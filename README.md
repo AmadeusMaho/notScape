@@ -1,2 +1,2 @@
-# notScape.github.io
+# notScape
 Runescape de temu
