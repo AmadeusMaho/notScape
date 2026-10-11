@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NotScape</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Pixelify+Sans:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css"></head><body>
+<div class="wrap">
+<div class="top"><h1>NotScape</h1><div id="hd"></div></div>
+<div class="game">
+<div class="panel" id="goalp"><h2>🎯 Objetivo principal</h2><div id="goals"></div></div><div><div id="cw"><canvas id="c" width="640" height="400"></canvas><div id="dlg" onclick="dlgNext()"></div></div>
+<div style="margin:6px 0"><button class="bt" id="runb" onclick="tgRun()">🏃 Correr: NO (R)</button> <button class="bt" id="autob" onclick="tgAuto()" title="Al matar un enemigo, ir solo al siguiente. Con enemigos agresivos solo lo hace si no arrastra a otros.">🎯 Auto-objetivo: SÍ</button> <label class="sl" title="Volumen de la música">🎵 <input type="range" id="mv" min="0" max="100"></label> <label class="sl" title="Volumen de los efectos">🔊 <input type="range" id="sv" min="0" max="100"></label></div><div class="hint">Muévete con WASD / flechas o toca el mapa. El mundo tiene 5 biomas, de izquierda a derecha, cada uno con recursos y monstruos de más nivel. Cada campamento tiene banco, tienda, fogata, horno, yunque y taller. El botón 🔊 activa o silencia el sonido.</div>
+<div id="log"></div></div>
+<div class="panel"><div id="tabs">
+<button class="bt" data-t="inv" onclick="tab('inv')">🎒 Inv</button><button class="bt" data-t="sk" onclick="tab('sk')">📊 Skills</button><button class="bt" data-t="q" onclick="tab('q')">📜 Misiones</button><button class="bt" data-t="col" onclick="tab('col')">📖 Colección</button><button class="bt" data-t="mg" onclick="tab('mg')">✨ Magia</button><button class="bt" data-t="bank" onclick="tab('bank')">🏦 Banco</button><button class="bt" data-t="shop" onclick="tab('shop')">🏪 Tienda</button><button class="bt" data-t="st" onclick="tab('st')">🔥 Fabricar</button>
+</div><div id="pn"></div>
+<button class="bt" id="rstb" style="margin-top:12px" onclick="resetGame()">Reiniciar</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+<script src="src/ground.js"></script>
+<script src="src/roads.js"></script>
+<script src="src/game.js"></script></body></html>
