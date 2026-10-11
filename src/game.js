@@ -550,6 +550,8 @@ const T=(s,x,y,c)=>{ctx.font='16px VT323, monospace';ctx.textAlign='center';ctx.
   f('#8a6a3a',x0+322,490,14,12);f('#6b4a2a',x0+338,494,12,10);f('#333',x0+120,432,2,16);f('#ffe629',x0+119,428,4,4);f('#333',x0+270,432,2,16);f('#ffe629',x0+269,428,4,4);
   f('#7a4a2a',x0+50,528,172,14);f('#5a3a1a',x0+50,540,172,3);f('#5a3a1a',x0+54,542,4,34);f('#5a3a1a',x0+218,542,4,34);f('#7a4a2a',x0+262,540,76,10);f('#5a3a1a',x0+264,550,4,26);f('#5a3a1a',x0+332,550,4,26);
   // ---- agua: estanque, río, lago y puente
+  if(WT)WT.draw(g,k,x0,b,PD.filter(p=>p.x>=x0&&p.x<x0+BW)); // WT: agua por píxel (src/water.js); con ?old se usa el código antiguo de abajo
+  else{
   OY=500;
   f('#d8c68a',x0+472,672,516,206);f(b.w,x0+480,680,500,190);for(let i=0;i<36;i++)f(i%2?'#8a8a80':'#a8a090',x0+R(474,986),(i%2?672:874)+R(-2,3),R(2,4),2);for(let i=0;i<8;i++)f('#3a8a4a',x0+R(500,950),700+R(0,150),5,3);
   f('#d8c68a',x0+32,732,448,76);f(b.w,x0+40,738,436,64);
@@ -557,6 +559,7 @@ const T=(s,x,y,c)=>{ctx.font='16px VT323, monospace';ctx.textAlign='center';ctx.
   f('#8a6a3a',x0+232,728,76,80);for(let i=0;i<8;i++)f(i%2?'#7a5a2a':'#9a7a4a',x0+236+i*9,730,8,76);f('#5a3a1a',x0+232,727,76,3);f('#5a3a1a',x0+232,806,76,3);
   for(let i=0;i<46;i++)f(i%3?'#8aa04a':'#6a8a3a',x0+R(40,470),(i%2?730:802)+R(-2,6),2,R(6,10));
   for(let i=0;i<26;i++)f('#e8e8e0',x0+R(50,440),632+R(0,240),3,2);
+  }
   OY=0;
   // ---- decoración de zonas
   for(let i=0;i<12;i++){const mx=x0+R(70,350),my=100+R(0,160);f('#fff',mx+1,my+3,2,3);f('#d03030',mx-1,my,6,3)}
@@ -657,7 +660,7 @@ function dGates(t){for(let k=1;k<5;k++){const x=k*BW;if(Math.abs(x-cx-W/2)>W/2+6
 function draw(now){const t=now/1000;cx=Math.max(0,Math.min(WW-W,P.x-W/2))|0;cy=Math.max(0,Math.min(WH-H,P.y-H/2))|0;
  {const s0=sunS(t),ph0=2*Math.PI*(dayP(t)-.25),d0=Math.max(0,s0);SHD.dx=-Math.cos(ph0)*(8+20*(1-d0));SHD.dy=2+3*(1-d0);SHD.a=Math.max(0,Math.min(.28,(s0+.15)*.5))}
 const vis=e=>Math.abs(e.x-cx-W/2)<W/2+60;ctx.imageSmoothingEnabled=false;ctx.save();const shk=now<SHK?(SHK-now)/200*3:0;ctx.translate(-cx+(Math.random()-.5)*2*shk,-cy+(Math.random()-.5)*2*shk);{const sx=Math.max(0,cx-8),sy=Math.max(0,cy-8),sw=Math.min(W+16,WW-sx),sh=Math.min(H+16,WH-sy);if(GR)GR.draw(ctx,cx,cy);ctx.drawImage(bgc,sx,sy,sw,sh,sx,sy,sw,sh)}
- PD.forEach(p=>{if(Math.abs(p.x+p.w/2-cx-W/2)>=W/2+p.w/2||p.y>cy+H+10||p.y+p.h<cy-10)return;const x1=Math.max(p.x,cx-12),x2=Math.min(p.x+p.w,cx+W+12);
+ PD.forEach(p=>{if(Math.abs(p.x+p.w/2-cx-W/2)>=W/2+p.w/2||p.y>cy+H+10||p.y+p.h<cy-10)return;if(WT){WT.anim(ctx,p,t,cx,cy,W,H);return}const x1=Math.max(p.x,cx-12),x2=Math.min(p.x+p.w,cx+W+12);
  for(let r=0;r<Math.floor(p.h/14);r++){const yy=p.y+8+r*14;if(yy<cy-8||yy>cy+H+8)continue;const sp2=(r%2?1:-1)*(9+r*1.4);for(let x=x1-(x1%12);x<x2;x+=12){const ox=(((x+t*sp2)%24)+24)%24-12;ctx.globalAlpha=.14+.14*Math.sin(t*1.5+x*.07+r);Rc(p.sh,x+ox,yy+Math.sin(t*2+x*.12+r)*1.4,7,2)}}
  for(let x=x1-(x1%5);x<x2;x+=5){ctx.globalAlpha=.28+.24*Math.sin(t*2.2+x*.35);Rc('#ffffff',x,p.y+1+Math.sin(t*1.6+x*.2),3,1);Rc('#ffffff',x,p.y+p.h-3,3,1)}ctx.globalAlpha=1});ctx.globalAlpha=1;
  dGates(t);dDecor(t,now);[...N.filter(vis).map(e=>[e.y,()=>dN(e,t,now)]),...ST.filter(vis).map(e=>[e.y,()=>dS(e,t)]),...M.filter(vis).map(e=>[e.y,()=>dM(e,t,now)]),[P.y,()=>dP(t,now)]].sort((a,b)=>a[0]-b[0]).forEach(o=>o[1]());
