@@ -1,91 +1,103 @@
-# NotScape — guía para modelos y colaboradores
+# NotScape — guía para modelos y colaboradores (estilo isométrico pintado «cozy»)
 
-RPG idle estilo OSRS, en español, juego de navegador. Autor: un solo dev que alterna entre varios modelos; **este archivo es la memoria compartida**. Léelo entero antes de tocar nada y actualiza la sección "Estado de la migración" al terminar.
+RPG idle estilo OSRS, en español, juego de navegador. Autor: un solo dev que alterna entre varios modelos; **este archivo es la memoria compartida**. Léelo entero antes de tocar nada y actualiza «Estado» al terminar tu parte.
 
-## Estructura
-- `index.html` — shell HTML (paneles, tienda, inventario, HUD). 
-- `css/style.css` — estilos de los paneles.
-- `src/ground.js` — suelo por tiles (Fase 1). Define `const GR` (null con `?old`).
-- `src/roads.js` — caminos por píxel (Fase 2, paso 1). Define `const RD` (null con `?old`). Usa los helpers compartidos `GR.H = {hash,vnoise,mix,hex}`; los módulos nuevos deben cargarse en `index.html` después de `ground.js` y antes de `game.js` (`build_single.py` inlinea automáticamente todos los `src/*.js` salvo `game.js`).
-- `src/water.js` — agua por píxel (Fase 2, paso 2): estanque, río, lago, orilla, puente, poste de pesca y animación de ondas. Define `const WT` (null con `?old`). Se carga después de `roads.js`; usa también `GR.H`.
-- `src/phaser-world.js` — intento descartado de la Fase 1 con Phaser (ver "Por qué NO hay Phaser todavía"). **No se carga en `index.html`**; no lo toques ni lo cargues.
-- `src/game.js` — todo lo demás: datos, lógica, guardado, audio y dibujo 2D. Globales: `S` estado, `P` jugador, `N/M/ST` entidades, `cx/cy` cámara, `curB` bioma actual, `BI` biomas, `BW=2300` ancho de bioma, `WW=11500`, `WH=1500`.
-- `assets/music/*.mp3` — música.
-- `tools/build_single.py` — junta todo en un HTML único (`dist/notscape.html`) para publicar como artefacto (inlinea CSS, JS y música).
-- `tools/headless_check.py` — comprobación automática sin pantalla (errores de consola, colisiones del agua vs `blk()`, tiempos, capturas). Ver "Cómo probar sin pantalla".
+> Este archivo **reemplaza por completo** la guía anterior (migración a pixel art cenital con Phaser). Ese plan queda cancelado. El nuevo rumbo es el de `docs/GUIA_ESTILO_ISOMETRICO.md`.
 
-## Cómo correrlo
-`python3 -m http.server 8000` en esta carpeta → `http://localhost:8000`. No hay bundler ni npm. Comprobación rápida de sintaxis: `for f in src/game.js src/ground.js src/roads.js src/water.js; do node --check $f; done`. Comprobación funcional sin navegador a mano: `python3 tools/headless_check.py` (ver más abajo).
+## Orden de lectura
+1. `docs/GUIA_ESTILO_ISOMETRICO.md` — **manda en lo visual** (proyección 2:1, paleta, formas, técnica de pincel, catálogo, fases, diorama, jefes).
+2. `INVENTARIO.md` — estado real del juego (canvas, mundo, biomas, entidades, preguntas abiertas).
+3. `docs/style-reference/notscape-diorama.html` — referencia de **colores y técnica de pincel** (sus formas NO están aprobadas).
+4. `docs/style-reference/notscape-cenital.html` — referencia de la **forma de los objetos** (`blobz`/`bp`), no de la vista.
+5. Este archivo — **manda en lo técnico**.
 
-## Objetivo de la migración
-Pixel art más rico y, cuando aporte (entidades animadas y luces), **Phaser 3**; tiles de 16 px, contorno oscuro 1 px, luz desde arriba-izquierda (referencia visual: la demo `notscape-demo.html` publicada en el chat de origen; si no la tienes, el dueño puede compartirla). **Estrategia: cambiar solo la capa de dibujo.** Lógica, guardado y paneles HTML NO se tocan.
+## Decisiones ya tomadas por el dueño
+- 2D con proyección isométrica 2:1. Nada de 3D ni Three.js, **nada de Phaser**.
+- La lógica no cambia: el mundo sigue plano (rectángulos en px de mundo); la isometría solo se aplica al dibujar y, a la inversa, al convertir clics.
+- Formato **diorama por bioma** (bloques flotantes con corte de tierra) con pasarelas y transición suave entre biomas. Bloqueos visuales por jefe (guía §12).
+- Todo el arte se genera por código; sin arte pintado a mano.
+- **Respuestas del dueño a las preguntas de `INVENTARIO.md` §10 (11 oct 2026):**
+  1. *Canvas:* a criterio del agente, priorizando que se vea atractivo → **responsivo con `devicePixelRatio` máx. 2** (`ISO.resize`). El canvas deja de ser 640×400 fijo.
+  2. *Escala:* `ISO.TILE = 32` px de mundo por tile, y el dueño quiere **una escala visual mayor que la del cenital** → `ISO.V.zoom` (hoy 1,6; un solo número para ajustarlo).
+  3. *Movimiento:* **8 direcciones**, teclas en ejes de pantalla (`ISO.keyDir`). Sigue siendo analógico en px de mundo.
+  4. *Biomas:* se conservan los 5 actuales y se **seguirán añadiendo biomas**. **No hay layout repetido**: cada bioma tendrá su propia aldea con **arquitectura propia de su región**. Esto reemplaza la plantilla `x0 + offset` repetida de hoy (ver «Diseño por bioma» abajo).
+  5. *Jefes:* los actuales (Gruk, Fenrir, Rey Ciénaga, Yeti Milenario, Señor del Fuego) son **placeholders**; el dueño inventará la historia después. Los nombres de la guía §12 no mandan.
+  6. *Tiers:* se conservan los 6 actuales (cuero, bronce, hierro, acero, mitril, adamantita) pero el dueño quiere **muchos más**: el sistema de tiers debe ser **datos extensibles** (tabla de colores principal/luz, sombra calculada), nunca `if` por tier.
+  7. *Minimapa:* a criterio del agente → **cenital** (plano, se lee mejor y es barato).
+  8. *Modo antiguo:* **se descarta**. No hay `?old` ni `?iso`; solo existe el diseño isométrico. **No hay que mantener partidas guardadas** (se puede subir `S.ver` y reiniciar sin migrar).
+- **Las formas poligonales/«raras» de la guía están pendientes de revisión con el dueño.** Hasta entonces, no inventes formas finales: usa rombos de color plano (F1) y deja la forma tras un único helper `soft` fácil de cambiar.
 
-## Cómo funciona el suelo (Fase 1) — leer antes de continuar
-- `src/ground.js` define `const GR`. Genera por código un tileset de 16 variantes (16×16) por bioma desde `BI[k].g`: pasto tono A/B, flores, guijarros, matas. Ruido de valor elige el tono (manchas orgánicas) y un hash elige la decoración.
-- Cada bioma (144×94 tiles) se **pre-renderiza una vez** a un canvas 2D de 2300×1500 y `draw()` copia la porción visible, igual que hacía el antiguo `bgc`. Se precargan los 5 (uno por frame tras ~45 frames) para no crear uno de golpe al cruzar un borde.
-- `game.js` llama `GR.draw(ctx,cx,cy)` en `draw()` justo ANTES de pintar el overlay `bgc`, y salta el pasto/matas/flores antiguos con `if(!GR)` dentro de la IIFE de `bgc` (~499–577). El overlay `bgc` es ahora transparente donde antes estaba el pasto.
-- **Con `?old` en la URL, `GR` es null y se ve el suelo antiguo**: sirve para comparar rendimiento y como fallback. Mantén ese fallback hasta el final de la migración.
-- **Por qué NO hay Phaser todavía:** una primera versión renderizaba el suelo con un Tilemap de Phaser (WebGL) y copiaba su canvas al canvas 2D en cada frame; en la práctica daba tirones durante el juego (copia GPU→2D por frame). El suelo es estático, así que se descartó. Phaser entra cuando aporta algo: sprites con animación y luces (Fases 3–4), y entonces **su canvas se muestra directamente** (no se copia al 2D). Para eso: añadir `<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js">`, y apilar el canvas de Phaser debajo/encima del `#c`, o migrar también la iluminación (`lighting`/`post` usan composición sobre el canvas 2D, por eso no se pueden apilar sin migrarlas a la vez).
-
-## Cómo funciona el agua (Fase 2, paso 2) — leer antes de tocar `water.js` o el bloque de agua
-- **Contrato con `game.js`.** (a) En la IIFE de `bgc` (~552): `if(WT)WT.draw(g,k,x0,b,PD.filter(p=>p.x>=x0&&p.x<x0+BW));else{…código antiguo…}`; después viene `OY=0;`. (b) En `draw()` (~661), dentro de `PD.forEach` y tras el descarte por cámara: `if(WT){WT.anim(ctx,p,t,cx,cy,W,H);return}`; debajo sigue el código antiguo de ondas (solo corre con `?old`). `WT` es `null` con `?old`, como `GR` y `RD`.
-- **Geometría = `PD`.** `PD` (definido en la generación del mundo, ~252) tiene, por bioma y en este orden: estanque `{x0+480,1180,500,190}`, río `{x0+40,1238,436,64}` y, solo en el bioma 0, lago `{x0+1304,1122,326,176}`; cada uno con `sh` (color de brillo). `WT.draw` recibe esas entradas como `shapes` y deduce todo de ellas: **no hay coordenadas de agua duplicadas** salvo el puente (`rio.x+192, rio.y-10`, 76×80 → calzada x0+236..304 = hueco entre los dos `BLK` del río) y el poste de pesca (`lago.x+96, lago.y-16`). Si algún día cambian `PD`/`BLK`, el dibujo las sigue solo, pero el puente y el poste hay que revisarlos a mano.
-- **`lake()` (pinta una masa).** Máscara `Uint8Array` del agua (rectángulo de `PD` menos entrantes de arena de 0–2 px por ruido 1D y esquinas de radio 3) → dos transformadas de distancia chamfer (`dw`: distancia al agua para tierra; `di`: distancia a la tierra para agua) → un solo paso por píxel que decide el color; la luz sale del **gradiente** de esas distancias (`ql` = componente hacia arriba-izquierda). Bbox = rectángulo + margen `M=12`; ancho de arena `RW=8` (±1 irregular). Se pinta en un `ImageData` → canvas temporal → `g.drawImage`. Devuelve máscara y distancias para colocar decoración con `scatter()`.
-- **Decoración.** `scatter(semilla,cuántos,intentos,sepMin,región,ok,fn)` elige puntos por `hash` y exige `ok(X,Y)` (p. ej. "arena seca a 3–6.5 px del agua", "agua a ≥9 px de la orilla"); la cantidad escala con el área real (`nRing`, `nWater`). Sprites pequeños con `spr()` (filas de letras + paleta, `.`=transparente). Zona del puente excluida (`ex`). Nenúfares/témpanos/escoria solo en masas anchas (`p.h>100`) y a >22 px del borde superior: ahí caen los puntos de pesca (`put('fi',…)` en `[1184..1192]` estanque, `[1124..1132]` lago, `[1242..1250]`/`[1290..1298]` río).
-- **Paleta por bioma:** `PAL[k]` en `water.js` (suelo de orilla `S`, guijarros `P`, color de espuma `fc`, arena mojada `wet`, piedras `st`, juncos `reed`, flotantes `fl`/`fp`, flags `alg` (algas), `crust` (costra de lava), `spk` (cristales), `dense`). El color del agua sale de `BI[k].w` y su brillo de `BI[k].sh`. Para otro bioma/estilo basta con tocar `PAL`.
-- **Animación (`WT.anim`).** Ondas: las mismas de antes pero recortadas al interior (inset 3 px) para que no se salgan a la arena. Espuma: al pintar, `lake()` guarda los píxeles de orilla del agua en un `Map` (`FM`, clave = el objeto de `PD`) como 4 `Int32Array` (x,y,w,h) ordenados por x, uno por fase; `anim` los hace parpadear y recorta por cámara con búsqueda binaria. Se dibuja directamente sobre el contexto del mundo (ya trasladado), igual que antes.
-- **Determinismo.** Todo sale de `hash()`/`vnoise()` de `GR.H` con semillas `k*31+n*7+3+offset`: el mismo mundo se ve igual en cada carga y no se consume `rnd()`/`R()`.
-- **Ideas pendientes de gusto (no bloquean nada):** la lava/agua no brilla de noche (eso es `lighting()`, Fase 4); los peces/ondas de pesca los dibuja `dDecor`, no este módulo; se pueden añadir olas en la orilla (animar el contorno), reflejos de los árboles cercanos o nenúfares con flor animada.
-
-## Cómo probar sin pantalla (lo que sí se puede verificar desde un chat)
-- `python3 tools/headless_check.py [carpeta]` levanta su propio servidor, abre el juego con Chromium headless (Playwright: `pip install playwright && playwright install chromium`) y comprueba: errores de consola (nuevo y `?old`), que todo rectángulo de `PD` esté bloqueado por `blk()` salvo bajo el puente y que la calzada sea libre, `WT.draw` por bioma y capturas del canvas en la carpeta. Sale con código 0 si todo está bien. **No sustituye al checklist manual** (no juzga aspecto, fluidez real ni el minijuego de pesca).
-- Para mirar el aspecto: teletransporta con `P.x=k*BW+dx; P.y=dy` (globales accesibles con `page.evaluate`), espera ~1 s y captura `#c`. Para ver la capa estática, recorta `bgc` con `drawImage` a otro canvas, **pero ojo: `bgc` es transparente donde va el pasto** (el suelo lo pinta `GR` aparte), así que compón el recorte sobre `BI[k].g[0]` antes de juzgar los colores.
-- Trampas del entorno: `S.boss` es un **objeto** (`S.boss[i]=1` abre la puerta del bioma i+1), no un arreglo; mientras no estén abiertas, `blk()` bloquea todo `x>=BW`, y un test de colisiones en los biomas 1–4 sale "mal" sin que haya bug. Las fuentes de Google no cargan en headless/sandbox (da igual). No uses `pkill -f http.server` (coincide con su propia línea de comandos y mata tu shell); cierra el servidor por PID. En el sandbox `npm i` falló por red (no intentes instalar `canvas`); Playwright con Chromium venía ya instalado y es la vía que funciona.
-- Rendimiento: en headless el render es por software, así que sirve para **comparar** (nuevo vs `?old`, antes vs después de un cambio), no como cifra absoluta. Lección aprendida: en bucles por píxel evita `Math.hypot` y calcular gradientes/ruido donde luego no se usan (en `lake()`, quitar eso bajó los biomas 1–4 de ~28–49 ms a ~23–30 ms en headless).
-
-## Trampas conocidas
-- No uses `rnd()` ni `R()` del juego para generar arte nuevo: `rnd` está sembrado (`seed=7`) y el layout depende de su secuencia; `R` usa `Math.random`. `ground.js` tiene su propio RNG (`hash`/`vnoise`/LCG).
-- Colisiones y zonas (`blk`, `BLK`, `PD`, `ZS`, `cliff`) están en datos aparte: si cambias lo visual, **el layout visual debe seguir coincidiendo con esos datos**.
-- Evita copiar canvases WebGL al canvas 2D en cada frame, y no crees texturas WebGL de 11500 px de ancho.
-- Orden de pintado dentro de la IIFE de `bgc`: pasto → caminos (~540) → aldea (~544) → agua (~552) → decoración de zonas → cartel → acantilados. El agua se pinta DESPUÉS de los caminos a propósito: el camino que baja al estanque (x0+700) y al lago (x0+1450) termina bajo la arena de la orilla. No lo reordenes sin mirarlo.
-- El código antiguo de agua dibujaba 26 puntos blancos con `R()` que caían sobre pasto y juncos por encima del puente; el módulo nuevo NO los reproduce (a propósito). Si comparas con `?old`, esa diferencia es esperada.
-- La Fase 1 y el arreglo del panel (`skLive`) fueron probados por el dueño en el navegador y funcionan. Lo que añadas tú probablemente NO se pueda probar desde el chat: dile al dueño qué comprobar (usa el checklist de abajo).
-
-## Rendimiento (ya corregido, no reintroducir)
-- `panel()` reconstruye TODO el `innerHTML` del panel lateral cuando `dirty=1` (como mucho cada 250 ms). Correr daba `gain('ag')` cada ~130 unidades de camino → un rebuild completo del DOM cada ~1 s → micro-tirones. Ahora `gain()` no reconstruye el panel: si la pestaña activa es `sk` (Habilidades) llama `skLive(sk)`, que solo actualiza el texto de XP y la barra de esa skill (los divs llevan `data-sk`); al subir de nivel sí marca `dirty` (rebuild completo, es raro). Antes de añadir más `dirty=1` en eventos frecuentes, comprueba qué pestaña lo necesita. Este defecto venía del juego original, no de la migración.
-
-## Contexto técnico del dibujo actual (necesario para las fases 2–4)
-- Todo se dibuja en `draw(now)` (~660) sobre un canvas 2D de 640×400 con coordenadas de mundo (`ctx.translate(-cx,-cy)`; temblor de pantalla `SHK`). Orden: suelo (`GR`) → `bgc` (escenario estático) → aguas animadas `PD` → `dGates` → `dDecor` → entidades ordenadas por `y` (NPCs `N`, estaciones `ST`, monstruos `M`, jugador `P`) → partículas/proyectiles → `lighting` → luz ambiental `dAmb` → `post` → HUD (barras, minimapa, texto).
-- Las entidades son **procedurales por frame**, con rectángulos `Rc(color,x,y,w,h)`; dependen del estado: `dPerson(x,y,camisa,pelo,dir,fase,andando,armadura)`, `dP` usa `S.eq` (colores por tier `TCOL`/`tierOf`), arma por `wtype()`, acción actual `A`. Los monstruos pasan por `dSpr(m,d,x,y,c,w,h,lk,t,now)`; `m.fl` (parpadeo al ser golpeado), `m.f` (dirección), `m.hunt`.
-- Sombras: `Sd(x,y,w,h)` con `SHD` (dirección según el sol). Texto flotante y de HUD: `T(texto,x,y,color)` con fuente VT323.
-- `lighting()` usa un canvas de oscuridad (`lc`/`lx`) y `destination-out` para abrir luces (fogatas, horno, tienda, antorchas por bioma). `dAmb` usa `lighter` para luciérnagas. **`post()` copia el canvas sobre sí mismo con `ctx.filter` cada frame** (contraste/saturación) → caro; en la Fase 4 sustituirlo (filtro CSS sobre el canvas o post-efecto de Phaser) en vez de portarlo tal cual.
-- La IIFE de `bgc` (~499–577) usa desplazamientos `OX/OY` que **cambian por sección**: rancho `OX=250,OY=300`; zona hostil `OX=500,OY=300`; guarida `OX=800,OY=300`; aldea `OY=300`; agua `OY=500` (lago del bioma 0 con `OX=300`); roca/tumbas `OX=100,OY=350`. Las coordenadas de cada sección son relativas a esos offsets: al migrar una pieza, calcula la posición final (`x0+x+OX`, `y+OY`) antes de moverla.
-
-## Estado de la migración (actualiza esto al terminar tu parte)
-- [x] **Fase 0** — proyecto en carpetas, música fuera del código.
-- [x] **Fase 1** — suelo base por tiles (`src/ground.js`). Verificado por el dueño: funciona y sin tirones.
-- [ ] **Fase 2 — escenario estático** (sin Phaser: seguir la técnica de `ground.js`: tileset/sprites generados por código con paleta fija y contorno `#14100a`, pre-renderizados por bioma a canvas 2D y copiados por frame; no crear canvases de 11500 px, usar uno por bioma). Un archivo nuevo por bloque (p. ej. `src/roads.js`, `src/water.js`, `src/village.js`), cada uno con su interruptor `?old` o guarda `if(!X)` en la IIFE. Pasos, de menor a mayor riesgo:
-  1. ✅ **Caminos — HECHO (`src/roads.js`).** Se unen los 6 rectángulos del bioma en una máscara con bordes irregulares (±1 px) y se pinta por píxel en un `ImageData` (contorno oscuro, borde claro arriba-izquierda / oscuro abajo-derecha, interior moteado con guijarros, roderas en la calle principal, halo suave sobre el pasto). `game.js` (~543) llama `RD.draw(g,k,RR,rc,ed,b.g)` o, con `?old`, la función `road()` original. Geometría = la original ±1 px (colisiones intactas). Coste: ~70 ms por bioma al cargar (una vez). Previsualizado solo en un test con mocks (T-junction y biomas 0 y 3 se ven limpios); **pendiente de verificar por el dueño en el juego** (aspecto en los 5 biomas, que NPCs/estaciones queden bien sobre el camino, tiempo de carga). Ajustes de gusto: colores `SOFT/DK/LG/PB` y densidad de guijarros en `roads.js`. **Técnica reutilizable para agua y acantilados:** máscara `Uint8Array` + paso por píxel que mira vecinos a 1–2 px + `createImageData` → canvas temporal → `g.drawImage` (nunca `putImageData` directo sobre `bgc`, borraría lo dibujado debajo).
-
-  2. ✅ **Agua — HECHO (`src/water.js`, `const WT`, null con `?old`).** Estanque, río y lago (bioma 0) por píxel con orilla, contorno, luz arriba-izquierda, piedras, juncos, nenúfares/témpanos/escoria, puente y poste de pesca; ondas y espuma animadas solo dentro del agua. Variante por bioma: arena (0–1), barro con algas (2), nieve con témpanos (3), basalto y lava con costra (4). **Detalles de diseño, contrato con `game.js` y cómo extenderlo: sección "Cómo funciona el agua".** **Aspecto aprobado por el dueño** (vio capturas del juego: "me gustó muchísimo"). **Verificado sin pantalla** con `tools/headless_check.py`: 0 errores de consola; 0 discrepancias en ~168 000 muestras de colisión en los 5 biomas con las puertas abiertas (el rectángulo de `PD` está bloqueado salvo bajo el puente; la calzada es libre; el río sigue bloqueado a ambos lados del hueco); `build_single.py` inlinea `water.js`; `?old` intacto. Coste de carga: ~110–130 ms el primer bioma (en frío) y ~25–40 ms cada uno de los demás; `draw()` con el estanque a la vista ≈ igual que con `?old`. **Pendiente de verificar por el dueño en el juego real:** fluidez, tiempo de carga y que el minijuego de pesca siga bien (checklist 7). Ajustes de gusto: `PAL`, umbrales de manchas en `lake()`, densidad de decoración en `draw()`.
-  3. **← SIGUIENTE:** Aldea (~544), rancho (~515), zona hostil (~523), guarida (~531), decoración de zonas (~564), cartel (~570): convertir a sprites con contorno y sombreado; mantener posiciones (las estaciones `ST` se dibujan en `dS`, no aquí). Cada bioma `k` tiene su variante (`if(k===0)…else if(k===1)…`). Sugerencia: reutilizar el patrón de `spr()` de `water.js` (bitmaps de letras + paleta, contorno `#14100a`) y colocar por `hash`, no por `R()`. Ojo: el camino (`RD`) y el agua (`WT`) se pintan antes/después según el orden en la IIFE (caminos ~540 → aldea ~544 → agua ~552): no pintes sobre el agua ni cambies ese orden sin revisar que el camino que llega al estanque (x0+700) y al lago (x0+1450) sigue terminando en la orilla.
-  4. Acantilados y franja superior (~572): hueco en el camino `y 702–826`; debe coincidir con `cliff()` (~363).
-  *Hecho cuando (toda la fase):* la IIFE de `bgc` queda vacía o eliminada y `?old` sigue funcionando hasta ese punto.
-- [ ] **Fase 3 — entidades** (aquí entra Phaser si aporta animación real). Decisión recomendada: «panadería de sprites»: conservar las funciones procedurales (`dPerson`, `dN`, `dS`, `dM`, `dSpr`, `dP`) pero renderizar cada combinación (tipo + dirección + frame + equipo) UNA vez a un canvas/atlas cacheado y dibujar el sprite cacheado (o un sprite de Phaser); invalidar la caché solo cuando cambie `S.eq`. Mantener intactos los datos `P`, `N`, `M`, `ST` y el orden por `y`. Antes de usar Phaser, definir cómo apilar canvases: el canvas de Phaser iría debajo de un canvas 2D transparente solo para HUD/texto, **lo que obliga a migrar `lighting` y `post` en la misma tarea** (hoy componen sobre el canvas 2D). *Hecho cuando:* a 60 fps con ~100 entidades en pantalla no hay tirones, y el combate (golpe, parpadeo, barras de vida, texto flotante) se ve igual o mejor.
-- [ ] **Fase 4 — luz, clima y post-proceso**: `ambient`(~410), `weather`(~434), `dRain`(~447), `dAmb`(~418), `lighting`(~644), `post`(~639). Enfoque de la demo: capa multiplicada para el día/noche + luces aditivas; lluvia/tormenta como partículas; sustituir `ctx.filter` de `post`. Solo entonces quitar el canvas 2D del mundo (paneles y HUD de texto pueden quedarse en DOM/canvas 2D). *Hecho cuando:* ciclo día/noche, lluvia, tormenta, luciérnagas y luces de fogata/horno se ven igual o mejor y no cuestan más CPU que antes.
-
-## Checklist manual (no hay tests automáticos): ejecútalo tras cada cambio
-1. Cargar con partida guardada existente y sin ella (`localStorage` limpio) → sin errores en consola.
-2. Recorrer los 5 biomas cruzando cada borde (puertas desbloqueadas por jefes), de día y de noche.
-3. Correr (R), talar, minar, pescar, cocinar (minijuego), combatir un monstruo y un jefe; subir de nivel (banner).
-4. Lluvia/tormenta en biomas 0–2; minimapa; pestaña Habilidades abierta mientras se gana XP.
-5. Comparar fluidez y tiempo de carga con `?old` (mientras exista el fallback).
-6. Caminos: en cada bioma, cruces limpios, sin huecos entre tramos, y las puertas/estaciones (`ST`) sobre el camino se ven bien.
-7. Agua: en cada bioma (con las puertas desbloqueadas), el estanque, el río y (bioma 0) el lago se ven bien de día y de noche; no se puede entrar al agua, el puente se cruza de norte a sur, el camino llega limpio a la orilla del estanque y del lago, el minijuego de pesca (ondas/peces en los bordes) sigue funcionando, y la carga y los frames no empeoran frente a `?old`.
+## Estructura del repo
+- `index.html`, `css/style.css` — shell HTML y paneles (no se tocan salvo el canvas).
+- `src/game.js` — lógica, guardado, audio y dibujo mezclados (822 líneas). Globales: `S` estado, `P` jugador, `N/M/ST` entidades, `cx/cy` cámara, `curB` bioma, `BI` biomas, `BW=2300`, `WW=11500`, `WH=1500`, `W=640`, `H=400`.
+- `src/ground.js`, `roads.js`, `water.js`, `village.js`, `stations.js`, `characters.js`, `sprites.js`, `phaser-world.js` — **BORRADOS en F1-B** (plan cenital descartado). Ya no existen `GR/RD/WT/VG/SX/CH/SP`; ver «Código provisional».
+- `src/iso.js` — **(nuevo, F1-A, HECHO)** módulo `ISO`: solo matemáticas, sin DOM ni dibujo. API: `proj/unproj` (mundo↔pantalla lógica con altura z), `resize` (vista responsiva + dpr), `follow/snap` (cámara suavizada y redondeada al píxel real), `toCanvas/toWorld` (mundo↔px del canvas; `toWorld` resuelve la altura con `hz(x,y)` y elige el candidato más cercano a la cámara junto a acantilados), `tileAt`, `depth/tileOrder/sortDepth` (orden de dibujo), `keyDir` (8 direcciones en ejes de pantalla), `occludes`, `diamond`. Constantes: `TILE=32`, rombo 56×28 (`HW=28`, `HH=14`), `LV=22` px por nivel, zoom `V.zoom=1.6`.
+- `src/world-iso.js` — **(nuevo, F1-B)** `TER`: terreno **provisional** de rombos planos con 3 alturas (agua .75, suelo 1, acantilado 2) y compuertas de jefe. API: `heightAt(x,y)`, `tileH`, `draw(ctx,t)`, `gate(ctx,k,abierta,t)`, `PAL` (paleta por bioma de la guía §3, datos), `PAPER`. La altura sale de `BLK` (agua), de la frontera de biomas y del borde del mundo; **no afecta a la colisión** (`blk()` sigue igual).
+- `tools/iso_test.js` — prueba sin navegador de `iso.js` (`node tools/iso_test.js` debe acabar en `RESULTADO: OK`).
+- `tools/iso_check.py` — **(nuevo, F1-B)** Playwright: errores de consola, colisiones (`blk`), ida y vuelta de clics, tecla arriba, ms por `draw()` y 5 capturas en `capturas/` (o la carpeta que le pases). Debe acabar en `RESULTADO: OK`.
+- `tools/build_single.py` — junta todo en un HTML único (`dist/notscape.html`); actualizado para módulos con guion (`world-iso.js`).
 
 ## Reglas
-- No cambiar la lógica de juego mientras se migra el dibujo.
-- Un cambio por vez; tras cada uno, comprobar que el guardado (`localStorage`) sigue cargando.
-- Textos del juego en español. Paleta y estilo: contorno `#14100a`, luz arriba-izquierda, 3–4 tonos por material.
-- Al terminar tu parte, actualiza "Estado de la migración" y las líneas aproximadas.
-- Git: trabaja en una rama por paso (`fase2-agua`, `fase2-aldea`, …) y abre PR a `main`; el dueño prueba en el navegador y mezcla. Si el clon es superficial, el hook de parada puede avisar de "commits sin subir" tras un push correcto porque falta la referencia local `origin/<rama>`: comprueba con `git ls-remote origin <rama>` y, si el SHA coincide, crea la referencia con `git fetch origin +refs/heads/<rama>:refs/remotes/origin/<rama>`.
+- **No cambiar lógica de juego, guardado (`localStorage` `tdo2`, `S.ver=10`) ni colisiones.** Las colisiones siguen en px de mundo (`blk`, `BLK`, `PD`, `ZS`, `cliff`).
+- **Trabaja en segmentos pequeños** (petición del dueño: se queda sin tokens en prompts largos). Un entregable por mensaje; cierra con qué probar a mano.
+- Una rama por fase (`iso-f1-nucleo`, …) y PR a `main`; el dueño prueba en el navegador y mezcla.
+- Un cambio por vez; tras cada uno comprobar que el guardado carga (con y sin partida).
+- Textos del juego en español. Contorno `#5b3a29` (nunca negro puro), papel `#fdf9e3`.
+- Si dudas entre dos aspectos, entrega ambos en capturas; **el gusto lo decide el dueño**.
+- Cada fase termina con capturas y visto bueno del dueño antes de pasar a la siguiente.
+- Preguntas que se plantean al dueño, no se resuelven solas: canvas fijo o responsivo, movimiento y teclas, biomas, tiers, minimapa (ver `INVENTARIO.md` §10).
+
+## Trampas técnicas heredadas (siguen vigentes)
+- No uses `rnd()` ni `R()` del juego para arte: `rnd` está sembrado (`seed=7`) y el layout depende de su secuencia; `R` usa `Math.random`. El arte usa **hash por tile** (x, y, bioma, capa).
+- `ctx` en `game.js` es `let`: no guardes referencias a `ctx` entre frames. Al final de `draw()` el contexto queda con la transformación del HUD (`cv.width/W`); el HUD se dibuja en unidades de 640×400.
+- Los sprites cenitales antiguos se dibujan con `spr(x,y,lift,fn)`: transforma `ctx` para que los pies queden en la posición isométrica (escala `SPR=1.5`). El texto dentro de `spr` usa `TXS=.5` para no salir gigante. **No añadas lógica nueva que dependa de `bk`/`BAKE`** (la panadería de sprites ya no existe).
+- `S.boss` es un **objeto**: `S.boss[i]=1` abre la puerta del bioma `i+1`; mientras no esté abierta `blk()` bloquea `x>=BW`. Un test de colisiones en biomas 1–4 sale «mal» sin que haya bug.
+- `panel()` reconstruye el `innerHTML` completo con `dirty=1`; no añadas `dirty=1` en eventos frecuentes (usar `skLive`).
+- Nada de filtros por frame (`ctx.filter`, copiar el canvas sobre sí mismo). No crear canvases de 11500 px.
+
+## Pruebas (lo que sí se puede verificar desde un chat)
+- Sintaxis: `for f in src/*.js; do node --check $f; done`.
+- Matemáticas isométricas: `node tools/iso_test.js` → `RESULTADO: OK`.
+- Navegador sin pantalla: `python3 tools/iso_check.py` (Playwright + Chromium disponibles en el sandbox) → `RESULTADO: OK`; mira siempre las capturas que guarda.
+- Aspecto y fluidez **no se verifican desde el chat**: dile siempre al dueño qué probar a mano.
+- No uses `pkill -f http.server`; cierra el servidor por PID.
+
+## Diseño por bioma (decisión del dueño, aplica desde F2/F3)
+Cada bioma es **único**: aldea propia con arquitectura de su región, distribución propia de zonas de tala/minería/pesca, guarida y estaciones. Hoy `game.js` genera los 5 con la misma plantilla (`x0 + dx`); eso se sustituye por **datos por bioma** (un objeto `BIOME[k]` con aldea, zonas, estaciones y recursos). Nuevos biomas = nuevo objeto de datos, sin tocar código de dibujo. La arquitectura de cada aldea la propondrá el agente en capturas y la decide el dueño.
+
+## Plan (resumen; detalle en la guía §7, §11, §12)
+- [x] **F0 · Inventario** — `INVENTARIO.md` entregado y respondido por el dueño (ver «Decisiones»).
+- [~] **F1 · Núcleo isométrico** — en segmentos pequeños:
+  - [x] **F1-A** — `src/iso.js` + `tools/iso_test.js` (matemáticas, probadas).
+  - [x] **F1-B** — HECHO: módulos cenitales y `?old` borrados; canvas responsivo (`fitCv` + `ISO.resize`); terreno de rombos planos con 3 alturas (`TER`); entidades antiguas como marcadores en su posición isométrica (`spr`); teclas con `ISO.keyDir`; clics con `ISO.toWorld`; `tools/iso_check.py`. *Pendiente de que el dueño lo pruebe a mano.*
+  - [~] **F1-C** — en micro-pasos (un entregable por mensaje):
+    - [x] **F1-C1** — cursor de tile (rombo suave bajo el puntero, rojo si `blk()` bloquea ese tile). HECHO; *pendiente de que el dueño lo pruebe a mano.*
+    - [ ] **F1-C2** — oclusión al 50 % de objetos altos sobre el jugador (`ISO.occludes`).
+    - [ ] **F1-C3** — comprobar a mano escenas junto a un acantilado (clics y altura).
+    - [ ] **F1-C4** — afinar cámara y zoom (`ISO.V.zoom`, `SPR`) con el dueño.
+  *Hecho cuando:* el jugador camina por el mapa de prueba, los clics caen en el tile correcto a cualquier altura y las colisiones se comportan igual.
+- [ ] **F2 · Estilo y terreno** — `STYLE`, `soft`, `paint`, `ink`, grano, tinte; bloque diorama de la Pradera con borde, sombra y pasarela; transiciones, caminos y agua. Puerta de aprobación con 3 capturas.
+- [ ] **F3 · Decoración, recursos, estructuras y barreras de jefe** (primero solo el portón del orco).
+- [ ] **F4 · Personaje y equipo** (capas + paleta-swap por tier).
+- [ ] **F5 · NPC, monstruos y efectos.**
+- [ ] **F6 · Luz, clima y post** (incluye mezcla de luz por bioma).
+- [ ] **F7 · Interfaz e iconos de ítems** (minimapa cenital).
+- [ ] **F8 · Pulido, rendimiento y limpieza** (borrar módulos cenitales y `phaser-world.js`).
+
+## Código provisional (se borra o rehace en la fase indicada)
+- `const GR=null,RD=null,WT=null,VG=null,SX=null,CH=null,SP=null` en `game.js`: **shim** que mantiene vivas las ramas antiguas de dibujo de entidades (`dN`, `dS`, `dSpr`, `dPerson`, `bk`, `TC`, `LDISC`…). Se elimina junto con cada sprite: estaciones y aldea F3, personaje F4, monstruos y NPC F5.
+- Sprites de entidades: siguen siendo los **cenitales de rectángulos** (`Rc`), solo colocados en isométrico. Se rehacen en F3–F5.
+- **Desactivado hasta F6:** clima y ambiente (`weather`, `ambient` siguen actualizando estado pero **no se dibujan**: lluvia, tormenta, luciérnagas, hojas, nieve). La iluminación `lighting()` sí funciona (noche, fogatas) con coordenadas convertidas a pantalla; incluye luces de farolas del layout antiguo en posiciones fijas (`x0+120/270`, etc.) que ya no tienen farola: se limpian en F3.
+- **Desactivado hasta F3:** decoración de zonas, aldea, caminos, agua animada, cartel, banderas y antorchas (se borraron `dDecor`, `dGates` y la IIFE del escenario `bgc`). El «estanque/río» hoy es solo la altura .75 de `TER`.
+- `post()` ya **no aplica filtro de color** (contraste/saturación): los colores de la guía se usan tal cual. Se mantiene el destello rojo al recibir daño.
+- Minimapa: `mmk(k)` pinta un plano simple (suelo, agua, bordes) desde datos; sigue cenital. El recuadro de la vista usa `cx,cy` del cálculo antiguo (aproximado) hasta F7.
+- Altura de un tile por su **centro**: junto al agua el jugador puede quedar 0,25 niveles más bajo hasta 16 px antes de la orilla real. Aceptado como provisional.
+
+## Registro de cambios (más reciente arriba; el dueño pidió que todo quede aquí)
+- **11 oct 2026 · F1-C1.** `game.js`: nuevo cursor de tile (`CUR`, `dCur`, helper `soft` para las esquinas suavizadas; es el único sitio donde cambiar la forma). Se dibuja justo después de `TER.draw`, bajo las entidades; solo con ratón (no en táctil); rojo si `blk()` bloquea el centro del tile. No toca lógica, guardado ni colisiones. `tools/iso_check.py`: comprueba que el tile resaltado es el que hay bajo el puntero (3 posiciones), que desaparece al salir del canvas y guarda `06_cursor.png` y `07_cursor_agua.png`. **Verificado sin pantalla:** 0 errores de consola, `RESULTADO: OK`. **No verificado:** el aspecto del tinte rojo sobre tile bloqueado (la captura 07 no cae sobre agua) ni la fluidez.
+- **11 oct 2026 · F1-B.** (1) Borrados `ground/roads/water/village/sprites/stations/characters/phaser-world.js` y las herramientas `headless_check.py`/`sprites_check.py`. (2) `game.js`: eliminada la IIFE `bgc` (escenario cenital de 11500×1500, ~69 MB), `dDecor`, `dGates` y el dibujo antiguo del mundo; `draw()` ahora limpia con el papel `#fdf9e3`, sigue al jugador con `ISO.follow`, dibuja `TER.draw`, y entidades/proyectiles/partículas ordenados por `ISO.depth` con `spr()`; luego el HUD en unidades 640×400 con `setTransform(cv.width/W,…)`. (3) Canvas responsivo: `fitCv()` (CSS + `ResizeObserver`, dpr máx. 2), el atributo `width/height` ya no es fijo; CSS `image-rendering:auto`. (4) Entrada: teclas con `ISO.keyDir` (8 direcciones en ejes de pantalla); `P.f` (izquierda/derecha) ahora sale de la dirección en pantalla; clic con `ISO.toWorld(…, TER.heightAt)` y selección de entidades en espacio de pantalla. (5) `lighting()` convierte posiciones de luz a pantalla (`lp`, `LR`). (6) Flecha de objetivo con el ángulo de pantalla. (7) `mmk` y `post` simplificados. (8) Nuevo `src/world-iso.js` y `tools/iso_check.py`; `build_single.py` acepta guiones. **Verificado sin pantalla:** 0 errores de consola; `blk()` bloquea agua, acantilado y compuerta cerrada, deja libres puente, pasto y paso abierto; 200 clics aleatorios vuelven a su punto; la tecla arriba sube en pantalla; `draw()` ≈ 1 ms (headless, software). **No verificable desde el chat:** fluidez real y aspecto en tu pantalla. Colisiones y guardado **no se tocaron** (sin migración de partidas, por decisión del dueño).
+- **11 oct 2026 · F1-A.** Creado `src/iso.js` (núcleo isométrico) y `tools/iso_test.js`. Decisiones técnicas: tile 56×28 con 22 px por nivel; zoom 1,6 sobre tamaño CSS; dpr máx. 2; cámara con suavizado exponencial y redondeo al píxel real; `toWorld` prueba cada nivel de altura y elige el candidato más cercano a la cámara (resuelve clics junto a acantilados); `keyDir` mapea arriba de pantalla a (-1,-1) de mundo y normaliza en mundo (por la proyección 2:1, moverse en horizontal de pantalla se ve el doble de rápido que en vertical; es lo correcto en isométrico). Limitación conocida: un clic a <1 px de mundo del borde exacto de un escalón puede caer en el nivel contiguo. `game.js` **no se ha tocado** todavía.
+- **11 oct 2026 · F0.** Cancelado el plan de pixel art cenital con Phaser. Reescrito este `AGENTS.md`. Creado `INVENTARIO.md`. Copiados a `docs/` la guía isométrica y las dos demos de estilo.
+
+## Estado
+- Siguiente: **F1-C2** (oclusión al 50 %). F1-C1 hecho, pendiente de prueba a mano. No empezar F2 sin visto bueno del dueño a las capturas de F1.

@@ -45,7 +45,7 @@ try:
             print('WT.draw ms por bioma (el primero incluye JIT en frío):', t)
         # (4) capturas: el jugador se teletransporta (P.x/P.y); la cámara lo sigue en el siguiente frame
         for name, k, dx, dy in (('estanque', 0, 730, 1150), ('puente', 0, 270, 1200), ('lago', 0, 1470, 1100), ('puente_bosque', 1, 270, 1200),
-                                ('puente_pantano', 2, 270, 1200), ('puente_nieve', 3, 270, 1200), ('lava', 4, 730, 1150)):
+                                ('puente_pantano', 2, 270, 1200), ('puente_nieve', 3, 270, 1200), ('lava', 4, 730, 1150), ('aldea', 0, 230, 700), ('aldea_sur', 0, 200, 880), ('aldea_nieve', 3, 230, 720)):
             pg.evaluate(f"()=>{{P.x={k}*BW+{dx};P.y={dy}}}"); pg.wait_for_timeout(900)
             d = pg.evaluate("document.getElementById('c').toDataURL('image/png')")
             open(os.path.join(OUT, f'juego_{name}.png'), 'wb').write(base64.b64decode(d.split(',')[1]))
