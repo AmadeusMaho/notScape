@@ -494,7 +494,7 @@ const cv=$('#c');let ctx=cv.getContext('2d');const W=640,H=400; // W,H = unidade
 const GR=null,RD=null,WT=null,VG=null,SX=null,CH=null,SP=null; // TEMPORAL: módulos cenitales borrados; las ramas antiguas de sprites siguen vivas hasta F3–F5 (ver AGENTS.md)
 const lc=document.createElement('canvas');lc.width=W;lc.height=H;const lx=lc.getContext('2d'),DAYLEN=360,dayP=t=>(t/DAYLEN+.33)%1,sunS=t=>Math.sin(2*Math.PI*(dayP(t)-.25));
 let SHD={dx:0,dy:2,a:.26};
-function Sd(x,y,w,h){if(BAKE){BAKE.sh.push([x-BAKE.ax,y-BAKE.ay,w,h]);return}const q=SHD;if(q.a<.02)return;ctx.save();ctx.globalAlpha=q.a;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(Math.round(x+w/2+q.dx/2),Math.round(y+h/2+q.dy/2),w/2+Math.abs(q.dx)/2,h/2+Math.abs(q.dy)/2+1,0,0,7);ctx.fill();ctx.restore()}
+function Sd(x,y,w,h){if(SIL)return;if(BAKE){BAKE.sh.push([x-BAKE.ax,y-BAKE.ay,w,h]);return}const q=SHD;if(q.a<.02)return;ctx.save();ctx.globalAlpha=q.a;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(Math.round(x+w/2+q.dx/2),Math.round(y+h/2+q.dy/2),w/2+Math.abs(q.dx)/2,h/2+Math.abs(q.dy)/2+1,0,0,7);ctx.fill();ctx.restore()}
 const Rc=(c,x,y,w,h)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),w,h)};
 // ---- Fase 3: panadería de sprites (ver src/sprites.js y AGENTS.md). BAKE = {ax,ay,sh} mientras fn() se ejecuta contra un canvas de caché:
 // Sd NO pinta (la sombra depende del sol y se dibuja en vivo cada frame con las posiciones que Sd anotó en BAKE.sh).
@@ -505,7 +505,7 @@ function bk(key,x,y,w,h,ax,ay,fn){const s=SP.get(key,w,h,ax,ay,g=>{const r=ctx,b
  for(const q of s.r.sh)Sd(rx+q[0],ry+q[1],q[2],q[3]);ctx.drawImage(s.c,rx-s.ax,ry-s.ay);return s.r.v}
 
 let TXS=1; // corrección del tamaño del texto dentro de spr() (los sprites se escalan SPR veces)
-const T=(s,x,y,c)=>{ctx.font=(16*TXS)+'px VT323, monospace';ctx.textAlign='center';ctx.fillStyle='#000';ctx.fillText(s,x+1,y+1);ctx.fillStyle=c;ctx.fillText(s,x,y)};
+const T=(s,x,y,c)=>{if(SIL)return;ctx.font=(16*TXS)+'px VT323, monospace';ctx.textAlign='center';ctx.fillStyle='#000';ctx.fillText(s,x+1,y+1);ctx.fillStyle=c;ctx.fillText(s,x,y)};
 // T con caché para etiquetas que casi nunca cambian (nombre de estación, nivel de monstruo). NO usar con texto que cambia cada frame (se llenaría la caché).
 const TC=(s,x,y,c)=>{if(!SP)return T(s,x,y,c);const w=Math.max(24,s.length*10+8);bk('t|'+c+'|'+s,x,y,w,20,w>>1,15,(X,Y)=>T(s,X,Y,c))};
 const QW=Math.PI/8; // la fase de paso se cuantiza a 16 fotogramas por ciclo (≈30 ms cada uno a 12 rad/s): indistinguible a ojo y deja la caché en 16+2 sprites por equipo
@@ -606,17 +606,55 @@ function lighting(now){const t=now/1000,s=sunS(t),d=Math.max(WXD,Math.max(0,Math
 let LFT=0;
 const SPR=1.5; // px lógicos por px de sprite cenital antiguo (marcadores provisionales hasta F4/F5)
 // Dibuja un sprite cenital antiguo con los pies en la posición isométrica de (x,y); lift = px de sprite hacia arriba
-function spr(x,y,lift,fn){const p=ISO.toCanvas(x,y,TER.heightAt(x,y)),k=SPR*ISO.scale();ctx.setTransform(k,0,0,k,p.x-x*k,p.y-(y+lift)*k);TXS=.5;try{fn()}finally{TXS=1}}
+let SIL=0,SPX=0,SPY=0; // SIL: dibujando la silueta del contorno (sin texto ni sombra); SPX/SPY: desplazamiento de spr() hacia el lienzo pequeño
+function spr(x,y,lift,fn){const p=ISO.toCanvas(x,y,TER.heightAt(x,y)),k=SPR*ISO.scale();ctx.setTransform(k,0,0,k,p.x-SPX-x*k,p.y-SPY-(y+lift)*k);TXS=.5;try{fn()}finally{TXS=1}}
 const onScr=(x,y)=>{const p=ISO.toCanvas(x,y,1);return p.x>-140&&p.x<ISO.V.cw+140&&p.y>-200&&p.y<ISO.V.ch+140};
 function fitCv(){const w=cv.clientWidth||640;ISO.resize(w,Math.round(w*H/W),window.devicePixelRatio||1);if(cv.width!==ISO.V.cw||cv.height!==ISO.V.ch){cv.width=ISO.V.cw;cv.height=ISO.V.ch}}
 fitCv();addEventListener('resize',fitCv);if(window.ResizeObserver)new ResizeObserver(fitCv).observe($('#cw'));
 // ---- F1-C1 · cursor de tile: rombo suave bajo el puntero (solo ratón). No toca lógica ni colisiones. ----
 const CUR={px:0,py:0,on:0,tx:-1,ty:-1};
+let CURON=0;try{CURON=+localStorage.getItem('ns_cursor')||0}catch(e){} // preferencia propia, fuera del guardado (tdo2)
+const curBtn=()=>{const b=$('#curb');if(b)b.textContent='▱ Cursor: '+(CURON?'SÍ':'NO')+' (G)'},tgCur=()=>{CURON=CURON?0:1;try{localStorage.setItem('ns_cursor',CURON)}catch(e){}curBtn()};curBtn();
 cv.addEventListener('pointermove',ev=>{if(ev.pointerType==='touch')return;const r=cv.getBoundingClientRect();CUR.px=(ev.clientX-r.left)*cv.width/r.width;CUR.py=(ev.clientY-r.top)*cv.height/r.height;CUR.on=1});
-cv.addEventListener('pointerleave',()=>{CUR.on=0});
+cv.addEventListener('pointerleave',()=>{CUR.on=0;cv.style.cursor=''});
 // Único sitio que define la forma del cursor: las formas finales se deciden con el dueño (AGENTS.md), aquí solo esquinas suavizadas.
 function soft(pts,k){const n=pts.length;ctx.beginPath();for(let i=0;i<n;i++){const a=pts[(i+n-1)%n],b=pts[i],c=pts[(i+1)%n],p1={x:b.x+(a.x-b.x)*k,y:b.y+(a.y-b.y)*k},p2={x:b.x+(c.x-b.x)*k,y:b.y+(c.y-b.y)*k};if(i)ctx.lineTo(p1.x,p1.y);else ctx.moveTo(p1.x,p1.y);ctx.quadraticCurveTo(b.x,b.y,p2.x,p2.y)}ctx.closePath()}
-function dCur(t){CUR.tx=CUR.ty=-1;if(!CUR.on||CK)return;
+// Entidad bajo el puntero (px reales del canvas). La usan el clic y el resaltado, así que lo que se ilumina es lo que se clica.
+function pickEnt(px,py,now){const sc=ISO.scale(),k=SPR*sc;let b=null,bd=34;[...N,...ST,...M].forEach(e=>{if(!alive(e,now))return;const q=ISO.toCanvas(e.x,e.y,TER.heightAt(e.x,e.y)),d=Math.hypot(px-q.x,py-(q.y-10*k))/sc-(e.id?18:0);if(d<bd){bd=d;b=e}});return b}
+// Contorno de la entidad bajo el puntero (F1-C3): se dibuja la entidad UNA vez en un lienzo pequeño, se tiñe como silueta y se estampa
+// desplazada en 8 direcciones (borde oscuro + borde claro) justo antes de su sprite. Solo cuesta algo mientras hay una entidad resaltada.
+// Funciona con cualquier sprite (rectángulos, arcos…), también con los definitivos de F3–F5. No usa ctx.filter ni copia el canvas principal.
+const HLC=document.createElement('canvas'),HLX=HLC.getContext('2d'),HLD=document.createElement('canvas'),HLY=HLD.getContext('2d');let HOV=null;
+const HL8=[[1,0],[-1,0],[0,1],[0,-1],[.7,.7],[-.7,.7],[.7,-.7],[-.7,-.7]];
+function hovUpdate(){HOV=null;CUR.hov=null;if(!CUR.on||CK){cv.style.cursor='';return}HOV=pickEnt(CUR.px,CUR.py,performance.now());CUR.hov=HOV;cv.style.cursor=HOV?'pointer':''}
+function hl(e,fn,t){if(e!==HOV)return;const sv=ctx,s=ISO.scale(),w=Math.ceil(300*s),h=Math.ceil(340*s),ax=Math.round(w/2),ay=Math.round(h-50*s),p=ISO.toCanvas(e.x,e.y,TER.heightAt(e.x,e.y));
+ if(HLC.width!==w||HLC.height!==h){HLC.width=HLD.width=w;HLC.height=HLD.height=h}
+ HLX.setTransform(1,0,0,1,0,0);HLX.globalCompositeOperation='source-over';HLX.globalAlpha=1;HLX.clearRect(0,0,w,h);
+ ctx=HLX;SIL=1;SPX=p.x-ax;SPY=p.y-ay;try{spr(e.x,e.y,0,fn)}finally{ctx=sv;SIL=0;SPX=SPY=0}
+ HLX.setTransform(1,0,0,1,0,0);HLX.globalAlpha=1;HLY.setTransform(1,0,0,1,0,0);HLY.globalCompositeOperation='source-over';HLY.clearRect(0,0,w,h);HLY.drawImage(HLC,0,0);
+ HLY.globalCompositeOperation='source-in';HLY.fillStyle='#5b3a29';HLY.fillRect(0,0,w,h);HLX.globalCompositeOperation='source-in';HLX.fillStyle='#fdf9e3';HLX.fillRect(0,0,w,h);HLX.globalCompositeOperation='source-over';
+ const r1=Math.max(2,1.7*s),r2=r1+Math.max(1.5,1.1*s),pul=.88+.12*Math.sin(t*6);
+ ctx.setTransform(1,0,0,1,0,0);ctx.save();ctx.imageSmoothingEnabled=false;
+ for(const o of HL8)ctx.drawImage(HLD,Math.round(p.x-ax+o[0]*r2),Math.round(p.y-ay+o[1]*r2));
+ ctx.globalAlpha=pul;for(const o of HL8)ctx.drawImage(HLC,Math.round(p.x-ax+o[0]*r1),Math.round(p.y-ay+o[1]*r1));ctx.restore()}
+// ---- F1-C3 · oclusión: un objeto alto (recurso o estación) que está DELANTE del jugador y le tapa se dibuja al 50 % con transición suave. ----
+// Cómo: si el objeto es candidato (delante en profundidad y cerca en pantalla) se renderiza en un lienzo pequeño (OCC), se mira cuántos píxeles
+// opacos caen sobre el rectángulo del jugador (4 % o más = tapa) y se estampa con alpha animado (e._oa, 0.5–1). Los demás objetos se dibujan
+// directos con spr() como siempre. Es por píxeles, no por cajas: la copa de un árbol tapa, el hueco entre ramas no. No usa ctx.filter.
+// Los monstruos NO se atenúan. Si algún día hace falta, basta llamar a occ() también para ellos en draw().
+const OCC=document.createElement('canvas'),OCX=OCC.getContext('2d',{willReadFrequently:true});let OCDT=1/60;
+function occ(e,fn){const s=ISO.scale(),k=SPR*s,p=ISO.toCanvas(e.x,e.y,TER.heightAt(e.x,e.y)),pf=ISO.toCanvas(P.x,P.y,TER.heightAt(P.x,P.y)),dy=p.y-pf.y,
+  cand=ISO.depth(e.x,e.y)>ISO.depth(P.x,P.y)&&dy>-8*k&&dy<70*k&&Math.abs(p.x-pf.x)<40*k;let cur=e._oa==null?1:e._oa;
+ if(!cand&&cur>=1){spr(e.x,e.y,0,fn);return}
+ const w=Math.ceil(300*s),h=Math.ceil(340*s),ax=Math.round(w/2),ay=Math.round(h-50*s),sv=ctx;
+ if(OCC.width!==w||OCC.height!==h){OCC.width=w;OCC.height=h}
+ OCX.setTransform(1,0,0,1,0,0);OCX.globalAlpha=1;OCX.clearRect(0,0,w,h);ctx=OCX;SPX=p.x-ax;SPY=p.y-ay;try{spr(e.x,e.y,0,fn)}finally{ctx=sv;SPX=SPY=0}
+ let tgt=1;
+ if(cand){const px=ax+(pf.x-p.x),py=ay+(pf.y-p.y),x0=Math.max(0,Math.floor(px-8*k)),x1=Math.min(w,Math.ceil(px+8*k)),y0=Math.max(0,Math.floor(py-34*k)),y1=Math.min(h,Math.ceil(py-3*k));
+  if(x1>x0&&y1>y0){const d=OCX.getImageData(x0,y0,x1-x0,y1-y0).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i]>100)n++;tgt=n>(x1-x0)*(y1-y0)*.04?.5:1}}
+ cur+=(tgt-cur)*(1-Math.exp(-OCDT*14));if(Math.abs(cur-tgt)<.02)cur=tgt;e._oa=cur;
+ ctx.setTransform(1,0,0,1,0,0);ctx.save();ctx.globalAlpha=cur;ctx.imageSmoothingEnabled=false;ctx.drawImage(OCC,p.x-ax,p.y-ay);ctx.restore()}
+function dCur(t){CUR.tx=CUR.ty=-1;if(!CURON||!CUR.on||CK)return;
  const w=ISO.toWorld(CUR.px,CUR.py,TER.heightAt),q=ISO.tileAt(w.x,w.y);if(q.tx<0||q.ty<0||q.tx>=TER.NX||q.ty>=TER.NY)return;
  CUR.tx=q.tx;CUR.ty=q.ty;const h=TER.tileH(q.tx,q.ty),d=ISO.diamond(q.tx,q.ty,h),no=blk((q.tx+.5)*ISO.TILE,(q.ty+.5)*ISO.TILE),s=ISO.scale(),pul=.5+.5*Math.sin(t*5),cxx=(d[0].x+d[2].x)/2,cyy=(d[0].y+d[2].y)/2,
   sh=d.map(p=>({x:cxx+(p.x-cxx)*.92,y:cyy+(p.y-cyy)*.92})); // un poco más pequeño que el tile
@@ -625,11 +663,11 @@ function dCur(t){CUR.tx=CUR.ty=-1;if(!CUR.on||CK)return;
  ctx.lineWidth=Math.max(1,1.6*s);ctx.strokeStyle=no?'rgba(91,58,41,.85)':'rgba(253,249,227,.95)';ctx.stroke();ctx.restore()}
 function draw(now){const t=now/1000;cx=Math.max(0,Math.min(WW-W,P.x-W/2))|0;cy=Math.max(0,Math.min(WH-H,P.y-H/2))|0;
  {const s0=sunS(t),ph0=2*Math.PI*(dayP(t)-.25),d0=Math.max(0,s0);SHD.dx=-Math.cos(ph0)*(8+20*(1-d0));SHD.dy=2+3*(1-d0);SHD.a=Math.max(0,Math.min(.28,(s0+.15)*.5))}
- const dt=LFT?Math.min(.1,(now-LFT)/1000):1/60,sk=now<SHK?(SHK-now)/200*3:0;if(LFT)ISO.follow(P.x,P.y,TER.heightAt(P.x,P.y),dt);else ISO.snap(P.x,P.y,TER.heightAt(P.x,P.y));LFT=now;
+ const dt=LFT?Math.min(.1,(now-LFT)/1000):1/60,sk=now<SHK?(SHK-now)/200*3:0;if(LFT)ISO.follow(P.x,P.y,TER.heightAt(P.x,P.y),dt);else ISO.snap(P.x,P.y,TER.heightAt(P.x,P.y));LFT=now;OCDT=dt;
  ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=true;ctx.fillStyle=TER.PAPER;ctx.fillRect(0,0,cv.width,cv.height);
  if(sk)ISO.cam.x+=(Math.random()-.5)*2*sk,ISO.cam.y+=(Math.random()-.5)*2*sk;
- TER.draw(ctx,t);dCur(t);
- const ents=[...N.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>spr(e.x,e.y,0,()=>dN(e,t,now))]),...ST.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>spr(e.x,e.y,0,()=>dS(e,t))]),...M.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>spr(e.x,e.y,0,()=>dM(e,t,now))]),[ISO.depth(P.x,P.y),()=>spr(P.x,P.y,0,()=>dP(t,now))]];
+ TER.draw(ctx,t);dCur(t);hovUpdate();
+ const ents=[...N.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>{hl(e,()=>dN(e,t,now),t);occ(e,()=>dN(e,t,now))}]),...ST.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>{hl(e,()=>dS(e,t),t);occ(e,()=>dS(e,t))}]),...M.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>{hl(e,()=>dM(e,t,now),t);spr(e.x,e.y,0,()=>dM(e,t,now))}]),[ISO.depth(P.x,P.y),()=>spr(P.x,P.y,0,()=>dP(t,now))]];
  for(let k=1;k<5;k++)if(onScr(k*BW,769))ents.push([ISO.depth(k*BW,826),()=>{ctx.setTransform(1,0,0,1,0,0);TER.gate(ctx,k,!!S.boss[k-1],t)}]);
  ents.sort((a,b)=>a[0]-b[0]).forEach(o=>o[1]());
  PJ.forEach(p=>{const u=Math.min(1,(now-p.t0)/(p.t1-p.t0)),x=p.x+(p.tx-p.x)*u,y=p.y+(p.ty-p.y)*u;spr(x,y,10+Math.sin(u*Math.PI)*8,()=>{if(p.wt==='r'){const an=Math.atan2(p.ty-p.y,p.tx-p.x);ctx.strokeStyle='#d8c9a3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-Math.cos(an)*8,y-Math.sin(an)*8);ctx.lineTo(x+Math.cos(an)*4,y+Math.sin(an)*4);ctx.stroke()}else{ctx.globalAlpha=.8;ctx.fillStyle=p.col||ORB[tierOf(S.eq.w||'st_pino')]||'#9cf';ctx.beginPath();ctx.arc(x,y,4,0,7);ctx.fill();ctx.globalAlpha=1}})});
@@ -648,10 +686,10 @@ Rc('#400',6,6,92,14);Rc(P.hp/maxHp()>.3?'#3c3':'#e33',8,8,88*Math.max(0,P.hp)/ma
  if(A){let p,lb;if(A.ty==='f'){const m=A.e;p=m.hp/m.mh;lb=m.d.n+' nv.'+m.lv+' '+Math.max(0,m.hp)+'/'+m.mh}else{p=Math.min(1,A.pr||0);lb=actLabel()}
   Rc('#000',W/2-100,H-26,200,16);Rc(A.ty==='f'?'#a33':'#c8861a',W/2-98,H-24,196*p,12);T(lb,W/2,H-13,'#fff')}}
 cv.addEventListener('pointerdown',ev=>{if(CK){cookHit();return}const r=cv.getBoundingClientRect(),px=(ev.clientX-r.left)*cv.width/r.width,py=(ev.clientY-r.top)*cv.height/r.height,now=performance.now(),sc=ISO.scale(),k=SPR*sc;
- let b=null,bd=34;[...N,...ST,...M].forEach(e=>{if(!alive(e,now))return;const q=ISO.toCanvas(e.x,e.y,TER.heightAt(e.x,e.y)),d=Math.hypot(px-q.x,py-(q.y-10*k))/sc-(e.id?18:0);if(d<bd){bd=d;b=e}});
+ const b=pickEnt(px,py,now);
  if(A)stopA();if(b){P.g={e:b};P.mv=null}else{const w=ISO.toWorld(px,py,TER.heightAt);P.mv={x:w.x,y:w.y};P.g=null}});
 const KM={ArrowLeft:'l',a:'l',ArrowRight:'r',d:'r',ArrowUp:'u',w:'u',ArrowDown:'d',s:'d'};
-addEventListener('keydown',e=>{const k=KM[e.key];if(k){K[k]=1;e.preventDefault()}if(e.key==='r'||e.key==='R')tgRun();if(e.key==='m'||e.key==='M')MM=!MM;if((e.key===' '||e.key==='Enter')&&CK){cookHit();e.preventDefault()}if(e.key==='Escape')CK=null});addEventListener('keyup',e=>{const k=KM[e.key];if(k)K[k]=0});
+addEventListener('keydown',e=>{const k=KM[e.key];if(k){K[k]=1;e.preventDefault()}if(e.key==='r'||e.key==='R')tgRun();if(e.key==='m'||e.key==='M')MM=!MM;if(e.key==='g'||e.key==='G')tgCur();if((e.key===' '||e.key==='Enter')&&CK){cookHit();e.preventDefault()}if(e.key==='Escape')CK=null});addEventListener('keyup',e=>{const k=KM[e.key];if(k)K[k]=0});
 addEventListener('pointerdown',()=>pd=1);addEventListener('pointerup',()=>setTimeout(()=>pd=0,60));
 let hid=0;document.addEventListener('visibilitychange',()=>{if(document.hidden)hid=Date.now();else if(A&&A.ty!=='f'&&Date.now()-hid>5000){offline(Date.now()-hid,A.sk,A.i);A.t0=performance.now()}});
 
