@@ -14,7 +14,7 @@ const ISO=(()=>{
  const unproj=(sx,sy,z=0)=>{const u=sx/HW,v=(sy+z*LV)/HH;return{x:(u+v)/2*TILE,y:(v-u)/2*TILE}};
 
  // vista y canvas: tamaño lógico = tamaño CSS / zoom; px reales = tamaño CSS * dpr (máx. 2)
- function resize(cssW,cssH,dpr){V.dpr=Math.min(2,Math.max(1,dpr||1));V.w=cssW/V.zoom;V.h=cssH/V.zoom;V.cw=Math.round(cssW*V.dpr);V.ch=Math.round(cssH*V.dpr);return V}
+ function resize(cssW,cssH,dpr){V.dpr=Math.min(2,Math.max(.5,dpr||1));V.w=cssW/V.zoom;V.h=cssH/V.zoom;V.cw=Math.round(cssW*V.dpr);V.ch=Math.round(cssH*V.dpr);return V}
  const scale=()=>V.zoom*V.dpr;                          // px reales por px lógico
  // cámara: sigue al objetivo con suavizado y se redondea al píxel real (sin vibraciones)
  function follow(wx,wy,z,dt){const p=proj(wx,wy,z),k=cam.init?1-Math.exp(-(dt||1/60)*9):1;cam.init=true;cam.x+=(p.x-cam.x)*k;cam.y+=(p.y-cam.y)*k;const s=scale();cam.x=Math.round(cam.x*s)/s;cam.y=Math.round(cam.y*s)/s}
