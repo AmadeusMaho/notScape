@@ -104,10 +104,17 @@ const IRC={x:6000,y:6000},IK=2;   // IRC: centro de todas las salas; IK: px de m
  const DM={casa:[30,22,-1/6,2.3],taberna:[36,26,-.16,2.15],troncos:[32,24,-1/6,2.3],casaLarga:[46,22,-.2,1.7],salon:[40,28,-.15,1.6],palafito:[30,22,-1/6,2.3],casaJp:[32,24,-1/6,2.1],casaMaya:[30,22,-1/6,2.1]};
  function doorPos(p,B){const m=DM[p.n];if(!m)return null;const w=(p.o&&p.o.w)||m[0],d=(p.o&&p.o.d)||m[1],K=m[3],lx=K*m[2]*w,ly=K*d/2+14,rot=p.o&&p.o.rot;return rot?{x:B.ox+p.x+ly,y:B.oy+p.y+lx}:{x:B.ox+p.x+lx,y:B.oy+p.y+ly}}
  // se llama desde game.js tras crear las instalaciones de las aldeas: elige 3 casas por bioma (Herrería = la más cercana al horno, Taberna/Salón = la taberna o la casa más cercana a la tienda, Taller = la más cercana al banco de trabajo)
+ window.intDoorPos=doorPos;   // lote D5: lo usa el editor de aldeas (village-edit.js) para mover la puerta con su casa
  window.intDoorsInit=function(){BI.forEach((B,k)=>{const V=B.village,hs=[];V.props.forEach(p=>{const q=DM[p.n]&&doorPos(p,B);if(q)hs.push({p,q})});if(!hs.length)return;
-   const stn=id=>ST.find(e=>e.id===id&&!e.inroom&&biomeAt(e.x,e.y)===k),used=new Set(),pick=(e,pref)=>{if(!e)return null;let b=null,bd=1e12;hs.forEach(h=>{if(used.has(h))return;const d=Math.hypot(h.q.x-e.x,h.q.y-e.y)-(pref&&pref(h)?200:0);if(d<bd){bd=d;b=h}});if(b)used.add(b);return b};
-   const out=[['herreria',pick(stn('furnace'))],['taller',pick(stn('bench'))],['banco',pick(stn('bank'))],['tienda',pick(stn('shop'))],['taberna',pick(stn('fire'),h=>h.p.n==='taberna'||h.p.n==='salon')]];
-   out.forEach(([id,h])=>{if(!h)return;ST.push({id:'door',n:DNAME[id],x:h.q.x,y:h.q.y,k,room:id,lh:44,rot:!!(h.p.o&&h.p.o.rot)})});
+   // lote D2: una puerta con otra casa/edificio a <90 px DELANTE queda «tapada» (fachada metida contra la pared de enfrente; pasaba con el Taller en las 6 aldeas) → penalización fuerte
+   const BIG=/^(casa|taberna|troncos|casaLarga|salon|palafito|casaJp|casaMaya|stabbur|casaArbol|cabana|granero|gallinero|guarida|templo)/; // los puestos de mercado no cuentan: van junto a la tienda a propósito
+   const blocked=h=>{const r=h.p.o&&h.p.o.rot,nx=r?1:0,ny=r?0:1;return V.props.some(o=>{if(o===h.p||!BIG.test(o.n))return false;const dx=B.ox+o.x-h.q.x,dy=B.oy+o.y-h.q.y,f=dx*nx+dy*ny,sd2=Math.abs(dx*ny-dy*nx);return f>-6&&f<90&&sd2<46})};
+   hs.forEach(h=>h.bl=blocked(h));
+   const stn=id=>ST.find(e=>e.id===id&&!e.inroom&&biomeAt(e.x,e.y)===k),used=new Set(),sv=(typeof VEDIT!=='undefined'&&VEDIT.doors(k))||{},saved={};for(const id in sv){const f=hs.find(h=>h.p._ek===sv[id]&&!used.has(h));if(f){saved[id]=f;used.add(f)}}   // lote D5: casa de cada instalación fijada por el editor de aldeas (sobrevive a que muevas casas)
+   const pick=(e,pref)=>{if(!e)return null;let b=null,bd=1e12;hs.forEach(h=>{if(used.has(h))return;const d=Math.hypot(h.q.x-e.x,h.q.y-e.y)-(pref&&pref(h)?200:0)+(h.bl?600:0);if(d<bd){bd=d;b=h}});if(b)used.add(b);return b};
+   const tag={};hs.forEach(h=>{if(h.p.room&&!saved[h.p.room]&&!tag[h.p.room]&&!used.has(h)){tag[h.p.room]=h;used.add(h)}});   // lote D7: casa fijada en layouts.js (p.room)
+   const gt=(id,e,pf)=>saved[id]||tag[id]||pick(e,pf),out=[['herreria',gt('herreria',stn('furnace'))],['taller',gt('taller',stn('bench'))],['banco',gt('banco',stn('bank'))],['tienda',gt('tienda',stn('shop'))],['taberna',gt('taberna',stn('fire'),h=>h.p.n==='taberna'||h.p.n==='salon'||h.p.tav)]];
+   out.forEach(([id,h])=>{if(!h)return;ST.push({id:'door',n:DNAME[id],x:h.q.x,y:h.q.y,k,room:id,lh:44,rot:!!(h.p.o&&h.p.o.rot),hn:h.p.n,hp:h.p})});
    // las instalaciones salen del mapa (viven dentro de las casas); la fogata de la plaza queda de adorno
    for(let i=ST.length-1;i>=0;i--){const e=ST[i];if(e.inroom||e.id==='door'||biomeAt(e.x,e.y)!==k)continue;if(['bank','shop','furnace','anvil','bench','altar'].includes(e.id))ST.splice(i,1);else if(e.id==='fire'){e.deco=1;delete e.sks}}})}; const WOR=['N','ST','M','PO','GD','GA'];
  function canEnter(now){if(INT)return false;if(M.some(m=>m.hunt&&alive(m,now))||(A&&A.ty==='f')){toast('No puedes entrar con enemigos cerca.');return false}return true}

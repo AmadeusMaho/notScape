@@ -26,46 +26,80 @@
     if(x<90||y<90||x>B.w-90||y>B.h-90)continue;if(holes.some(h=>x>h[0]&&x<h[1]&&y>h[2]&&y<h[3])||wet(x,y))continue;if(segs.some(s=>dseg(x,y,s)<60))continue;
     if(have.some(q=>Math.hypot(q[0]-x,q[1]-y)<48)||mine.some(q=>Math.hypot(q[0]-x,q[1]-y)<54))continue;
     const kind=kinds[Math.floor(rnd()*kinds.length)];mine.push([x,y]);B.village.props.push(P(kind,Math.round(x),Math.round(y),null,{fp:kind==='pino'?[5,5]:[6,6]}));k++}}}
+
+ // ═════════════ lote D7 · AJUSTES DEL DUEÑO (aldeas_ajustes.json del editor F2, 13 oct 2026) ═════════════
+ // PRA_ADJ = la Pradera tal como la dejó el dueño con el editor. `o`: 'nombre|x|y' ORIGINAL (coords locales de este archivo; los duplicados exactos llevan '#n') → [x,y,rot,escala]; `add`: piezas duplicadas; `doors`: casa de cada instalación (clave de la pieza).
+ // Se aplica en la Pradera con applyAdj(). En las otras 5 aldeas SOLO se copia la estructura de las 5 casas con instalación (DOORH, relativa al centro) y el resto de casas se reparten al azar con semilla (layHouses).
+ const PRA_ADJ={o:{"casa|2170|1215":[2232,1312,0,1],"casa|2460|1210":[2360,1096,0,1],"casa|1995|1415":[2008,1264,0,1],"cabana|1990|1610":[2168,1112,0,1],"casa|2620|1410":[2520,1328,0,1],"cabana|2615|1620":[2648,1664,0,1],"casa|2115|1770":[2576,1264,1,1],"casa|2470|1755":[2640,1448,0,1],"taberna|2345|1825":[2184,1544,1,1],"farola|2175|1410":[2176,1464,0,1],"farola|2425|1410":[2448,1336,0,1],"farola|2175|1590":[2040,1400,0,1],"farola|2425|1590":[2176,1312,0,1],"farola|2300|1255":[2280,1272,0,1],"farola|2300|1762":[2248,1696,0,1],"puesto|2440|1608":[2352,1384,0,1],"puesto|2498|1608":[2688,1456,0,1],"pozo|2150|1455":[2304,1552,0,1],"barril|2080|1369":[2016,1216,0,1],"banca|2205|1562":[2336,1224,1,1],"banca|2395|1562":[2304,1592,0,1],"estandarte|2150|1350":[2152,1352,0,1],"estandarte|2450|1350":[2472,1344,1,1],"farola|2267|1150":[2272,1160,0,1],"estanteria|2545|1228":[2456,1312,0,1],"atril|2625|1286":[2424,1312,1,1],"rollos|2539|1296":[2408,1320,0,1],"candelabro|2633|1240":[2392,1296,0,1],"farola|2655|1272":[2584,1216,0,1]},
+  add:[{"n":"banca","x":2296,"y":1504,"o":null,"sc":1,"fp":[11,4]},{"n":"cabana","x":2528,"y":1120,"o":{"roof":"#6a8fb8","rot":1},"sc":1,"fp":[24,20]},{"n":"puesto","x":2584,"y":1304,"o":{"g1":"#d9553a","g2":"#e0b83a","col":"#c0392b","rot":0},"sc":1,"fp":[16,10]},{"n":"puesto","x":2264,"y":1320,"o":{"g1":"#d9553a","g2":"#e0b83a","col":"#c0392b","rot":1},"sc":1,"fp":[16,10]},{"n":"casa","x":1832,"y":1448,"o":{"roof":"#c98a3a","wall":"#efe0bd","rot":0},"sc":1,"fp":[32,25]},{"n":"farola","x":2384,"y":1384,"o":null,"sc":1,"fp":[3,3]},{"n":"casa","x":1904,"y":1656,"o":{"roof":"#8a6aa8","wall":"#e6d2a6","rot":1},"sc":1,"fp":[32,25]},{"n":"casa","x":2176,"y":1848,"o":{"roof":"#c98a3a","wall":"#efe0bd","rot":1},"sc":1,"fp":[32,25]},{"n":"farola","x":2568,"y":1328,"o":null,"sc":1,"fp":[3,3]},{"n":"casa","x":2416,"y":1800,"o":{"roof":"#8a6aa8","wall":"#e6d2a6","rot":0},"sc":1,"fp":[32,25]},{"n":"puesto","x":2376,"y":1480,"o":{"g1":"#d9553a","g2":"#e0b83a","col":"#c0392b","rot":0},"sc":1,"fp":[16,10]},{"n":"puesto","x":2416,"y":1384,"o":{"g1":"#d9553a","g2":"#e0b83a","col":"#c0392b"},"sc":1,"fp":[16,10]},{"n":"casa","x":2056,"y":1792,"o":{"roof":"#c98a3a","wall":"#efe0bd","rot":0},"sc":1,"fp":[32,25]},{"n":"cabana","x":2200,"y":1224,"o":{"roof":"#6a8fb8","rot":1},"sc":1,"fp":[24,20]},{"n":"puesto","x":2440,"y":1480,"o":{"g1":"#e0b83a","g2":"#7aa84a","col":"#c0392b"},"sc":1,"fp":[16,10]},{"n":"casa","x":1992,"y":1128,"o":{"roof":"#c98a3a","wall":"#efe0bd","rot":1},"sc":1,"fp":[32,25]},{"n":"farola","x":2056,"y":1640,"o":null,"sc":1,"fp":[3,3]},{"n":"farola","x":2552,"y":1664,"o":null,"sc":1,"fp":[3,3]}],
+  doors:{"herreria":"casa|2460|1210","taller":"casa|1995|1415","banco":"casa|2170|1215","tienda":"casa|2620|1410","taberna":"taberna|2345|1825"}};
+ const LAMPN={farola:1,brasero:1,linterna:1,antorcha:1};
+ function applyAdj(props,adj){const seen={},byKey={};
+  props.forEach(p=>{let ek=p.n+'|'+p.x+'|'+p.y;if(seen[ek]!=null)ek+='#'+(++seen[ek]);else seen[ek]=0;byKey[ek]=p;const a=adj.o[ek];if(!a)return;
+   p.x=a[0];p.y=a[1];const r0=p.o&&p.o.rot?1:0;if(a[2]!==r0)p.o=Object.assign({},p.o||{},{rot:a[2]?1:0});if(a[3]&&a[3]!==1)p.sc=a[3]});
+  adj.add.forEach(a=>{const q={n:a.n,x:a.x,y:a.y,o:a.o?Object.assign({},a.o):null,sc:a.sc||1,fp:a.fp||null};if(!q.o)delete q.o;if(!q.fp)delete q.fp;if(q.sc===1)delete q.sc;if(LAMPN[a.n])q.lamp=1;props.push(q)});
+  for(const r in adj.doors){const p=byKey[adj.doors[r]];if(p)p.room=r}}
+ // las 5 casas con instalación respecto al centro de la aldea (tomadas de la Pradera del dueño): [tipo de KIT, dx, dy, rot]
+ const DOORH={herreria:['M',60,-404,0],taller:['M',-292,-236,0],banco:['M',-68,-188,0],tienda:['M',220,-172,0],taberna:['B',-116,44,1]};
+ const SECOND=['S','S','S','S','M','M','M','M','M','M','M','M'];   // el resto de casas: 4 cabañas y 8 medianas (como en la Pradera del dueño)
+ // Coloca en un bioma de las 5 aldeas nuevas: primero las 5 casas con instalación (estructura fija; se empujan hacia fuera los adornos que queden debajo) y luego las demás al azar con semilla (reparto natural: lejos de la plaza, de las calles, de los patios y de otras casas).
+ function layHouses(props,kit,k,CX,CY,plaza){let sd=7001+k*977;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^sd>>>15,1|sd);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+  let i=k*3;const hs=[],mk=(t,x,y,r)=>{const q=kit[t](CX+x,CY+y,i++,r);if(t==='B'&&q)q.tav=1;return q};
+  const half=q=>{const f=q.fp||[0,0],r=q.o&&q.o.rot;return r?[f[1],f[0]]:f};
+  for(const room in DOORH){const[t,x,y,r]=DOORH[room],q=mk(t,x,y,r);q.room=room;props.push(q);hs.push(q)}
+  // adornos bajo una casa de instalación: se apartan en línea recta (pasos de 8 px)
+  const hit=(a,b,m)=>{const fa=half(a),fb=half(b);return Math.abs(a.x-b.x)<fa[0]+fb[0]+m&&Math.abs(a.y-b.y)<fa[1]+fb[1]+m};
+  props.forEach(p=>{if(hs.includes(p)||p.fps||!p.fp&&!p.lamp&&!/^(banca|estandarte|barril|caja|tocon|pozo)$/.test(p.n))return;if(p.fp&&p.fp[0]>40)return;
+   hs.forEach(h=>{const q=p.fp?p:Object.assign({},p,{fp:[3,3]});let n=0;while(hit(q,h,10)&&n++<25){const dx=p.x-h.x,dy=p.y-h.y,l=Math.hypot(dx,dy)||1;p.x=Math.round(p.x+dx/l*8);p.y=Math.round(p.y+dy/l*8);q.x=p.x;q.y=p.y}})});
+  const fixed=props.filter(p=>p.fp||p.fps||p.lamp),ok=(x,y,f)=>{
+   const dx=x-CX,dy=y-CY;if(Math.hypot(dx,dy)<235)return false;if(Math.abs(dx)>470-f[0]||Math.abs(dy)>440-f[1])return false;
+   if(Math.abs(dy)<60+f[1]&&dx>-430&&dx<450)return false;if(Math.abs(dx)<60+f[0]&&dy>-350&&dy<350)return false;   // calles
+   if(plaza.some(([px,py,pr],j)=>j>0&&Math.hypot(x-px,y-py)<pr+Math.max(f[0],f[1])*.7+14))return false;                  // patios de instalaciones
+   if(hs.some(h=>{const g=half(h);return Math.abs(x-h.x)<f[0]+g[0]+34&&Math.abs(y-h.y)<f[1]+g[1]+34}))return false;     // otras casas y su fachada
+   return !fixed.some(p=>{const g=p.fps?[40,40]:half(p);return Math.abs(x-p.x)<f[0]+g[0]+14&&Math.abs(y-p.y)<f[1]+g[1]+14})};
+  for(const t of SECOND){let q=null;for(let n=0;n<400&&!q;n++){const a=rnd()*6.2832,r=235+rnd()*230,x=Math.round(CX+Math.cos(a)*r),y=Math.round(CY+Math.sin(a)*r*.85);
+    const dy=y-CY,dx=x-CX,rot=dy<-70?0:dx<-70?1:rnd()<.5?0:1,c=mk(t,x-CX,y-CY,rot);if(c&&ok(x,y,half(c)||[24,20])){q=c}}
+   if(q){props.push(q);hs.push(q)}}}
  // ═════════════════════════ PRADERA · 4600×3000, aldea al centro ═════════════════════════
  {const B=BIOMES.list[0],S0=TK.SPOTS[0],CX=2300,CY=1500,old=B.village;
-  const kit=KIT[0];let i=0;const H=(t,x,y,r)=>kit[t](CX+x,CY+y,i++,r||0);
+  const kit=KIT[0];let i=0;const H=(t,x,y,r)=>{const q=kit[t](CX+x,CY+y,i++,r||0);if(t==='B'&&q)q.tav=1;return q};   // tav: edificio reservado a la taberna (interiors.js lo prefiere)
   // ── aldea (menos cosas, mejor repartidas: las instalaciones se leen; las casas flanquean 4 calles que salen de la plaza) ──
   const props=[
-   H('M',-120,-312,0),H('M',-200,-395,0),H('M',210,-405,1),H('B',120,335,1),            // calle norte (el hueco de las dos casas más cercanas es de Taller y Escritorio) y taberna al sur de la plaza
-   H('M',-345,-115,1),H('S',-350,125,0),H('M',345,-115,1),H('S',352,122,1),              // calles oeste y este
-   H('M',-200,292,0),H('M',205,298,1)];                                                  // calle sur
-  [[-80,-55],[80,-55],[-80,55],[80,55],[0,-285],[0,300]].forEach(([x,y])=>props.push(L(kit.lamp,CX+x,CY+y)));   // 4 farolas en la plaza y 2 en los extremos de la calle
-  props.push(P('puesto',CX+240,CY-48,Object.assign({g1:'#d9553a',g2:'#e0b83a'},kit.stall)),P('puesto',CX+300,CY-48,Object.assign({g1:'#e0b83a',g2:'#7aa84a'},kit.stall)));
-  [[-400,-215],[405,-210],[-395,235],[400,230]].forEach(([x,y])=>props.push(P(kit.tree,CX+x,CY+y,null,{fp:kit.tfp})));
-  props.push(P('pozo',CX-150,CY-45,null,{fp:[9,9]}),P('barril',CX-232,CY-100),P('barril',CX-220,CY-91));
+   H('M',-130,-285,0),H('M',160,-290,0),H('M',-305,-85,1),H('S',-310,110,1),H('M',320,-90,0),H('S',315,120,0),   // lote D4: aldea más COMPACTA y centrada. Anillo de casas a ~300-330 px de la plaza (antes 330-410 y repartidas), con la plaza ampliada a 175 px de radio. Norte/oeste: puerta hacia la plaza; este/sur: puerta hacia la calle
+   H('M',-185,270,1),H('M',170,255,0),H('B',45,325,1)];                                  // calle sur y taberna al sur de la plaza (el esqueleto 'B' se marca tav=1 y intDoorsInit lo prefiere para la taberna)
+  [[-125,-90],[125,-90],[-125,90],[125,90],[0,-245],[0,262]].forEach(([x,y])=>props.push(L(kit.lamp,CX+x,CY+y)));   // 4 farolas en la plaza y 2 en los extremos de la calle
+  props.push(P('puesto',CX+140,CY+108,Object.assign({g1:'#d9553a',g2:'#e0b83a'},kit.stall)),P('puesto',CX+198,CY+108,Object.assign({g1:'#e0b83a',g2:'#7aa84a'},kit.stall)));
+  [[-430,-235],[440,-215],[-385,262],[480,215]].forEach(([x,y])=>props.push(P(kit.tree,CX+x,CY+y,null,{fp:kit.tfp})));
+  props.push(P('pozo',CX-150,CY-45,null,{fp:[9,9]}),P('barril',CX-232,CY-140),P('barril',CX-220,CY-131));
   // ── rincones de las instalaciones (oct 2026): cada una tiene su sitio y su decoración con sentido; la plaza queda para banco y tienda ──
   const D=(n,x,y,o,fp)=>props.push(P(n,CX+x,CY+y,o||null,fp?{fp}:undefined)),LP=(x,y)=>props.push(L(kit.lamp,CX+x,CY+y));
-  D('banca',-62,42,null,[11,4]);D('banca',62,42,null,[11,4]);D('estandarte',-95,-135,{col:'#4a6ab0'});D('estandarte',95,-135,{col:'#c0502a'});
+  D('banca',-95,62,null,[11,4]);D('banca',95,62,null,[11,4]);D('estandarte',-150,-150,{col:'#4a6ab0'});D('estandarte',150,-150,{col:'#c0502a'});
   // herrería (horno + yunque), al norte junto al camino de la cantera: cobertizo de dos muros y tejado (ancla = esquina trasera), abrevadero, carbón, lingotes, muela, brasero, rack de armas y carreta de mena
-  props.push(P('herreria',CX+145,CY-665,null,{fps:[[32,3,32,4],[3,32,4,32]]}));   // cobertizo del herrero al fondo del patio (NE): antes estaba justo detrás del horno/yunque y su tejado se solapaba con ambos (medido por píxeles: 49 % del horno, 59 % del yunque)
-  D('tinaja',44,-503,null,[13,6]);D('carbon',152,-548,null,[8,7]);D('lingotes',138,-515,{col:'#c8742a'});D('muela',22,-540,null,[7,6]);
-  D('brasero',150,-590,null,[6,6]);D('lanzas',30,-512);D('barril',30,-575,null,[6,6]);D('barril',18,-562,null,[6,6]);D('caja',170,-502,null,[8,7]);D('caja',182,-492);
-  D('carreta',190,-575,{load:'#8a8a98'},[16,10]);D('tocon',200,-540,null,[7,6]);D('lenera',214,-512,null,[12,8]);LP(2,-505);
+  props.push(P('herreria',CX+110,CY-510,null,{fps:[[32,3,32,4],[3,32,4,32]]}));   // cobertizo del herrero al fondo del patio (NE): antes estaba justo detrás del horno/yunque y su tejado se solapaba con ambos (medido por píxeles: 49 % del horno, 59 % del yunque)
+  D('tinaja',9,-348,null,[13,6]);D('carbon',117,-393,null,[8,7]);D('lingotes',103,-360,{col:'#c8742a'});D('muela',-13,-385,null,[7,6]);
+  D('brasero',115,-435,null,[6,6]);D('lanzas',-5,-357);D('barril',-5,-420,null,[6,6]);D('barril',-17,-407,null,[6,6]);D('caja',135,-347,null,[8,7]);D('caja',147,-337);
+  D('carreta',155,-420,{load:'#8a8a98'},[16,10]);D('tocon',165,-385,null,[7,6]);D('lenera',179,-357,null,[12,8]);LP(-33,-350);
   // cocina al aire libre (fogata), junto al camino del estanque: asador sobre el fuego, olla, secadero de pescado, cesta, troncos para sentarse y la tienda
-  {const X=385,Y=292;[['tronco',-38,32,{len:26}],['tronco',42,36,{len:26}],['tronco',2,-44,{len:24}]].forEach(([n,x,y,o])=>D(n,X+x,Y+y,o));D('asador',X,Y-6,null,[14,3]);D('olla',X+40,Y-10,null,[7,6]);D('carpa',X-72,Y-26,{col:'#8a6a3a'},[10,10]);D('secadero',X+62,Y-34,null,[12,4]);D('cestaPeces',X+60,Y+16,null,[7,6]);D('barril',X-74,Y+12,null,[6,6]);D('caja',X+86,Y+4,null,[8,7]);}
+  {const X=345,Y=255;[['tronco',-38,32,{len:26}],['tronco',42,36,{len:26}],['tronco',2,-44,{len:24}]].forEach(([n,x,y,o])=>D(n,X+x,Y+y,o));D('asador',X,Y-6,null,[14,3]);D('olla',X+40,Y-10,null,[7,6]);D('carpa',X-72,Y-26,{col:'#8a6a3a'},[10,10]);D('secadero',X+62,Y-34,null,[12,4]);D('cestaPeces',X+60,Y+16,null,[7,6]);D('barril',X-74,Y+12,null,[6,6]);D('caja',X+86,Y+4,null,[8,7]);}
   // taller de artesanía (noroeste de la plaza): leña apilada, tablones, caballete de aserrado, tocón de trabajo, cajas y una carreta
-  {const X=-270,Y=-255;D('pilaTroncos',X-52,Y+34,null,[10,8]);D('tablones',X+45,Y-45,null,[11,5]);D('caballete',X-30,Y-48,null,[11,5]);D('tocon',X+42,Y+26,null,[7,6]);D('caja',X+66,Y+6,null,[8,7]);D('barril',X+80,Y+14,null,[6,6]);D('carreta',X-84,Y-6,{load:'#a07040'},[16,10]);LP(X-58,Y-30);}
+  {const X=-285,Y=-230;D('pilaTroncos',X-52,Y+34,null,[10,8]);D('tablones',X+45,Y-45,null,[11,5]);D('caballete',X-30,Y-48,null,[11,5]);D('tocon',X+42,Y+26,null,[7,6]);D('caja',X+66,Y+6,null,[8,7]);D('barril',X+80,Y+14,null,[6,6]);D('carreta',X-84,Y-6,{load:'#a07040'},[16,10]);LP(X-58,Y-30);}
   // escritorio del escriba (noreste): estantería de libros, atril, cesta de rollos, candelabro, estandarte y farol
-  {const X=275,Y=-255;D('estanteria',X-40,Y-42,null,[13,4]);D('atril',X+40,Y+16,null,[6,6]);D('rollos',X-46,Y+26,null,[6,6]);D('candelabro',X+48,Y-30,null);D('estandarte',X-70,Y-10,{col:'#4a6ab0'});LP(X+70,Y+2);}
+  {const X=285,Y=-230;D('estanteria',X-40,Y-42,null,[13,4]);D('atril',X+40,Y+16,null,[6,6]);D('rollos',X-46,Y+26,null,[6,6]);D('candelabro',X+48,Y-30,null);D('estandarte',X-70,Y-10,{col:'#4a6ab0'});LP(X+70,Y+2);}
   // portón y empalizada del campamento orco (se mueven con él)
   const DOC=sh(2077,768);old.props.filter(e=>(e.n==='portonOrco'||e.n==='empalizada')&&e.x===1900).forEach(e=>props.push(DOC.prop(e)));
   // ── guaridas: las ya decoradas, movidas a su anillo ──
   const sp={ing:sh(778,1440).spot(S0.ing),camp:sh(1503,345).spot(S0.camp),orc:sh(2077,768).spot(S0.orc)};
-  const st=[],plaza=[[CX,CY,115],[CX+95,CY-550,105],[CX+385,CY+292,95],[CX-270,CY-255,85],[CX+275,CY-255,85]],routes=[],dirt=[];
+  const st=[],plaza=[[CX,CY,175],[CX+60,CY-395,105],[CX+345,CY+255,95],[CX-285,CY-230,85],[CX+285,CY-230,85]],routes=[],dirt=[];
   ['ing','camp','orc'].forEach(k=>{sp[k].decor.forEach(e=>props.push(e));(sp[k].dirt||[]).forEach(d=>plaza.push(d));(sp[k].routes||[]).forEach(r=>routes.push(r));st.push(...(sp[k].stone||[]))});
   B.spots=sp;
-  B.village=Object.assign({},old,{props,stations:[['bank','Banco',CX-125,CY-105],['shop','Tienda',CX+125,CY-105],['fire','Fogata',CX+385,CY+292,['co']],['furnace','Horno',CX+112,CY-570,['sm']],['anvil','Yunque',CX+66,CY-528,['sm']],['bench','Taller',CX-270,CY-255,['cr','es']],['altar','Escritorio',CX+275,CY-255,['ins']]],
+  applyAdj(props,PRA_ADJ);   // lote D7: la Pradera tal como la dejó el dueño con el editor (F2)
+  B.village=Object.assign({},old,{props,stations:[['bank','Banco',CX-125,CY-105],['shop','Tienda',CX+125,CY-105],['fire','Fogata',CX+345,CY+255,['co']],['furnace','Horno',CX+77,CY-415,['sm']],['anvil','Yunque',CX+31,CY-373,['sm']],['bench','Taller',CX-285,CY-230,['cr','es']],['altar','Escritorio',CX+285,CY-230,['ins']]],
    plaza,bridge:null,safe:[CX,CY,470,470],
-   cobs:[{p:[[CX-70,CY],[CX+70,CY]],w:130},{p:[[CX,CY-120],[CX,CY-320]],w:24},{p:[[CX,CY+120],[CX,CY+340]],w:24},{p:[[CX-130,CY],[CX-400,CY]],w:24},{p:[[CX+130,CY],[CX+420,CY]],w:24},{p:[[CX+60,CY-540],[CX+160,CY-565]],w:70}].concat(st)});
+   cobs:[{p:[[CX-95,CY],[CX+95,CY]],w:215},{p:[[CX,CY-170],[CX,CY-330]],w:24},{p:[[CX,CY+170],[CX,CY+340]],w:24},{p:[[CX-180,CY],[CX-410,CY]],w:24},{p:[[CX+180,CY],[CX+430,CY]],w:24},{p:[[CX+25,CY-385],[CX+125,CY-410]],w:70}].concat(st)});
   // ── caminos de tierra (aldea → cada nodo) ──
   B.routes=routes.concat([
    [[360,1520],[900,1510],[1500,1500],[2000,1500],[2300,1500],[2700,1500],[3300,1490],[3977,1500],[4620,1500]],   // camino principal oeste–este hasta la compuerta
-   [[CX,CY-320],[CX,950],[2150,850]],[[CX,CY-535],[CX+60,CY-540]],[[CX,950],[2500,700],[2900,470]],                                          // norte: cantera (3 vetas)
+   [[CX,CY-320],[CX,950],[2150,850]],[[CX,CY-380],[CX+25,CY-395]],[[CX,950],[2500,700],[2900,470]],                                          // norte: cantera (3 vetas)
    [[CX,CY+340],[CX,1900],[2100,2050],[1800,2150],[1648,2145]],                                                  // sur: rancho
    [[CX,1900],[2500,1840],[2780,1780]],                                                                          // sur-este: estanque
    [[1500,1500],[1350,1300],[1200,1050],[1050,900]],                                                             // oeste: bosque noroeste
@@ -129,35 +163,36 @@
    col:'#d8501a',arena:'lava'}];
  for(let k=1;k<=5;k++){const B=BIOMES.list[k],C=CFG[k],kit=KIT[k],SP=TK.SPOTS[k];
   const mp=(x,y)=>[C.fx?4600-x:x,C.fy?3000-y:y],MP=q=>mp(q[0],q[1]),MR=r=>{const a=mp(r[0],r[2]),b=mp(r[1],r[3]);return[Math.min(a[0],b[0]),Math.max(a[0],b[0]),Math.min(a[1],b[1]),Math.max(a[1],b[1])]};
-  let i=0;const H=(t,x,y,r)=>kit[t](CX+x,CY+y,i++,r||0),old=B.village;
+  let i=0;const H=(t,x,y,r)=>{const q=kit[t](CX+x,CY+y,i++,r||0);if(t==='B'&&q)q.tav=1;return q},old=B.village;
   // ── aldea (misma distribución que la Pradera con el estilo de edificios del bioma) ──
-  const props=[H('M',-120,-312,0),H('M',-200,-395,0),H('M',210,-405,1),H('B',120,335,1),H('M',-345,-115,1),H('S',-350,125,0),H('M',345,-115,1),H('S',352,122,1),H('M',-200,292,0),H('M',205,298,1)];
-  [[-80,-55],[80,-55],[-80,55],[80,55],[0,-285],[0,300]].forEach(([x,y])=>props.push(L(kit.lamp,CX+x,CY+y)));
-  props.push(P('puesto',CX+240,CY-48,Object.assign({g1:'#d9553a',g2:'#e0b83a'},kit.stall)),P('puesto',CX+300,CY-48,Object.assign({g1:'#e0b83a',g2:'#7aa84a'},kit.stall)));
-  [[-400,-215],[405,-210],[-395,235],[400,230]].forEach(([x,y])=>props.push(P(kit.tree,CX+x,CY+y,null,{fp:kit.tfp})));
-  props.push(P('pozo',CX-150,CY-45,null,{fp:[9,9]}),P('barril',CX-232,CY-100),P('barril',CX-220,CY-91));
+  const props=[];   // las casas las coloca layHouses() más abajo
+  [[-125,-90],[125,-90],[-125,90],[125,90],[0,-245],[0,262]].forEach(([x,y])=>props.push(L(kit.lamp,CX+x,CY+y)));
+  props.push(P('puesto',CX+140,CY+108,Object.assign({g1:'#d9553a',g2:'#e0b83a'},kit.stall)),P('puesto',CX+198,CY+108,Object.assign({g1:'#e0b83a',g2:'#7aa84a'},kit.stall)));
+  [[-430,-235],[440,-215],[-385,262],[480,215]].forEach(([x,y])=>props.push(P(kit.tree,CX+x,CY+y,null,{fp:kit.tfp})));
+  props.push(P('pozo',CX-150,CY-45,null,{fp:[9,9]}),P('barril',CX-232,CY-140),P('barril',CX-220,CY-131));
   const D=(n,x,y,o,fp)=>props.push(P(n,CX+x,CY+y,o||null,fp?{fp}:undefined)),LP=(x,y)=>props.push(L(kit.lamp,CX+x,CY+y));
-  D('banca',-62,42,null,[11,4]);D('banca',62,42,null,[11,4]);D('estandarte',-95,-135,{col:'#4a6ab0'});D('estandarte',95,-135,{col:'#c0502a'});
-  props.push(P('herreria',CX+145,CY-665,null,{fps:[[32,3,32,4],[3,32,4,32]]}));
-  D('tinaja',44,-503,null,[13,6]);D('carbon',152,-548,null,[8,7]);D('lingotes',138,-515,{col:'#c8742a'});D('muela',22,-540,null,[7,6]);
-  D('brasero',150,-590,null,[6,6]);D('lanzas',30,-512);D('barril',30,-575,null,[6,6]);D('barril',18,-562,null,[6,6]);D('caja',170,-502,null,[8,7]);D('caja',182,-492);
-  D('carreta',190,-575,{load:'#8a8a98'},[16,10]);D('tocon',200,-540,null,[7,6]);D('lenera',214,-512,null,[12,8]);LP(2,-505);
-  {const X=385,Y=292;[['tronco',-38,32,{len:26}],['tronco',42,36,{len:26}],['tronco',2,-44,{len:24}]].forEach(([n,x,y,o])=>D(n,X+x,Y+y,o));D('asador',X,Y-6,null,[14,3]);D('olla',X+40,Y-10,null,[7,6]);D('carpa',X-72,Y-26,{col:'#8a6a3a'},[10,10]);D('secadero',X+62,Y-34,null,[12,4]);D('cestaPeces',X+60,Y+16,null,[7,6]);D('barril',X-74,Y+12,null,[6,6]);D('caja',X+86,Y+4,null,[8,7]);}
-  {const X=-270,Y=-255;D('pilaTroncos',X-52,Y+34,null,[10,8]);D('tablones',X+45,Y-45,null,[11,5]);D('caballete',X-30,Y-48,null,[11,5]);D('tocon',X+42,Y+26,null,[7,6]);D('caja',X+66,Y+6,null,[8,7]);D('barril',X+80,Y+14,null,[6,6]);D('carreta',X-84,Y-6,{load:'#a07040'},[16,10]);LP(X-58,Y-30);}
-  {const X=275,Y=-255;D('estanteria',X-40,Y-42,null,[13,4]);D('atril',X+40,Y+16,null,[6,6]);D('rollos',X-46,Y+26,null,[6,6]);D('candelabro',X+48,Y-30,null);D('estandarte',X-70,Y-10,{col:'#4a6ab0'});LP(X+70,Y+2);}
+  D('banca',-95,62,null,[11,4]);D('banca',95,62,null,[11,4]);D('estandarte',-150,-150,{col:'#4a6ab0'});D('estandarte',150,-150,{col:'#c0502a'});
+  props.push(P('herreria',CX+110,CY-510,null,{fps:[[32,3,32,4],[3,32,4,32]]}));
+  D('tinaja',9,-348,null,[13,6]);D('carbon',117,-393,null,[8,7]);D('lingotes',103,-360,{col:'#c8742a'});D('muela',-13,-385,null,[7,6]);
+  D('brasero',115,-435,null,[6,6]);D('lanzas',-5,-357);D('barril',-5,-420,null,[6,6]);D('barril',-17,-407,null,[6,6]);D('caja',135,-347,null,[8,7]);D('caja',147,-337);
+  D('carreta',155,-420,{load:'#8a8a98'},[16,10]);D('tocon',165,-385,null,[7,6]);D('lenera',179,-357,null,[12,8]);LP(-33,-350);
+  {const X=345,Y=255;[['tronco',-38,32,{len:26}],['tronco',42,36,{len:26}],['tronco',2,-44,{len:24}]].forEach(([n,x,y,o])=>D(n,X+x,Y+y,o));D('asador',X,Y-6,null,[14,3]);D('olla',X+40,Y-10,null,[7,6]);D('carpa',X-72,Y-26,{col:'#8a6a3a'},[10,10]);D('secadero',X+62,Y-34,null,[12,4]);D('cestaPeces',X+60,Y+16,null,[7,6]);D('barril',X-74,Y+12,null,[6,6]);D('caja',X+86,Y+4,null,[8,7]);}
+  {const X=-285,Y=-230;D('pilaTroncos',X-52,Y+34,null,[10,8]);D('tablones',X+45,Y-45,null,[11,5]);D('caballete',X-30,Y-48,null,[11,5]);D('tocon',X+42,Y+26,null,[7,6]);D('caja',X+66,Y+6,null,[8,7]);D('barril',X+80,Y+14,null,[6,6]);D('carreta',X-84,Y-6,{load:'#a07040'},[16,10]);LP(X-58,Y-30);}
+  {const X=285,Y=-230;D('estanteria',X-40,Y-42,null,[13,4]);D('atril',X+40,Y+16,null,[6,6]);D('rollos',X-46,Y+26,null,[6,6]);D('candelabro',X+48,Y-30,null);D('estandarte',X-70,Y-10,{col:'#4a6ab0'});LP(X+70,Y+2);}
   // ── guaridas del bioma movidas a su sitio y espejadas (decoración, monstruos, senda, suelos y zona) ──
   const mv=(s,dx,dy)=>{const o=Object.assign({},s),t=(x,y)=>mp(x+dx,y+dy);o.z=MR([s.z[0]+dx,s.z[1]+dx,s.z[2]+dy,s.z[3]+dy]);o.mobs=s.mobs.map(([id,x,y])=>[id].concat(t(x,y)));
    if(s.dirt)o.dirt=s.dirt.map(d=>t(d[0],d[1]).concat(d[2]));if(s.stone)o.stone=s.stone.map(r=>({p:r.p.map(q=>t(q[0],q[1])),w:r.w}));if(s.routes)o.routes=s.routes.map(r=>r.map(q=>t(q[0],q[1])));
    o.decor=s.decor.map(e=>{const q=t(e.x,e.y);return Object.assign({},e,{x:q[0],y:q[1]})});if(o.decor.some(e=>e.fps))o.decor.forEach(e=>{if(e.fps&&C.fx)e.fps=e.fps.map(f=>[-f[0],f[1],f[2],f[3]])});return o};
   const sp={ing:mv(SP.ing,778,1440),pack:mv(SP.pack,1503,345),cap:mv(SP.cap,1150,1300)};
-  B.spots=sp;const plaza=[[CX,CY,115],[CX+95,CY-550,105],[CX+385,CY+292,95],[CX-270,CY-255,85],[CX+275,CY-255,85]],routes=[],st=[];
+  B.spots=sp;const plaza=[[CX,CY,175],[CX+60,CY-395,105],[CX+345,CY+255,95],[CX-285,CY-230,85],[CX+285,CY-230,85]],routes=[],st=[];
   ['ing','pack','cap'].forEach(key=>{sp[key].decor.forEach(e=>props.push(e));(sp[key].dirt||[]).forEach(d=>plaza.push(d));(sp[key].routes||[]).forEach(r=>routes.push(r));st.push(...(sp[key].stone||[]))});
-  B.village=Object.assign({},old,{props,stations:[['bank','Banco',CX-125,CY-105],['shop','Tienda',CX+125,CY-105],['fire','Fogata',CX+385,CY+292,['co']],['furnace','Horno',CX+112,CY-570,['sm']],['anvil','Yunque',CX+66,CY-528,['sm']],['bench','Taller',CX-270,CY-255,['cr','es']],['altar','Escritorio',CX+275,CY-255,['ins']]],
+  layHouses(props,kit,k,CX,CY,plaza);   // lote D7: las 5 casas con instalación en la posición de la Pradera del dueño y el resto repartidas al azar (semilla por bioma)
+  B.village=Object.assign({},old,{props,stations:[['bank','Banco',CX-125,CY-105],['shop','Tienda',CX+125,CY-105],['fire','Fogata',CX+345,CY+255,['co']],['furnace','Horno',CX+77,CY-415,['sm']],['anvil','Yunque',CX+31,CY-373,['sm']],['bench','Taller',CX-285,CY-230,['cr','es']],['altar','Escritorio',CX+285,CY-230,['ins']]],
    plaza,bridge:null,safe:[CX,CY,470,470],
-   cobs:[{p:[[CX-70,CY],[CX+70,CY]],w:130},{p:[[CX,CY-120],[CX,CY-320]],w:24},{p:[[CX,CY+120],[CX,CY+340]],w:24},{p:[[CX-130,CY],[CX-400,CY]],w:24},{p:[[CX+130,CY],[CX+420,CY]],w:24},{p:[[CX+60,CY-540],[CX+160,CY-565]],w:70}].concat(st)});
+   cobs:[{p:[[CX-95,CY],[CX+95,CY]],w:215},{p:[[CX,CY-170],[CX,CY-330]],w:24},{p:[[CX,CY+170],[CX,CY+340]],w:24},{p:[[CX-180,CY],[CX-410,CY]],w:24},{p:[[CX+180,CY],[CX+430,CY]],w:24},{p:[[CX+25,CY-385],[CX+125,CY-410]],w:70}].concat(st)});
   // ── caminos de tierra (plantilla de la Pradera, espejada) ──
   const RT=[[[360,1520],[900,1510],[1500,1500],[2000,1500],[2300,1500],[2700,1500],[3300,1490],[3977,1500]],
-   [[CX,CY-320],[CX,950],[2150,850]],[[CX,CY-535],[CX+60,CY-540]],[[CX,950],[2500,700],[2900,470]],[[CX,CY+340],[CX,1900],[2100,2050],[1800,2150],[1648,2145]],[[CX,1900],[2500,1840],[2780,1780]],[[2500,1840],[2450,1990]],
+   [[CX,CY-320],[CX,950],[2150,850]],[[CX,CY-380],[CX+25,CY-395]],[[CX,950],[2500,700],[2900,470]],[[CX,CY+340],[CX,1900],[2100,2050],[1800,2150],[1648,2145]],[[CX,1900],[2500,1840],[2780,1780]],[[2500,1840],[2450,1990]],
    [[1500,1500],[1350,1300],[1200,1050],[1050,900]],[[1500,1505],[1330,1620],[1160,1700]],[[3050,1498],[3020,1280],[3001,1070]],[[3300,1495],[3450,1800],[3600,2050]],[[3400,1495],[3550,1250],[3800,1110]]];
   if(!C.exit)RT[0].push([4620,1500]);
   B.routes=routes.concat(RT.map(r=>r.map(MP)));

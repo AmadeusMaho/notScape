@@ -14,11 +14,18 @@ const PROPS=(()=>{
  function lru(share){const m=new Map();let by=0;return{get(k){const b=m.get(k);if(b){m.delete(k);m.set(k,b)}return b},
   set(k,b,w,h){b.by=w*h*4;by+=b.by;m.set(k,b);const mx=BUD*share;while(by>mx&&m.size>16){const o=m.entries().next().value;by-=o[1].by;m.delete(o[0])}return b},
   get size(){return m.size},get bytes(){return by}}}
- let list=[],sol=[],trees=[],cache=lru(.45),SG=null;   // SG: rejilla de 128 px con los rectángulos sólidos (solid() no recorre toda la lista)
- function build(){list=[];sol=[];SG=null;trees=[];for(let k=0;k<BIOMES.N;k++){const B=BIOMES.list[k];for(const p of B.village.props){const e=Object.assign({},p,{x:B.ox+p.x,y:B.oy+p.y,k,_oa:1});
-  const ti=TREES.indexOf(p.n);if(ti>=0){trees.push({i:ti,x:e.x,y:e.y});if(p.fp)sol.push([e.x-p.fp[0],e.x+p.fp[0],e.y-p.fp[1],e.y+p.fp[1]]);continue}   // árbol → recurso talable (lo crea game.js desde PROPS.trees)
-  list.push(e);if(p.fp){const f=p.o&&p.o.rot?[p.fp[1],p.fp[0]]:p.fp;e.fp=f;sol.push([e.x-f[0],e.x+f[0],e.y-f[1],e.y+f[1]])}
-   if(p.fps)p.fps.forEach(r=>sol.push([e.x+r[0]-r[2],e.x+r[0]+r[2],e.y+r[1]-r[3],e.y+r[1]+r[3]]))}}}
+ let list=[],sol=[],extra=[],trees=[],cache=lru(.45),SG=null;   // SG: rejilla de 128 px con los rectángulos sólidos (solid() no recorre toda la lista)
+ // lote D5 (editor de aldeas): build() se reparte en mk() (entidad de mundo desde la pieza LOCAL p; guarda p en e._src), solOf() (colisión de una pieza) y resol() (recalcula toda la colisión
+ // desde las piezas fuente: es lo que usa el editor tras mover/rotar/escalar/borrar). Una pieza puede llevar p.sc (escala del editor, 0,5-2; escala sprite y huella) y p._del (borrada por el editor).
+ function solOf(p,B,tree){const x=B.ox+p.x,y=B.oy+p.y,sc=p.sc||1;
+  if(p.fp){const f=!tree&&p.o&&p.o.rot?[p.fp[1],p.fp[0]]:p.fp;sol.push([x-f[0]*sc,x+f[0]*sc,y-f[1]*sc,y+f[1]*sc])}
+  if(!tree&&p.fps)p.fps.forEach(r=>sol.push([x+r[0]-r[2],x+r[0]+r[2],y+r[1]-r[3],y+r[1]+r[3]]))}
+ function mk(p,k){const B=BIOMES.list[k],e=Object.assign({},p,{x:B.ox+p.x,y:B.oy+p.y,k,_oa:1,_src:p,sc:p.sc||1});if(p.fp){const f=p.o&&p.o.rot?[p.fp[1],p.fp[0]]:p.fp;e.fp=[f[0]*e.sc,f[1]*e.sc]}return e}
+ function build(){list=[];sol=[];SG=null;trees=[];extra=[];for(let k=0;k<BIOMES.N;k++){const B=BIOMES.list[k];for(const p of B.village.props){if(p._del)continue;
+  const ti=TREES.indexOf(p.n);if(ti>=0){trees.push({i:ti,x:B.ox+p.x,y:B.oy+p.y});solOf(p,B,1);continue}   // árbol → recurso talable (lo crea game.js desde PROPS.trees)
+  list.push(mk(p,k));solOf(p,B,0)}}}
+ function resol(){sol=[];SG=null;for(let k=0;k<BIOMES.N;k++){const B=BIOMES.list[k];for(const p of B.village.props)if(!p._del)solOf(p,B,TREES.indexOf(p.n)>=0)}extra.forEach(r=>sol.push(r))}
+ const addEnt=(p,k)=>{const e=mk(p,k);list.push(e);resol();return e},delEnt=e=>{const i=list.indexOf(e);if(i>=0)list.splice(i,1);resol()};
  const GC=128,gk=(i,j)=>i*100003+j;
  function sgrid(){SG=new Map();for(const r of sol){for(let i=Math.floor(r[0]/GC);i<=Math.floor(r[1]/GC);i++)for(let j=Math.floor(r[2]/GC);j<=Math.floor(r[3]/GC);j++){const k=gk(i,j);let a=SG.get(k);if(!a)SG.set(k,a=[]);a.push(r)}}}
  const solid=(x,y)=>{if(!SG)sgrid();const a=SG.get(gk(Math.floor(x/GC),Math.floor(y/GC)));if(a)for(const r of a)if(x>r[0]&&x<r[1]&&y>r[2]&&y<r[3])return true;return false};
@@ -39,7 +46,8 @@ const PROPS=(()=>{
     b.bb=x1>=x0?[x0,y0,x1-x0+1,y1-y0+1]:[0,0,1,1]}
    const[bx,by,bw,bh]=b.bb,L=LIGHT.sprite(bw,bh);L.g.drawImage(b.c,bx,by,bw,bh,0,0,bw,bh);
    LIGHT.tint(L.g,bw,bh,b.ax-bx,b.ay-by-(tall?34:12)*s,(tall?46:16)*s,li);src=L.c;ox=bx;oy=by}
-  g.drawImage(src,Math.round(p.x-b.ax)+ox,Math.round(p.y-b.ay)+oy);if(FXN[e.n])propFx(g,e,p.x,p.y,s,performance.now()/1000);g.restore()}
+  if(e.sc&&e.sc!==1){g.translate(Math.round(p.x),Math.round(p.y));g.scale(e.sc,e.sc);g.drawImage(src,Math.round(-b.ax)+ox,Math.round(-b.ay)+oy)}   // escala del editor de aldeas (lote D5)
+  else g.drawImage(src,Math.round(p.x-b.ax)+ox,Math.round(p.y-b.ay)+oy);if(FXN[e.n])propFx(g,e,p.x,p.y,s,performance.now()/1000);g.restore()}
 
 
  // ── precalentado (oct 2026): hornear un sprite por primera vez cuesta 5-25 ms y, si ocurre al entrar en pantalla, es un tirón al caminar.
@@ -60,7 +68,7 @@ const PROPS=(()=>{
   return st.all.length?st.i/st.all.length:1}
  // warmHero: ciclo de andar y correr en las 8 direcciones + reposo, con el equipo/apariencia actuales (eq={dir,ar,helm,boot,app}). Para si el jugador ya ocupa el 70 % de su cuota de memoria.
  function warmHero(st,ms,eq){const s=ISO.scale(),t0=performance.now();
-  if(!st.q){st.q=[];const d0=eq.dir==null?2:eq.dir;for(let k=0;k<8;k++){const d=(d0+k)%8;for(const run of[false,true])for(let f=0;f<8;f++)st.q.push({dir:d,mv:true,run,w:(f+.02)/8*2*Math.PI,t:0});for(let i=0;i<8;i++)st.q.push({dir:d,mv:false,run:false,w:0,t:i*.37})}st.i=0}
+  if(!st.q){st.q=[];const d0=eq.dir==null?2:eq.dir;for(let k=0;k<8;k++){const d=(d0+k)%8;for(const run of[false,true])for(let f=0;f<HERO.NF;f++)st.q.push({dir:d,mv:true,run,w:(f+.02)/HERO.NF*2*Math.PI,t:0});for(let i=0;i<8;i++)st.q.push({dir:d,mv:false,run:false,w:0,t:i*.37})}st.i=0}
   while(st.i<st.q.length){const o=st.q[st.i++];if(PLC.bytes>BUD*.2*.7){st.i=st.q.length;break}
    try{const R=HERO.pose({dir:o.dir,mv:o.mv,run:o.run,w:o.w,t:o.t,act:null,hurt:0,blink:false});playerFrame(R,{ar:eq.ar||null,helm:eq.helm||null,boot:eq.boot||null,app:eq.app||null},s,false)}catch(x){}
    if(performance.now()-t0>ms)break}
@@ -147,12 +155,20 @@ const PROPS=(()=>{
   const w=130,h=150,ax=65,ay=116,c=document.createElement('canvas');c.width=Math.ceil(w*s);c.height=Math.ceil(h*s);const g=c.getContext('2d');g.setTransform(s,0,0,s,0,0);g.lineJoin='round';
   const o={view:R.view,pose:R.pose,item:R.item?Object.assign({},R.item):null,trail:R.trail,col:e.ar||'#c0392b',collar:e.ar?null:'#e8c0a8'};if(e.app){const q=appOpts(e.app);if(e.ar)delete q.col;Object.assign(o,q)}if(e.helm){o.hat='helm';o.hatCol=e.helm}if(e.boot)o.boot=e.boot;if(e.lamp!=null)o.lamp=e.lamp;if(e.gear){o.gear=e.gear;if(e.gear.cp)o.cape=e.gear.cp}
   ORG.noSoft(sil);ORG.rot(R.rot);try{ORG.U.heroe(g,ax,ay,0,o)}catch(x){if(window.console)console.warn('[PROPS] player',x)}finally{ORG.noSoft(false);ORG.rot(false)}
-  b={c,ax:ax*s,ay:ay*s};return PLC.set(key,b,c.width,c.height)}
+  b=trimFrame(c,ax*s,ay*s);return PLC.set(key,b,b.c.width,b.c.height)}
+ // recorte del fotograma (oct 2026): el lienzo de 130×150 deja mucho aire alrededor del héroe; se copia solo la caja con píxeles (+1 px) a un lienzo propio.
+ // Así cada fotograma ocupa ~1/4 de memoria y caben los 16 fotogramas por ciclo de caminar/correr. Una lectura de píxeles por horneado (no por frame).
+ function trimFrame(c,ax,ay){let d;try{d=c.getContext('2d').getImageData(0,0,c.width,c.height).data}catch(x){return{c,ax,ay}}
+  const W=c.width,H=c.height;let x0=W,y0=H,x1=-1,y1=-1;
+  for(let y=0;y<H;y++){const r=y*W*4;for(let x=0;x<W;x++)if(d[r+x*4+3]){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;y1=y}}
+  if(x1<0)return{c,ax,ay};x0=Math.max(0,x0-1);y0=Math.max(0,y0-1);x1=Math.min(W-1,x1+1);y1=Math.min(H-1,y1+1);
+  const w=x1-x0+1,h=y1-y0+1;if(w*h>W*H*.8)return{c,ax,ay};const t=document.createElement('canvas');t.width=w;t.height=h;t.getContext('2d').drawImage(c,x0,y0,w,h,0,0,w,h);
+  return{c:t,ax:ax-x0,ay:ay-y0}}
  // retrato para el inventario: el héroe de frente (dir 2), en reposo, con su apariencia y equipo, centrado en un lienzo propio
  function portrait(c,o){const sc=3,R=HERO.pose({dir:2,mv:false,run:false,w:0,t:0,act:null,hurt:0,blink:false}),b=playerFrame(R,{ar:o.ar||null,helm:o.helm||null,boot:o.boot||null,app:o.app||null,gear:o.gear||null},sc,false),g=c.getContext('2d');
   if(!b.bb2){const d=b.c.getContext('2d').getImageData(0,0,b.c.width,b.c.height).data;let x0=b.c.width,y0=b.c.height,x1=0,y1=0;for(let y=0;y<b.c.height;y++)for(let x=0;x<b.c.width;x++)if(d[(y*b.c.width+x)*4+3]>10){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}b.bb2=x1>=x0?[x0,y0,x1-x0+1,y1-y0+1]:[0,0,b.c.width,b.c.height]}
   const[bx,by,bw,bh]=b.bb2,k=Math.min(c.width*.68/bw,c.height*.8/bh);g.clearRect(0,0,c.width,c.height);g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(b.c,bx,by,bw,bh,(c.width-bw*k)/2,c.height*.95-bh*k,bw*k,bh*k)}
- function player(g,P,o){const s=ISO.scale(),R=HERO.pose({dir:o.dir,mv:o.mv,run:o.run,w:P.w,t:o.t,act:o.act,hurt:o.hurt||0,blink:!o.mv&&!o.act&&(o.t%5)<.13}),
+ function player(g,P,o){const s=ISO.scale(),R0=HERO.pose({dir:o.dir,mv:o.mv,run:o.run,w:P.w,t:o.t,act:o.act,hurt:o.hurt||0,blink:!o.mv&&!o.act&&(o.t%5)<.13}),R=o.post?o.post(R0):R0, // o.post: fundido entre estados (HERO.blend, game.js)
    b=playerFrame(R,{ar:o.ar||null,helm:o.helm||null,boot:o.boot||null,app:o.app||null,lamp:o.lamp,gear:o.gear||null},s,o.sil),p=ISO.toCanvas(P.x,P.y,TER.standZ(P.x,P.y));
   g.save();g.setTransform(1,0,0,1,0,0);g.drawImage(b.c,Math.round(p.x-o.ox-b.ax),Math.round(p.y-o.oy-b.ay));g.restore();
   const tp=HERO.rodTip(R,ORG.KSC.heroe*(o.app&&o.app.g==='f'?.95:1));return{tip:tp}}
@@ -194,6 +210,6 @@ const PROPS=(()=>{
   }
   g.restore();return d.lh}
  const sprite=(e,s)=>bake(e,s||ISO.scale());
- return{playerFrame,sprite,warmPass,warmHero,warmMob,portrait,get cacheN(){return cache.size},get mcaN(){return MCA.size},get plcN(){return PLC.size},get cacheMB(){return(cache.bytes+MCA.bytes+PLC.bytes+RC.bytes)/1e6},budgetMB:BUD/1e6,build,solid,draw,warm,get trees(){return trees},addSolid:(x,y,hx,hy)=>{sol.push([x-hx,x+hx,y-hy,y+hy]);SG=null},station,resource,scatter,player,mob,appOpts,ST,get list(){return list}}
+ return{playerFrame,sprite,warmPass,warmHero,warmMob,portrait,get cacheN(){return cache.size},get mcaN(){return MCA.size},get plcN(){return PLC.size},get cacheMB(){return(cache.bytes+MCA.bytes+PLC.bytes+RC.bytes)/1e6},budgetMB:BUD/1e6,build,solid,draw,warm,get trees(){return trees},addSolid:(x,y,hx,hy)=>{const r=[x-hx,x+hx,y-hy,y+hy];sol.push(r);extra.push(r);SG=null},resol,addEnt,delEnt,station,resource,scatter,player,mob,appOpts,ST,get list(){return list}}
 })();
 if(typeof module!=='undefined')module.exports=PROPS;

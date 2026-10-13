@@ -64,7 +64,7 @@ const qFmt=ms=>{const s=Math.ceil(ms/1000);return Math.floor(s/60)+':'+String(s%
 function qChk(){if(!S.qs||!S.qs.length)return;const done=S.qs.filter(q=>qProg(q)>=q.n);done.forEach(qDone)}
 function qDone(q){const i=S.qs.indexOf(q);if(i<0)return;S.qs.splice(i,1);qClean(q.id);const now=Date.now();S.qstreak=(S.qlast&&now-S.qlast<30*60000)?Math.min(10,(S.qstreak||0)+1):1;S.qlast=now;const bon=1+.05*Math.min(10,S.qstreak-1),c=Math.round(q.rw.c*bon);
  S.coins+=c;S.st.coins=(S.st.coins||0)+c;S.qn=(S.qn||0)+1;S.rep[q.k]=(S.rep[q.k]||0)+q.rw.rep;const rk0=qRank(q.k);
- if(q.rw.xp)gain(q.rw.xp[0],Math.round(q.rw.xp[1]*bon),0);let itx='';if(q.rw.it){for(let n=0;n<q.rw.it[1];n++)if(S.inv.length<cap())add(q.rw.it[0]);itx='<br>+'+q.rw.it[1]+' '+I[q.rw.it[0]][0]}
+ if(q.rw.xp)gain(q.rw.xp[0],Math.round(q.rw.xp[1]*bon),0);let itx='';if(q.rw.it){for(let n=0;n<q.rw.it[1];n++)if(room(q.rw.it[0]))add(q.rw.it[0]);itx='<br>+'+q.rw.it[1]+' '+I[q.rw.it[0]][0]}
  snd('quest');banner('📜 ¡Encargo cumplido!',q.t,'#ffe629',3200);toast('📜 <b>'+q.t+'</b><br>+'+fmt(c)+' oro · +'+fmt(Math.round((q.rw.xp?q.rw.xp[1]:0)*bon))+' XP'+itx+(S.qstreak>1?'<br>Racha ×'+S.qstreak+' (+'+Math.round((bon-1)*100)+'%)':''),4200);log('Encargo cumplido: '+q.t+' (+'+fmt(c)+' oro).');
  if(qRank(q.k)>rk0)setTimeout(()=>toast('🏅 ¡Rango de '+BI[q.k].n+': <b>'+QRKN[qRank(q.k)-1]+'</b>!<br>Ahora hay encargos de peligro '+qRank(q.k)+'.',4200),1500);
  dirty=1;save();qRender();if(TB==='qm')panel()}

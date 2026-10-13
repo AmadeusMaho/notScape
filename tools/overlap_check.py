@@ -9,7 +9,7 @@ import sys, os, subprocess, time, json
 from playwright.sync_api import sync_playwright
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 a = sys.argv[1:]
-ZONAS = [('herreria', 2400, 920, 230), ('plaza', 2300, 1500, 330), ('taller', 2030, 1245, 200), ('escritorio', 2575, 1245, 200), ('fogata', 2685, 1792, 200)]
+ZONAS = [('herreria', 2360, 1105, 230), ('plaza', 2300, 1500, 420), ('taller', 2015, 1270, 200), ('escritorio', 2585, 1270, 200), ('fogata', 2645, 1755, 200)]   # lote D4: zonas de la aldea compacta
 if len(a) >= 3: ZONAS = [('zona', float(a[0]), float(a[1]), float(a[2]))]
 umbral = float(a[3]) / 100 if len(a) > 3 else .30
 # solapes que son intencionados (el asador se apoya sobre la fogata; las estaciones del mismo rincón pueden rozarse un poco)

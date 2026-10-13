@@ -300,7 +300,7 @@ const ORG=(()=>{
  // catálogo de peinados (editor de personaje): cap = casquete (short|part|sweep), behind = mechón largo (long|mane|bob), tail = coleta(s) (pony|twin), top = moño|puntas|rizos. Uno nuevo = una fila (+ su forma si es nueva en hairGeo).
  const HAIRS={bald:{},cut:{cap:'short'},spiky:{cap:'short',top:'spiky'},side:{cap:'sweep'},curly:{cap:'short',top:'curly'},mane:{cap:'short',behind:'mane'},long:{cap:'part',behind:'long'},bun:{cap:'part',top:'bun'},pony:{cap:'part',tail:'pony'},bob:{cap:'part',behind:'bob'},twin:{cap:'part',tail:'twin'}};
  function hero2d(g,x,y,sm,o){o=o||{};const GR=o.gear||{},p=o.pose||{},view=o.view||'front',sd=view==='side',bk=view==='back',INKC=STYLE.line||'#5b3a29',skin=o.skin||'#f6d4b0',col=o.col||'#c0392b',pants=GR.lg||o.pants||'#5a4a6a',boot=o.boot||'#7a5238',hair=o.hair||'#5a3a22',hs=o.hairStyle||'bald',sc=KS,dk=c=>STY.mix(c,'#6a3a3a',.3),D=Math.PI/180;
-  soft(g,x,y,15);g.save();g.translate(x,y);if(ROT)g.scale(-1,1);g.scale(sc,sc);if(o.gender==='f')g.scale(.95,.95);g.lineJoin='round';g.lineCap='round';if(p.lunge)g.translate(sd?p.lunge:0,sd?0:(bk?-1:1)*p.lunge*.45); // p.lunge: avance del cuerpo en px (estocada/golpe máximo); de frente/espalda se acorta por la perspectiva
+  soft(g,x,y,15-(p.air||0)*1.6);g.save();g.translate(x,y);if(ROT)g.scale(-1,1);g.scale(sc,sc);if(o.gender==='f')g.scale(.95,.95);g.lineJoin='round';g.lineCap='round';if(p.lunge)g.translate(sd?p.lunge:0,sd?0:(bk?-1:1)*p.lunge*.45);if(p.air)g.translate(0,-p.air); // p.air (oct 2026): fase de vuelo al correr; todo el cuerpo sube y la sombra (dibujada antes) se encoge en el suelo // p.lunge: avance del cuerpo en px (estocada/golpe máximo); de frente/espalda se acorta por la perspectiva
   g.rotate((p.lean||0)*D);
   const P=(fn,c,e)=>{e=e||{};g.save();g.beginPath();fn();g.fillStyle=e.nodark?c:dk(c);g.fill();if(!e.nodark){g.save();g.clip();g.translate(-1.6,-1.3);g.beginPath();fn();g.fillStyle=c;g.fill();g.restore()}
    if(e.ink!==false){g.beginPath();fn();g.lineWidth=(e.lw||1.5)/sc;g.strokeStyle=INKC;g.globalAlpha=.9;g.stroke()}g.restore()};
@@ -313,8 +313,8 @@ const ORG=(()=>{
   const HDEF=HAIRS[hs]||HAIRS[hs==='short'?'cut':'bald'],hasH=HDEF!==HAIRS.bald&&o.hat!=='helm';
   const edge=x=>hy-hv*Math.sqrt(Math.max(.02,1-(x/hw)*(x/hw)))+1.2;
   const hairGeo=()=>{const C=HDEF.cap,f=hw+.9,B=[],T=[];
-   if(HDEF.behind){const hh={long:27,mane:22,bob:16.5}[HDEF.behind];B.push(bk?()=>rr(-12.5,hy+1,25,hh+2,8):sd?()=>rr(-13.5,hy-4,14.5,hh+1,6):()=>rr(-13.3,hy-3,26.6,hh,8))}
-   if(HDEF.tail==='pony'){if(sd)B.push(()=>g.ellipse(-hw-2.6,hy+5.5,3.2,8.6,.22,0,eo));else if(bk)B.push(()=>g.ellipse(0,hy+10,3.8,9.6,0,0,eo))}
+   if(HDEF.behind){const hh={long:27,mane:22,bob:16.5}[HDEF.behind],hc=p.cw||0;B.push(bk?()=>rr(-12.5+(p.cf||0)*.8,hy+1,25,hh+2-hc*2,8):sd?()=>rr(-13.5-hc*3,hy-4,14.5+hc*1.5,hh+1-hc*3,6):()=>rr(-13.3,hy-3,26.6,hh,8))} // K2: al moverse el pelo largo se va hacia atrás
+   if(HDEF.tail==='pony'){const hc=p.cw||0,hf=p.cf||0;if(sd)B.push(()=>g.ellipse(-hw-2.6-hc*2.5,hy+5.5-hc*2,3.2,8.6,.22+hc*.75+hf*.12,0,eo));else if(bk)B.push(()=>g.ellipse(hf*1.6,hy+10,3.8,9.6,-hf*.18,0,eo))} // K2: la coleta se balancea con cada paso
    if(HDEF.tail==='twin'){if(sd)B.push(()=>g.ellipse(-2,hy+10.5,3.6,7.8,0,0,eo));else[-1,1].forEach(sg=>B.push(()=>g.ellipse(sg*(hw+.4),hy+11,3.2,8.6,sg*.12,0,eo)))}
    if(!hasH)return{B,cap:null,T};
    let cap;
@@ -341,25 +341,46 @@ const ORG=(()=>{
    const bootP=()=>{const f=sd?2.4:(bk?0:lk*2.2);g.moveTo(sx-3.1,-5.4);g.lineTo(sx+3.1,-5.4);g.lineTo(sx+3.1,-3.4);g.quadraticCurveTo(sx+5.8+f,-3.2,sx+5.8+f,-1.2);g.quadraticCurveTo(sx+5.8+f,.2,sx+4.2+f,.2);g.lineTo(sx-3.2,.2);g.quadraticCurveTo(sx-4.5,.2,sx-4.2,-1.4);g.closePath()};   // bota: caña recta del ancho de la pierna + pie con puntera (antes era un bloque más ancho que la pierna)
    const cuff=()=>P(()=>rr(sx-3.5,-6.2,7,2,.9),STY.mix(b1,'#ffffff',.22),{lw:1});
    if(sd){ // perfil: la pierna GIRA desde la cadera (L.x = avance del pie en px, acotado al largo de la pierna) y la bota se mantiene horizontal → los pies nunca se separan más de lo que da la pierna
-    const th=Math.asin(Math.max(-.8,Math.min(.8,L.x/12)));g.translate(0,-L.l);
-    g.save();g.translate(sx,-15);g.rotate(-th);g.translate(-sx,15);P(()=>rr(sx-3,-15,6,12,2),c1);if(GR.lg)P(()=>rr(sx-3.5,-9,7,3.6,1.4),STY.mix(c1,'#ffffff',.3),{lw:1});g.restore();
-    g.translate(12*Math.sin(th),12*Math.cos(th)-12);P(bootP,b1);cuff()}
+    // RODILLA (lote K1): pierna en 2 tramos (muslo 6 + espinilla 6) resuelta por IK: el pie va donde diga la pose (avance L.x, elevación L.l) y la rodilla
+    // se dobla HACIA DELANTE sola. Antes la pierna era rígida y «subir el pie» la trasladaba entera hacia arriba. p.lgw: la inclinación es solo del torso.
+    const lw=p.lgw?(p.lean||0)*D:0,th=Math.asin(Math.max(-.8,Math.min(.8,L.x/12)));let fx=12*Math.sin(th),fy=12*Math.cos(th)-L.l;
+    {const r=Math.hypot(fx,fy),ph=Math.atan2(fx,fy)+lw;const d=Math.min(11.98,Math.max(3,r));fx=d*Math.sin(ph);fy=d*Math.cos(ph)}
+    const d=Math.hypot(fx,fy),phi=Math.atan2(fx,fy),al=Math.acos(Math.max(-1,Math.min(1,d/12))),tA=phi+al,kx=6*Math.sin(tA),ky=6*Math.cos(tA),sA=Math.atan2(fx-kx,fy-ky);
+    g.save();g.translate(sx+kx,-15+ky);g.rotate(-sA);P(()=>rr(-3,-1.4,6,7.6,2),c1);g.restore();
+    g.save();g.translate(sx,-15);g.rotate(-tA);P(()=>rr(-3,-.6,6,7.6,2.2),c1);g.restore();
+    if(GR.lg){g.save();g.translate(sx+kx,-15+ky);g.rotate(-(tA+sA)/2);P(()=>rr(-3.5,-1.8,7,3.6,1.4),STY.mix(c1,'#ffffff',.3),{lw:1});g.restore()}
+    g.translate(fx,fy-12);{const tl=L.l>.4?Math.min(L.l,6)*(L.x<0?.11:.05):0;if(lw||tl){g.translate(sx,-2.5);g.rotate(-lw+tl);g.translate(-sx,2.5)}}P(bootP,b1);cuff()} // pie en el aire: puntera hacia abajo (más si va detrás: «patada»)
    else{g.translate(L.x*(lk?1:.3),-L.l+(L.y||0));P(()=>rr(sx-3,-15,6,12,2),c1);if(GR.lg&&!bk)P(()=>rr(sx-3.5,-9.6,7,3.6,1.4),STY.mix(c1,'#ffffff',.3),{lw:1});
     if(lk){g.save();g.translate(sx,-2.8);g.rotate((bk?-1:1)*.1);g.translate(-sx,2.8);P(bootP,b1);cuff();g.restore()} // diagonales: la bota (no la pierna) apunta por la diagonal de pantalla
     else{P(bootP,b1);cuff()}}
    g.restore()};
-  if(sd){leg(-.4,lg[1],true);leg(.4,lg[0],false)}else{const lx=fem?3.6:4;leg(-lx,lg[1],false);leg(lx,lg[0],false)}
+  // (lote D3: la capa de frente/perfil va ANTES de las piernas; estaba después y tapaba los pantalones, sobre todo al andar de frente)
   // ── capa detrás (frente/lado) ──
-  if(o.cape&&!bk)P(()=>sd?rr(-10,-30+ty,8,27,3):rr(-9.5,-30+ty,19,27,4),o.cape);
+  // CAPA con movimiento (lote K2): p.cw = cuánto la arrastra la velocidad (0 quieto · .35 andar · .9 correr), p.cf = aleteo por paso (-1..1).
+  // Perfil: el bajo se va hacia atrás y sube; de frente se abre por los lados; de espaldas (más abajo) el bajo ondea.
+  const cw=p.cw||0,cf=p.cf||0;
+  if(o.cape&&!bk)P(()=>{if(sd){const hx=-10-cw*7.5+cf*1.4,hy2=-3-cw*6.5-cf*.8;g.moveTo(-2,-30+ty);g.lineTo(-7.5,-30+ty);g.quadraticCurveTo(-10.5-cw*2,-16+ty,hx,hy2);g.quadraticCurveTo((hx-2)*.5,hy2+1.2+cf*.6,-2.5-cw*2.5,-3.5-cw*3);g.closePath()}
+   else if(cw){const ww=9.5+cw*1.8,bw=ww+cw*1.6+Math.abs(cf)*.6;g.moveTo(-ww,-28+ty);g.quadraticCurveTo(-ww,-30+ty,-ww+4,-30+ty);g.lineTo(ww-4,-30+ty);g.quadraticCurveTo(ww,-30+ty,ww,-28+ty);g.lineTo(bw+cf*.8,-3-cw*1.5);g.lineTo(-bw+cf*.8,-3-cw*1.5);g.closePath()}else rr(-9.5,-30+ty,19,27,4)},o.cape);
+  if(sd){leg(-.4,lg[1],true);leg(.4,lg[0],false)}else{const lx=fem?3.6:4;leg(-lx,lg[1],false);leg(lx,lg[0],false)}
   // ── objetos y brazos ──
   const drawItem=t=>{const c=t.col||'#aaa',c2=t.col2||'#8a5a2a',ex=t.ex==null?1:t.ex; // ex<1: cabezal visto de canto (golpe hacia/desde la cámara)
-   if(t.hv&&(t.t!=='bow'||sd)){const nk=t.nock||[0,-6],gx=t.t==='bow'?nk[0]:0,cy=t.t==='bow'?nk[1]+24:({sword:26,staff:39,axe:22})[t.t]||20;g.save();g.fillStyle='#ffd23a';g.globalAlpha=.2+.2*t.hv;g.beginPath();g.arc(gx,cy,9+5*t.hv,0,7);g.fill();g.globalAlpha=.55*t.hv;g.fillStyle='#fff6b0';g.beginPath();g.arc(gx,cy,4.5,0,7);g.fill();g.restore()} // carga dorada del golpe máximo (item.hv 0..1)
+   if(t.hv&&(t.t!=='bow'||sd)){const nk=t.nock||[0,-6],gx=t.t==='bow'?nk[0]:0,cy=t.t==='bow'?nk[1]+24:({sword:20,dagger:12,great:28,staff:39,scepter:19,xbow:14,axe:22})[t.t]||20;g.save();g.fillStyle='#ffd23a';g.globalAlpha=.2+.2*t.hv;g.beginPath();g.arc(gx,cy,9+5*t.hv,0,7);g.fill();g.globalAlpha=.55*t.hv;g.fillStyle='#fff6b0';g.beginPath();g.arc(gx,cy,4.5,0,7);g.fill();g.restore()} // carga dorada del golpe máximo (item.hv 0..1)
    
    switch(t.t){
     case'axe':P(()=>rr(-1.1,-4,2.2,32),c2,{lw:1.2});P(()=>{g.moveTo(1,18);g.quadraticCurveTo(1+9.5*ex,14,1+10*ex,23.5);g.quadraticCurveTo(1+9.5*ex,31,1,28);g.closePath()},c);break;
     case'pick':P(()=>rr(-1.1,-4,2.2,34),c2,{lw:1.2});P(()=>{g.moveTo(-11.5*ex,25);g.quadraticCurveTo(-5*ex,30,0,32);g.quadraticCurveTo(5*ex,30,11.5*ex,25);g.quadraticCurveTo(5*ex,27.2,0,28);g.quadraticCurveTo(-5*ex,27.2,-11.5*ex,25);g.closePath()},c);break;
-    case'sword':P(()=>rr(-1.2,-3,2.4,15),c2,{lw:1.1});P(()=>{g.moveTo(-1.8,13);g.lineTo(1.8,13);g.lineTo(1.8,35);g.lineTo(0,39.5);g.lineTo(-1.8,35);g.closePath()},c);P(()=>rr(-4.6,11,9.2,2.5,1),'#d8b050',{lw:1.1});break;
+    // espadas (lote G1): la MANO (origen) queda en el centro de la empuñadura; pomo detrás, guarda y hoja delante. Antes la mano iba en el pomo con 11 u. de mango por delante
+    case'sword':P(el(0,-6.4,1.9,1.9),'#d8b050',{lw:1});P(()=>rr(-1.2,-5.4,2.4,9.6),c2,{lw:1.1});P(()=>{g.moveTo(-1.8,5.6);g.lineTo(1.8,5.6);g.lineTo(1.8,28.5);g.lineTo(0,32.6);g.lineTo(-1.8,28.5);g.closePath()},c);P(()=>rr(-1,7,.9,20.5,.4),STY.mix(c,'#ffffff',.45),{ink:false,nodark:true});P(()=>rr(-4.6,3.6,9.2,2.5,1),'#d8b050',{lw:1.1});break;
+    case'dagger':P(el(0,-4.4,1.6,1.6),'#d8b050',{lw:.9});P(()=>rr(-1.1,-3.8,2.2,7),c2,{lw:1});P(()=>{g.moveTo(-1.6,4.2);g.lineTo(1.6,4.2);g.lineTo(1.2,15.5);g.lineTo(0,19);g.lineTo(-1.2,15.5);g.closePath()},c);P(()=>rr(-3.3,2.6,6.6,2,.8),'#d8b050',{lw:1});break;
+    case'great':P(el(0,-11.6,2.2,2.2),'#d8b050',{lw:1.1});P(()=>rr(-1.4,-10.6,2.8,15.4),c2,{lw:1.1});for(let i=0;i<3;i++)P(()=>rr(-1.4,-8.4+i*4.4,2.8,.8,.3),STY.mix(c2,'#000000',.3),{ink:false,nodark:true});
+     P(()=>{g.moveTo(-2.5,7);g.lineTo(2.5,7);g.lineTo(2.5,42);g.lineTo(0,47);g.lineTo(-2.5,42);g.closePath()},c,{lw:1.2});P(()=>rr(-1.3,9,1.1,32,.5),STY.mix(c,'#ffffff',.45),{ink:false,nodark:true});P(()=>rr(-6.6,4.4,13.2,2.8,1.2),'#d8b050',{lw:1.2});break;
     case'staff':P(()=>rr(-1.1,-14,2.2,50),c2,{lw:1.1});if(t.glow){g.save();g.globalAlpha=.35*t.glow;g.fillStyle=c;g.beginPath();g.arc(0,39,10,0,7);g.fill();g.restore()}P(el(0,39,3.8,3.8),c,{nodark:true});break;
+    case'xbow':{P(()=>rr(-1.6,-7.5,3.2,24,1.2),c2,{lw:1.1});P(()=>rr(-1.9,-1.5,3.8,3.2,.8),STY.mix(c2,'#000000',.25),{lw:.8}); // ballesta (lote G2): culata a lo largo de la mano, arco de metal cruzado delante, cuerda y virote
+     g.save();g.lineCap='round';const sy=t.bolt?6.5:13.4;g.beginPath();g.moveTo(-10.5,15.2);g.lineTo(0,sy);g.lineTo(10.5,15.2);g.lineWidth=.9/sc;g.strokeStyle='#f4efe0';g.stroke();
+     g.beginPath();g.moveTo(-10.5,15.2);g.quadraticCurveTo(0,10.2,10.5,15.2);g.lineWidth=3.4/sc;g.strokeStyle=INKC;g.stroke();g.lineWidth=1.9/sc;g.strokeStyle=c;g.stroke();g.restore();
+     if(t.bolt)P(()=>rr(-.7,6,1.4,13.5,.5),'#c8b080',{lw:.8});break}
+    case'scepter':{if(t.glow){g.save();g.globalAlpha=.35*t.glow;g.fillStyle=c;g.beginPath();g.arc(0,19,8,0,7);g.fill();g.restore()}P(()=>rr(-1,-5,2,21),c2,{lw:1}); // cetro (lote G2): corto, con corona dorada y orbe
+     P(()=>{g.moveTo(-3.4,14.6);g.lineTo(3.4,14.6);g.lineTo(2.4,17.4);g.lineTo(-2.4,17.4);g.closePath()},'#d8b050',{lw:.9});P(el(0,19.6,3.1,3.1),c,{nodark:true});P(el(-.9,18.7,.9,.9),'#ffffff',{ink:false,nodark:true});break}
     case'rod':P(()=>rr(-.9,-6,1.8,44),c2,{lw:1});P(el(0,5,1.8,1.8),'#9a9aa8',{lw:.9});break;
     case'hammer':P(()=>rr(-1,-2,2,16),c2,{lw:1.1});P(()=>rr(-5.8*ex,12,11.6*ex,6.8,1.5),c);break;
     case'spoon':P(()=>rr(-.9,-2,1.8,19),c2,{lw:1});P(el(0,19,3.4,2.7),c);break;
@@ -371,16 +392,25 @@ const ORG=(()=>{
      if(t.arrow){g.beginPath();g.moveTo(nk[0],nk[1]);g.lineTo(nk[0],nk[1]+26);g.lineWidth=1.3/sc;g.strokeStyle='#c8b080';g.stroke()}g.restore();break}}};
   // F5-anim: en las vistas frente/espalda las ACCIONES (pose.fw) mueven el brazo en el plano sagital (adelante/atrás) en vez de abrirlo de lado:
   // ángulo 0 = colgando, 90 = hacia delante, 180 = arriba. Con cámara isométrica «adelante» sube en pantalla de espaldas (el brazo se acorta por escorzo) y baja de frente.
-  const fw=!!p.fw&&!sd,fwS=bk?-1:1,FWK=.55,FWL=.16,fwY=a=>Math.cos(a*D)+fwS*FWK*Math.sin(a*D);
-  const arm=(shx,ang,far,item)=>{g.save();g.translate(shx,-27+ty);let rot=((shx<0&&!sd)?1:-1)*ang*D,kk=1;
-   if(fw){const y=fwY(ang),xs=FWL+(shx>0?1:-1)*lk*.8*Math.sin(ang*D),m=Math.hypot(xs,y);kk=Math.max(.4,Math.min(1,m));rot=(shx<0?1:-1)*Math.atan2(xs,y)}
+  let fw=!!p.fw&&!sd;const fwS=bk?-1:1,FWK=.55,FWL=.16,fwY=a=>Math.cos(a*D)+fwS*FWK*Math.sin(a*D);
+  // fwDir (lote G1): orienta un objeto con ángulo propio (item.abs) en vistas frente/espalda. Caña y báculo: solo arriba/abajo con escorzo (como antes).
+  // Hojas (BLD): además se abren hacia FUERA según lo que apunten adelante → en guardia la espada queda en diagonal y no «clavada» hacia la cámara.
+  const BLD={sword:1,dagger:1,great:1},fwDir=(item,out)=>{const y3=fwY(item.abs);if(!BLD[item.t]){if(y3<0)g.rotate(Math.PI);g.scale(1,Math.max(.12,Math.min(1,Math.abs(y3))));return}
+   const vx=out*.62*Math.abs(Math.sin(item.abs*D)),m=Math.hypot(vx,y3);g.rotate(-Math.atan2(vx,y3));g.scale(1,Math.max(.3,Math.min(1,m)))};
+  // CODO (lote K1, oct 2026): eb = flexión del codo en grados (el antebrazo se dobla hacia DELANTE, mismo sistema de ángulos que el brazo). Solo en brazos
+  // SIN objeto (andar, correr, reposo, brazo libre o puños en combate): con objeto el brazo sigue recto para no mover la mano que lo agarra (caña, arco, dos manos).
+  // Brazo = 2 tramos de 6,8 u. (antes 1 de 13,6: la mano queda en el mismo sitio con eb=0). En frente/espalda (fw) cada tramo tiene su propio escorzo.
+  const aDir=(shx,ang)=>{if(!fw)return[((shx<0&&!sd)?1:-1)*ang*D,1];const y=fwY(ang),xs=FWL+(shx>0?1:-1)*lk*.8*Math.sin(ang*D),m=Math.hypot(xs,y);return[(shx<0?1:-1)*Math.atan2(xs,y),Math.max(.4,Math.min(1,m))]};
+  const arm=(shx,ang,far,item,eb)=>{eb=item?0:(eb||0);g.save();g.translate(shx,-27+ty);let[rot,kk]=aDir(shx,ang);
    // estela de golpe (en el sistema del hombro, antes de rotar)
    if(item&&o.trail&&!far){const tr=o.trail,k=(shx<0&&!sd)?1:-1;g.save();g.beginPath();g.arc(0,0,tr.r,k*tr.a0*D+Math.PI/2+(k>0?0:0),k*tr.a1*D+Math.PI/2,k>0?tr.a1<tr.a0:tr.a1>tr.a0);g.strokeStyle='#ffffff';g.globalAlpha=.55;g.lineWidth=3/sc;g.lineCap='round';g.stroke();g.restore()}
    g.rotate(rot);const c=far&&sd?dk(col):col;
+   if(eb){const[r2,k2]=aDir(shx,ang+eb);g.save();g.scale(1,kk);P(()=>rr(-2.6,-1,5.2,8.2,2.6),c);g.restore();g.translate(0,6.8*kk);g.rotate(r2-rot); // codo
+    g.save();g.scale(1,k2);P(()=>rr(-2.5,-1.3,5,8.4,2.5),c);g.restore();P(el(0,6.8*k2,2.7,2.7),GR.gl||skin);if(GR.gl&&!fw)P(()=>rr(-3,2.4,6,2.6,1),STY.mix(GR.gl,'#ffffff',.25),{lw:1});g.restore();return}
    if(fw){ // brazo y objeto con escorzo a lo largo del eje del brazo
     g.save();g.scale(1,kk);P(()=>rr(-2.6,-1,5.2,14,2.6),c);g.restore();
     if(item){g.save();g.translate(0,13.6*kk);
-     if(item.abs!=null){const y3=fwY(item.abs);g.rotate(-rot);if(y3<0)g.rotate(Math.PI);g.scale(1,Math.max(.12,Math.min(1,Math.abs(y3))))}else g.scale(1,kk);
+     if(item.abs!=null){g.rotate(-rot);fwDir(item,shx>0?1:-1)}else g.scale(1,kk);
      drawItem(item);g.restore()}
     P(el(0,13.6*kk,2.7,2.7),GR.gl||skin);g.restore();return}
    if(item){g.save();g.translate(0,13.6);if(item.abs!=null)g.rotate(((shx<0&&!sd)?1:-1)*item.abs*D-rot);drawItem(item);g.restore()}
@@ -389,42 +419,71 @@ const ORG=(()=>{
   if(it&&it.t==='bow'){const shN=sd?0:SHW,shF=sd?0:-SHW,rN=-aN*D,rF=((sd)?-1:1)*aF*D,hF=[shF-13.6*Math.sin(rF),-27+ty+13.6*Math.cos(rF)],dx=hF[0]-shN,dy=hF[1]-(-27+ty),c1=Math.cos(rN),s1=Math.sin(rN);it.nock=[dx*c1+dy*s1,-dx*s1+dy*c1-13.6]}
   const shN=sd?0:SHW,shF=sd?0:-SHW;
   // Objetos a dos manos (it.two, ver HERO.TWO en hero.js: hacha, pico, martillo y TODA herramienta de recolección nueva): en frente/espalda ambos brazos agarran el mango en un punto común G (centro del cuerpo)
-  const fwArms=(st)=>{if(!(it&&it.two)){arm(shF,aF,false,null);arm(shN,aN,false,it);return}
+  const fwArms=(st)=>{if(!(it&&it.two)){arm(shF,aF,false,null,p.eF);arm(shN,aN,false,it,p.eN);return}
    const ny=fwY(aN),nm=Math.hypot(FWL,ny),nk=Math.max(.4,Math.min(1,nm)),sy=-27+ty,u=bk?0:Math.max(0,Math.min(1,-ny)),G=[1.8+u*9.5,sy+13.6*nk*ny/nm],Gf=[-1.8+u*7.5,G[1]+(ny<0?-1:1)*5*nk]; // de frente, al levantar la herramienta va por encima del hombro derecho (no tapa la cara)
    const dA=(sx,T)=>{const dx=T[0]-sx,dy=T[1]-sy,d=Math.hypot(dx,dy);g.save();g.translate(sx,sy);g.rotate(Math.atan2(-dx,dy));g.scale(1,Math.max(.35,Math.min(1.3,d/13.6)));P(()=>rr(-2.6,-1,5.2,14,2.6),col);g.restore();g.save();g.translate(T[0],T[1]);P(el(0,0,2.7,2.7),GR.gl||skin);g.restore()};
    if(st==='far'){dA(shF,Gf);return}
    if(o.trail){const tr=o.trail;g.save();g.translate(shN,sy);g.beginPath();g.arc(0,0,tr.r,-tr.a0*D+Math.PI/2,-tr.a1*D+Math.PI/2,tr.a1>tr.a0);g.strokeStyle='#ffffff';g.globalAlpha=.55;g.lineWidth=3/sc;g.lineCap='round';g.stroke();g.restore()}
-   g.save();g.translate(G[0],G[1]);if(ny<0)g.rotate(Math.PI);g.scale(1,nk);drawItem(Object.assign({},it,{ex:.7}));g.restore();
+   g.save();g.translate(G[0],G[1]);if(it.abs!=null&&BLD[it.t])fwDir(it,1);else{if(ny<0)g.rotate(Math.PI);g.scale(1,nk)}drawItem(Object.assign({},it,{ex:.7}));g.restore();
    if(!st)dA(shF,Gf);dA(shN,G)};
   // de espaldas (adelante = lejos de la cámara) los brazos van DETRÁS del torso y de la cabeza: solo asoma el mango/hacha por encima (decisión del dueño, oct 2026)
   const late=fw&&!bk&&!!(it&&it.two); // de frente (adelante = hacia la cámara) los brazos y la herramienta van delante de la cabeza
-  if(fw&&bk)fwArms();else if(!fw)arm(shF,aF,sd,null);   // de espaldas con acción: ambos brazos van detrás del torso (adelante = lejos de la cámara)
+  if(fw&&bk)fwArms();else if(!fw)arm(shF,aF,sd,null,p.eF);   // de espaldas con acción: ambos brazos van detrás del torso (adelante = lejos de la cámara)
   // ── arma a la espalda (cuando no se empuña nada): detrás del torso en frente/perfil, encima en la espalda ──
-  const stow=()=>{const w=GR.wp;if(!w||it)return;g.save();g.translate(sd?-4.5:(bk?0:-2.5),-14+ty);
-   if(w.t==='bow'){g.translate(sd?-2:-1,-9);g.rotate(Math.PI/2+.12);g.scale(.8,.8)}
-   else if(w.t==='staff'){g.rotate(Math.PI-.5);g.scale(.62,.62)}
+  // ESPADA ENVAINADA a la espalda (lote D1): empuñadura arriba asomando por encima del hombro DERECHO del personaje y hoja hacia abajo dentro de una vaina
+  // de cuero (antes la espada iba al revés, con la hoja desnuda hacia arriba). De frente solo asoma la empuñadura; de espaldas se ve entera.
+  const sheath=w=>{const gr=w.wk==='great',L=gr?40:27,W2=gr?3.3:2.6,lth='#5a3a22',mt='#c9a24a',k=gr?.6:.66;g.save();
+   if(sd)g.translate(-8,-29+ty),g.rotate(.32);else if(bk)g.translate(8.6+lk*1.2,-29.5+ty),g.rotate(.75);else g.translate(-9.4+lk*1.2,-29.5+ty),g.rotate(-.75); // la empuñadura asoma al lado de la cabeza (si no, el pelo la tapa)
+   g.scale(k,k);drawItem({t:w.wk,col:w.col,col2:'#6b4a2a'}); // empuñadura y guarda (la hoja queda tapada por la vaina)
+   const y0=gr?5.6:4.2;P(()=>{g.moveTo(-W2,y0);g.lineTo(W2,y0);g.lineTo(W2,y0+L-3);g.quadraticCurveTo(0,y0+L+2,-W2,y0+L-3);g.closePath()},lth,{lw:1.2});
+   P(()=>rr(-W2-.4,y0,W2*2+.8,2.6,.8),mt,{lw:.9});P(()=>{g.moveTo(-W2*.8,y0+L-5);g.lineTo(W2*.8,y0+L-5);g.lineTo(W2*.6,y0+L-2.6);g.quadraticCurveTo(0,y0+L+1.4,-W2*.6,y0+L-2.6);g.closePath()},mt,{lw:.9});
+   P(()=>rr(-.5,y0+4,1,L-11,.4),STY.mix(lth,'#ffffff',.18),{ink:false,nodark:true});g.restore()};
+  const stow=()=>{const w=GR.wp;if(!w||it)return;const wk=w.wk||w.t;if(wk==='sword'||wk==='great'){sheath(Object.assign({},w,{wk}));return}g.save();g.translate(sd?-4.5:(bk?0:-2.5),-14+ty);
+   // lote G2: cada forma de arma se guarda a su manera
+   if(wk==='bow'){g.translate(sd?-2:-1,-9);g.rotate(Math.PI/2+.12);g.scale(.8,.8)}
+   else if(wk==='xbow'){g.translate(0,-4);g.rotate(Math.PI-.35);g.scale(.62,.62)}
+   else if(wk==='staff'){g.rotate(Math.PI-.5);g.scale(.62,.62)}
+   else if(wk==='scepter'){g.translate(sd?6:7.5,4);g.rotate(Math.PI-.25);g.scale(.62,.62)}   // cetro y daga: colgados del cinturón, no a la espalda
+   else if(wk==='dagger'){g.translate(sd?6:7.5,4);g.rotate(Math.PI-.3);g.scale(.7,.7)}
+   else if(wk==='great'){g.translate(0,-2);g.rotate(Math.PI-.55);g.scale(.6,.6)}
    else{g.rotate(Math.PI-.62);g.scale(.62,.62)}
-   drawItem({t:w.t,col:w.col,col2:'#6b4a2a'});g.restore()};
+   drawItem({t:wk==='bow'||wk==='staff'?w.t:wk,col:w.col,col2:'#6b4a2a',bolt:1});g.restore()};
   if(!bk)stow();
+  const shOnBack=!!(GR.sh&&it&&(it.two||it.t==='bow'));
+  const armPt=(shx,ang,len,useFw,eb)=>{const f0=fw;fw=useFw;const[r1,k1]=aDir(shx,ang),[r2,k2]=aDir(shx,ang+(eb||0));fw=f0;const l1=Math.min(len,6.8),l2=len-l1;return[shx-l1*k1*Math.sin(r1)-l2*k2*Math.sin(r2),-27+ty+l1*k1*Math.cos(r1)+l2*k2*Math.cos(r2)]}; // punto a `len` u. del hombro siguiendo brazo y antebrazo (codo eb)
+  // lote D1: en las DIAGONALES DE FRENTE (lk y no espalda) el brazo del escudo es el lado que se aleja de la cámara → el escudo va DETRÁS del torso y asoma por el borde
+  // (antes se pintaba encima del pecho). De espaldas en diagonal sigue delante pero más estrecho (girado 3/4).
+  const shBehind=!!(GR.sh&&lk&&!bk&&!sd);
+  const shieldDraw=()=>{const sc2=GR.sh,rim=STY.mix(sc2,'#2a2a3a',.4),hi=STY.mix(sc2,'#ffffff',.32),ap=armPt(shF,aF,10,fw,p.eF),a0=armPt(shF,sd?20:8,10,false,0),dx=ap[0]-a0[0],dy=ap[1]-a0[1];
+   if(sd){const ex=ap[0]+3.8,ey=ap[1]-1.4;P(()=>g.ellipse(ex,ey,4.4,8.8,0,0,eo),rim,{lw:1.2});P(()=>g.ellipse(ex+.6,ey,3.1,7.4,0,0,eo),sc2,{lw:.8});P(el(ex+2,ey,1.4,1.7),hi,{lw:.8,nodark:true})} // perfil: más ancho y adelantado sobre el antebrazo (antes 3,2 de ancho justo detrás del brazo cercano: no se veía)
+   else{const cx=shF+lk*1.2+dx*.85-Math.abs(lk)*(bk?1.4:2.4),cy=-19+ty+dy*.85;if(lk){g.save();g.translate(cx,cy);g.scale(.78,1);g.translate(-cx,-cy)} // diagonal: escudo girado 3/4 (más estrecho) y hacia fuera
+    P(()=>{g.moveTo(cx-7.6,cy-8.4);g.lineTo(cx+7.6,cy-8.4);g.quadraticCurveTo(cx+8.4,cy+3,cx,cy+11.6);g.quadraticCurveTo(cx-8.4,cy+3,cx-7.6,cy-8.4);g.closePath()},bk?dk(rim):rim,{lw:1.4});
+    P(()=>{g.moveTo(cx-5.6,cy-6.4);g.lineTo(cx+5.6,cy-6.4);g.quadraticCurveTo(cx+6.2,cy+2.6,cx,cy+9);g.quadraticCurveTo(cx-6.2,cy+2.6,cx-5.6,cy-6.4);g.closePath()},bk?dk(sc2):sc2,{lw:.9});
+    if(!bk){P(el(cx,cy-.4,2.5,2.5),hi,{lw:.9,nodark:true});P(()=>{g.moveTo(cx-5.4,cy-5.6);g.lineTo(cx-1.6,cy-5.6);g.lineTo(cx-4.6,cy+1);g.closePath()},hi,{ink:false,nodark:true})}if(lk)g.restore()}};
+  if(GR.sh&&!shOnBack&&shBehind)shieldDraw();
   // ── torso ──
   if(sd){P(()=>fem?rr(-5.1,-30+ty,10.2,18,5):rr(-5.8,-30+ty,11.6,18,5),col);if(!bk)P(()=>fem?rr(-5.2,-15.2,10.4,2.8,1.2):rr(-5.9,-15.2,11.8,2.8,1.2),o.belt||'#7a5230',{lw:1.2})}
   else{P(fem?()=>{g.moveTo(-6.4,-28.8+ty);g.quadraticCurveTo(-6.4,-30.4+ty,-4.8,-30.4+ty);g.lineTo(4.8,-30.4+ty);g.quadraticCurveTo(6.4,-30.4+ty,6.4,-28.8+ty);g.quadraticCurveTo(5.2,-21+ty,7.2,-13.6+ty);g.quadraticCurveTo(7.2,-12+ty,5.6,-12+ty);g.lineTo(-5.6,-12+ty);g.quadraticCurveTo(-7.2,-12+ty,-7.2,-13.6+ty);g.quadraticCurveTo(-5.2,-21+ty,-6.4,-28.8+ty);g.closePath()}:()=>rr(-8,-30+ty,16,18,5),col);P(()=>fem?rr(-7.4,-15.2,14.8,2.8,1.2):rr(-8.2,-15.2,16.4,2.8,1.2),o.belt||'#7a5230',{lw:1.2});
    if(lk&&!bk)P(()=>fem?rr(-7.2,-29.6+ty,4.2,17,2):rr(-8,-29.6+ty,6,17.4,2.4),STY.mix(col,'#3a2a4a',.38),{lw:1.1,nodark:true});   // 3/4: cara lateral del torso (la que mira a la cámara) más oscura → el cuerpo se ve girado, no solo la cabeza
    if(!bk){P(()=>rr(-1.4,-15.4,2.8,3.2,.8),'#e0b84a',{lw:1,nodark:true});P(()=>{g.moveTo(-3.6,-30+ty);g.lineTo(3.6,-30+ty);g.lineTo(0,-25.5+ty);g.closePath()},o.collar||STY.mix(col,'#ffffff',.5),{lw:1,nodark:true})}}
-  if(bk&&o.cape)P(()=>rr(-9.5,-30+ty,19,29,4),o.cape);
+  if(bk&&o.cape)P(()=>{if(!cw){rr(-9.5,-30+ty,19,29,4);return}const sw=cf*1.6,hy3=-1-cw*2.2,bw=9.5+cw*1.2; // de espaldas al moverse: bajo ondulado que se balancea
+   g.moveTo(-9.5,-26+ty);g.quadraticCurveTo(-9.5,-30+ty,-5.5,-30+ty);g.lineTo(5.5,-30+ty);g.quadraticCurveTo(9.5,-30+ty,9.5,-26+ty);g.lineTo(bw+sw,hy3);
+   g.quadraticCurveTo(bw*.5+sw,hy3+1.6*cf,sw,hy3);g.quadraticCurveTo(-bw*.5+sw,hy3-1.6*cf,-bw+sw,hy3);g.closePath()},o.cape);
   if(bk)stow();
   // ── ARMADURA del torso: peto con relieve (nervio central, borde) y hombreras ──
   const plate=GR.pl?STY.mix(col,'#ffffff',.26):null;
   if(plate&&!sd){if(!bk){P(()=>rr(-5.8,-28.6+ty,11.6,10.4,3.2),plate,{lw:1.1});g.save();g.strokeStyle=STY.mix(col,'#2a2a3a',.45);g.globalAlpha=.7;g.lineWidth=.9/sc;g.beginPath();g.moveTo(0,-28.4+ty);g.lineTo(0,-18.4+ty);g.stroke();g.restore()}else P(()=>rr(-6,-28.6+ty,12,11,3.2),plate,{lw:1.1})}
   if(plate&&sd)P(()=>rr(-4.2,-28.6+ty,8.4,10.6,3.2),plate,{lw:1.1});
+  // tahalí (lote D1): correa de cuero cruzada sobre el pecho cuando hay espada/mandoble envainado a la espalda → se lee el arma aunque el pelo tape la empuñadura
+  if(GR.wp&&!it&&(GR.wp.wk==='sword'||GR.wp.wk==='great')&&!bk){const sx2=sd?-1.4:-7.4+lk*1.6,ex2=sd?3.2:6.6+lk*.6;P(()=>{g.moveTo(sx2-1.3,-29.6+ty);g.lineTo(sx2+1.3,-29.6+ty);g.lineTo(ex2+1.3,-14.6+ty);g.lineTo(ex2-1.3,-14.6+ty);g.closePath()},'#5a3a22',{lw:1});P(el(sx2*.45+ex2*.55,-21.6+ty,1.3,1.3),'#c9a24a',{lw:.8,nodark:true})}
   // ── ESCUDO (mano libre): de frente/espalda cubre el brazo lejano; de perfil asoma por delante del torso ──
-  if(GR.sh){const sc2=GR.sh,rim=STY.mix(sc2,'#2a2a3a',.4),hi=STY.mix(sc2,'#ffffff',.32);
-   if(sd){P(()=>g.ellipse(3.4,-19+ty,3.2,8.6,0,0,eo),rim,{lw:1.2});P(()=>g.ellipse(3.8,-19+ty,2.1,7.2,0,0,eo),sc2,{lw:.8});P(el(5.2,-19+ty,1.2,1.5),hi,{lw:.8,nodark:true})}
-   else{const cx=shF+lk*1.2,cy=-19+ty;
-    P(()=>{g.moveTo(cx-7.6,cy-8.4);g.lineTo(cx+7.6,cy-8.4);g.quadraticCurveTo(cx+8.4,cy+3,cx,cy+11.6);g.quadraticCurveTo(cx-8.4,cy+3,cx-7.6,cy-8.4);g.closePath()},bk?dk(rim):rim,{lw:1.4});
-    P(()=>{g.moveTo(cx-5.6,cy-6.4);g.lineTo(cx+5.6,cy-6.4);g.quadraticCurveTo(cx+6.2,cy+2.6,cx,cy+9);g.quadraticCurveTo(cx-6.2,cy+2.6,cx-5.6,cy-6.4);g.closePath()},bk?dk(sc2):sc2,{lw:.9});
-    if(!bk){P(el(cx,cy-.4,2.5,2.5),hi,{lw:.9,nodark:true});P(()=>{g.moveTo(cx-5.4,cy-5.6);g.lineTo(cx-1.6,cy-5.6);g.lineTo(cx-4.6,cy+1);g.closePath()},hi,{ink:false,nodark:true})}}}
-  if(fw&&!bk&&!late)fwArms();else if(late){bodyOn();fwArms('far');g.restore()}else if(!fw)arm(shN,aN,false,it);
+  // ESCUDO (lote G2): va en el antebrazo del brazo libre (sigue a aF: se balancea al andar y cubre en guardia). Si las dos manos están ocupadas
+  // (mandoble, arco, ballesta, hacha, pico… it.two o arco) va colgado a la ESPALDA: se ve de espaldas, de frente/perfil queda tapado por el cuerpo.
+  if(shOnBack&&bk){const sc2=GR.sh,rim=STY.mix(sc2,'#2a2a3a',.4),cx=lk*-1.2,cy=-21+ty;P(()=>rr(cx-6.6,cy-3.4,13.2,1.6,.6),'#6b4a2a',{lw:.9}); // escudo a la espalda: correa + escudo
+   P(()=>{g.moveTo(cx-7,cy-7.8);g.lineTo(cx+7,cy-7.8);g.quadraticCurveTo(cx+7.8,cy+2.8,cx,cy+10.8);g.quadraticCurveTo(cx-7.8,cy+2.8,cx-7,cy-7.8);g.closePath()},rim,{lw:1.4});
+   P(()=>{g.moveTo(cx-5.2,cy-5.9);g.lineTo(cx+5.2,cy-5.9);g.quadraticCurveTo(cx+5.8,cy+2.4,cx,cy+8.4);g.quadraticCurveTo(cx-5.8,cy+2.4,cx-5.2,cy-5.9);g.closePath()},sc2,{lw:.9});P(el(cx,cy,2.2,2.2),STY.mix(sc2,'#ffffff',.32),{lw:.9,nodark:true})}
+  if(GR.sh&&!shOnBack&&!shBehind)shieldDraw();
+  if(fw&&!bk&&!late)fwArms();else if(late){bodyOn();fwArms('far');g.restore()}else if(!fw)arm(shN,aN,false,it,p.eN);
   if(plate){const pa=(cx,cy)=>{P(()=>g.ellipse(cx,cy,5.2,3.6,0,0,eo),plate,{lw:1.3});P(()=>g.ellipse(cx-.6,cy-1,3,1.5,0,0,eo),STY.mix(plate,'#ffffff',.4),{ink:false,nodark:true})};
    if(sd)pa(0,-28.4+ty);else{pa(shN,-27.8+ty);pa(shF,-27.8+ty)}}
   // ── farol colgado del cinturón (o.lamp: undefined = sin farol, 0 apagado, 1/2 encendido con dos fases de parpadeo). De noche el juego lo enciende (game.js dP); su luz real es LIGHT.player ──
