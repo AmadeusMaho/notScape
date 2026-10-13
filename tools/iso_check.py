@@ -12,21 +12,21 @@ try:
         b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1280, 'height': 800}, device_scale_factor=1)
         pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' and 'fonts.g' not in m.text and 'ERR_' not in m.text else None)
         pg.on('pageerror', lambda e: errs.append(str(e)))
-        pg.goto('http://127.0.0.1:8765/index.html'); pg.wait_for_timeout(1500)
-        shots = {'01_inicio': (200, 750), '02_puente_rio': (270, 1240), '03_estanque': (700, 1150), '04_paso_cerrado': (2250, 770), '05_acantilado': (2250, 300)}
+        pg.goto('http://127.0.0.1:8765/index.html?noedit'); pg.wait_for_timeout(1500)
+        shots = {'01_inicio': (2300, 1580), '02_rio': (960, 1700), '03_estanque': (2800, 1858), '04_paso_cerrado': (4540, 1500), '05_acantilado': (2300, 380)}   # coordenadas de mundo de la Pradera nueva (F9)
         for n, (x, y) in shots.items():
             pg.evaluate(f'P.x={x};P.y={y};P.mv=null;P.g=null'); pg.wait_for_timeout(700)
             pg.screenshot(path=os.path.join(out, n + '.png'))
         # colisiones: la lógica es la de siempre; comprobamos que blk() sigue bloqueando agua y acantilado y deja libre el puente y el paso
-        r = pg.evaluate('''()=>{const c=blk(2400,770);S.boss[0]=1;const r={agua:blk(700,1250),pasto:blk(200,750),puente:blk(270,1270),acant:blk(2300,300),paso:blk(2300,770),cerrado:c};S.boss[0]=0;return r}''')  # S.boss[0]=1 abre la puerta del bioma 1
-        exp = {'agua': True, 'pasto': False, 'puente': False, 'acant': True, 'paso': False, 'cerrado': True}
+        r = pg.evaluate('''()=>{const c=blk(4620,1500);S.boss[0]=1;const r={agua:blk(1045,2000),pasto:blk(2000,1700),acant:blk(2300,10),paso:blk(4620,1500),cerrado:c};S.boss[0]=0;return r}''')  # S.boss[0]=1 abre la puerta del bioma 1
+        exp = {'agua': True, 'pasto': False, 'acant': True, 'paso': False, 'cerrado': True}
         for k, v in exp.items():
             if r[k] != v: fails.append(f'blk {k}: esperado {v}, salió {r[k]}')
         # el clic: un punto de la pantalla debe volver al mismo tile (a la altura del suelo)
-        c = pg.evaluate('''()=>{P.x=300;P.y=800;P.mv=null;let bad=0,n=0;for(let i=0;i<200;i++){const x=P.x-200+Math.random()*400,y=P.y-150+Math.random()*300,z=TER.heightAt(x,y),q=ISO.toCanvas(x,y,z),w=ISO.toWorld(q.x,q.y,TER.heightAt);n++;if(Math.abs(w.x-x)>2||Math.abs(w.y-y)>2)bad++}return[bad,n]}''')
+        c = pg.evaluate('''()=>{P.x=2300;P.y=1580;P.mv=null;let bad=0,n=0;for(let i=0;i<200;i++){const x=P.x-200+Math.random()*400,y=P.y-150+Math.random()*300,z=TER.heightAt(x,y),q=ISO.toCanvas(x,y,z),w=ISO.toWorld(q.x,q.y,TER.heightAt);n++;if(Math.abs(w.x-x)>2||Math.abs(w.y-y)>2)bad++}return[bad,n]}''')
         if c[0] > 10: fails.append(f'clic: {c[0]}/{c[1]} puntos no vuelven a su sitio')
         # teclado: en 8 direcciones sobre ejes de pantalla; arriba debe subir en pantalla
-        pg.evaluate('P.x=300;P.y=800;P.mv=null;P.g=null'); pg.wait_for_timeout(300); y0 = pg.evaluate('ISO.proj(P.x,P.y,1).y'); pg.evaluate('K.u=1'); pg.wait_for_timeout(500)
+        pg.evaluate('P.x=2300;P.y=1580;P.mv=null;P.g=null'); pg.wait_for_timeout(300); y0 = pg.evaluate('ISO.proj(P.x,P.y,1).y'); pg.evaluate('K.u=1'); pg.wait_for_timeout(500)
         y1 = pg.evaluate('ISO.proj(P.x,P.y,1).y'); pg.evaluate('K.u=0')
         if not y1 < y0 - 5: fails.append(f'tecla arriba no sube en pantalla ({y0}->{y1})')
         # rendimiento: ms por frame de draw()
@@ -34,27 +34,27 @@ try:
         print('draw() ms/frame (software, solo para comparar): %.1f' % t)
         pg.evaluate('CURON=1')
         # F1-C1 · cursor de tile: con el ratón sobre el canvas, el tile resaltado debe ser el que hay bajo el puntero; fuera, ninguno
-        pg.evaluate('P.x=300;P.y=800;P.mv=null;P.g=null'); pg.wait_for_timeout(500)
+        pg.evaluate('P.x=2300;P.y=1580;P.mv=null;P.g=null'); pg.wait_for_timeout(500)
         bb = pg.evaluate('(()=>{const r=cv.getBoundingClientRect();return [r.left,r.top,r.width,r.height]})()')
         js_hover = 'm=>{const rc=cv.getBoundingClientRect(),px=(m[0]-rc.left)*cv.width/rc.width,py=(m[1]-rc.top)*cv.height/rc.height,w=ISO.toWorld(px,py,TER.heightAt),q=ISO.tileAt(w.x,w.y);return [CUR.tx===q.tx&&CUR.ty===q.ty,CUR.tx,CUR.ty,q.tx,q.ty]}'
-        for fx, fy in [(.5, .5), (.3, .7), (.75, .35)]:
+        for fx, fy in [(.5, .5), (.4, .6), (.6, .4)]:
             mx, my = bb[0] + bb[2] * fx, bb[1] + bb[3] * fy
             pg.mouse.move(mx, my); pg.wait_for_timeout(200)
             r = pg.evaluate(js_hover, [mx, my])
             if not r[0]: fails.append(f'cursor: tile {r[1:3]} != esperado {r[3:5]} en ({fx},{fy})')
         pg.mouse.move(bb[0] + bb[2] * .5, bb[1] + bb[3] * .5); pg.wait_for_timeout(200)
         pg.screenshot(path=os.path.join(out, '06_cursor.png'))
-        pg.mouse.move(5, 5); pg.wait_for_timeout(200)
+        pg.mouse.move(*pg.evaluate('(()=>{const r=document.querySelector("#hd").getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2]})()')); pg.wait_for_timeout(200)
         pg.evaluate('CURON=0'); pg.mouse.move(bb[0] + bb[2] * .5, bb[1] + bb[3] * .5); pg.wait_for_timeout(200)
         if pg.evaluate('CUR.tx') != -1: fails.append('cursor: se dibuja con el interruptor apagado')
-        pg.evaluate('CURON=1'); pg.mouse.move(5, 5); pg.wait_for_timeout(100)
+        pg.evaluate('CURON=1'); pg.mouse.move(*pg.evaluate('(()=>{const r=document.querySelector("#hd").getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2]})()')); pg.wait_for_timeout(100)
         if pg.evaluate('CUR.tx') != -1: fails.append('cursor: sigue visible con el ratón fuera del canvas')
         # cursor sobre agua (no transitable): captura aparte
-        pg.evaluate('P.x=700;P.y=1000;P.mv=null;P.g=null'); pg.wait_for_timeout(500)
+        pg.evaluate('P.x=1000;P.y=2000;P.mv=null;P.g=null'); pg.wait_for_timeout(500)
         pg.mouse.move(bb[0] + bb[2] * .5, bb[1] + bb[3] * .5); pg.wait_for_timeout(200)
         pg.screenshot(path=os.path.join(out, '07_cursor_agua.png'))
         # F1-C2 · resalte de entidad: el ratón sobre una entidad debe resaltarla (y el clic usa la misma selección)
-        pg.evaluate('P.x=200;P.y=750;P.mv=null;P.g=null'); pg.wait_for_timeout(500)
+        pg.evaluate('(()=>{const e=ST[0];P.x=e.x+30;P.y=e.y+110;P.mv=null;P.g=null})()'); pg.wait_for_timeout(500)
         info = pg.evaluate('(()=>{const e=ST[0],k=SPR*ISO.scale(),q=ISO.toCanvas(e.x,e.y,TER.heightAt(e.x,e.y)),r=cv.getBoundingClientRect();return {id:e.id,x:r.left+q.x*r.width/cv.width,y:r.top+(q.y-10*k)*r.height/cv.height,on:onScr(e.x,e.y)}})()')
         if not info['on']: pg.evaluate('(()=>{const e=ST[0];P.x=e.x-60;P.y=e.y+10})()'); pg.wait_for_timeout(600); info = pg.evaluate('(()=>{const e=ST[0],k=SPR*ISO.scale(),q=ISO.toCanvas(e.x,e.y,TER.heightAt(e.x,e.y)),r=cv.getBoundingClientRect();return {id:e.id,x:r.left+q.x*r.width/cv.width,y:r.top+(q.y-10*k)*r.height/cv.height,on:onScr(e.x,e.y)}})()')
         pg.mouse.move(info['x'], info['y']); pg.wait_for_timeout(250)
@@ -64,8 +64,8 @@ try:
         px_sil = pg.evaluate('(()=>{const d=HLC.getContext("2d").getImageData(0,0,HLC.width,HLC.height).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i]>0)n++;return n})()')
         if px_sil < 50: fails.append(f'contorno: la silueta casi no tiene píxeles ({px_sil})')
         # el contorno debe funcionar con los tres tipos de entidad: recurso (N), monstruo (M) y estación (ST)
-        for nombre, lst, idx in [('09_contorno_recurso', 'N', 0), ('10_contorno_monstruo', 'M', 0), ('11_contorno_estacion', 'ST', 3)]:
-            ok = pg.evaluate(f'(()=>{{const l={lst}.filter(e=>alive(e,performance.now())&&e.x<2200),e=l[{idx}%l.length];if(!e)return false;window.__e=e;P.x=e.x-70;P.y=e.y+40;P.mv=null;P.g=null;return true}})()')
+        for nombre, lst, idx in [('09_contorno_recurso', 'N', 0), ('10_contorno_monstruo', 'M', 0), ('11_contorno_estacion', 'ST', 6)]:
+            ok = pg.evaluate(f'(()=>{{const l={lst}.filter(e=>alive(e,performance.now())&&biomeAt(e.x,e.y)===0),e=l[{idx}%l.length];if(!e)return false;window.__e=e;P.x=e.x-70;P.y=e.y+40;P.mv=null;P.g=null;return true}})()')
             if not ok: continue
             pg.wait_for_timeout(700)
             q = pg.evaluate('(()=>{const e=window.__e,k=SPR*ISO.scale(),q=ISO.toCanvas(e.x,e.y,TER.heightAt(e.x,e.y)),r=cv.getBoundingClientRect();return [r.left+q.x*r.width/cv.width,r.top+(q.y-10*k)*r.height/cv.height]})()')
