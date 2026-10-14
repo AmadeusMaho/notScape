@@ -95,6 +95,51 @@
  add('barra',(g,x,y,sm,o)=>{const P=pal(o),w=o.w||48,d=o.d||9;soft(g,x,y,w*.55);M(g,x,y,box(w,d,13,[0,0,0]),P.wood,sm,1650,RG);for(let i=0;i<Math.round(w/8);i++)M(g,x,y,box(w/Math.round(w/8)-.8,.8,10,[-w/2+(i+.5)*w/Math.round(w/8),d/2+.2,1.5]),i%2?P.woodL:mix(P.wood,'#000',.1),0,1651+i,NP);
   M(g,x,y,box(w+3,d+3,2,[0,0,13]),P.woodD,sm,1670,RG);M(g,x,y,box(w+2,.8,1.2,[0,d/2+1.4,5]),'#c8a050',0,1671,NI);
   [-1,0,1].forEach((s,i)=>M(g,x,y,lathe({n:6,at:[s*w*.28,-.5,15],r:[1.5,1.5],h:4,top:.9,seed:1672+i}),['#c9885a','#e8e0d0','#8ab0d8'][i],0,1672+i,{crease:0,paint:false}))},1.8);
+ // ═════════ BANCO (lote V8, 14 oct 2026): mostrador de ventanillas con reja + cámara acorazada en la pared, un estilo por bioma (o.k: 0 Pradera … 5 Volcán) ═════════
+ // mostrador largo a lo largo de x; la reja va en el centro del fondo (y≈−1) con 3 ventanillas; los clientes están en +y y los cajeros detrás (−y).
+ const BKV=P=>[{body:P.wood,top:P.woodD,trim:'#d8b050',bar:'#c8a050',pan:P.woodL},            // Pradera: madera clara y latón
+  {body:P.wood,top:P.woodD,trim:'#6f9a46',bar:P.woodD,pan:P.woodL},                            // Bosque: troncos con musgo y reja de madera
+  {body:'#a8884e',top:P.woodD,trim:'#d9a03a',bar:'#b8a85a',pan:'#c0a060'},                     // Pantano: caña
+  {body:P.wood,top:P.woodD,trim:'#cfe8f6',bar:'#6a6e78',pan:P.woodL},                          // Cumbres: madera oscura y hierro
+  {body:'#a02a22',top:'#3a1a14',trim:'#e0b050',bar:'#3a1a14',pan:'#b8302a'},                   // Oriental: laca roja con oro
+  {body:'#3c3234',top:'#2a2226',trim:'#ff8a2a',bar:'#2e2a2c',pan:'#4a3e3c'}];                  // Volcán: basalto con veta de lava
+ add('mostradorBanco',(g,x,y,sm,o)=>{const P=pal(o),k=o.k||0,V=BKV(P)[k]||BKV(P)[0],w=o.w||70,d=o.d||11,H=9;let sd=2300;const S=()=>sd++;soft(g,x,y,w*.55);
+  if(k===1){M(g,x,y,box(w-2,d-2,H,[0,-1,0]),mix(V.body,'#000',.2),0,S(),RG);for(let i=0;i<3;i++)M(g,x,y,tilt(lathe({n:7,at:[0,0,0],r:[2,2],h:w,top:1,seed:S(),amp:.06}),[-w/2,d/2-2,2+i*2.9],'x',1),i%2?V.pan:V.body,sm,S(),RG);
+   M(g,x,y,blob({at:[-w*.3,d/2,H-.4],r:[7,2.4,1.4],amp:.25,seed:S()}),V.trim,0,S(),{paint:false,ij:.3,crease:0});M(g,x,y,blob({at:[w*.34,d/2,H-.4],r:[5,2,1.2],amp:.25,seed:S()}),V.trim,0,S(),{paint:false,ij:.3,crease:0})}
+  else if(k===2){M(g,x,y,box(w-2,d-2,H,[0,-1,0]),mix(V.body,'#000',.25),0,S(),RG);const n=Math.round(w/2.9);for(let i=0;i<n;i++)M(g,x,y,lathe({n:6,at:[-w/2+1.45+i*(w/n),d/2-1.4,0],r:[1.35,1.35],h:H,top:.95,seed:S()}),i%3===0?V.pan:V.body,sm,S(),RG);
+   [2.5,6.5].forEach(z=>M(g,x,y,box(w,1,1.2,[0,d/2+.1,z]),P.woodD,0,S(),NP))}
+  else{M(g,x,y,box(w,d,H,[0,0,0]),V.body,sm,S(),RG);
+   for(let i=0;i<3;i++){const cx=-w/3+i*w/3;M(g,x,y,box(w/3-5,.7,H-4.4,[cx,d/2+.2,2]),V.pan,0,S(),NP);if(k===4||k===0)M(g,x,y,box(w/3-8,.6,H-7,[cx,d/2+.6,3]),mix(V.pan,'#fff',.12),0,S(),NI)}
+   M(g,x,y,box(w+.4,.8,1.4,[0,d/2+.3,.6]),mix(V.body,'#000',.3),0,S(),NI);
+   if(k===5)for(let i=0;i<4;i++)M(g,x,y,box(.8,.5,H*.55,[-w*.38+i*w*.25,d/2+.4,2+(i%2)*3]),V.trim,0,S(),NI)}
+  M(g,x,y,box(w+3,d+3,2,[0,0,H]),V.top,sm,S(),RG);M(g,x,y,box(w+2,.8,1.1,[0,d/2+1.4,H-2.2]),V.trim,0,S(),NI);
+  // reja: 4 postes, travesaño alto y barrotes; cada tramo deja una ventanilla abierta en el centro
+  const z0=H+2,zt=z0+9,yb=-1.2,bar=V.bar;
+  [-w/2+1,-w/6,w/6,w/2-1].forEach(px=>M(g,x,y,box(2.2,2.2,zt-z0+2,[px,yb,z0]),k===4?V.top:mix(bar,'#000',.15),sm,S(),RG));
+  M(g,x,y,box(w,2.4,2.4,[0,yb,zt]),k===4?V.body:mix(bar,'#000',.1),sm,S(),RG);
+  if(k===4){M(g,x,y,box(w,1.2,.8,[0,yb,zt+2.4]),V.trim,0,S(),NI);[-1,1].forEach(u=>M(g,x,y,box(5,2.6,1.2,[u*(w/2+.5),yb,zt+1.2]),V.top,0,S(),NP))}   // tejadillo con puntas curvas
+  for(let i=0;i<3;i++){const cx=-w/3+i*w/3,hw=w/6-1.6;
+   for(let bx=cx-hw+1.6;bx<cx+hw-.5;bx+=k===4?3.6:2.6){const win=Math.abs(bx-cx)<5.6,zb=win?z0+7:z0;M(g,x,y,box(.7,.7,zt-zb,[bx,yb,zb]),bar,0,S(),NI)}
+   M(g,x,y,box(w/3-3,1,1.1,[cx,yb,z0+7]),bar,0,S(),NI);   // dintel de la ventanilla
+   if(k===4)[z0+3,z0+8.6].forEach(z=>M(g,x,y,box(w/3-3,.8,.8,[cx,yb+.1,z]),bar,0,S(),NI));
+   // en cada ventanilla: monedas en el lado del cliente
+   const coin=(px,py,n)=>{for(let j=0;j<n;j++)M(g,x,y,lathe({n:8,at:[px,py,H+2+j*1],r:[1.7,1.7],h:.9,top:1,seed:S()}),j%2?'#e8c040':'#f8d860',0,S(),{crease:0,paint:false,ij:.25})};
+   if(i!==1)coin(cx+(i?-3:3),2.6,2+i);}
+  // libro de cuentas, campanilla y (oriental) ábaco sobre el mostrador
+  M(g,x,y,box(7,4.6,1.2,[w/3+2,2.8,H+2]),'#e6dcb8',0,S(),NP);M(g,x,y,box(7.4,5,.5,[w/3+2,2.8,H+2]),P.cloth,0,S(),NI);
+  M(g,x,y,lathe({n:8,at:[-2,3,H+2],r:[1.8,.3],h:2.2,top:.4,seed:S()}),'#e0b850',0,S(),{crease:0,paint:false});
+  if(k===4){M(g,x,y,box(8,1,5,[-w/3-1,3,H+2]),'#3a1a14',0,S(),NP);for(let r=0;r<3;r++)for(let c=0;c<4;c++)M(g,x,y,box(1.1,1.3,1,[-w/3-3.6+c*1.8,3.4,H+3+r*1.4]),'#e0b050',0,S(),NI)}
+  if(k===3)M(g,x,y,box(w*.6,d*.6,.4,[0,2,H+2]),P.cloth,0,S(),NI)   // tapete azul
+ },1.8);
+ // cámara acorazada en la pared (portón redondo con volante); modelo de pared: y=0 es el plano de la pared, sale hacia +y
+ add('boveda',(g,x,y,sm,o)=>{const P=pal(o),k=o.k||0,met=['#9aa0a8','#7a6a50','#8a8a6a','#6a6e78','#4a3a32','#2e2a2c'][k],fr=k===5?'#4a3e3c':k===4?'#a02a22':P.stone;let sd=2400;const S=()=>sd++;soft(g,x,y,10);
+  M(g,x,y,box(26,1.4,26,[0,0,2]),fr,sm,S(),RG);
+  M(g,x,y,tilt(lathe({n:16,at:[0,0,0],r:[10.5,10.5],h:2.2,top:1,seed:S()}),[0,1,15],'y',1),met,sm,S(),RG);
+  M(g,x,y,tilt(lathe({n:16,at:[0,0,0],r:[8,8],h:.8,top:1,seed:S()}),[0,3,15],'y',1),mix(met,'#fff',.12),0,S(),NI);
+  for(let i=0;i<8;i++){const a=i*Math.PI/4;M(g,x,y,box(1.1,.8,1.1,[Math.cos(a)*9.3,3.4,15+Math.sin(a)*9.3-.5]),'#e0c060',0,S(),NI)}
+  M(g,x,y,box(11,.8,1.3,[0,4,14.35]),'#c8a050',0,S(),NI);M(g,x,y,box(1.3,.8,11,[0,4,9.5]),'#c8a050',0,S(),NI);   // volante en cruz
+  M(g,x,y,tilt(lathe({n:10,at:[0,0,0],r:[2,2],h:1.4,top:1,seed:S()}),[0,3.8,15],'y',1),'#e8c860',0,S(),{crease:0,paint:false});
+  if(k===5)M(g,x,y,box(24,.6,.8,[0,1.6,2.6]),P.lava,0,S(),NI)},1.8);
  // barril de taberna tumbado con grifo
  add('barrilTap',(g,x,y,sm,o)=>{const P=pal(o);soft(g,x,y,9);M(g,x,y,box(14,9,2.4,[0,0,0]),P.woodD,sm,1690,RG);M(g,x,y,tilt(lathe({n:9,at:[0,0,0],r:[5.6,5.6],h:13,top:1.08,seed:1691}),[-6.5,0,7],'x',1),P.wood,sm,1691,RG);
   [-3,3].forEach((px,i)=>M(g,x,y,tilt(lathe({n:9,at:[0,0,0],r:[5.9,5.9],h:1.3,top:1,seed:1692+i}),[px-.6,0,7],'x',1),P.woodD,0,1692+i,{crease:0,paint:false}));M(g,x,y,box(1.2,1.2,2.6,[6.8,0,5.4]),'#c8a050',0,1694,NI)},1.8);

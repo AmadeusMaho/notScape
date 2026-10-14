@@ -94,6 +94,7 @@ const ITEMICON=(()=>{
   paw(c){const f=c||'#8a6a4a';S(f,E(32,42,14,12));for(const [x,y] of[[14,28],[25,18],[39,18],[50,28]])S(f,E(x,y,6,8),{lw:2.2})},
   anvil(c){S('#4a4e58',()=>{g.moveTo(6,22);g.lineTo(50,22);g.lineTo(60,28);g.lineTo(46,32);g.lineTo(42,36);g.lineTo(46,46);g.lineTo(52,52);g.lineTo(12,52);g.lineTo(18,46);g.lineTo(22,36);g.lineTo(14,32);g.lineTo(6,30);g.closePath()});L(10,26,48,26,'rgba(255,255,255,.4)',2)},
   coins(c){for(let i=0;i<3;i++){S(i%2?'#d8b030':'#f0c840',R(12,40-i*11,40,11,5),{lw:2.2});}S('#f8e070',E(32,16,20,8),{lw:2.2});dot(32,16,4,'#d8a020')},
+  church(c){S('#d8cdb4',R(8,34,48,22,2));S('#c8382e',Pl([[4,36],[32,22],[60,36]]));S('#e8dcc4',R(24,10,16,28,1));S('#5a6a8a',Pl([[22,12],[32,0],[42,12]]));S('#4a3a2a',()=>{g.moveTo(26,56);g.lineTo(26,46);g.quadraticCurveTo(32,38,38,46);g.lineTo(38,56);g.closePath()});S('#ffd86a',R(29,18,6,8,2),{lw:1.8});L(32,0,32,-1,'#e8c040',1)},
   mug(c){S('#e8b050',R(12,16,32,38,5));S('#fff6d8',()=>{g.moveTo(10,18);g.quadraticCurveTo(14,4,24,10);g.quadraticCurveTo(30,2,38,10);g.quadraticCurveTo(48,6,46,18);g.closePath()},{lw:2.2});g.beginPath();g.arc(48,34,9,-1.4,1.4);g.strokeStyle=INK;g.lineWidth=8;g.stroke();g.strokeStyle='#e8b050';g.lineWidth=4;g.stroke()},
   tools(c){L(14,52,44,16,'#8a5a2a',5);S('#9a9aa8',R(36,6,20,12,3));L(12,16,50,52,'#cfd4dc',5);L(12,16,6,10,'#8a5a2a',5)},
   speech(c){S('#fdf9e3',()=>{g.moveTo(10,10);g.lineTo(54,10);g.lineTo(54,40);g.lineTo(34,40);g.lineTo(22,54);g.lineTo(24,40);g.lineTo(10,40);g.closePath()});for(const x of[22,32,42])dot(x,25,3,'#8a6a4a')},
@@ -126,7 +127,7 @@ const ITEMICON=(()=>{
  function draw(id){const cv=document.createElement('canvas');cv.width=cv.height=64;g=cv.getContext('2d');g.lineJoin='round';const[k,c,o]=spec(id);try{SH[k](c,o)}catch(e){if(window.console)console.warn('[icon]',id,e)}return cv}
  // marcadores del mapa / minimapa: emoji → icono pintado (forma, color)
  const MK={'🌲':['tree','#4f9a4a'],'⛏️':['pick','#9a9aa8'],'🎣':['rod','#8a5a2a'],'🏕️':['tent','#c8a060'],'⛺':['tent','#a86a4a'],'⛩️':['torii','#c8382e'],'🧰':['chestbox'],'💀':['skull'],'🐄':['paw','#f0e8d8'],'🐗':['paw','#8a5a3a'],'🐸':['paw','#6ab048'],'🦬':['paw','#6a4a30'],'🦊':['paw','#e8803a'],'🦎':['paw','#6ab058'],'🐺':['paw','#8a8a98'],'🐻':['paw','#6a4a30'],
-  '🧙':['hat','#4a2a6a'],'🧊':['gem','#8ad0f0'],'🥷':['mask','#2a2a3a'],'🌋':['core','#ff7a2a'],'🏚️':['tent','#8a8a7a'],'🍖':['steak','#d8605a'],'⚰️':['skull'],'😈':['horn','#7a2a2a'],'👹':['mask','#c8382e'],'❓':['scroll','#8a6a4a'],'🏦':['coins'],'🛒':['bag','#9a6a34'],'💬':['speech'],'⚒️':['anvil'],'🍺':['mug'],'🪚':['tools'],'🔥':['core','#ff7a2a']};
+  '🧙':['hat','#4a2a6a'],'🧊':['gem','#8ad0f0'],'🥷':['mask','#2a2a3a'],'🌋':['core','#ff7a2a'],'🏚️':['tent','#8a8a7a'],'🍖':['steak','#d8605a'],'⚰️':['skull'],'😈':['horn','#7a2a2a'],'👹':['mask','#c8382e'],'❓':['scroll','#8a6a4a'],'🏦':['coins'],'🛒':['bag','#9a6a34'],'💬':['speech'],'⚒️':['anvil'],'🍺':['mug'],'🪚':['tools'],'🔥':['core','#ff7a2a'],'⛪':['church']};
  const MC={};
  function marker(e){if(MC[e]!==undefined)return MC[e];const m=MK[e];if(!m)return MC[e]=null;const cv=document.createElement('canvas');cv.width=cv.height=64;g=cv.getContext('2d');g.lineJoin='round';try{SH[m[0]](m[1],{})}catch(x){}return MC[e]=cv}
  const canvas=id=>C[id]||(C[id]=draw(id)),URL_={};

@@ -580,7 +580,12 @@ const ORG=(()=>{
   arbusto(g,x,y,sm){soft(g,x,y,18);const c='#6fb048';[[-6,-1,9,9],[7,-1,9,9],[0,4,10,10]].forEach((l,i)=>M(g,x,y,blob({at:at(l[0],l[1],l[2]),r:[l[3],l[3],l[3]*.8],amp:.2,seed:61+i}),c,sm,61+i));
    [[-4,3,18,'#ff9ac0'],[5,2,17,'#ffd75a']].forEach((f,i)=>M(g,x,y,blob({at:at(f[0],f[1],f[2]),r:[2.2,2.2,2],amp:.1,seed:64+i}),f[3],sm,64+i,{paint:false}))},
   casa(g,x,y,sm,o){o=o||{};const w=o.w||30,d=o.d||22,hh=o.h||16,W=o.wall||'#e6d2a6',rf=o.roof||'#d0674a';soft(g,x,y,Math.max(w,d)*.8);M(g,x,y,box(w,d,hh,[0,0,0]),W,sm,61,RG);
+   if(o.tim!==0){const T='#6e4a2a',F={crease:0,paint:false,ij:.2};   // V1 (15 oct 2026): entramado de madera (postes en las esquinas y viga a media altura) sobre el muro de cal
+    [-w/2+.8,w/2-.8].forEach((px,i)=>M(g,x,y,box(1.5,1.4,hh,[px,d/2+.1,0]),T,0,70+i,F));[-d/2+.8,d/2-.8].forEach((py,i)=>M(g,x,y,box(1.4,1.5,hh,[w/2+.1,py,0]),T,0,72+i,F));
+    M(g,x,y,box(w,1.3,1.3,[0,d/2+.1,hh*.6]),T,0,74,F);M(g,x,y,box(1.3,d,1.3,[w/2+.1,0,hh*.6]),T,0,75,F)}
+   M(g,x,y,box(w+.8,1.5,3.2,[0,d/2+.45,0]),'#aaa59a',sm,76,RG);M(g,x,y,box(1.5,d+.8,3.2,[w/2+.45,0,0]),'#99948a',sm,77,RG);   // zócalo de piedra (la casa deja de «flotar»)
    M(g,x,y,box(7,1.4,11,[-w/6,d/2,0]),'#7a4e2c',0,62,{crease:0,paint:false});M(g,x,y,box(1.4,4.6,5,[w/2,-d*.2,hh*.45]),'#9fd6e8',0,63,{crease:0,paint:false,ij:.3});M(g,x,y,box(1.4,4.6,5,[w/2,d*.2,hh*.45]),'#9fd6e8',0,64,{crease:0,paint:false,ij:.3});
+   M(g,x,y,box(1.9,5.6,1.7,[w/2+.5,d*.2,hh*.45-3.4]),'#8a5a30',0,78,{crease:0,paint:false,ij:.2});[-1.6,1.6].forEach((q,i)=>M(g,x,y,blob({at:[w/2+.6,d*.2+q,hh*.45-1.4],r:[1.2,1.3,1.1],amp:.1,seed:79+i}),i?'#f4d24a':'#e8708c',0,79+i,{paint:false}));   // jardinera con flores bajo la ventana
    M(g,x,y,gable({at:[0,0,hh],w:w,d:d,h:o.rh||13,ov:2.2}),rf,sm,65,RG);M(g,x,y,box(5,5,12,[-w*.27,-d*.14,hh+4]),'#a29d93',sm,66,RG)},
   farola(g,x,y,sm){soft(g,x,y,9);M(g,x,y,lathe({n:6,at:[0,0,0],r:[1.7,1.7],h:30,top:.8,seed:91}),'#5a4a3a',sm,91,RG);
    M(g,x,y,box(8,8,1.6,[0,0,29]),'#4a3a2e',sm,94,RG);                                           // base del farol (se pinta ANTES del cristal para no taparlo)
@@ -601,7 +606,7 @@ const ORG=(()=>{
     M(g,x,y,fr,T,0,nn++,{crease:0,paint:false,ij:.2});M(g,x,y,gl,'#9fd6e8',0,nn++,{crease:0,paint:false,ij:.3});M(g,x,y,sl,'#8a5a30',0,nn++,{crease:0,paint:false,ij:.2})};
     WN(w*.16,5.6,1,0);WN(-w*.16,hh*.64,1,J);WN(w*.16,hh*.64,1,J);[-d*.17,d*.17].forEach(c=>{WN(c,5.6,0,0);WN(c,hh*.64,0,J)})}
    M(g,x,y,gableEnds({at:[0,0,hh],w:w+2*J+.3,d:d+2*J,h:15,ov:2.4}),W,sm,128,RG);M(g,x,y,gableOpen({at:[0,0,hh],w:w,d:d,h:15,ov:2.4}),rf,sm,129,RG);M(g,x,y,box(6,6,13,[w*.28,-d*.16,hh+5]),'#a29d93',sm,130,RG);
-   M(g,x,y,box(1.6,1.6,14,[w/2+5,d/2+2,0]),T,sm,131,RG);M(g,x,y,box(1.4,10,7,[w/2+5,d/2-3,8]),'#d9a05a',0,132,{crease:0,paint:false,ij:.3})},   // cartel colgante
+   if(!o.nosign){M(g,x,y,box(1.6,1.6,14,[w/2+5,d/2+2,0]),T,sm,131,RG);M(g,x,y,box(1.4,10,7,[w/2+5,d/2-3,8]),'#d9a05a',0,132,{crease:0,paint:false,ij:.3})}},   // cartel colgante (o.nosign: casa de dos plantas, variante V2)
   granero(g,x,y,sm,o){o=o||{};const w=o.w||42,d=o.d||30,hh=20,W=o.wall||'#c0583c',rf=o.roof||'#7a4a3a';soft(g,x,y,w*.8);M(g,x,y,box(w,d,hh,[0,0,0]),W,sm,141,RG);
    M(g,x,y,box(16,1.4,15,[0,d/2,0]),'#6e4a2a',0,142,{crease:0,paint:false});M(g,x,y,box(16.6,1.8,1.6,[0,d/2,7]),'#f1e4c4',0,143,{crease:0,paint:false,ij:.2});M(g,x,y,box(1.6,1.9,16.6,[0,d/2,0]),'#f1e4c4',0,144,{crease:0,paint:false,ij:.2});
    M(g,x,y,box(1.4,7,7,[w/2,0,hh+4]),'#4a3a2e',0,145,{crease:0,paint:false,ij:.2});M(g,x,y,box(1.4,d*.7,1.6,[w/2,0,hh*.5]),'#f1e4c4',0,146,{crease:0,paint:false,ij:.2});
@@ -690,15 +695,15 @@ const ORG=(()=>{
   lenera(g,x,y,sm){soft(g,x,y,12);[[-4,0,0],[0,0,0],[4,0,0],[-2,0,3],[2,0,3],[0,0,6]].forEach((q,i)=>M(g,x,y,box(16,3.6,3,[q[0]*0,q[0],q[2]]),i%2?'#8f6238':'#a8784a',sm,330+i,RG))},
   tocon(g,x,y,sm){soft(g,x,y,7);M(g,x,y,lathe({n:7,at:[0,0,0],r:[5,5],h:5,top:.92,seed:341}),'#a8784a',sm,341,RG);M(g,x,y,lathe({n:7,at:[0,0,5],r:[4.2,4.2],h:.6,top:1,seed:342}),'#d6a566',0,342,{crease:0,paint:false})},
   seta(g,x,y,sm){soft(g,x,y,8);[[-4,1,5],[3,-2,6.5],[4,4,4]].forEach((q,i)=>{M(g,x,y,lathe({n:6,at:[q[0],q[1],0],r:[1.2,1.2],h:q[2],top:1,seed:351+i}),'#efe6d0',sm,351+i,RG);M(g,x,y,blob({at:[q[0],q[1],q[2]],r:[3.4,3.4,2.2],amp:.1,flat:true,seed:355+i}),i%2?'#d9a05a':'#c0392b',sm,355+i)})},
-  casaLarga(g,x,y,sm,o){o=o||{};const w=o.w||46,d=o.d||22,hh=10,W=o.wall||'#6a4a30',rf=o.roof||'#e4edf3';soft(g,x,y,w*.7);M(g,x,y,box(w,d,hh,[0,0,0]),W,sm,401,RG);
+  casaLarga(g,x,y,sm,o){o=o||{};const w=o.w||46,d=o.d||22,hh=10,W=o.wall||'#6a4a30',rf=o.roof||'#5e6b4c';   // V5: tejado de turba oscura con nieve solo en lo alto (antes todo blanco: nieve sobre nieve, sin contraste)soft(g,x,y,w*.7);M(g,x,y,box(w,d,hh,[0,0,0]),W,sm,401,RG);
    for(let i=0;i<8;i++)M(g,x,y,box(1,d+.6,hh,[-w/2+3+i*(w-6)/7,0,0]),'#4a3220',0,402+i,{crease:0,paint:false,ij:.2});
    M(g,x,y,box(8,1.6,9,[-w/5,d/2+.2,0]),'#3a2616',0,410,{crease:0,paint:false});M(g,x,y,box(10,2,1.4,[-w/5,d/2+.4,9]),'#c0392b',0,411,{crease:0,paint:false,ij:.2});
    [-w*.1,w*.1,w*.28].forEach((px,i)=>M(g,x,y,lathe({n:8,at:[px,d/2+.8,5.4],r:[2.2,2.2],h:.8,top:1,seed:412+i}),['#c0392b','#3a6aa8','#e0b84a'][i],0,412+i,{crease:0,paint:false,ij:.2}));
-   M(g,x,y,gable({at:[0,0,hh],w:w+1,d:d+1,h:10,ov:3}),rf,sm,415,RG);M(g,x,y,box(w+8,1.6,1.6,[0,0,hh+10.4]),'#3a2616',0,416,{crease:0,paint:false});
+   M(g,x,y,gable({at:[0,0,hh],w:w+1,d:d+1,h:10,ov:3}),rf,sm,415,RG);if(!o.roof)M(g,x,y,gable({at:[0,0,hh+4.4],w:w+7,d:16,h:5.7,ov:.2}),'#eef4f8',sm,4150,RG);M(g,x,y,box(w+8,1.6,1.6,[0,0,hh+10.4]),'#3a2616',0,416,{crease:0,paint:false});
    [-1,1].forEach((sg,i)=>M(g,x,y,tilt(cone({at:[0,0,0],r:[1.2,1.2],h:7,n:4,amp:0,seed:417+i}),[sg*(w/2+3.5),0,hh+10],'x',sg),'#3a2616',sm,417+i,RG));M(g,x,y,box(4,4,6,[w*.2,-d*.1,hh+8]),'#8a8f98',sm,419,RG)},
   stabbur(g,x,y,sm,o){o=o||{};const w=16,d=14;soft(g,x,y,12);[[-1,-1],[1,-1],[-1,1],[1,1]].forEach((q,i)=>M(g,x,y,lathe({n:6,at:[q[0]*(w/2-2),q[1]*(d/2-2),0],r:[1.8,1.8],h:8,top:.9,seed:421+i}),'#5a3e28',sm,421+i,RG));
    M(g,x,y,box(w+2,d+2,1.6,[0,0,8]),'#4a3220',sm,425,RG);M(g,x,y,box(w,d,11,[0,0,9.6]),o.wall||'#7a5a3a',sm,426,RG);M(g,x,y,box(5,1.4,7,[-2,d/2+.2,9.6]),'#3a2616',0,427,{crease:0,paint:false});
-   M(g,x,y,gable({at:[0,0,20.6],w:w+2,d:d+2,h:9,ov:2.4}),o.roof||'#e4edf3',sm,428,RG);M(g,x,y,box(w+8,1.4,1.4,[0,0,29.8]),'#3a2616',0,429,{crease:0,paint:false})},
+   M(g,x,y,gable({at:[0,0,20.6],w:w+2,d:d+2,h:9,ov:2.4}),o.roof||'#5e6b4c',sm,428,RG);if(!o.roof)M(g,x,y,gable({at:[0,0,24.8],w:w+7,d:11.6,h:4.8,ov:.2}),'#eef4f8',sm,4280,RG);M(g,x,y,box(w+8,1.4,1.4,[0,0,29.8]),'#3a2616',0,429,{crease:0,paint:false})},
   salon(g,x,y,sm,o){o=o||{};const W=o.wall||'#5a3e28',rf=o.roof||'#3a3330',sn=o.snow||'#e4edf3';soft(g,x,y,34);M(g,x,y,box(40,28,14,[0,0,0]),W,sm,431,RG);
    [-12,0,12].forEach((px,i)=>M(g,x,y,box(1.4,1.6,14,[px,14.2,0]),'#2e2014',0,432+i,{crease:0,paint:false,ij:.2}));M(g,x,y,box(8,1.6,10,[-6,14.2,0]),'#241810',0,436,{crease:0,paint:false});
    M(g,x,y,gable({at:[0,0,14],w:44,d:32,h:6,ov:3}),rf,sm,437,RG);M(g,x,y,box(26,18,10,[0,0,19.5]),W,sm,438,RG);M(g,x,y,gable({at:[0,0,29.5],w:30,d:22,h:7,ov:2.4}),rf,sm,439,RG);
@@ -736,6 +741,7 @@ const ORG=(()=>{
   pagoda(g,x,y,sm){soft(g,x,y,26);M(g,x,y,box(30,30,2.4,[0,0,0]),'#8a8a90',sm,621,RG);let z=2.4;
    [[22,9,34,6],[16,8,26,5.5],[10,7,18,5]].forEach(([b,bh,rw,rh],i)=>{M(g,x,y,box(b,b,bh,[0,0,z]),i%2?'#efe6d0':'#b8302a',sm,622+i*3,RG);
     [-1,1].forEach((sg,j)=>M(g,x,y,box(1.4,b*.4,bh*.55,[b/2,sg*b*.22,z+bh*.25]),'#3e2a22',0,623+i*3+j*9,{crease:0,paint:false}));
+    if(i===0){M(g,x,y,box(6.4,1.5,bh*.8,[0,b/2,z]),'#3e2a22',0,670,{crease:0,paint:false});M(g,x,y,box(8,1.7,1.2,[0,b/2,z+bh*.8]),'#c8302a',0,671,{crease:0,paint:false,ij:.2});M(g,x,y,box(9,3,1.2,[0,b/2+1.8,z]),'#b9b2a4',sm,672,RG)}   // V4: puerta en la cara +y (es el Templo de la aldea oriental)
     M(g,x,y,box(rw*.78,rw*.78,1.3,[0,0,z+bh-.6]),'#7a2a22',sm,640+i,RG);z+=bh;M(g,x,y,hip({at:[0,0,z],w:rw,d:rw,h:rh,ov:2.6}),'#3e4250',sm,650+i,RG);z+=rh-1.2});
    M(g,x,y,lathe({n:6,at:[0,0,z],r:[.9,.9],h:11,top:.5,seed:660}),'#e0b040',0,660,{crease:0,paint:false});M(g,x,y,blob({at:[0,0,z+5],r:[2.4,2.4,1.5],amp:.05,seed:661}),'#e0b040',0,661,{paint:false})},
   torii(g,x,y,sm,o){o=o||{};soft(g,x,y,18);const R='#c8302a';[-1,1].forEach((sg,i)=>{M(g,x,y,lathe({n:6,at:[0,sg*13,0],r:[2.1,2.1],h:30,top:.9,seed:671+i}),R,sm,671+i,RG);M(g,x,y,box(5,5,1.6,[0,sg*13,0]),'#3a3430',0,673+i,{crease:0,paint:false})});
@@ -852,6 +858,79 @@ const ORG=(()=>{
    [-4,0,4].forEach((px,i)=>{M(g,x,y,lathe({n:6,at:[px,0,18.8],r:[.9,.9],h:4.2,top:1,seed:1323+i}),'#f4efe0',sm,1323+i,RG);M(g,x,y,blob({at:[px,0,24],r:[.9,.9,1.5],amp:.05,seed:1326+i}),'#ffd070',0,1326+i,{paint:false,ij:.4})})}
  });
  Object.assign(KSC,{altarRezo:1.8,tablon:1.9,banca:1.7,pilaTroncos:1.8,tablones:1.8,caballete:1.8,tinaja:1.8,carbon:1.8,lingotes:1.8,muela:1.8,herreria:1.6,asador:1.8,olla:1.8,secadero:1.8,cestaPeces:1.8,atril:1.8,estanteria:1.8,rollos:1.8,candelabro:1.8});
+ // ═══ V1/V2 (15 oct 2026) · VARIANTES DE CASA ═══
+ // Una sola silueta por bioma se leía como «casitas de Monopoly». `o.v` (0-5) añade un rasgo de silueta a casa/troncos/casaLarga/casaJp/casaMaya/cabana sin tocar su puerta (la puerta sigue en x = dx·w sobre la cara +y: `interiors.js` DM la calcula igual):
+ //   1 ala en L (cruce de tejado, fachada a +y) · 2 torreón en la esquina delantera · 3 porche con tejadillo sobre la puerta · 4 buhardilla en el tejado · 5 dos plantas (solo `casa`: reutiliza `taberna` sin cartel).
+ // Orden de dibujo: lo que está DELANTE del volumen (ala, torreón, porche, buhardilla) se pinta después del modelo base; el escalón de la puerta lo llevan todos.
+ // HD: [w, d, alto de muro, z del suelo del muro, muro, tejado, puerta (fracción de w), hip]
+ const HD={casa:[30,22,16,0,'#e6d2a6','#d0674a',-1/6,0,13,2.2],troncos:[32,24,14,0,'#a8784a','#5f8a46',-1/6,0,14,2.8],casaLarga:[46,22,10,0,'#6a4a30','#5e6b4c',-.2,0,10,3],casaJp:[32,24,14,2,'#efe6d0','#3e4250',-1/6,1,9,2.4],casaMaya:[30,22,11,2,'#6a5a58','#7a6a42',-1/6,1,10,2.8],cabana:[22,18,12,0,'#d8b98a','#d9b45a',-.2,0,11,3]};
+ const gY=o=>mir(gable({at:[o.at[1],o.at[0],o.at[2]],w:o.d,d:o.w,h:o.h,ov:o.ov}));   // tejado a dos aguas con la cumbrera a lo largo de Y (cruce de tejado)
+ Object.keys(HD).forEach(n=>{const D=HD[n],f=U[n];U[n]=(g,x,y,sm,o)=>{o=o||{};const v=o.v|0,w=o.w||D[0],d=o.d||D[1],hh=o.h||D[2],z=D[3],W=o.wall||D[4],rf=o.roof||D[5],dx=D[6]*w,hp=D[7],rh=o.rh||D[8],ov=D[9],T='#6e4a2a',F={crease:0,paint:false,ij:.2},GL={crease:0,paint:false,ij:.3};
+  if(v===5&&n==='casa'){U.taberna(g,x,y,sm,{w:30,d:24,wall:W,roof:rf,nosign:1});return}
+  f(g,x,y,sm,o);
+  M(g,x,y,box(9,3.2,1.3,[dx,d/2+1.9,z]),'#b9b2a4',sm,2001,RG);   // escalón de piedra ante la puerta
+  if(v===1){const ww=Math.round(w*.42),wl=Math.round(d*.4),h2=hh*.8,cx=w/2-ww/2+1.4,cy=d/2+.2+wl/2;   // ala corta (un «mirador»): más larga taparía la puerta en pantalla (+y baja hacia la izquierda)
+   M(g,x,y,box(ww,wl,h2,[cx,cy,z]),W,sm,2010,RG);M(g,x,y,box(1.4,4.4,4.2,[cx+ww/2,cy,z+h2*.45]),'#9fd6e8',0,2011,GL);M(g,x,y,box(4.4,1.4,4.2,[cx,cy+wl/2,z+h2*.45]),'#9fd6e8',0,2012,GL);
+   M(g,x,y,box(ww+.8,1.5,3,[cx,cy+wl/2+.45,z]),'#aaa59a',sm,2013,RG);
+   M(g,x,y,hp?hip({at:[cx,cy,z+h2],w:ww+1,d:wl+1,h:6,ov:2}):gY({at:[cx,cy,z+h2],w:ww+1,d:wl+1,h:6.5,ov:1.4}),rf,sm,2014,RG)}
+  if(v===2){const tw=Math.min(10,w*.34),th=hh+11,tx=w/2-tw/2+1,ty=d/2-tw/2+1;
+   M(g,x,y,box(tw,tw,th,[tx,ty,z]),W,sm,2020,RG);M(g,x,y,box(tw+1,tw+1,1.5,[tx,ty,z+th-3]),T,0,2021,F);
+   M(g,x,y,box(1.3,3.6,4.2,[tx+tw/2,ty,z+th*.55]),'#9fd6e8',0,2022,GL);M(g,x,y,box(3.6,1.3,4.2,[tx,ty+tw/2,z+th*.55]),'#9fd6e8',0,2023,GL);
+   M(g,x,y,box(tw+.8,1.5,3.2,[tx,ty+tw/2+.45,z]),'#aaa59a',sm,2024,RG);
+   M(g,x,y,hip({at:[tx,ty,z+th],w:tw+1,d:tw+1,h:11,ov:1.8}),rf,sm,2025,RG)}
+  if(v===3){const pw=17,pd=11;
+   M(g,x,y,box(pw,pd+1,1,[dx,d/2+pd/2+.3,z]),'#b9803f',sm,2030,RG);
+   [-1,1].forEach((s,i)=>M(g,x,y,box(1.7,1.7,10,[dx+s*7.4,d/2+pd,z+1]),T,sm,2031+i,RG));
+   M(g,x,y,gY({at:[dx,d/2+pd/2,z+11],w:pw+2,d:pd+2,h:4.5,ov:.6}),rf,sm,2033,RG)}
+  if(v===4&&!hp){const yq=d*.22,zr=z+hh+rh*(1-yq/(d/2+ov)),qx=w*.22,zf=z+hh+rh*(1-(yq+2.2)/(d/2+ov));
+   M(g,x,y,box(6.6,4.4,7,[qx,yq,zf-.6]),W,sm,2040,RG);M(g,x,y,box(3.8,1.2,3.6,[qx,yq+2.2,zf+1.6]),'#9fd6e8',0,2041,GL);
+   M(g,x,y,gY({at:[qx,yq,zf+6.4],w:7.4,d:5.6,h:4.4,ov:.4}),rf,sm,2042,RG)}
+ }});
+ // ═══ V3/V4 (15 oct 2026) · patios, plaza e hitos: huerto, monumento, iglesia (D0, 4 estilos), molino ═══
+ Object.assign(U,{
+  // huerto: bancal de tierra con 3 hileras de hortalizas y un borde de tablas (patio de las casas corrientes)
+  huerto(g,x,y,sm,o){o=o||{};soft(g,x,y,13);M(g,x,y,box(26,17,1.6,[0,0,0]),'#7a5230',sm,2100,RG);
+   [[-1,'#7fbf4a'],[0,'#e8903a'],[1,'#5fa854']].forEach(([r,c],i)=>[-9,-3,3,9].forEach((px,j)=>M(g,x,y,blob({at:[px,r*5,3.6],r:[2.1,2.1,2.5],amp:.16,seed:2101+i*4+j}),j%2?STY.mix(c,'#ffffff',.18):c,sm,2101+i*4+j)));
+   [[0,-8.8,26,1.3],[0,8.8,26,1.3]].forEach((q,i)=>M(g,x,y,box(q[2],q[3],2.2,[q[0],q[1],0]),'#9a6a3a',0,2115+i,{crease:0,paint:false,ij:.2}))},
+  // monumento de plaza: peldaños, pedestal y obelisco con remate dorado y cuatro maceteros (o.col = color del bioma en el remate y las flores)
+  monumento(g,x,y,sm,o){o=o||{};const C=o.col||'#e0b040',S='#b8b2a6';soft(g,x,y,24);
+   M(g,x,y,box(34,34,2.4,[0,0,0]),'#a29d93',sm,2120,RG);M(g,x,y,box(26,26,2.4,[0,0,2.4]),'#b4aea2',sm,2121,RG);M(g,x,y,box(14,14,6,[0,0,4.8]),S,sm,2122,RG);
+   M(g,x,y,lathe({n:4,rot:Math.PI/4,at:[0,0,10.8],r:[4.6,4.6],h:34,top:.42,seed:2123}),'#cfc9bb',sm,2123,RG);M(g,x,y,blob({at:[0,0,46],r:[3,3,3.4],amp:.06,seed:2124}),C,0,2124,{paint:false});
+   [[-1,-1],[1,-1],[-1,1],[1,1]].forEach((q,i)=>{M(g,x,y,box(6,6,3.6,[q[0]*13,q[1]*13,2.4]),'#8f8a80',sm,2125+i,RG);M(g,x,y,blob({at:[q[0]*13,q[1]*13,7],r:[3.2,3.2,2.2],amp:.2,seed:2130+i}),i%2?C:'#e8708c',sm,2130+i)})},
+  // iglesia (D0): una por aldea; o.style 'piedra' (Pradera) · 'troncos' (Bosque, ermita) · 'palafito' (Pantano, capilla sobre pilotes) · 'stave' (Cumbres, iglesia de madera con cabezas de dragón). La puerta va en x=-w/6 de la cara +y (igual que las casas: DM de interiors.js).
+  iglesia(g,x,y,sm,o){o=o||{};const st=o.style||'piedra',w=40,d=24,hh=17,Z=st==='palafito'?12:0,z0=Z?Z+1.8:0,T='#6e4a2a',F={crease:0,paint:false,ij:.2},GL={crease:0,paint:false,ij:.3},
+    W=o.wall||(st==='troncos'?'#a8784a':st==='palafito'?'#b8996a':st==='stave'?'#5a3e28':'#d2cbbb'),rf=o.roof||(st==='troncos'?'#5f8a46':st==='palafito'?'#c9b36a':st==='stave'?'#3a3330':'#b9573b'),TR=o.tower||(st==='troncos'?'#4f7a3e':st==='palafito'?'#a8925a':st==='stave'?'#2e2014':'#6f7d8a');
+   soft(g,x,y,w*.85);
+   if(Z){[-1,0,1].forEach(a=>[-1,1].forEach(b=>M(g,x,y,lathe({n:6,at:[a*(w/2-3),b*(d/2-3),0],r:[1.8,1.8],h:Z,top:.9,seed:2200+a*3+b+4}),'#5a4028',sm,2200+a*3+b+4,RG)));M(g,x,y,box(w+5,d+5,1.8,[0,0,Z]),'#8a6a42',sm,2210,RG);
+    [[d/2+9.4,Z-3.4],[d/2+11.4,Z-6.8],[d/2+13.4,Z-10.2]].forEach((q,i)=>M(g,x,y,box(7,2.2,1.2,[-w/6,q[0],q[1]]),'#7a5a36',0,2211+i,F))}
+   M(g,x,y,box(w,d,hh,[0,0,z0]),W,sm,2220,RG);
+   if(st==='troncos')for(let i=0;i<5;i++)M(g,x,y,box(w+1.2,d+1.2,1.3,[0,0,z0+2.5+i*3.2]),'#7a5230',0,2221+i,F);
+   if(st==='piedra'){[-w/2+.8,w/2-.8].forEach((px,i)=>M(g,x,y,box(1.6,1.6,hh,[px,d/2+.1,z0]),'#9a958d',sm,2226+i,RG));M(g,x,y,box(w+.8,1.6,3,[0,d/2+.4,z0]),'#9a958d',sm,2228,RG);M(g,x,y,box(1.6,d+.8,3,[w/2+.4,0,z0]),'#8a857d',sm,2229,RG)}
+   // puerta de dos hojas con dintel y escalón; vitrales altos en la cara +y y en la +x
+   M(g,x,y,box(8.4,1.5,12,[-w/6,d/2,z0]),'#4a2e1a',0,2230,F);M(g,x,y,box(9.6,1.8,1.6,[-w/6,d/2,z0+12]),st==='stave'?'#c8421a':'#8a8478',0,2231,F);M(g,x,y,box(.9,1.7,12,[-w/6,d/2+.1,z0]),'#2e1a0e',0,2232,F);M(g,x,y,box(10,3.2,1.3,[-w/6,d/2+1.9,z0]),'#b9b2a4',sm,2233,RG);
+   [[0,'#6fa8d8'],[5.4,'#f1c24a']].forEach(([px,c],i)=>{M(g,x,y,box(3.2,1.2,8.5,[px,d/2,z0+4]),T,0,2234+i*2,F);M(g,x,y,box(2.4,1.3,7.6,[px,d/2+.1,z0+4.5]),c,0,2235+i*2,GL)});
+   M(g,x,y,box(1.2,3.2,8.5,[w/2,-3.4,z0+4]),T,0,2240,F);M(g,x,y,box(1.3,2.4,7.6,[w/2+.1,-3.4,z0+4.5]),'#6fa8d8',0,2241,GL);
+   if(st==='stave'){   // tres cuerpos escalonados con tejados superpuestos y cabezas de dragón en las cumbreras
+    M(g,x,y,gable({at:[0,0,z0+hh],w:w+2,d:d+2,h:6,ov:3}),rf,sm,2250,RG);M(g,x,y,box(26,16,10,[-3,0,z0+hh+4.5]),W,sm,2251,RG);M(g,x,y,gable({at:[-3,0,z0+hh+14.5],w:28,d:19,h:7,ov:2.4}),rf,sm,2252,RG);
+    M(g,x,y,box(14,10,8,[-3,0,z0+hh+19]),W,sm,2253,RG);M(g,x,y,gable({at:[-3,0,z0+hh+27],w:17,d:13,h:9,ov:2}),'#e4edf3',sm,2254,RG);M(g,x,y,cone({at:[-3,0,z0+hh+36],r:[1.4,1.4],h:11,n:4,amp:0,seed:2255}),'#2e2014',sm,2255,RG);
+    [-1,1].forEach((sg,i)=>[[w/2+3.5,z0+hh+6],[17.5,z0+hh+26]].forEach((q,j)=>M(g,x,y,tilt(cone({at:[0,0,0],r:[1.1,1.1],h:6,n:4,amp:0,seed:2256+i*2+j}),[sg*q[0]-(j?3:0),0,q[1]],'x',sg),'#2e2014',sm,2256+i*2+j,RG)));return}
+   M(g,x,y,gable({at:[0,0,z0+hh],w:w,d:d,h:13,ov:2.2}),rf,sm,2250,RG);
+   // campanario en la esquina delantera derecha: cuerpo, huecos de campana, flecha y cruz
+   const tw=12,th=hh+(st==='troncos'?11:20),tx=w/2-tw/2+1,ty=d/2-tw/2+1;
+   M(g,x,y,box(tw,tw,th,[tx,ty,z0]),W,sm,2260,RG);M(g,x,y,box(tw+1,tw+1,1.5,[tx,ty,z0+th-3]),T,0,2261,F);
+   M(g,x,y,box(4,1.4,6,[tx,ty+tw/2,z0+th-10]),'#2e2014',0,2262,F);M(g,x,y,box(1.4,4,6,[tx+tw/2,ty,z0+th-10]),'#2e2014',0,2263,F);M(g,x,y,blob({at:[tx,ty+tw/2-.4,z0+th-8.5],r:[1.2,.8,1.4],amp:.05,seed:2264}),'#e0b040',0,2264,{paint:false});
+   M(g,x,y,box(3.6,1.3,4,[tx,ty+tw/2,z0+th*.45]),'#f4d46a',0,2265,GL);M(g,x,y,box(tw+.8,1.5,3,[tx,ty+tw/2+.45,z0]),'#aaa59a',sm,2266,RG);
+   const sh=st==='troncos'?10:16;M(g,x,y,hip({at:[tx,ty,z0+th],w:tw+1.6,d:tw+1.6,h:sh,ov:1}),TR,sm,2267,RG);
+   M(g,x,y,lathe({n:5,at:[tx,ty,z0+th+sh],r:[.8,.8],h:6,top:.4,seed:2268}),'#e0b040',0,2268,F);M(g,x,y,box(4.2,.9,.9,[tx,ty,z0+th+sh+3.4]),'#e0b040',0,2269,F)},
+  // molino de viento: torre de piedra con techo de paja; las aspas giran en propFx (props.js) y no van en el sprite
+  molino(g,x,y,sm,o){o=o||{};soft(g,x,y,18);M(g,x,y,box(24,24,3,[0,0,0]),'#a8a398',sm,2300,RG);M(g,x,y,lathe({n:8,rot:Math.PI/8,at:[0,0,3],r:[10.5,6.2],h:26,top:.62,seed:2301}),o.wall||'#e0d8c4',sm,2301,RG);
+   M(g,x,y,box(7,1.5,11,[-3,9.2,3]),'#7a4e2c',0,2302,{crease:0,paint:false});M(g,x,y,box(3.6,1.3,4,[4.4,8.2,17]),'#9fd6e8',0,2303,{crease:0,paint:false,ij:.3});
+   M(g,x,y,cone({at:[0,0,29],r:[8.4,8.4],h:11,n:8,amp:0,seed:2304}),o.roof||'#cfa24e',sm,2304,RG);M(g,x,y,lathe({n:6,at:[0,6,24.5],r:[1.8,1.8],h:5,top:1,seed:2305}),'#6e4a2a',0,2305,{crease:0,paint:false})}
+ });
+ Object.assign(KSC,{huerto:1.8,monumento:1.9,iglesia:2.5,molino:2.2,pagoda:2.6,templo:2.4});   // pagoda (Templo oriental) y templo escalonado (Volcán): ahora son el edificio principal de su aldea, más grandes que una casa
+ // V5 (15 oct 2026) · ESCALA: las casas eran «de muñecas» (la puerta medía como el héroe). HK = factor único para los edificios habitables: sube KSC, y de él cuelgan DM (puertas), BH (lienzos), fp (colisión), OH (luz) y facades.js (porche/toldo/medallón).
+ // Para volver al tamaño anterior basta HK=1 (nada más depende de un número suelto).
+ const HK=1.2;['casa','troncos','cabana','palafito','casaJp','casaMaya','casaLarga','salon','stabbur','taberna','casaArbol'].forEach(n=>{if(KSC[n])KSC[n]=Math.round(KSC[n]*HK*1000)/1000});
  Object.keys(U).forEach(n=>{const f=U[n];U[n]=(g,x,y,sm,a,b,c)=>{KS=KSC[n]||1;try{f(g,x,y,sm,a,b,c)}finally{KS=1}}});
  // checks(): comprobaciones geométricas de «no se corta» (sin navegador). Devuelve una lista de problemas; vacía = OK.
  function checks(){const bad=[];
@@ -862,5 +941,5 @@ const ORG=(()=>{
   return bad}
  // ORG.add(nombre, fn(g,x,y,sm,o), escala): registra un modelo nuevo desde otro archivo (src/spots.js) con las mismas utilidades que los de aquí (M = malla con tema/espejo, soft = sombra de apoyo, RG = pliegues).
  const add=(n,f,ks)=>{KSC[n]=ks||1;U[n]=(g,x,y,sm,a,b,c)=>{KS=KSC[n]||1;try{f(g,x,y,sm,a,b,c)}finally{KS=1}}};
- return{add,M:(...a)=>M(...a),soft:(...a)=>soft(...a),RG,STY_:STY,KSC,HAIRS,PEOPLE,noSoft:v=>{NOSOFT=!!v},theme:m=>{TH=m||null},rot:v=>{ROT=!!v},A,B,U,TIER,checks,COW,trunkH,SPECIES,BUILD,blob,cone,lathe,box,gable,tilt,ico,drawMesh,clump,tier,at,lit,ramp,C,KY}})();
+ return{HK,add,M:(...a)=>M(...a),soft:(...a)=>soft(...a),RG,STY_:STY,KSC,HAIRS,PEOPLE,noSoft:v=>{NOSOFT=!!v},theme:m=>{TH=m||null},rot:v=>{ROT=!!v},A,B,U,TIER,checks,COW,trunkH,SPECIES,BUILD,blob,cone,lathe,box,gable,tilt,ico,drawMesh,clump,tier,at,lit,ramp,C,KY}})();
 if(typeof module!=='undefined')module.exports={ORG};

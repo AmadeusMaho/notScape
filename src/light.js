@@ -21,6 +21,7 @@ const LIGHT=(()=>{
  const OH={casa:40,casaLarga:36,stabbur:30,salon:38,troncos:34,casaArbol:34,palafito:34,casaJp:36,templo:46,casaMaya:36,pagoda:50,taberna:38,granero:38,cabana:30,pozo:20,torii:44,cerezo:42,
   portonOrco:46,empalizada:34,estela:30,runestone:22,obsidiana:16,roca:10,piedra:10,arbusto:9,tocon:8,barril:10,caja:9,heno:10,lenera:9,valla:12,rack:16,bambu:26,junco:6,seta:5,farola:40,brasero:16,linterna:18,
   ruina:34,muro:26,columna:34,tienda:30,tiendaOrco:30,totem:44,lapida:12,cruz:20,huesos:6,cueva:36,abrevadero:9,comedero:9,gallinero:20,cofre:10,estandarte:40,hoguera:8,carreta:20,fumarola:12,altarDemon:24,roca2:14};
+ Object.assign(OH,{iglesia:60,molino:44,monumento:34,huerto:2});['casa','casaLarga','stabbur','salon','troncos','casaArbol','palafito','casaJp','casaMaya','taberna','cabana'].forEach(n=>{OH[n]=Math.round(OH[n]*(ORG.HK||1))});Object.assign(OH,{pagoda:78,templo:62});   // V4/V5: nuevos modelos y alturas de sombra de los edificios escalados por ORG.HK
  const DFP={roca:[8,6],piedra:[8,6],arbusto:[6,5],tocon:[4,4],cerezo:[4,4],bambu:[3,3],estela:[4,4],obsidiana:[4,4],runestone:[4,4],barril:[4,4],caja:[4,4],heno:[7,6],lenera:[8,4],rack:[10,2],valla:[9,2],farola:[1.5,1.5],brasero:[2,2],linterna:[2,2],torii:[18,3]};
  const FIX={mi:[6,5,14],wc:[4.5,4.5,40]};
  function init(w,h){W=w;H=h;const lw=Math.ceil(W/SC)+2,lh=Math.ceil(H/SC)+2;if(!LM||LM.width!==lw||LM.height!==lh){LM=mk(lw,lh);LMx=LM.getContext('2d');LC=mk(lw,lh);LCx=LC.getContext('2d')}}
@@ -61,7 +62,7 @@ const LIGHT=(()=>{
   return{poly:hull(pts),tall:c.h>=30,far}}
  // ---- mapa de luz ----
  function render(){if(!LM||d<.02||!lights.length)return null;LMx.setTransform(1,0,0,1,0,0);LMx.globalCompositeOperation='source-over';LMx.clearRect(0,0,LM.width,LM.height);LCx.setTransform(1,0,0,1,0,0);LCx.globalCompositeOperation='source-over';LCx.clearRect(0,0,LC.width,LC.height);
-  let li=0;for(const l of lights){const R=l.r*l.f,rl=R*LR,rq=Math.max(4,Math.ceil(rl/SC));if(rq>240)continue;const s=proj(l.rx,l.ry),ox=s[0]-rl,oy=s[1]-rl,tw=Math.ceil(rl*2/SC)+2,sz=tw;
+  let li=0,bx0=1e9,by0=1e9,bx1=-1e9,by1=-1e9;for(const l of lights){const R=l.r*l.f,rl=R*LR,rq=Math.max(4,Math.ceil(rl/SC));if(rq>240)continue;const s=proj(l.rx,l.ry),ox=s[0]-rl,oy=s[1]-rl,tw=Math.ceil(rl*2/SC)+2,sz=tw;
    if(s[0]<-rl||s[0]>W+rl||s[1]<-rl||s[1]>H+rl)continue;const LP=lpool(li++,sz),TM=LP.m,TMx=LP.mx,TN=LP.n,TNx=LP.nx;
    TMx.setTransform(1,0,0,1,0,0);TMx.globalCompositeOperation='source-over';TMx.clearRect(0,0,sz,sz);TMx.globalAlpha=l.k;TMx.drawImage(disc(rq),0,0,rl*2/SC,rl*2/SC);TMx.globalAlpha=1;
    TMx.globalCompositeOperation='destination-out';TMx.lineJoin='round';
@@ -71,10 +72,13 @@ const LIGHT=(()=>{
     let fill='rgba(0,0,0,.9)';if(!sh.tall){const a=proj(c.x,c.y),b=proj(c.x+(c.x-l.rx)/(dd||1)*sh.far,c.y+(c.y-l.ry)/(dd||1)*sh.far),g=TMx.createLinearGradient((a[0]-ox)/SC,(a[1]-oy)/SC,(b[0]-ox)/SC,(b[1]-oy)/SC);g.addColorStop(0,'rgba(0,0,0,.92)');g.addColorStop(.6,'rgba(0,0,0,.45)');g.addColorStop(1,'rgba(0,0,0,0)');fill=g}
     path();TMx.strokeStyle='rgba(0,0,0,.22)';TMx.lineWidth=3.4;TMx.stroke();TMx.fillStyle=fill;TMx.fill()}
    TMx.globalCompositeOperation='source-over';
-   const px=ox/SC,py=oy/SC;LMx.globalCompositeOperation='lighter';LMx.drawImage(TM,0,0,sz,sz,px,py,sz,sz);
+   const px=ox/SC,py=oy/SC;if(px<bx0)bx0=px;if(py<by0)by0=py;if(px+sz>bx1)bx1=px+sz;if(py+sz>by1)by1=py+sz;LMx.globalCompositeOperation='lighter';LMx.drawImage(TM,0,0,sz,sz,px,py,sz,sz);
    TNx.setTransform(1,0,0,1,0,0);TNx.globalCompositeOperation='source-over';TNx.clearRect(0,0,sz,sz);TNx.drawImage(TM,0,0,sz,sz,0,0,sz,sz);TNx.globalCompositeOperation='source-in';TNx.fillStyle='rgb('+l.c[0]+','+l.c[1]+','+l.c[2]+')';TNx.fillRect(0,0,sz,sz);TNx.globalCompositeOperation='source-over';
    LCx.globalCompositeOperation='lighter';LCx.drawImage(TN,0,0,sz,sz,px,py,sz,sz)}
-  LMx.globalCompositeOperation='source-over';LCx.globalCompositeOperation='source-over';return{map:LM,col:LC,sc:SC}}
+  LMx.globalCompositeOperation='source-over';LCx.globalCompositeOperation='source-over';
+  // bb (lote V8): caja de texels donde hay luz (unión de los discos); fuera de ella el mapa de color está vacío → game.js solo mezcla ese recorte con 'lighter'
+  const bb=bx1>bx0?[Math.max(0,Math.floor(bx0)),Math.max(0,Math.floor(by0)),0,0]:null;if(bb){bb[2]=Math.min(LC.width,Math.ceil(bx1))-bb[0];bb[3]=Math.min(LC.height,Math.ceil(by1))-bb[1];if(bb[2]<=0||bb[3]<=0)bb.length=0}
+  return{map:LM,col:LC,sc:SC,bb:bb&&bb.length?bb:null}}
  // ---- luz que llega a un punto del mundo (para los assets) ----
  // visibilidad de un punto desde una luz: producto de (1 - cobertura) de los oclusores que cruzan el segmento (circulo aproximado, con borde suave)
  function vis(l,x,y,self){let v=1;const sx=x-l.rx,sy=y-l.ry,len2=sx*sx+sy*sy||1;

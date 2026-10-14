@@ -62,14 +62,15 @@ const IRC={x:6000,y:6000},IK=2;   // IRC: centro de todas las salas; IK: px de m
    add('farolPapel',-46,-38);add('farolPapel',40,-38);add('plantaGrande',64,46);add('maceta',-62,-36,{kind:P.kind});add('maceta',64,10,{kind:P.kind2});
    lt.push([-4,-34,22,190,'#ffe9a0'],[-46,-38,16,110,'#ffd890'],[40,-38,16,110,'#ffd890']);
    return{id,nm:'Templo',it,st,lt}}
- if(id==='banco'){
-   st.push(['bank',-4,-36]);
-   wr('estante',-54);wr('cuadro',-26);wr('cuadro',22);wl('estante',-24);wl('cuadro',14);
-   add('arcon',-58,12,{rot:true},{});add('arcon',-58,32,{rot:true},{});add('mesaEscribir',30,18);sit(30,32);
-   add('alfombra',-4,-6,{w:60,d:40,col:P.cloth,col2:P.cloth2},{fl:1});
-   add('farolPapel',62,-40);add('plantaGrande',64,50);add('maceta',-62,-38,{kind:P.kind});add('maceta',64,6,{kind:P.kind2});
-   if(vol||nor)wr('pielPared',-8);
-   lt.push([-4,-36,18,150,'#ffd890'],[30,18,10,80,'#ffc070']);
+ if(id==='banco'){   // lote V8: banco «de verdad»: mostrador con reja y 3 ventanillas (la instalación 'bank' ES el mostrador; lo pinta intBankDraw con sus cajeros), cámara acorazada al fondo
+   st.push(['bank',-10,-30]);
+   wl('boveda',-30,{k});wr('cuadro',-40);wr('cuadro',22);wl('cuadro',22);
+   add('arcon',-58,8,{rot:true},{});
+   add('alfombra',-10,4,{w:58,d:30,col:P.cloth,col2:P.cloth2},{fl:1});
+   add('mesaEscribir',40,26);sit(40,40);
+   add('farolPapel',62,-40);add('plantaGrande',64,50);add('maceta',-62,-14,{kind:P.kind});add('maceta',64,6,{kind:P.kind2});
+   if(vol||nor)wr('pielPared',2);
+   lt.push([-10,-30,26,170,'#ffd890'],[40,26,10,80,'#ffc070']);
    return{id,nm:'Banco',it,st,lt}}
   if(id==='tienda'){
    st.push(['shop',-18,-36]);
@@ -109,13 +110,13 @@ const IRC={x:6000,y:6000},IK=2;   // IRC: centro de todas las salas; IK: px de m
 
  // ── entrada / salida ──
  // posición de la puerta de cada casa (mundo): el modelo dibuja la puerta en la cara +y, a x=fx·w (K·…); con rot se espeja (x↔y). off = hacia fuera.
- const DM={casa:[30,22,-1/6,2.3],taberna:[36,26,-.16,2.15],troncos:[32,24,-1/6,2.3],casaLarga:[46,22,-.2,1.7],salon:[40,28,-.15,1.6],palafito:[30,22,-1/6,2.3],casaJp:[32,24,-1/6,2.1],casaMaya:[30,22,-1/6,2.1]};
- function doorPos(p,B){const m=DM[p.n];if(!m)return null;const w=(p.o&&p.o.w)||m[0],d=(p.o&&p.o.d)||m[1],K=m[3],lx=K*m[2]*w,ly=K*d/2+14,rot=p.o&&p.o.rot;return rot?{x:B.ox+p.x+ly,y:B.oy+p.y+lx}:{x:B.ox+p.x+lx,y:B.oy+p.y+ly}}
+ const DM={iglesia:[40,24,-1/6,1.9],pagoda:[30,30,0,1.5],templo:[38,38,0,1.5],casa:[30,22,-1/6,2.3],taberna:[36,26,-.16,2.15],troncos:[32,24,-1/6,2.3],casaLarga:[46,22,-.2,1.7],salon:[40,28,-.15,1.6],palafito:[30,22,-1/6,2.3],casaJp:[32,24,-1/6,2.1],casaMaya:[30,22,-1/6,2.1]};
+ function doorPos(p,B){const m=DM[p.n];if(!m)return null;const w=(p.o&&p.o.w)||m[0],d=(p.o&&p.o.d)||m[1],K=ORG.KSC[p.n]||m[3],lx=K*m[2]*w,ly=K*d/2+14,rot=p.o&&p.o.rot;return rot?{x:B.ox+p.x+ly,y:B.oy+p.y+lx}:{x:B.ox+p.x+lx,y:B.oy+p.y+ly}}
  // se llama desde game.js tras crear las instalaciones de las aldeas: elige 3 casas por bioma (Herrería = la más cercana al horno, Taberna/Salón = la taberna o la casa más cercana a la tienda, Taller = la más cercana al banco de trabajo)
  window.intDoorPos=doorPos;   // lote D5: lo usa el editor de aldeas (village-edit.js) para mover la puerta con su casa
  window.intDoorsInit=function(){BI.forEach((B,k)=>{const V=B.village,hs=[];V.props.forEach(p=>{const q=DM[p.n]&&doorPos(p,B);if(q)hs.push({p,q})});if(!hs.length)return;
    // lote D2: una puerta con otra casa/edificio a <90 px DELANTE queda «tapada» (fachada metida contra la pared de enfrente; pasaba con el Taller en las 6 aldeas) → penalización fuerte
-   const BIG=/^(casa|taberna|troncos|casaLarga|salon|palafito|casaJp|casaMaya|stabbur|casaArbol|cabana|granero|gallinero|guarida|templo)/; // los puestos de mercado no cuentan: van junto a la tienda a propósito
+   const BIG=/^(casa|taberna|troncos|casaLarga|salon|palafito|casaJp|casaMaya|stabbur|casaArbol|cabana|granero|gallinero|guarida|templo|iglesia|pagoda|molino)/; // los puestos de mercado no cuentan: van junto a la tienda a propósito
    const blocked=h=>{const r=h.p.o&&h.p.o.rot,nx=r?1:0,ny=r?0:1;return V.props.some(o=>{if(o===h.p||!BIG.test(o.n))return false;const dx=B.ox+o.x-h.q.x,dy=B.oy+o.y-h.q.y,f=dx*nx+dy*ny,sd2=Math.abs(dx*ny-dy*nx);return f>-6&&f<90&&sd2<46})};
    hs.forEach(h=>h.bl=blocked(h));
    const stn=id=>ST.find(e=>e.id===id&&!e.inroom&&biomeAt(e.x,e.y)===k),used=new Set(),sv=(typeof VEDIT!=='undefined'&&VEDIT.doors(k))||{},saved={};for(const id in sv){const f=hs.find(h=>h.p._ek===sv[id]&&!used.has(h));if(f){saved[id]=f;used.add(f)}}   // lote D5: casa de cada instalación fijada por el editor de aldeas (sobrevive a que muevas casas)
@@ -133,7 +134,7 @@ const IRC={x:6000,y:6000},IK=2;   // IRC: centro de todas las salas; IK: px de m
   const sv={N:N.slice(),ST:ST.slice(),M:M.slice(),PO:PO.slice(),GD:GD.slice(),GA:GA.slice()};[N,ST,M,PO,GD,GA].forEach(a=>a.length=0);PJ.length=0;HFX.length=0;
   const items=R.it.map(q=>{const[n,x,y,o,ex]=q,fp=ex.fp||(ex.w||ex.wl||ex.fl?null:FPT[n])||null,tall=['hogar','alacena','plantaGrande','biombo','rackArmas','cama','barra'].includes(n);return{n,o,wx:IRC.x+x*IK,wy:IRC.y+y*IK,fl:!!ex.fl,fp,tall,oa:1,wall:!!(ex.w||ex.wl)}});
   const fpR=[];items.forEach(it=>{if(it.fp&&!it.fl){let[hx,hy]=it.fp;if(it.o.rot){const t=hx;hx=hy;hy=t}fpR.push([it.wx-hx,it.wx+hx,it.wy-hy,it.wy+hy])}});
-  R.st.forEach(([id,x,y])=>{const s={id,n:({furnace:'Horno',anvil:'Yunque',armero:'Armero',curtidor:'Banco de curtidor',bench:'Taller',altar:'Escritorio',bank:'Banco',shop:'Tienda',fire:'Hogar',shrine:'Altar de oración'})[id]||id,x:IRC.x+x*IK,y:IRC.y+y*IK,k:e.k,inroom:1};if(id==='fire'){s.sks=['co'];s.nodraw=1}if(id==='bench'||id==='altar')s.sks=id==='bench'?['cr','es']:['ins'];if(id==='furnace'||id==='anvil'||id==='armero')s.sks=['sm'];if(id==='curtidor')s.sks=['cr'];ST.push(s);if(id!=='fire')fpR.push([s.x-20,s.x+20,s.y-13,s.y+13])});
+  R.st.forEach(([id,x,y])=>{const s={id,n:({furnace:'Horno',anvil:'Yunque',armero:'Armero',curtidor:'Banco de curtidor',bench:'Taller',altar:'Escritorio',bank:'Banco',shop:'Tienda',fire:'Hogar',shrine:'Altar de oración'})[id]||id,x:IRC.x+x*IK,y:IRC.y+y*IK,k:e.k,inroom:1};if(id==='fire'){s.sks=['co'];s.nodraw=1}if(id==='bench'||id==='altar')s.sks=id==='bench'?['cr','es']:['ins'];if(id==='furnace'||id==='anvil'||id==='armero')s.sks=['sm'];if(id==='curtidor')s.sks=['cr'];ST.push(s);if(id==='bank'){s.lh=52;fpR.push([s.x-56,s.x+56,s.y-60,s.y+12])}else if(id!=='fire')fpR.push([s.x-20,s.x+20,s.y-13,s.y+13])});
   const dx=IRC.x+RW*DOOR*IK;
   ST.push({id:'exit',n:'Salir',x:dx,y:IRC.y-RD*IK/2+26,lh:44});
   INT={k:e.k,R,id:e.room,sv,items,fpR,ret:{x:e.x,y:e.y},t0:now,so:shellO(e.k),dust:Array.from({length:16},(_,i)=>({x:Math.random(),y:Math.random(),v:.01+Math.random()*.02,p:Math.random()*6.28}))};
@@ -182,5 +183,21 @@ const IRC={x:6000,y:6000},IK=2;   // IRC: centro de todas las salas; IK: px de m
   {const v=ctx.createRadialGradient(cv.width/2,cv.height/2,Math.min(cv.width,cv.height)*.32,cv.width/2,cv.height/2,Math.max(cv.width,cv.height)*.72);v.addColorStop(0,'rgba(30,12,0,0)');v.addColorStop(1,'rgba(14,6,0,.62)');ctx.fillStyle=v;ctx.fillRect(0,0,cv.width,cv.height);ctx.fillStyle='rgba(255,150,60,.05)';ctx.fillRect(0,0,cv.width,cv.height)}
   const e=now-I.t0;if(e<500){ctx.globalAlpha=1-e/500;ctx.fillStyle='#000';ctx.fillRect(0,0,cv.width,cv.height);ctx.globalAlpha=1}
   if(P.hp<=0)leaveRoom(1)};
+ // ── BANCO (lote V8): mostrador + cajeros, uno por bioma. Lo llama dS() de game.js para la instalación 'bank' de dentro (así el contorno de selección y la etiqueta siguen funcionando) ──
+ // cajeros: presets de ORG.U.aldeano (mismo dibujo que Ru/aldeanos). [preset, dx en unidades de sala respecto al mostrador]; se colocan detrás (−y), en las ventanillas 1 y 3.
+ const TELL=[
+  [{col:'#4f7a4a',collar:'#f1e4c4',hair:'#6a4a2a',hairStyle:'short',stache:'#6a4a2a',pants:'#4a3a32',hat:'cap',hatCol:'#2f5a3a'},{col:'#c06a4a',dress:'#b85a3e',collar:'#f7f1e1',hair:'#c08a3a',hairStyle:'bun',pants:'#5a3a32'}],
+  [{col:'#6a5a32',cape:'#3f8a4a',hair:'#3a2a1a',hairStyle:'short',beard:'#3a2a1a',pants:'#4a3a22'},{col:'#8a6a3a',dress:'#4f7a3a',collar:'#efe6c8',hair:'#e0c070',hairStyle:'long',pants:'#4a3a22'}],
+  [{col:'#8a7a3a',hat:'cap',hatCol:'#d8c070',hair:'#4a3a1a',hairStyle:'short',pants:'#5a4a2a',collar:'#d9a03a'},{col:'#6a8a5a',dress:'#7a8a4a',hair:'#2a1a12',hairStyle:'curly',pants:'#4a4a2a',collar:'#efe6c8'}],
+  [{col:'#3a5a8a',collar:'#f4f8fb',hair:'#d8c8a0',hairStyle:'short',beard:'#d8c8a0',pants:'#3a3a4a',skin:'#f0d0b8'},{col:'#5a3a6a',dress:'#3a6aa8',collar:'#f4f8fb',hair:'#e8e0c8',hairStyle:'long',pants:'#3a3a4a',skin:'#f0d0b8'}],
+  [{col:'#2a3a5a',collar:'#f6efe0',hair:'#1a1414',hairStyle:'bun',pants:'#2a2a3a',belt:'#b8302a'},{col:'#b8302a',dress:'#c83a32',collar:'#e0b050',hair:'#1a1414',hairStyle:'bun',pants:'#4a2a2a'}],
+  [{col:'#4a3a3a',apron:'#d8501a',hair:'#1a1210',hairStyle:'bald',beard:'#2a1a14',pants:'#2a2226',skin:'#d8a880'},{col:'#5a4a48',hat:'helm',hatCol:'#3a3034',cape:'#d8501a',hair:'#1a1210',hairStyle:'short',pants:'#2a2226',skin:'#d8a880'}]];
+ const TX=[-17.5,17.5],TY=-9;   // en unidades de sala (1 u = IK px). Medido en captura: 1 u de modelo del mostrador ≈ 1,1 px de mundo → ventanillas (±32 u) ≈ ±35 px; TY = justo detrás de la reja
+ window.intBankDraw=function(e,t){const s=ISO.scale(),k=e.k||0,p=PALS[k];ctx.setTransform(1,0,0,1,0,0);
+  const put=(b,wx,wy,dy)=>{const c=ISO.toCanvas(wx,wy,0);ctx.drawImage(b.c,Math.round(c.x-b.ax-SPX),Math.round(c.y-b.ay-SPY+(dy||0)))};
+  TELL[k].forEach((q,i)=>{const ph=t*1.9+i*2.3,bl=((t+i*1.7)%4.2)<.13?1:0,bob=Math.round(Math.sin(ph)*2)/4,  // respiración en 3 pasos (se hornea cada uno una vez) y parpadeo de vez en cuando
+   b=ibake('aldeano',Object.assign({rot:true,turn:.55,pose:{bob,arm:0,blink:bl,smile:.8}},q),s);put(b,e.x+TX[i]*IK,e.y+TY*IK,-Math.round(9*s))})   // tarima detrás del mostrador: los cajeros quedan 9 px más altos, se les ve de cintura para arriba;
+  put(ibake('mostradorBanco',{k,w:96,wood:p.wood,woodL:p.woodL,woodD:p.woodD,cloth:p.cloth,cloth2:p.cloth2,stone:p.stone,lava:p.lava||'#ff8a2a'},s),e.x,e.y);
+  return 52};
  window.INTROOMS={ROOMS,PALS,RW,RD,RH,ibake,doorPos};
 })();

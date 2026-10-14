@@ -46,7 +46,7 @@ const TER=(()=>{
  const M=PAINT.mix,TH=[];
  const theme=k=>TH[k]||(TH[k]=Object.assign({},PAL[k],CUT,DEC[k],{g2:M(PAL[k].g,PAL[k].s,.25),l2:M(PAL[k].l,PAL[k].g,.3),d2:M(PAL[k].s,INK,.15)}));
  const GLOK=()=>typeof WGL!=='undefined'&&WGL.ok;
- let GRID=null,ROCK=null,PF=null,PC=null,PM=null,DK=null,CACHE=new Map(),CSCALE=0,BUILT=0;const LC={x:0,y:0,f:0},SYNC={n:0,ms:0}; // LC: cámara del frame anterior; SYNC: chunks visibles construidos en el propio frame (causan tirones; ver tools/walk_check.py)
+ let GRID=null,ROCK=null,PF=null,PC=null,PM=null,DK=null,CACHE=new Map(),CSCALE=0,BUILT=0;const CPOOL=[];const LC={x:0,y:0,f:0},SYNC={n:0,ms:0}; // LC: cámara del frame anterior; SYNC: chunks visibles construidos en el propio frame (causan tirones; ver tools/walk_check.py)
  // ───────── F2-C2 · caminos y pasarelas ─────────
  // Los datos (rutas de tierra `routes`, plaza, calles adoquinadas `cobs`, puente `bridge`) viven en biomes.js (F3-B): BIOMES.list[k].routes / .village.
  // rellena PM (0–255: cuánto camino hay en el tile; ≥128 = camino) y DK (1 = pasarela sobre el río, 2 = pasarela de frontera)
@@ -70,7 +70,7 @@ const TER=(()=>{
  const grid=()=>{if(GRID)return GRID;GRID=new Float32Array(NX*NY);ROCK=new Uint8Array(NX*NY);BO=new Uint8Array(NX*NY);for(let ty=0;ty<NY;ty++)for(let tx=0;tx<NX;tx++){const k=BIOMES.at((tx+.5)*T,(ty+.5)*T);BO[ty*NX+tx]=k<0?255:k;{const h=tileH(tx,ty);GRID[ty*NX+tx]=h;if(h>=HGROUND&&h<HCLIFF&&k>=0){const r=BIOMES.list[k];if(r.lay&&r.lay.hills&&BIOMES.geo.rock(r,(tx+.5)*T-r.ox,(ty+.5)*T-r.oy))ROCK[ty*NX+tx]=1}}}buildPaths();return GRID};
  const gh=(tx,ty)=>tx<0||ty<0||tx>=NX||ty>=NY?0:GRID[ty*NX+tx];
  const out=(tx,ty)=>tx<0||ty<0||tx>=NX||ty>=NY||GRID[ty*NX+tx]===0;   // fuera del mundo o vacío
- const reset=()=>{TB.clear();SB.clear();GRID=null;ROCK=null;BO=null;PF=null;PC=null;PM=null;DK=null;CACHE=new Map();CSCALE=0;LC.f=0};
+ const reset=()=>{TB.clear();SB.clear();GRID=null;ROCK=null;BO=null;PF=null;PC=null;PM=null;DK=null;CACHE=new Map();CPOOL.length=0;CSCALE=0;LC.f=0};
  const PP=(x,y,z)=>{const p=ISO.proj(x,y,z);return[p.x,p.y]};
  // tramos de una cara lateral: [z arriba, z abajo, material]. Hacia el exterior del mundo la pared sigue como corte de bloque (tierra → arcilla → roca).
  const CUTZ=[[HGROUND,.76,'soil'],[.76,-.4,'clay'],[-.4,-1.2,'deep']];
@@ -188,14 +188,17 @@ const TER=(()=>{
   for(let sum=tx0+ty0;sum<=tx1+ty1;sum++)for(let tx=Math.max(tx0,sum-ty1);tx<=Math.min(tx1,sum-ty0);tx++){const ty=sum-tx,h=gh(tx,ty);if(h<=0)continue;const nx=(tx-ty)*ISO.HW,ny=(tx+ty)*ISO.HH-h*ISO.LV;
    if(nx+ISO.HW+26<lx0||nx-ISO.HW>lx1||ny-3>ly1||ny+2*ISO.HH+(h+1.4)*ISO.LV+30<ly0)continue;list.push([tx,ty])}
   if(!list.length)return{c:null,ox:ox0,oy:oy0,w:ox1-ox0,h:oy1-oy0,done:true};
-  const cv=document.createElement('canvas');cv.width=ox1-ox0;cv.height=oy1-oy0;const c=cv.getContext('2d');c.setTransform(s,0,0,s,-ox0,-oy0);c.lineJoin='round';
+  // lote V8b: lienzo reciclado de un chunk desalojado del mismo tamaño (evita crear/soltar lienzos de ~0,7 MB al caminar: menos recolector de basura y menos texturas nuevas en la GPU)
+  const pw=ox1-ox0,ph=oy1-oy0,pi=CPOOL.findIndex(q=>q.width===pw&&q.height===ph);let cv,c;
+  if(pi>=0){cv=CPOOL.splice(pi,1)[0];c=cv.getContext('2d');c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';c.clearRect(0,0,pw,ph)}else{cv=document.createElement('canvas');cv.width=pw;cv.height=ph;c=cv.getContext('2d')}
+  c.setTransform(s,0,0,s,-ox0,-oy0);c.lineJoin='round';
   for(const[tx,ty]of list){if(out(tx+1,ty))shadow(c,tx,ty,'x');if(out(tx,ty+1))shadow(c,tx,ty,'y')}
   return{c:cv,g:c,list:list,i:0,ox:ox0,oy:oy0,w:ox1-ox0,h:oy1-oy0,done:false}}
  // pinta tiles del chunk hasta agotar el tiempo (until = performance.now() límite; 0 = sin límite). Se reparte en varios frames para no causar tirones.
  function run(e,until){while(!e.done){const q=e.list[e.i++];tile(e.g,q[0],q[1]);if(e.i>=e.list.length){e.done=true;e.g=null;e.list=null;BUILT++}else if(until&&performance.now()>=until)break}return e.done}
  function chunk(ci,cj,s,until){const key=ci+','+cj;let e=CACHE.get(key);if(e){CACHE.delete(key);CACHE.set(key,e)}else{e=prep(ci,cj,s);CACHE.set(key,e)}if(!e.done)run(e,until);return e}
  function draw(g,t){
-  const V=ISO.V,s=ISO.scale(),cam=ISO.cam;if(Math.abs(s-CSCALE)>1e-6){CACHE=new Map();CSCALE=s;LC.f=0}grid();
+  const V=ISO.V,s=ISO.scale(),cam=ISO.cam;if(Math.abs(s-CSCALE)>1e-6){CACHE=new Map();CPOOL.length=0;CSCALE=s;LC.f=0}grid();
   const cs=CFG.cs,hw=V.cw/2/s,hh=V.ch/2/s,i0=Math.floor((cam.x-hw)/cs),i1=Math.floor((cam.x+hw)/cs),j0=Math.floor((cam.y-hh)/cs),j1=Math.floor((cam.y+hh)/cs),
    offX=Math.round(V.cw/2-cam.x*s),offY=Math.round(V.ch/2-cam.y*s),lim=Math.max(CFG.lru,(i1-i0+1+2*CFG.ring)*(j1-j0+1+2*CFG.ring)+2);
   // velocidad de la cámara (px lógicos/frame): sirve para precargar primero lo que está en la dirección de la marcha
@@ -214,10 +217,14 @@ const TER=(()=>{
    miss.push([Math.hypot(dx,dy)-(vm>.05?.9*cs*(dx*vx+dy*vy)/(Math.hypot(dx,dy)*vm+1e-6):0),ci,cj,rd])}
   miss.sort((a,b)=>a[0]-b[0]);const tn=performance.now(),slow=LC.t&&tn-LC.t>22;LC.t=tn; // si el juego ya va justo (>22 ms entre frames) la precarga baja a 3 ms para no empeorarlo
   const until=tn+(slow?3:(miss.length&&miss.some(m=>m[3]<=1)?CFG.budgetHi:CFG.budget));for(const m of miss){if(performance.now()>=until)break;chunk(m[1],m[2],s,until)}
-  while(CACHE.size>lim2){CACHE.delete(CACHE.keys().next().value)}
+  // lote V8b: se desaloja lo MÁS LEJANO de la vista (antes, el más antiguo por orden de inserción: los chunks del anillo de precarga ya hechos no se «tocaban» y eran
+  // los primeros en salir → se volvían a pintar al rato; caminando se reconstruía ~2,5× más de lo necesario y la precarga no daba abasto → chunks a medias y tirones)
+  const lim3=Math.max(lim2,Math.min(Math.floor(CFG.mem/per),lim2*2));   // V8b: se guardan hasta el doble de chunks si la memoria (CFG.mem) da → al volver sobre tus pasos no se repintan
+  if(CACHE.size>lim3){const ev=[];for(const[k,e]of CACHE){const c=k.indexOf(','),ci=+k.slice(0,c),cj=+k.slice(c+1);ev.push([Math.max(i0-ci,ci-i1,j0-cj,cj-j1,0)*1e6+Math.hypot((ci+.5)*cs-cam.x,(cj+.5)*cs-cam.y),k])}
+   ev.sort((a,b)=>b[0]-a[0]);for(let n=0;n<ev.length&&CACHE.size>lim3;n++){const e=CACHE.get(ev[n][1]);CACHE.delete(ev[n][1]);if(e&&e.c&&e.done&&CPOOL.length<12)CPOOL.push(e.c)}}
   if(GLOK())waterGL(t);else waterFx(g,t)}
  // Carga previa (pantalla de carga, oct 2026): construye en tandas de `ms` los chunks de la vista + el anillo de precarga alrededor de la cámara actual. Devuelve [hechos,total].
- function preload(ms){const V=ISO.V,s=ISO.scale(),cam=ISO.cam;if(Math.abs(s-CSCALE)>1e-6){CACHE=new Map();CSCALE=s;LC.f=0}grid();
+ function preload(ms){const V=ISO.V,s=ISO.scale(),cam=ISO.cam;if(Math.abs(s-CSCALE)>1e-6){CACHE=new Map();CPOOL.length=0;CSCALE=s;LC.f=0}grid();
   const cs=CFG.cs,hw=V.cw/2/s,hh=V.ch/2/s,i0=Math.floor((cam.x-hw)/cs),i1=Math.floor((cam.x+hw)/cs),j0=Math.floor((cam.y-hh)/cs),j1=Math.floor((cam.y+hh)/cs),per=(cs*s)*(cs*s)*4,
    R=[3,2].find(r=>((i1-i0+1+2*r)*(j1-j0+1+2*r))*per<=CFG.mem)||1,list=[];
   for(let cj=j0-R;cj<=j1+R;cj++)for(let ci=i0-R;ci<=i1+R;ci++)list.push([Math.hypot((ci+.5)*cs-cam.x,(cj+.5)*cs-cam.y),ci,cj]);list.sort((a,b)=>a[0]-b[0]);

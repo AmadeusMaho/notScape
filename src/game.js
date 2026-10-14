@@ -372,7 +372,8 @@ function rollLv(m){const d=m.d,r=LVR[d.id],f=MSF[d.id];m.lv=R(r[0],r[1]);m.mh=Ma
 const mob=(id,x,y)=>{const m={d:MD[id],hx:x,hy:y,x,y,rt:0,tx:x,ty:y,wt:0,fl:0};rollLv(m);M.push(m)};
 const ZS=[];PROPS.build();
 BI.forEach((b,k)=>{const x0=b.ox,y0=b.oy,L=b.lay;
- b.village.stations.forEach(([id,n,dx,dy,sks])=>{const e={id,n:id==='shop'?'Tienda':n,x:x0+dx,y:y0+dy};if(sks)e.sks=sks;ST.push(e);if(id==='shop'){ST.push({id:'ru',n:'Ru',x:e.x+30,y:e.y-26});ST.push({id:'board',n:'Tablón de encargos',x:e.x-112,y:e.y+30})}}); // Ru es un NPC aparte del puesto de la tienda (clic en Ru = diálogo, clic en el puesto = tienda)
+const RUDX=100,RUDY=74;   // Ru respecto al puesto de la tienda (14 oct 2026: antes (+30,−26) y tapaba la puerta de la tienda; este punto está libre de colisiones y de adornos en las 6 aldeas)
+ b.village.stations.forEach(([id,n,dx,dy,sks])=>{const e={id,n:id==='shop'?'Tienda':n,x:x0+dx,y:y0+dy};if(sks)e.sks=sks;ST.push(e);if(id==='shop'){ST.push({id:'ru',n:'Ru',x:e.x+RUDX,y:e.y+RUDY});ST.push({id:'board',n:'Tablón de encargos',x:e.x-112,y:e.y+30})}}); // Ru es un NPC aparte del puesto de la tienda (clic en Ru = diálogo, clic en el puesto = tienda)
  {const put=(kind,list,rs)=>list.forEach(([i,n])=>{for(let j=0;j<n;j++){const r=rs[R(0,rs.length-1)];sp0(kind,i,1,x0+r[0],x0+r[1],y0+r[2],y0+r[3])}}),ZN=(r,t)=>ZS.push({k,r:[x0+r[0],x0+r[1],y0+r[2],y0+r[3]],t}),nm=(sk,i)=>ACT[sk][i][0];
   b.res.wc.forEach((l,z)=>{put('wc',l,L.wc[z].r);ZN(L.wc[z].z,'🌲 Zona de '+nm('wc',l[0][0]).toLowerCase())});
   b.res.mi.forEach((l,v)=>{put('mi',l,L.mi[v].r);ZN(L.mi[v].z,'⛏️ Veta de '+nm('mi',l[0][0]).toLowerCase())});
@@ -785,6 +786,7 @@ function dN0(e,t,now){const dead=!alive(e,now),on=A&&A.e===e,x=e.x,y=e.y;
  ctx.strokeStyle=RCL;ctx.globalAlpha=.8-(t*2%1)*.6;ctx.beginPath();ctx.ellipse(x,y,5+(t*8%8),2+(t*4%4),0,0,7);ctx.stroke();ctx.globalAlpha=1;Rc(FCL,x+Math.sin(t*2+x)*4,y-2,4+Math.floor(i/3),2);
  if(i===7){ctx.globalAlpha=.3+.2*Math.sin(t*4);ctx.fillStyle='#ff9040';ctx.beginPath();ctx.arc(x,y,9,0,7);ctx.fill();ctx.globalAlpha=1}}
 function dS(e,t){const x=e.x,y=e.y,id=e.id,now=performance.now(),mine=A&&A.e===e,on=!!(mine||(CK&&S.stn===e&&id==='fire'));let ty;if(e.nodraw)return;if(id==='door'||id==='exit')return dDoor(e,t);
+ if(e.inroom&&id==='bank'&&window.intBankDraw){const ty=intBankDraw(e,t);TC(e.n,x,y-ty,'#fff');return}   // lote V8: banco de interior = mostrador + cajeros (interiors.js)
  if(PROPS.ST[id]){const lh=e.lh=PROPS.station(ctx,e,{on:id==='furnace'?!!mine:on,night:id==='bank'&&sunS(t)<-.05,t,ox:SPX,oy:SPY,sil:SIL});TC(e.n,x,y-lh/SPR,'#fff');if(id==='ru'&&S.gseen!==S.goal)T('!',x,y-(lh+16)/SPR+Math.sin(t*5)*2,'#ffe629');return}
  if(SX){ // Fase 3 paso 2 (src/stations.js): fotograma entero 0..7; con una acción en la estación se sincroniza con la fase del golpe (swPh) y el golpe cae en fr 6–7/0
   const fr=mine&&id!=='fire'?Math.floor(swPh(now)*8)&7:Math.floor(t*8)&7,o={fr,on,near:Math.hypot(P.x-x,P.y-y)<80,wave:id==='shop'&&t%7<1,night:id==='bank'||id==='shop'?WN(t):''};
@@ -862,16 +864,26 @@ const LG=[{dia:[255,214,120,.045],noche:[8,14,46],nf:1},{dia:[20,80,50,.11],noch
 function lgAt(x,y){const k0=biomeAt(x,y),k=k0<0?curB:k0,m=(a,b,t)=>a+(b-a)*t;let k2=k,t=0;
  for(const g of BIOMES.gates){if(g.a!==k&&g.b!==k)continue;const dx=g.vert?Math.abs(x-g.x):Math.max(0,g.x0-x,x-g.x1),dy=g.vert?Math.max(0,g.y0-y,y-g.y1):Math.abs(y-g.y),d=Math.hypot(dx,dy),E=280;if(d<E&&.5*(1-d/E)>t){t=.5*(1-d/E);k2=g.a===k?g.b:g.a}} // cerca de una compuerta se mezcla con la luz del bioma vecino
  const A=LG[k],B=LG[k2];return{dia:A.dia.map((v,i)=>m(v,B.dia[i],t)),noche:A.noche.map((v,i)=>m(v,B.noche[i],t)),nf:m(A.nf,B.nf,t)}}
+// calidad del reescalado de los mapas de luz (1/2-1/4 de resolución → pantalla). 'high' (bicúbico) costaba ~35 ms por mapa en equipos sin GPU potente y en capturas
+// comparadas no se distingue de 'low' (bilineal): el mapa ya es un degradado suave. Para volver al bicúbico: LIGHTQ='high'.
+var LIGHTQ='low';
 function lighting(now){const t=now/1000,s=sunS(t),d=Math.max(WXD,Math.max(0,Math.min(1,(.15-s)/.55))),w=Math.max(0,1-Math.abs(s)*4)*.16,vis=()=>true,lp=(x,y)=>{const q=ISO.toCanvas(x,y,1),f=cv.width/W;return[q.x/f,q.y/f]},LR=.9*ISO.scale()/(cv.width/W);
  const LGc=lgAt(P.x,P.y),dv=Math.max(0,Math.min(1,(s+.1)/.5))*(1-WXD*1.5>0?1-WXD*1.5:0);
  if(dv>.01&&LGc.dia[3]>0){ctx.fillStyle='rgba('+LGc.dia.slice(0,3).map(Math.round).join(',')+','+LGc.dia[3]*dv+')';ctx.fillRect(0,0,W,H)}
  if(d>.01){ // luz dinámica (src/light.js): mapa de luz con sombras de los objetos; las luces se recogen en LIGHT.update() al inicio de draw()
-  const LMp=LIGHT.render();lx.globalCompositeOperation='source-over';lx.clearRect(0,0,W,H);lx.fillStyle='rgba('+LGc.noche.map(Math.round).join(',')+','+d*.72*LGc.nf+')';lx.fillRect(0,0,W,H);
-  if(LMp){lx.globalCompositeOperation='destination-out';lx.imageSmoothingEnabled=true;lx.imageSmoothingQuality='high';lx.drawImage(LMp.map,0,0,LMp.map.width*LMp.sc,LMp.map.height*LMp.sc);lx.globalCompositeOperation='source-over'}
-  ctx.drawImage(lc,0,0);
-  if(LMp){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=Math.min(1,.3*d);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(LMp.col,0,0,LMp.col.width*LMp.sc,LMp.col.height*LMp.sc);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}}
+  // lote V8 (rendimiento): la oscuridad se compone A LA RESOLUCIÓN DEL MAPA DE LUZ (≈1/3) y se reescala UNA vez a pantalla con suavizado alto. Antes se rellenaba un lienzo
+  // de pantalla entera, se le restaba el mapa reescalado ('high') y se estampaba ese lienzo entero: 2 pasadas de pantalla completa más. Resultado idéntico (la resta y el reescalado conmutan).
+  const LMp=LIGHT.render(),dk='rgba('+LGc.noche.map(Math.round).join(',')+','+d*.72*LGc.nf+')';
+  if(LMp){const m=LMp.map,mw=m.width,mh=m.height;if(lc.width!==mw||lc.height!==mh){lc.width=mw;lc.height=mh}lx.setTransform(1,0,0,1,0,0);lx.globalCompositeOperation='source-over';lx.clearRect(0,0,mw,mh);lx.fillStyle=dk;lx.fillRect(0,0,mw,mh);
+   lx.globalCompositeOperation='destination-out';lx.drawImage(m,0,0);lx.globalCompositeOperation='source-over';
+   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality=LIGHTQ;ctx.drawImage(lc,0,0,mw*LMp.sc,mh*LMp.sc);
+   ctx.globalCompositeOperation='lighter';ctx.globalAlpha=Math.min(1,.3*d);ctx.imageSmoothingQuality=LIGHTQ;if(LMp.bb){const[a,b,c,e]=LMp.bb,k=LMp.sc;ctx.drawImage(LMp.col,a,b,c,e,a*k,b*k,c*k,e*k)}   // solo la caja con luz (fuera, el mapa de color está vacío)
+ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.imageSmoothingQuality='low'}   // ¡volver a 'low'! antes se quedaba en 'high' y TODO el fotograma siguiente (terreno y sprites) se dibujaba con filtro bicúbico
+  else{ctx.fillStyle=dk;ctx.fillRect(0,0,W,H)}}
  if(w>.01){ctx.fillStyle='rgba(255,130,50,'+w+')';ctx.fillRect(0,0,W,H)}
- const g=ctx.createRadialGradient(W/2,H/2,H*.35,W/2,H/2,H*.9);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,'+(.26+d*.2)+')');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
+ ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=.26+d*.2;ctx.drawImage(vign(),0,0);ctx.restore()}
+// viñeta horneada (lote V8): el degradado radial de pantalla entera se pintaba en cada fotograma (≈5 ms en CPU); ahora se hornea al tamaño real del lienzo (alfa 1) y se estampa con globalAlpha = mismo resultado
+let VGC=null;function vign(){const w=cv.width,h=cv.height;if(VGC&&VGC.width===w&&VGC.height===h)return VGC;VGC=document.createElement('canvas');VGC.width=w;VGC.height=h;const g=VGC.getContext('2d'),q=g.createRadialGradient(w/2,h/2,h*.35,w/2,h/2,h*.9);q.addColorStop(0,'rgba(0,0,0,0)');q.addColorStop(1,'rgba(0,0,0,1)');g.fillStyle=q;g.fillRect(0,0,w,h);return VGC}
 // Luz dinámica: recoge luces y oclusores del fotograma (LIGHT.update) con la oscuridad actual; se llama antes de dibujar entidades para que cada sprite reciba su luz (LIGHT.at/tint).
 function lightUpd(now){const t=now/1000,d=Math.max(WXD,Math.max(0,Math.min(1,(.15-sunS(t))/.55))),f=cv.width/W;
  const LR=.9*ISO.scale()/f;   // near = radio (px de mundo) en el que se recogen luces y oclusores: sigue al tamaño de la vista (con zoom bajo y pantalla grande se veían farolas sin luz)
@@ -928,12 +940,14 @@ function hl(e,fn,t){if(e!==HOV)return;const sv=ctx,s=ISO.scale(),w=Math.ceil(300
  if(HLC.width!==w||HLC.height!==h){HLC.width=HLD.width=w;HLC.height=HLD.height=h}
  HLX.setTransform(1,0,0,1,0,0);HLX.globalCompositeOperation='source-over';HLX.globalAlpha=1;HLX.clearRect(0,0,w,h);
  ctx=HLX;SIL=1;SPX=p.x-ax;SPY=p.y-ay;try{spr(e.x,e.y,0,fn)}finally{ctx=sv;SIL=0;SPX=SPY=0}
- HLX.setTransform(1,0,0,1,0,0);HLX.globalAlpha=1;HLY.setTransform(1,0,0,1,0,0);HLY.globalCompositeOperation='source-over';HLY.clearRect(0,0,w,h);HLY.drawImage(HLC,0,0);
- HLY.globalCompositeOperation='source-in';HLY.fillStyle='#5b3a29';HLY.fillRect(0,0,w,h);HLX.globalCompositeOperation='source-in';HLX.fillStyle='#fdf9e3';HLX.fillRect(0,0,w,h);HLX.globalCompositeOperation='source-over';
+ // lote V8: si la entidad ya tiene caja medida (omMeasure), los 2 rellenos y las 16 copias del contorno se hacen solo sobre su recorte (antes, lienzo entero de 300×340·s ×18)
+ const om=e._om&&e._om.s===s?e._om:null,bq=om?omBox(om,Math.ceil(26*s),w,h):null,[qx,qy,qw,qh]=bq||[0,0,w,h];
+ HLX.setTransform(1,0,0,1,0,0);HLX.globalAlpha=1;HLY.setTransform(1,0,0,1,0,0);HLY.globalCompositeOperation='source-over';HLY.clearRect(qx,qy,qw,qh);HLY.drawImage(HLC,qx,qy,qw,qh,qx,qy,qw,qh);
+ HLY.globalCompositeOperation='source-in';HLY.fillStyle='#5b3a29';HLY.fillRect(qx,qy,qw,qh);HLX.globalCompositeOperation='source-in';HLX.fillStyle='#fdf9e3';HLX.fillRect(qx,qy,qw,qh);HLX.globalCompositeOperation='source-over';
  const r1=Math.max(2,1.7*s),r2=r1+Math.max(1.5,1.1*s),pul=.88+.12*Math.sin(t*6);
  ctx.setTransform(1,0,0,1,0,0);ctx.save();ctx.imageSmoothingEnabled=false;
- for(const o of HL8)ctx.drawImage(HLD,Math.round(p.x-ax+o[0]*r2),Math.round(p.y-ay+o[1]*r2));
- ctx.globalAlpha=pul;for(const o of HL8)ctx.drawImage(HLC,Math.round(p.x-ax+o[0]*r1),Math.round(p.y-ay+o[1]*r1));ctx.restore()}
+ for(const o of HL8)ctx.drawImage(HLD,qx,qy,qw,qh,Math.round(p.x-ax+qx+o[0]*r2),Math.round(p.y-ay+qy+o[1]*r2),qw,qh);
+ ctx.globalAlpha=pul;for(const o of HL8)ctx.drawImage(HLC,qx,qy,qw,qh,Math.round(p.x-ax+qx+o[0]*r1),Math.round(p.y-ay+qy+o[1]*r1),qw,qh);ctx.restore()}
 function hlImg(e,t){if(e!==HOV)return;const s=ISO.scale(),b=PROPS.sprite(e,s),p=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y)),w=b.c.width,h=b.c.height; // contorno de props con sprite horneado (cofres, santuarios): mismo estilo que hl()
  if(HLC.width!==w||HLC.height!==h){HLC.width=HLD.width=w;HLC.height=HLD.height=h}
  HLX.setTransform(1,0,0,1,0,0);HLX.globalCompositeOperation='source-over';HLX.globalAlpha=1;HLX.clearRect(0,0,w,h);HLX.drawImage(b.c,0,0);
@@ -975,26 +989,47 @@ function dPick(a,t,now){if(SIL)return;const u=Math.min(1,(now-a.t0)/380),eu=u*u*
 // opacos caen sobre el rectángulo del jugador (4 % o más = tapa) y se estampa con alpha animado (e._oa, 0.5–1). Los demás objetos se dibujan
 // directos con spr() como siempre. Es por píxeles, no por cajas: la copa de un árbol tapa, el hueco entre ramas no. No usa ctx.filter.
 // Los monstruos NO se atenúan. Si algún día hace falta, basta llamar a occ() también para ellos en draw().
-const OCC=document.createElement('canvas'),OCX=OCC.getContext('2d',{willReadFrequently:true});let OCDT=1/60; // OCL: lienzo en GPU para la luz (sin lecturas de píxeles)
+const OCC=document.createElement('canvas'),OCX=OCC.getContext('2d');   // lote V8: ya no se leen sus píxeles (la oclusión usa la máscara de omMeasure) → lienzo normal de GPU
+let OCDT=1/60; // OCL: lienzo en GPU para la luz (sin lecturas de píxeles)
 // Luz sobre un sprite (src/light.js): pinta en el lienzo pequeño un degradado cálido en el lado que mira a la luz y uno oscuro en el opuesto, y lo estampa. self = el objeto (no se tapa a sí mismo).
+// ── lote V8 (rendimiento): CAJA + MÁSCARA del sprite de cada entidad ──
+// occ()/litSpr()/hl() pintaban cada entidad iluminada o «candidata a tapar al jugador» en un lienzo de 300×340·s px (≈0,4-1,6 Mpx), lo teñían con 2 rellenos de lienzo entero
+// y lo estampaban entero: de noche, con 8-10 árboles/instalaciones cerca, eran ~8 pantallas de relleno por fotograma (medido con tools: overdraw). Y la prueba «¿tapa al jugador?»
+// leía píxeles de la GPU (getImageData) en CADA fotograma (= «GPU stall due to ReadPixels», también de día).
+// Ahora se mide UNA vez (y se re-mide cada ~4 s, ampliando la caja) el sprite completo en un lienzo de CPU (MCV): caja de píxeles + máscara alfa a 1/2. El resto de fotogramas se pinta
+// solo el recorte (caja + margen) en el lienzo de GPU y la prueba de oclusión se hace contra la máscara guardada (sin leer la GPU). Mismo resultado visual.
+const MCV=document.createElement('canvas'),MCX=MCV.getContext('2d',{willReadFrequently:true}),OMQ=2;
+function omMeasure(o,x,y,fn,s,w,h,ax,ay,now){if(MCV.width!==w||MCV.height!==h){MCV.width=w;MCV.height=h}MCX.setTransform(1,0,0,1,0,0);MCX.globalAlpha=1;MCX.globalCompositeOperation='source-over';MCX.clearRect(0,0,w,h);
+ const sv=ctx,p=ISO.toCanvas(x,y,TER.standZ(x,y));ctx=MCX;SPX=p.x-ax;SPY=p.y-ay;try{spr(x,y,0,fn)}finally{ctx=sv;SPX=SPY=0}
+ const d=MCX.getImageData(0,0,w,h).data,mw=Math.ceil(w/OMQ),mh=Math.ceil(h/OMQ),a=new Uint8Array(mw*mh);let x0=w,y0=h,x1=-1,y1=-1;
+ for(let yy=0;yy<h;yy++){const r=yy*w*4,ry=(yy/OMQ|0)*mw;for(let xx=0;xx<w;xx++){const al=d[r+xx*4+3];if(al>4){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(yy<y0)y0=yy;if(yy>y1)y1=yy;if(al>100)a[ry+(xx/OMQ|0)]=1}}}
+ const old=o._om&&o._om.s===s?o._om:null;if(old&&old.x1>=old.x0){x0=Math.min(x0,old.x0);y0=Math.min(y0,old.y0);x1=Math.max(x1,old.x1);y1=Math.max(y1,old.y1)}
+ const jit=(Math.abs((x*13+y*7)|0)%1500);o._om={s,x0,y0,x1,y1,a,mw,mh,t:now+3500+jit};return o._om}
+// recorte (en coords del lienzo completo) con margen; null = sprite vacío
+function omBox(om,m,w,h){if(om.x1<om.x0)return null;const x0=Math.max(0,om.x0-m),y0=Math.max(0,om.y0-m);return[x0,y0,Math.min(w,om.x1+m+1)-x0,Math.min(h,om.y1+m+1)-y0]}
 function litSpr(x,y,fn,self,ext){const li=LIGHT.on?LIGHT.at(x,y,self):null;if(!li||li.w<.04){spr(x,y,0,fn);return}
- const s=ISO.scale(),p=ISO.toCanvas(x,y,TER.standZ(x,y)),w=Math.ceil(300*s),h=Math.ceil(340*s),ax=Math.round(w/2),ay=Math.round(h-50*s),sv=ctx;
- const L=LIGHT.sprite(w,h),OLX=L.g;ctx=OLX;SPX=p.x-ax;SPY=p.y-ay;try{spr(x,y,0,fn)}finally{ctx=sv;SPX=SPY=0}
- LIGHT.tint(OLX,w,h,ax,ay-(ext?ext*.9:34*s),ext||36*s,li);
- ctx.setTransform(1,0,0,1,0,0);ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(L.c,p.x-ax,p.y-ay);ctx.restore()}
+ const s=ISO.scale(),p=ISO.toCanvas(x,y,TER.standZ(x,y)),w=Math.ceil(300*s),h=Math.ceil(340*s),ax=Math.round(w/2),ay=Math.round(h-50*s),sv=ctx,now=performance.now(),o=self&&typeof self==='object'?self:null;
+ let bx=[0,0,w,h];if(o){let om=o._om;if(!om||om.s!==s||now>om.t)om=omMeasure(o,x,y,fn,s,w,h,ax,ay,now);const q=omBox(om,Math.ceil((o===P?36:24)*s),w,h);if(!q)return;bx=q}   // personajes animados: margen amplio (jugador 36 px, resto 24) para golpes, armas y capas
+ const L=LIGHT.sprite(bx[2],bx[3]),OLX=L.g;ctx=OLX;SPX=p.x-ax+bx[0];SPY=p.y-ay+bx[1];try{spr(x,y,0,fn)}finally{ctx=sv;SPX=SPY=0}
+ LIGHT.tint(OLX,bx[2],bx[3],ax-bx[0],ay-(ext?ext*.9:34*s)-bx[1],ext||36*s,li);
+ ctx.setTransform(1,0,0,1,0,0);ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(L.c,p.x-ax+bx[0],p.y-ay+bx[1]);ctx.restore()}
 function occ(e,fn){const s=ISO.scale(),k=SPR*s,p=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y)),pf=ISO.toCanvas(P.x,P.y,TER.standZ(P.x,P.y)),dy=p.y-pf.y,
   cand=ISO.depth(e.x,e.y)>ISO.depth(P.x,P.y)&&dy>-8*k&&dy<70*k&&Math.abs(p.x-pf.x)<40*k;let cur=e._oa==null?1:e._oa;
  const li=LIGHT.on?LIGHT.at(e.x,e.y,e):null,lit=!!li&&li.w>.04;
  if(!cand&&cur>=1&&!lit){spr(e.x,e.y,0,fn);return}
- const w=Math.ceil(300*s),h=Math.ceil(340*s),ax=Math.round(w/2),ay=Math.round(h-50*s),sv=ctx;let CV,CX;
- if(cand){CV=OCC;CX=OCX;if(CV.width!==w||CV.height!==h){CV.width=w;CV.height=h}}else{const L=LIGHT.sprite(w,h);CV=L.c;CX=L.g}
- CX.setTransform(1,0,0,1,0,0);CX.globalAlpha=1;CX.clearRect(0,0,w,h);ctx=CX;SPX=p.x-ax;SPY=p.y-ay;try{spr(e.x,e.y,0,fn)}finally{ctx=sv;SPX=SPY=0}
+ const w=Math.ceil(300*s),h=Math.ceil(340*s),ax=Math.round(w/2),ay=Math.round(h-50*s),sv=ctx,now=performance.now();
+ let om=e._om;if(!om||om.s!==s||now>om.t)om=omMeasure(e,e.x,e.y,fn,s,w,h,ax,ay,now);
+ const bx=omBox(om,Math.ceil(10*s),w,h);if(!bx){e._oa=1;return}
+ let CV,CX;
+ if(cand){CV=OCC;CX=OCX;if(CV.width!==bx[2]||CV.height!==bx[3]){CV.width=bx[2];CV.height=bx[3]}}else{const L=LIGHT.sprite(bx[2],bx[3]);CV=L.c;CX=L.g}
+ CX.setTransform(1,0,0,1,0,0);CX.globalAlpha=1;CX.clearRect(0,0,bx[2],bx[3]);ctx=CX;SPX=p.x-ax+bx[0];SPY=p.y-ay+bx[1];try{spr(e.x,e.y,0,fn)}finally{ctx=sv;SPX=SPY=0}
  let tgt=1;
  if(cand){const px=ax+(pf.x-p.x),py=ay+(pf.y-p.y),x0=Math.max(0,Math.floor(px-8*k)),x1=Math.min(w,Math.ceil(px+8*k)),y0=Math.max(0,Math.floor(py-34*k)),y1=Math.min(h,Math.ceil(py-3*k));
-  if(x1>x0&&y1>y0){const d=OCX.getImageData(x0,y0,x1-x0,y1-y0).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i]>100)n++;tgt=n>(x1-x0)*(y1-y0)*.04?.5:1}}
+  if(x1>x0&&y1>y0){const a=om.a,mw=om.mw,qx0=x0/OMQ|0,qx1=Math.ceil(x1/OMQ),qy0=y0/OMQ|0,qy1=Math.ceil(y1/OMQ);let n=0;for(let yy=qy0;yy<qy1&&yy<om.mh;yy++){const r=yy*mw;for(let xx=qx0;xx<qx1&&xx<mw;xx++)n+=a[r+xx]}
+   tgt=n>(qx1-qx0)*(qy1-qy0)*.04?.5:1}}   // misma regla que antes (>4 % del rectángulo del jugador tapado con alfa>100), contra la máscara guardada
  cur+=(tgt-cur)*(1-Math.exp(-OCDT*14));if(Math.abs(cur-tgt)<.02)cur=tgt;e._oa=cur;
- if(lit)LIGHT.tint(CX,w,h,ax,ay-40*s,46*s,li);
- ctx.setTransform(1,0,0,1,0,0);ctx.save();ctx.globalAlpha=cur;ctx.imageSmoothingEnabled=false;ctx.drawImage(CV,p.x-ax,p.y-ay);ctx.restore()}
+ if(lit)LIGHT.tint(CX,bx[2],bx[3],ax-bx[0],ay-40*s-bx[1],46*s,li);
+ ctx.setTransform(1,0,0,1,0,0);ctx.save();ctx.globalAlpha=cur;ctx.imageSmoothingEnabled=false;ctx.drawImage(CV,p.x-ax+bx[0],p.y-ay+bx[1]);ctx.restore()}
 function dCur(t){CUR.tx=CUR.ty=-1;if(!CURON||!CUR.on||CK)return;
  const w=ISO.toWorld(CUR.px,CUR.py,TER.heightAt),q=ISO.tileAt(w.x,w.y);if(q.tx<0||q.ty<0||q.tx>=TER.NX||q.ty>=TER.NY)return;
  CUR.tx=q.tx;CUR.ty=q.ty;const h=TER.tileH(q.tx,q.ty),d=ISO.diamond(q.tx,q.ty,h),no=blk((q.tx+.5)*ISO.TILE,(q.ty+.5)*ISO.TILE),s=ISO.scale(),pul=.5+.5*Math.sin(t*5),cxx=(d[0].x+d[2].x)/2,cyy=(d[0].y+d[2].y)/2,
@@ -1005,7 +1040,7 @@ function dCur(t){CUR.tx=CUR.ty=-1;if(!CURON||!CUR.on||CK)return;
 function draw(now){const t=now/1000;cx=Math.max(0,Math.min(WW-W,P.x-W/2))|0;cy=Math.max(0,Math.min(WH-H,P.y-H/2))|0;
  {const s0=sunS(t),ph0=2*Math.PI*(dayP(t)-.25),d0=Math.max(0,s0);SHD.dx=-Math.cos(ph0)*(8+20*(1-d0));SHD.dy=2+3*(1-d0);SHD.a=Math.max(0,Math.min(.28,(s0+.15)*.5))}
  const dt=LFT?Math.min(.1,(now-LFT)/1000):1/60,sk=now<SHK?(SHK-now)/200*3:0;if(LFT)ISO.follow(P.x,P.y,TER.standZ(P.x,P.y),dt);else ISO.snap(P.x,P.y,TER.standZ(P.x,P.y));LFT=now;OCDT=dt;
- ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=true;if(typeof WGL!=='undefined'&&WGL.ok)ctx.clearRect(0,0,cv.width,cv.height);else{ctx.fillStyle=TER.PAPER;ctx.fillRect(0,0,cv.width,cv.height)}
+ ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='low';if(typeof WGL!=='undefined'&&WGL.ok)ctx.clearRect(0,0,cv.width,cv.height);else{ctx.fillStyle=TER.PAPER;ctx.fillRect(0,0,cv.width,cv.height)}
  if(INT){intScene(now,t);ctx.setTransform(cv.width/W,0,0,cv.height/H,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}else{
  if(sk)ISO.cam.x+=(Math.random()-.5)*2*sk,ISO.cam.y+=(Math.random()-.5)*2*sk;
  TER.env(P.x,P.y,t,sunS(t));TER.draw(ctx,t);dCur(t);hovUpdate();lightUpd(now);

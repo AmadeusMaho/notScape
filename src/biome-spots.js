@@ -11,7 +11,7 @@
  const FPT={tronco:[18,5],huesos:null,carpa:[16,13],estandarte:[3,3],hoguera:[10,10],antorcha:[3,3],muroRuina:o=>[(o.len||34)*.72,4],columna:[7,7],lapida:[6,3],cruz:[4,3],tumba:[13,7],verja:o=>[(o.len||18)*.85,2],
   totem:[6,6],guarida:[26,16],arbolSeco:[5,5],abrevadero:[16,6],comedero:[14,5],gallinero:[12,9],carreta:[13,8],espantapajaros:[3,3],estatuaZorro:[7,6],fumarola:[13,11],altarDemon:[15,15],charco:null,puesto:[16,10],lanzas:[7,3],
   roca:[8,6],piedra:[8,6],arbusto:[6,5],tocon:[4,4],seta:null,junco:null,heno:[9,9],barril:[5,5],caja:[5,5],pozo:[9,9],valla:o=>[(o.len||18)*.72,3],obsidiana:[6,6],estela:[5,5],vasija:[5,5],cerezo:[5,5],bambu:[4,4],pino:[5,5],roble:[6,6],sauce:[6,6],
-  linterna:[3,3],brasero:[3,3],farola:[3,3],torii:null,granero:[46,34],rack:[11,3]};
+  linterna:[3,3],brasero:[3,3],farola:[3,3],torii:null,granero:[46,34],rack:[11,3],iglesia:[44,30],molino:[14,14],monumento:[19,19],huerto:null,pagoda:[40,40],templo:[46,46]};   // V3/V4: iglesia/molino/monumento/pagoda/templo
  const SOLO_FPS={arcoRuina:o=>{const S=(o.span||13)*1.5;return o.dir==='y'?[[0,-S,4,4],[0,S,4,4]]:[[-S,0,4,4],[S,0,4,4]]},portillo:o=>[[-15,0,3,3],[15,0,3,3]]};
  const fpOf=(n,o)=>{o=o||{};const a=FPT[n];if(a===undefined||a===null)return null;const f=typeof a==='function'?a(o):a;return o.dir==='y'?[f[1],f[0]]:f};
  const P=(n,x,y,o,extra)=>{const e={n,x,y};if(o)e.o=o;const f=fpOf(n,o);if(f)e.fp=f;if(SOLO_FPS[n])e.fps=SOLO_FPS[n](o||{});if(extra)Object.assign(e,extra);return e};
@@ -26,7 +26,7 @@
  // Plantilla de ampliación (misma para los 6 biomas; cada uno pone sus edificios con KIT). [tipo, x, y, rot]: M casa mediana, S cabaña, B edificio grande.
  const SLOTS=[['M',108,392,0],['M',300,392,1],['M',108,470,0],['M',300,470,1],['M',108,548,0],['S',300,548,1],['M',432,470,0],['M',432,548,0],['M',625,470,1],['M',625,548,1],['B',655,637,1],
   ['M',590,808,1],['S',520,842,1],['M',205,1092,0],['M',400,1095,1],['M',545,950,1]];
- const HRW=['#d0674a','#6a8fb8','#c98a3a','#8a6aa8'],HWL=['#e6d2a6','#ead9b5','#dcc79a','#efe0bd'];
+ const HRW=['#b9573b','#6f7d8a','#cfa24e','#a64d38'],HWL=['#efe3c6','#f2e8d0','#e8d7b0','#f0e0bf'];   // V1 (15 oct 2026): tejados terrosos (terracota, pizarra, paja, teja oscura) y muros de cal; el color vivo queda para toldos, puertas y carteles
  const KIT=[
   // Pradera: casas de cal y teja, cabañas, posada
   {M:(x,y,i,r)=>P('casa',x,y,{roof:HRW[i%4],wall:HWL[(i+1)%4],rot:r},{fp:[32,25]}),S:(x,y,i,r)=>P('cabana',x,y,{roof:HRW[(i+2)%4],rot:r},{fp:[24,20]}),B:(x,y,i,r)=>P('taberna',x,y,{roof:'#8a4a3a',rot:r},{fp:[41,31]}),lamp:'farola',tree:'roble',tfp:[6,6],
