@@ -61,7 +61,7 @@ button.slot:hover{background:#4a3f31;border-color:var(--or)!important}
 #goals>div:first-child{font-size:19px!important;font-weight:600;line-height:1.15}
 [style*="color:#ffd100"]{color:#b8861a!important}[style*="color:#fff"]{color:var(--tx)!important}[style*="color:#d8c9a3"]{color:var(--tx)!important}[style*="color:#c8a0ff"]{color:#7a54c0!important}[style*="color:#6ad0ff"]{color:#2f88b8!important}
 ::-webkit-scrollbar{width:10px}::-webkit-scrollbar-thumb{background:#7d6c50;border:2px solid var(--ink);border-radius:6px}::-webkit-scrollbar-track{background:transparent}
-@media(max-width:1500px){#tabs .lb{display:none}#tabs button.bt{padding:2px 5px}}@media(max-width:900px){#tabs .lb{display:none}#tabs button.bt{padding:2px 5px}}
+@media(max-width:2100px){#tabs .lb{display:none}#tabs button.bt{padding:2px 5px}}@media(max-width:900px){#tabs .lb{display:none}#tabs button.bt{padding:2px 5px}}
 @media(max-height:560px){#pw{max-height:calc(100vh - 64px);width:min(300px,50vw)}#hd{font-size:13px}#goals{font-size:13px;max-height:24vh}#botl{bottom:13vh}#topl{max-width:44vw}#ctl button.bt{font-size:13px}#sw{max-height:calc(100vh - 16px)}}
 
 #perf{position:fixed;left:50%;top:6px;transform:translateX(-50%);z-index:40;margin:0;padding:5px 10px;font:12px/1.35 ui-monospace,Consolas,monospace;color:#d6f5c0;background:rgba(20,16,10,.82);border:2px solid var(--ink);border-radius:8px;pointer-events:none;white-space:pre;text-align:left}#perf[hidden]{display:none}

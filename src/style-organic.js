@@ -810,6 +810,9 @@ const ORG=(()=>{
   secadero(g,x,y,sm){soft(g,x,y,12);[-9,9].forEach((px,i)=>M(g,x,y,box(1.8,1.8,18,[px,0,0]),'#5a3e28',sm,1230+i,RG));M(g,x,y,box(22,1.4,1.4,[0,0,16]),'#7a5a3a',sm,1232,RG);
    [-7,-2.5,2,6.5].forEach((px,i)=>{M(g,x,y,blob({at:[px,.9,11],r:[1.4,.7,3.6],amp:.1,seed:1233+i}),i%2?'#9ab8c8':'#c8d8e0',0,1233+i,{paint:false,ij:.25});M(g,x,y,box(1.4,.6,1.4,[px+.5,.9,13.4]),'#5a7a8a',0,1240+i,{crease:0,paint:false})})},
   cestaPeces(g,x,y,sm){soft(g,x,y,9);M(g,x,y,lathe({n:8,at:[0,0,0],r:[4.6,4.6],h:5,top:1.1,seed:1250}),'#b98a4a',sm,1250,RG);[[-1.6,0,5.4,'#9ab8c8'],[1.6,.8,5.8,'#c8d8e0'],[0,-1.6,6,'#7a98aa']].forEach((q,i)=>M(g,x,y,blob({at:[q[0],q[1],q[2]],r:[3.2,1.2,1.2],amp:.12,seed:1251+i}),q[3],0,1251+i,{paint:false,ij:.25}))},
+  altarRezo(g,x,y,sm){soft(g,x,y,15);M(g,x,y,box(26,18,3,[0,0,0]),'#a9a49a',sm,1400,RG);M(g,x,y,box(20,13,3,[0,0,3]),'#bdb8ae',sm,1401,RG);M(g,x,y,box(15,9,9,[0,0,6]),'#cfcac0',sm,1402,RG);M(g,x,y,box(17,11,1.6,[0,0,15]),'#e9e4d8',sm,1403,RG);M(g,x,y,box(13,7,.8,[0,0,16.4]),'#c8a23a',0,1404,{crease:0,paint:false,ij:.2});
+   [-5,5].forEach((px,i)=>{M(g,x,y,lathe({n:6,at:[px,0,17],r:[1.1,1.1],h:5,top:1,seed:1405+i}),'#f4efe0',sm,1405+i,RG);M(g,x,y,blob({at:[px,0,23.4],r:[.9,.9,1.5],amp:.05,seed:1407+i}),'#ffd070',0,1407+i,{paint:false,ij:.4})});
+   M(g,x,y,box(1.6,1.6,10,[0,-5,19]),'#e8c040',sm,1409,RG);M(g,x,y,box(1.6,7,1.6,[0,-5,25]),'#e8c040',sm,1410,RG)},
   tablon(g,x,y,sm){soft(g,x,y,16);M(g,x,y,box(2.4,2.4,28,[0,-13,0]),'#6e4a2a',sm,1300,RG);M(g,x,y,box(2.4,2.4,28,[0,13,0]),'#6e4a2a',sm,1301,RG);M(g,x,y,box(2.2,30,17,[0,0,9]),'#8f5f2c',sm,1302,RG);
    [[-8,19,6.4,7.4,'#f4efe0'],[1,17,6,8.2,'#efe2b0'],[9,18.5,5.4,6.4,'#f6ecc8'],[-4,11.6,5.6,5.4,'#ead9a2'],[6,11,6.4,5.8,'#f4efe0']].forEach(([py,pz,w,h,c],i)=>M(g,x,y,box(.7,w,h,[1.5,py,pz-h/2+2]),c,0,1304+i,{crease:0,paint:false,ij:.25}));
    M(g,x,y,box(7,34,2.4,[0,0,27]),'#a8442e',sm,1303,RG)},
@@ -820,7 +823,7 @@ const ORG=(()=>{
   candelabro(g,x,y,sm){soft(g,x,y,7);M(g,x,y,lathe({n:6,at:[0,0,0],r:[3,3],h:1.6,top:.8,seed:1320}),'#8a6a3a',sm,1320,RG);M(g,x,y,lathe({n:6,at:[0,0,0],r:[1,1],h:18,top:1,seed:1321}),'#8a6a3a',sm,1321,RG);M(g,x,y,box(9,1.4,1.4,[0,0,18]),'#8a6a3a',sm,1322,RG);
    [-4,0,4].forEach((px,i)=>{M(g,x,y,lathe({n:6,at:[px,0,18.8],r:[.9,.9],h:4.2,top:1,seed:1323+i}),'#f4efe0',sm,1323+i,RG);M(g,x,y,blob({at:[px,0,24],r:[.9,.9,1.5],amp:.05,seed:1326+i}),'#ffd070',0,1326+i,{paint:false,ij:.4})})}
  });
- Object.assign(KSC,{tablon:1.9,banca:1.7,pilaTroncos:1.8,tablones:1.8,caballete:1.8,tinaja:1.8,carbon:1.8,lingotes:1.8,muela:1.8,herreria:1.6,asador:1.8,olla:1.8,secadero:1.8,cestaPeces:1.8,atril:1.8,estanteria:1.8,rollos:1.8,candelabro:1.8});
+ Object.assign(KSC,{altarRezo:1.8,tablon:1.9,banca:1.7,pilaTroncos:1.8,tablones:1.8,caballete:1.8,tinaja:1.8,carbon:1.8,lingotes:1.8,muela:1.8,herreria:1.6,asador:1.8,olla:1.8,secadero:1.8,cestaPeces:1.8,atril:1.8,estanteria:1.8,rollos:1.8,candelabro:1.8});
  Object.keys(U).forEach(n=>{const f=U[n];U[n]=(g,x,y,sm,a,b,c)=>{KS=KSC[n]||1;try{f(g,x,y,sm,a,b,c)}finally{KS=1}}});
  // checks(): comprobaciones geométricas de «no se corta» (sin navegador). Devuelve una lista de problemas; vacía = OK.
  function checks(){const bad=[];

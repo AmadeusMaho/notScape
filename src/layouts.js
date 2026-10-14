@@ -93,7 +93,7 @@
   ['ing','camp','orc'].forEach(k=>{sp[k].decor.forEach(e=>props.push(e));(sp[k].dirt||[]).forEach(d=>plaza.push(d));(sp[k].routes||[]).forEach(r=>routes.push(r));st.push(...(sp[k].stone||[]))});
   B.spots=sp;
   applyAdj(props,PRA_ADJ);   // lote D7: la Pradera tal como la dejó el dueño con el editor (F2)
-  B.village=Object.assign({},old,{props,stations:[['bank','Banco',CX-125,CY-105],['shop','Tienda',CX+125,CY-105],['fire','Fogata',CX+345,CY+255,['co']],['furnace','Horno',CX+77,CY-415,['sm']],['anvil','Yunque',CX+31,CY-373,['sm']],['bench','Taller',CX-285,CY-230,['cr','es']],['altar','Escritorio',CX+285,CY-230,['ins']]],
+  B.village=Object.assign({},old,{props,stations:[['bank','Banco',CX-125,CY-105],['shop','Tienda',CX+125,CY-105],['fire','Fogata',CX+345,CY+255,['co']],['furnace','Horno',CX+77,CY-415,['sm']],['anvil','Yunque',CX+31,CY-373,['sm']],['bench','Taller',CX-285,CY-230,['cr','es']],['altar','Escritorio',CX+285,CY-230,['ins']],['shrine','Altar de oración',CX+100,CY+20]],
    plaza,bridge:null,safe:[CX,CY,470,470],
    cobs:[{p:[[CX-95,CY],[CX+95,CY]],w:215},{p:[[CX,CY-170],[CX,CY-330]],w:24},{p:[[CX,CY+170],[CX,CY+340]],w:24},{p:[[CX-180,CY],[CX-410,CY]],w:24},{p:[[CX+180,CY],[CX+430,CY]],w:24},{p:[[CX+25,CY-385],[CX+125,CY-410]],w:70}].concat(st)});
   // ── caminos de tierra (aldea → cada nodo) ──
@@ -187,7 +187,7 @@
   B.spots=sp;const plaza=[[CX,CY,175],[CX+60,CY-395,105],[CX+345,CY+255,95],[CX-285,CY-230,85],[CX+285,CY-230,85]],routes=[],st=[];
   ['ing','pack','cap'].forEach(key=>{sp[key].decor.forEach(e=>props.push(e));(sp[key].dirt||[]).forEach(d=>plaza.push(d));(sp[key].routes||[]).forEach(r=>routes.push(r));st.push(...(sp[key].stone||[]))});
   layHouses(props,kit,k,CX,CY,plaza);   // lote D7: las 5 casas con instalación en la posición de la Pradera del dueño y el resto repartidas al azar (semilla por bioma)
-  B.village=Object.assign({},old,{props,stations:[['bank','Banco',CX-125,CY-105],['shop','Tienda',CX+125,CY-105],['fire','Fogata',CX+345,CY+255,['co']],['furnace','Horno',CX+77,CY-415,['sm']],['anvil','Yunque',CX+31,CY-373,['sm']],['bench','Taller',CX-285,CY-230,['cr','es']],['altar','Escritorio',CX+285,CY-230,['ins']]],
+  B.village=Object.assign({},old,{props,stations:[['bank','Banco',CX-125,CY-105],['shop','Tienda',CX+125,CY-105],['fire','Fogata',CX+345,CY+255,['co']],['furnace','Horno',CX+77,CY-415,['sm']],['anvil','Yunque',CX+31,CY-373,['sm']],['bench','Taller',CX-285,CY-230,['cr','es']],['altar','Escritorio',CX+285,CY-230,['ins']],['shrine','Altar de oración',CX+100,CY+20]],
    plaza,bridge:null,safe:[CX,CY,470,470],
    cobs:[{p:[[CX-95,CY],[CX+95,CY]],w:215},{p:[[CX,CY-170],[CX,CY-330]],w:24},{p:[[CX,CY+170],[CX,CY+340]],w:24},{p:[[CX-180,CY],[CX-410,CY]],w:24},{p:[[CX+180,CY],[CX+430,CY]],w:24},{p:[[CX+25,CY-385],[CX+125,CY-410]],w:70}].concat(st)});
   // ── caminos de tierra (plantilla de la Pradera, espejada) ──
