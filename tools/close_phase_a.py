@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Cierre fase A (lote D8): por aldea, solapes casa-casa/casa-adorno; entra y sale de cada casa con instalacion y lista sus estaciones. Uso: python3 tools/close_phase_a.py (capturas de interiores de los biomas 0 y 3 en /tmp)"""
-import sys,subprocess,time,json
+import sys,os,subprocess,time,json
 from playwright.sync_api import sync_playwright
-S='/tmp/'
-srv=subprocess.Popen([sys.executable,'-m','http.server','8861','--bind','127.0.0.1'],cwd='/home/claude/ns',stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
+S=os.environ.get('CAPS','/tmp/')
+srv=subprocess.Popen([sys.executable,'-m','http.server','8861','--bind','127.0.0.1'],cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
 try:
  with sync_playwright() as p:
   b=p.chromium.launch();pg=b.new_page(viewport={'width':1400,'height':900});pg.set_default_timeout(60000);errs=[]
