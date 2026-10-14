@@ -96,3 +96,6 @@ Taller/Escritorio recolocados sin solapes, 17 modelos de decoración por instala
 
 ## Sesión 13 oct 2026 — resumen para el siguiente agente
 Estado actual: Pradera con aldea repartida (plaza = banco + tienda; herrería al norte; fogata junto al estanque; Taller y Escritorio al noroeste/noreste) con decoración propia por instalación (17 modelos nuevos en style-organic.js) y marcas en minimapa/mapa grande. Interfaz pintada con paleta OSRS (ui-paint.js), pestaña Personaje con 11 slots, zoom por pasos, panel de rendimiento F3. ICD global de ataque `ATKT` (magia/arco/melé). Rendimiento: sprites de props a medida (`BH` en props.js) + precarga direccional de chunks; el tirón mejoró, no desapareció del todo. Música: 30 mp3 placeholder (las 5 de Pradera con copyright). Detalle, reglas aprendidas y pendientes priorizados: ver la entrada «(10:00) CIERRE DE SESIÓN» de AGENTS.md.
+
+## 14 oct 2026 — ojo, lectura
+AGENTS.md ya no hay que leerlo entero: el Registro antiguo (Lote D6 y anteriores) está en `docs/HISTORIAL.md` (solo grep). Lo último: «Lote T» (tutorial por rutas, Agilidad eliminada, seguimiento de misiones, taberna rehecha) en AGENTS.md. Hecho en Fase D: solo la retirada de Agilidad.
