@@ -80,7 +80,7 @@ const PROPS=(()=>{
   return st.q.length?Math.min(1,st.i/st.q.length):1}
  // instalaciones (banco, tienda, fogata, horno, yunque, taller, escritorio). lh = altura de la etiqueta en px de modelo. El sprite se hornea una vez por variante
  // (banco de noche, horno encendido) y se pinta con el desplazamiento (ox,oy) del lienzo pequeño de hl()/occ(); llamas y luz de vela son overlays en vivo.
- const ST={bank:{n:'banco',lh:68},shop:{n:'tienda',lh:50},ru:{n:null,lh:66},board:{n:'tablon',lh:44},fire:{n:'fogata',lh:34},furnace:{n:'horno',lh:58},anvil:{n:'yunque',lh:48},bench:{n:'taller',lh:50},altar:{n:'escritorio',lh:54},shrine:{n:'altarRezo',lh:50}};
+ const ST={bank:{n:'banco',lh:68},shop:{n:'tienda',lh:50},ru:{n:null,lh:66},board:{n:'tablon',lh:44},fire:{n:'fogata',lh:34},furnace:{n:'horno',lh:58},anvil:{n:'yunque',lh:48},armero:{n:'armero',lh:56},curtidor:{n:'curtidor',lh:46},bench:{n:'taller',lh:50},altar:{n:'escritorio',lh:54},shrine:{n:'altarRezo',lh:50}};
  const prj=(X,Y,Z,K)=>[(X-Y)*.7071*K,(X+Y)*.3536*K-Z*.866*K];
  function flame(g,cx,cy,s,t,h0,w0,seed){for(let k=0;k<3;k++){const h=(h0+Math.sin(t*14+k*2+seed)*h0*.2)*s,w=w0*s,x=cx+(k-1)*w0*.9*s;
    [['#ff7a1a',1],['#ffd23a',.55]].forEach(([c,f])=>{g.fillStyle=c;g.beginPath();g.moveTo(x-w*f,cy);g.quadraticCurveTo(x-w*.8*f,cy-h*f*.6,x+Math.sin(t*9+k+seed)*2*s,cy-h*f);g.quadraticCurveTo(x+w*.8*f,cy-h*f*.6,x+w*f,cy);g.closePath();g.fill()})}}

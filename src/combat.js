@@ -18,7 +18,7 @@ const specId=()=>{const k=wKind();return {dagger:'dg',great:'gr',xbow:'xb',scept
 let SPECON=0,specKey='',specLt=0;
 const specNow=()=>SPECS[specId()];
 function specTog(){const s=specNow();if(!s||P.hp<=0||!inCombat(performance.now()))return;if(!SPECON&&EN<s.cost){toast('⚡ Energía especial: '+Math.floor(EN)+' % (hace falta '+s.cost+' %)');snd('miss');return}SPECON=SPECON?0:1;snd(SPECON?'xp':'miss');specKey='';specTick(performance.now(),1)}
-function specTry(m,now,wt){if(!SPECON)return false;const s=SPECS[specId()];if(!s)return false;SPECON=0;specKey='';if(EN<s.cost){toast('⚡ Te falta energía especial.');return false}EN-=s.cost;specFire(m,now,wt,s);return true}
+function specTry(m,now,wt){if(!SPECON)return false;const s=SPECS[specId()];if(!s)return false;SPECON=0;specKey='';if(EN<s.cost){toast('⚡ Te falta energía especial.');return false}EN-=s.cost;specFire(m,now,wt,s);inc('spec');return true}
 function specFire(m,now,wt,s){const mx=maxHit(),acc=Math.min(1,hitChance(m)+.3);P.pjM=m;P.pj=now+4800;P.sp={t0:now,wt,d:wt==='m'?520:wt==='r'?560:620};P.f=m.x-m.y>=P.x-P.y?1:-1;log('⚡ <b>'+s.n+'</b>');sp(P.x,P.y-16,'#ffd23a',10,70,60,120);
  if(s.v){specVar(m,now,wt,s,mx,acc);dirty=1;return}
  if(wt==='m'){HFX.push({k:wColor()?'thrust':'punch',x:P.x,y:P.y,tx:m.x,ty:m.y,th:m.d.h/2,t0:now,d:300});

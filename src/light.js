@@ -39,7 +39,7 @@ const LIGHT=(()=>{
   const P=o.P,R=o.near||640,near=(x,y,m)=>Math.abs(x-P.x)<R+(m||0)&&Math.abs(y-P.y)<R+(m||0),T=o.t,L=(x,y,def,key,extra)=>{const D=DEFS[def];if(!D)return;lights.push(Object.assign({x,y,r:D.r,k:D.k,c:D.c,fl:D.fl,key},extra||{}))};
   o.ST.forEach(e=>{if(!near(e.x,e.y))return;const on=o.active&&o.active.e===e;
    if(e.id==='fire')L(e.x,e.y-2,on?'fireOn':'fire',e);else if(e.id==='furnace')L(e.x,e.y-4,on?'furnaceOn':'furnace',e);else if(e.id==='shop'||e.id==='bank'||e.id==='altar')L(e.x,e.y-14,e.id,e);
-   const SZ={bank:[13,9,30],shop:[15,10,32],furnace:[9,9,28],bench:[13,8,14],altar:[8,6,16],anvil:[6,4,10]}[e.id];if(SZ)rect(e.x,e.y,SZ[0],SZ[1],SZ[2],e)});
+   const SZ={bank:[13,9,30],shop:[15,10,32],furnace:[9,9,28],bench:[13,8,14],altar:[8,6,16],anvil:[6,4,10],armero:[8,5,24],curtidor:[8,5,18]}[e.id];if(SZ)rect(e.x,e.y,SZ[0],SZ[1],SZ[2],e)});
   o.props.forEach(e=>{if(!near(e.x,e.y,60))return;
    if(e.lamp){const k=LAMPK[e.n]||'farola';L(e.x,e.y,k,e)}else if(LIGHTN[e.n])L(e.x,e.y,LIGHTN[e.n],e);
    if(e.fps){const h=OH[e.n]!=null?OH[e.n]:30;e.fps.forEach(r=>rect(e.x+r[0],e.y+r[1],r[2],r[3],h,e))}

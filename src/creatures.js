@@ -88,6 +88,10 @@ const CRE=(()=>{
   mid:(k,by)=>{k.P(k.E(-8,by-3,5,3.6,-.2),'#4a403c',{nd:true,lw:1});k.P(k.E(6,by-1,4.2,3.4,.2),'#4a403c',{nd:true,lw:1});k.P(k.E(1,by+8.6,3.6,2.4),'#f2a8a8',{lw:1.1})},
   headFar:(k,hx,hy)=>{k.P(k.T([hx-3,hy-5,hx-9,hy-9,hx-4,hy-2]),'#e8dfce',{lw:1.1})},
   post:(k,hx,hy)=>{k.P(k.T([hx-1.6,hy-5.4,hx-3.4,hy-10.4,hx+.4,hy-6.6]),'#f4ecd2',{lw:1.1});k.P(k.T([hx+3,hy-5,hx+5.6,hy-9.6,hx+5.6,hy-4.4]),'#f4ecd2',{lw:1.1});k.P(k.E(hx-4.6,hy-3,2.6,1.8,-.5),'#4a403c',{nd:true,lw:1});k.eye(hx+2.4,hy-1.8,1.15);k.P(k.E(hx+9.2,hy+3.4,.8,.8),'#8a4a4a',{nd:true,ink:false})}});
+ M.oveja=(g,x,y,o)=>quad(g,x,y,o,{s:1,col:'#f1ede2',belly:'#e4ddcc',bx:17,by:10,len:6.4,lwid:3.8,leg:'#4a403c',hoof:'#2e2622',hx:18,hy:0,hr:[5.6,5.2],sn:{x:4.2,y:1.8,rx:3,ry:2.6,col:'#5a4e48'}, // lote C1: oveja (lana para la tela de las túnicas)
+  pre:(k,by)=>{k.P(k.E(-16,by-1,4.4,3.6),'#f1ede2',{lw:1.2})},
+  mid:(k,by)=>{[[-9,-5],[-1,-8],[7,-5],[2,0],[-8,2]].forEach(([wx,wy])=>k.P(k.E(wx,by+wy,5,4),'#faf6ea',{nd:true,lw:1}))},
+  post:(k,hx,hy)=>{k.P(k.E(hx-3,hy-5,6.6,4.4),'#faf6ea',{lw:1.2});k.P(k.E(hx-6,hy-.6,2.8,1.8,-.4),'#5a4e48',{nd:true,lw:1});k.eye(hx+2.2,hy-1.2,1.1)}});
  M.jabali=(g,x,y,o)=>quad(g,x,y,o,{s:1,col:'#7a5440',belly:'#a07a5c',bx:15,by:9.4,len:6,lwid:4.4,hoof:'#3a2a22',hx:16,hy:2,hr:[7,6.4],sn:{x:6,y:2.4,rx:4.6,ry:3.4,col:'#9a6e58'},
   pre:(k,by)=>{k.P(k.T([-14,by-3,-19,by-6,-15,by+3]),'#5a3e30',{lw:1.2});[0,1,2,3,4,5].forEach(i=>k.P(k.T([-12+i*4.6,by-8.4,-10.6+i*4.6,by-13.8-(i%2),-8.6+i*4.6,by-8.4]),'#4a3226',{lw:1.1}))},
   post:(k,hx,hy,by)=>{k.P(k.E(hx-2,hy-5.4,3,2.2,-.4),'#7a5440',{lw:1.2});k.P(k.T([hx+7,hy+3,hx+13,hy-2.4,hx+9,hy+5.4]),'#f4ecd2',{lw:1.1});k.P(k.E(hx+10.4,hy+2,1.2,1.4),'#3a2a22',{nd:true,ink:false});k.eye(hx+2.2,hy-1.4,1.2,'#e8442a',true);k.line([hx-.6,hy-4.8,hx+5,hy-2.2],'#1e1410',1.8);k.line([hx+4.4,hy+5,hx+8,hy+5.6],'#4a3226',.9)}});
@@ -237,7 +241,7 @@ const CRE=(()=>{
    body:(k,ty)=>{k.line([-9,-24+ty,-5,-20+ty,-8,-14],'#ffd23a',1.3);k.line([9,-26+ty,6,-21+ty,9,-16],'#ffd23a',1.3)},head:(k,hy)=>{[-1,1].forEach(sg=>k.P(k.T([sg*5,hy-7,sg*9,hy-16,sg*2,hy-9]),'#2a2226',{lw:1.2}));flameAt(k,0,hy-8,1.1,k.p.t||0,2)}}));
  // ───────────────────────── tabla: altura de la etiqueta (px de modelo, tras escala) y caja de horneado {w,h,ax,ay} ─────────────────────────
  const BOX={w:96,h:104,ax:48,ay:84},BIG={w:150,h:160,ax:75,ay:132};
- const H={gallina:23,vaca:26,jabali:29,lobo:31,yak:30,zorro:31,lagarto:20,rana:19,slime:22,orco:46,ogro:54,esqueleto:48,oni:66,demonio:64,goblin:34,b0:77,b1:52,b2:70,b3:77,b4:89,b5:94,bandido:52,oso:36,bruja:76,gigante:80,shinobi:52,golem:72,k0:62,k1:52,k2:96,k3:98,k4:62,k5:108}; // altura medida (px de modelo) = donde cuelga la etiqueta; MD[id].h = H/SPR (ver game.js)
+ const H={gallina:23,vaca:26,oveja:26,jabali:29,lobo:31,yak:30,zorro:31,lagarto:20,rana:19,slime:22,orco:46,ogro:54,esqueleto:48,oni:66,demonio:64,goblin:34,b0:77,b1:52,b2:70,b3:77,b4:89,b5:94,bandido:52,oso:36,bruja:76,gigante:80,shinobi:52,golem:72,k0:62,k1:52,k2:96,k3:98,k4:62,k5:108}; // altura medida (px de modelo) = donde cuelga la etiqueta; MD[id].h = H/SPR (ver game.js)
  const MID_BOX={w:110,h:122,ax:55,ay:100},BX={bruja:MID_BOX,gigante:{w:120,h:132,ax:60,ay:108},golem:{w:120,h:128,ax:60,ay:104},k0:MID_BOX,k4:MID_BOX,k1:{w:128,h:110,ax:64,ay:88},k2:BIG,k3:BIG,k5:{w:160,h:176,ax:80,ay:146},oso:{w:104,h:104,ax:52,ay:84},b0:BIG,b1:BIG,b2:BIG,b3:BIG,b4:BIG,b5:BIG,yak:{w:110,h:104,ax:55,ay:84},lobo:{w:104,h:104,ax:52,ay:84},zorro:{w:104,h:104,ax:52,ay:84},lagarto:{w:112,h:90,ax:56,ay:72},ogro:{w:110,h:120,ax:55,ay:98},oni:{w:110,h:122,ax:55,ay:100},demonio:{w:120,h:122,ax:60,ay:100}};
  function reg(){for(const n in M){const f=M[n];ORG.U[n]=(g,x,y,sm,o)=>f(g,x,y,Object.assign({f:1},o||{}))}}
  reg();

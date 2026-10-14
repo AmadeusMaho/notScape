@@ -59,7 +59,7 @@
  const SPOTS=[];
  // ── Pradera · Rancho (vacas y gallinas) ──
  SPOTS[0]={ing:{id:'rancho',t:'🐄 Rancho',z:[760,985,455,665],
-  mobs:[['vaca',810,540],['vaca',850,525],['vaca',820,580],['vaca',860,575],['gallina',915,545],['gallina',945,560],['gallina',920,590],['gallina',950,600]],
+  mobs:[['vaca',810,540],['vaca',850,525],['vaca',820,580],['vaca',860,575],['oveja',885,603],['oveja',838,553],['oveja',905,628],['gallina',915,545],['gallina',945,560],['gallina',920,590],['gallina',950,600]],
   dirt:[[870,560,98]],routes:[[[870,705],[870,650],[870,615]]],
   decor:flat([fenceX(770,978,470),fenceX(770,822,650),fenceX(918,978,650),fenceY(496,626,770),fenceY(496,626,970)]).concat([
    P('portillo',870,650),P('gallinero',935,500),P('comedero',805,497),P('abrevadero',820,627),P('heno',790,596),P('heno',804,606),P('comedero',950,625,{dir:'y'}),
@@ -82,6 +82,14 @@
    P('hoguera',2036,668),P('hoguera',2036,818),P('totem',1955,650,{col:'#8a2e2a'}),P('totem',1955,832,{col:'#8a2e2a'}),
    P('estandarte',1938,672,{col:'#8a2e2a',mark:'#e8d9a0'}),P('estandarte',1938,812,{col:'#8a2e2a',mark:'#e8d9a0'}),P('estandarte',2172,672,{col:'#8a2e2a',mark:'#e8d9a0'}),P('estandarte',2172,812,{col:'#8a2e2a',mark:'#e8d9a0'}),
    P('lanzas',2002,692),P('lanzas',2072,692),P('lanzas',2004,796),P('huesos',2060,650),P('huesos',2012,842),P('huesos',2120,800),P('carreta',2158,862),P('barril',2122,640),P('barril',2134,651),P('caja',2180,640),P('rack',2150,640),P('arbolSeco',1930,590),P('arbolSeco',2200,900)]}};
+
+ // 14 oct 2026: rancho 1,6× más grande (pedido del dueño: «todo muy junto»); las ovejas se fueron a su propio prado (layouts.js, sp.pack)
+ ;(()=>{const s=SPOTS[0].ing,cx=870,cy=560,F=1.6,fx=x=>Math.round(cx+(x-cx)*F),fy=y=>Math.round(cy+(y-cy)*F);
+  const rest=s.decor.filter(d=>d.n!=='valla').map(d=>Object.assign({},d,{x:fx(d.x),y:fy(d.y)}));
+  s.decor=flat([fenceX(fx(770),fx(978),fy(470)),fenceX(fx(770),fx(822),fy(650)),fenceX(fx(918),fx(978),fy(650)),fenceY(fy(496),fy(626),fx(770)),fenceY(fy(496),fy(626),fx(970))]).concat(rest);
+  s.mobs=s.mobs.filter(m=>m[0]!=='oveja').map(([id,x,y])=>[id,fx(x),fy(y)]);
+  s.dirt=[[fx(870),fy(560),Math.round(98*F)]];s.routes=s.routes.map(r=>r.map(q=>[fx(q[0]),fy(q[1])]));
+  s.z=[fx(s.z[0]),fx(s.z[1]),fy(s.z[2]),fy(s.z[3])]})();
  // ── Bosque · claro de jabalíes y guarida de lobos ──
  SPOTS[1]={ing:{id:'claro',t:'🐗 Claro de jabalíes',z:[765,985,465,650],mobs:[['jabali',830,555],['jabali',875,545],['jabali',905,580],['jabali',850,592]],dirt:[[870,565,82]],routes:[[[870,705],[870,640],[870,600]]],
   decor:[P('tronco',812,520,{len:28}),P('tronco',942,592,{len:24}),P('tronco',860,498),P('charco',872,598,{col:'#4a3a28',water:'#7a6a48'}),P('charco',808,592,{col:'#4a3a28',water:'#7a6a48'}),P('tocon',790,560),P('tocon',942,522),P('tocon',905,622),P('seta',830,625),P('seta',930,555),P('seta',795,520),

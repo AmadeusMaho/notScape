@@ -57,15 +57,16 @@ function prAltar(){prInit();if(P.dot){P.dot=null;log('🙏 El altar te limpia de
 function prHTML(){prInit();const lv=L('pr'),xp=S.xp.pr,pc=lv>=99?100:(xp-XT[lv])/(XT[lv+1]-XT[lv])*100;let h=`<h2>🙏 Oración · nivel ${lv}</h2><div class="bar"><i style="width:${pc}%"></i></div><div class="hint" style="margin:3px 0 6px">Puntos: <b>${Math.floor(PP)}</b>/${prMax()} · ${PRA.length?'gastas '+PRA.reduce((s,id)=>s+PRB[id].dr,0)+'/min':'sin oraciones activas'}</div>`;
  let g0='';PRS.forEach(p=>{if(p.g!==g0){g0=p.g;h+=`<div class="hint" style="margin:8px 0 3px;color:var(--yl)">${PGN[g0]}${g0==='prot'?' (una a la vez)':''}</div>`}
   const on=PRA.includes(p.id),lock=lv<p.lv;h+=`<div class="row${lock?' cant':''}" style="${on?'outline:2px solid #ffd23a;border-radius:6px':''}"><span>${p.e} ${p.n}<br><span class="hint" style="margin:0">${lock?'🔒 Nivel '+p.lv:p.d+' · '+p.dr+' pts/min'}</span></span><button class="bt" onclick="prTog('${p.id}')">${on?'Quitar':'Activar'}</button></div>`});
- return h+'<div class="hint" style="margin-top:10px">Entierra huesos haciendo clic en ellos en la mochila (+XP) o ofrécelos en el <b>altar</b> de la aldea (×2 de XP y puntos al máximo). Los jefes y capitanes cambian de estilo: el círculo del golpe pesado muestra cuál viene (🗡️ rojo · 🏹 verde · ✨ azul).</div>'}
+ return h}
 
 // ═══ LOTE B2 · TRIÁNGULO DE ARMADURAS ═══
 // Cada pieza es de una CLASE: cuero (`r`, resiste distancia), malla/metal (`m`, resiste cuerpo a cuerpo) o túnica (`g`, resiste magia).
 // La armadura de una clase es DÉBIL al estilo que la contrarresta: malla ← magia, cuero ← cuerpo a cuerpo, túnica ← distancia.
 // Cada punto de defensa de una clase da 0,6 % de resistencia a su estilo (tope 25 %); cada punto de la clase débil suma la mitad como vulnerabilidad (tope 12 %).
-// Metal = crafteado de metal (ar_/sh_/lg_/gl_ de barra); cuero = `ar_cuero`; botín `lt_*`: clase por familia (k%3: 0 malla · 1 cuero · 2 túnica); legendarios por su tipo.
+// Metal = crafteado de metal (ar_/sh_/lg_/gl_ de barra); cuero = `ar_cuero` y los sets `*_cu_*` (lote C1); túnica = los sets `*_tu_*` (lote C1); botín `lt_*`: clase por familia (k%3: 0 malla · 1 cuero · 2 túnica); legendarios por su tipo.
 const ACLS={m:'Malla',r:'Cuero',g:'Túnica'},AWEAK={m:'g',r:'m',g:'r'},ASLOTS=['a','s','l','g','h','f','c'];
 function armCls(id){if(!id)return null;if(LOOT[id]){if(LOOT[id].s==='r'||LOOT[id].s==='n'||LOOT[id].s==='w'||LOOT[id].s==='m')return null;return['m','r','g'][LOOT[id].k%3]}
+ if(/^(ar|sh|lg|gl)_cu_/.test(id))return 'r';if(/^(ar|sh|lg|gl)_tu_/.test(id))return 'g'; // lote C1: sets de cuero (cu_) y de túnica (tu_) por tier, fabricables en Artesanía
  if(/^ar_cuero/.test(id))return 'r';if(/^(ar|sh|lg|gl)_/.test(id)&&(AR[id]||SHL[id]||LGL[id]||GLL[id]))return 'm';return null}
 function armDef(id){return AR[id]||SHL[id]||LGL[id]||GLL[id]||(LOOT[id]&&LOOT[id].st.def)||0}
 function armPts(){const t={m:0,r:0,g:0};for(const sl of ASLOTS){const id=S.eq[sl],c=armCls(id);if(c)t[c]+=armDef(id)}return t}

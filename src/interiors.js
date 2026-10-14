@@ -34,7 +34,7 @@ const IRC={x:6000,y:6000},IK=2;   // IRC: centro de todas las salas; IK: px de m
   const table=(x,y,o)=>ori?add('mesaBaja',x,y,o):add('mesa',x,y,o);
   const doorX=RW*DOOR;
   if(id==='herreria'){
-   st.push(['furnace',-42,-38],['anvil',-8,-10]);
+   st.push(['furnace',-42,-38],['anvil',-8,-10],['armero',34,-12]); // lote C1b-1: Armero (armaduras de malla/placa)
    wr('rackArmas',-12);wr('herramientas',14);wl('escudoPared',-22,{col:P.cloth});wl('escudoPared',8,{col:P.cloth});
    add('fuelle',-23,-46,{},{fp:[12,8]});add('mesaTrabajo',16,-42);add('barrilAgua',-60,30);add('cestaLena',-58,46);
    add('arcon',54,34);add('maceta',63,-40,{kind:P.kind});add('alfombra',-8,28,{w:50,d:30,col:vol?'#7a3a2a':P.cloth,col2:P.cloth2},{fl:1});
@@ -80,7 +80,7 @@ const IRC={x:6000,y:6000},IK=2;   // IRC: centro de todas las salas; IK: px de m
    lt.push([-18,-36,16,130,'#ffd890'],[24,20,10,80,'#ffc070']);
    return{id,nm:'Tienda',it,st,lt}}
   // taller
-  st.push(['bench',-40,-36],['altar',2,-36]);
+  st.push(['bench',-40,-36],['altar',2,-36],['curtidor',42,-10]); // lote C1b-1: Banco de curtidor (cuero)
   wr('estante',-52);wr('estante',-16);wr('cuadro',26);wl('estante',-22);wl('cuadro',16);
   table(8,28);sit(-6,28);sit(22,28);
   if(swp||bos||ori)add('hamaca',-34,46);else add('cama',-46,36,{});
@@ -122,7 +122,9 @@ const IRC={x:6000,y:6000},IK=2;   // IRC: centro de todas las salas; IK: px de m
    const pick=(e,pref)=>{if(!e)return null;let b=null,bd=1e12;hs.forEach(h=>{if(used.has(h))return;const d=Math.hypot(h.q.x-e.x,h.q.y-e.y)-(pref&&pref(h)?200:0)+(h.bl?600:0);if(d<bd){bd=d;b=h}});if(b)used.add(b);return b};
    const tag={};hs.forEach(h=>{if(h.p.room&&!saved[h.p.room]&&!tag[h.p.room]&&!used.has(h)){tag[h.p.room]=h;used.add(h)}});   // lote D7: casa fijada en layouts.js (p.room)
    const gt=(id,e,pf)=>saved[id]||tag[id]||pick(e,pf),out=[['herreria',gt('herreria',stn('furnace'))],['taller',gt('taller',stn('bench'))],['banco',gt('banco',stn('bank'))],['tienda',gt('tienda',stn('shop'))],['taberna',gt('taberna',stn('fire'),h=>h.p.n==='taberna'||h.p.n==='salon'||h.p.tav)],['templo',gt('templo',stn('shrine'))]];   // lote B2: el Templo es una casa más (el altar de oración vive dentro)
-   out.forEach(([id,h])=>{if(!h)return;ST.push({id:'door',n:DNAME[id],x:h.q.x,y:h.q.y,k,room:id,lh:44,rot:!!(h.p.o&&h.p.o.rot),hn:h.p.n,hp:h.p})});
+   out.forEach(([id,h])=>{if(!h)return;V.cobs.push({p:[[h.p.x,h.p.y],[h.q.x-B.ox,h.q.y-B.oy]],w:60});   // adoquín bajo cada casa-instalación y su puerta (14 oct 2026)
+    ST.push({id:'door',n:DNAME[id],x:h.q.x,y:h.q.y,k,room:id,lh:44,rot:!!(h.p.o&&h.p.o.rot),hn:h.p.n,hp:h.p})});
+   ST.forEach(e=>{if((e.id==='board'||e.id==='ru')&&!e.inroom&&biomeAt(e.x,e.y)===k)V.cobs.push({p:[[e.x-B.ox,e.y-B.oy],[e.x-B.ox,e.y-B.oy]],w:46})});
    // las instalaciones salen del mapa (viven dentro de las casas); la fogata de la plaza queda de adorno
    for(let i=ST.length-1;i>=0;i--){const e=ST[i];if(e.inroom||e.id==='door'||biomeAt(e.x,e.y)!==k)continue;if(['bank','shop','furnace','anvil','bench','altar'].includes(e.id)||(e.id==='shrine'&&out.some(o=>o[0]==='templo'&&o[1])))ST.splice(i,1);else if(e.id==='fire'){e.deco=1;delete e.sks}}})}; const WOR=['N','ST','M','PO','GD','GA'];
  function canEnter(now){if(INT)return false;if(M.some(m=>m.hunt&&alive(m,now))||(A&&A.ty==='f')){toast('No puedes entrar con enemigos cerca.');return false}return true}
@@ -131,7 +133,7 @@ const IRC={x:6000,y:6000},IK=2;   // IRC: centro de todas las salas; IK: px de m
   const sv={N:N.slice(),ST:ST.slice(),M:M.slice(),PO:PO.slice(),GD:GD.slice(),GA:GA.slice()};[N,ST,M,PO,GD,GA].forEach(a=>a.length=0);PJ.length=0;HFX.length=0;
   const items=R.it.map(q=>{const[n,x,y,o,ex]=q,fp=ex.fp||(ex.w||ex.wl||ex.fl?null:FPT[n])||null,tall=['hogar','alacena','plantaGrande','biombo','rackArmas','cama','barra'].includes(n);return{n,o,wx:IRC.x+x*IK,wy:IRC.y+y*IK,fl:!!ex.fl,fp,tall,oa:1,wall:!!(ex.w||ex.wl)}});
   const fpR=[];items.forEach(it=>{if(it.fp&&!it.fl){let[hx,hy]=it.fp;if(it.o.rot){const t=hx;hx=hy;hy=t}fpR.push([it.wx-hx,it.wx+hx,it.wy-hy,it.wy+hy])}});
-  R.st.forEach(([id,x,y])=>{const s={id,n:({furnace:'Horno',anvil:'Yunque',bench:'Taller',altar:'Escritorio',bank:'Banco',shop:'Tienda',fire:'Hogar',shrine:'Altar de oración'})[id]||id,x:IRC.x+x*IK,y:IRC.y+y*IK,k:e.k,inroom:1};if(id==='fire'){s.sks=['co'];s.nodraw=1}if(id==='bench'||id==='altar')s.sks=id==='bench'?['cr','es']:['ins'];if(id==='furnace'||id==='anvil')s.sks=['sm'];ST.push(s);if(id!=='fire')fpR.push([s.x-20,s.x+20,s.y-13,s.y+13])});
+  R.st.forEach(([id,x,y])=>{const s={id,n:({furnace:'Horno',anvil:'Yunque',armero:'Armero',curtidor:'Banco de curtidor',bench:'Taller',altar:'Escritorio',bank:'Banco',shop:'Tienda',fire:'Hogar',shrine:'Altar de oración'})[id]||id,x:IRC.x+x*IK,y:IRC.y+y*IK,k:e.k,inroom:1};if(id==='fire'){s.sks=['co'];s.nodraw=1}if(id==='bench'||id==='altar')s.sks=id==='bench'?['cr','es']:['ins'];if(id==='furnace'||id==='anvil'||id==='armero')s.sks=['sm'];if(id==='curtidor')s.sks=['cr'];ST.push(s);if(id!=='fire')fpR.push([s.x-20,s.x+20,s.y-13,s.y+13])});
   const dx=IRC.x+RW*DOOR*IK;
   ST.push({id:'exit',n:'Salir',x:dx,y:IRC.y-RD*IK/2+26,lh:44});
   INT={k:e.k,R,id:e.room,sv,items,fpR,ret:{x:e.x,y:e.y},t0:now,so:shellO(e.k),dust:Array.from({length:16},(_,i)=>({x:Math.random(),y:Math.random(),v:.01+Math.random()*.02,p:Math.random()*6.28}))};

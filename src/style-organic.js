@@ -142,6 +142,9 @@ const ORG=(()=>{
  // gable: tejado a dos aguas con la cumbrera a lo largo de X (ov = alero)
  const gable=o=>{const c=o.at,w=o.w/2+(o.ov||0),d=o.d/2+(o.ov||0),h=o.h,P=[[-w,-d,0],[w,-d,0],[w,d,0],[-w,d,0],[-w,0,h],[w,0,h]].map(v=>[c[0]+v[0],c[1]+v[1],c[2]+v[2]]);
   return{V:P,T:[[0,1,5],[0,5,4],[3,2,5],[3,5,4],[0,3,4],[1,2,5]],c:[c[0],c[1],c[2]+h/3],rig:1}};
+ // 14 oct 2026: tejado a dos aguas SIN los triángulos de los hastiales (gableOpen) + hastiales como pared del color del muro (gableEnds): así el piso de arriba se ve macizo y no «por dentro»
+ const gableOpen=o=>{const g=gable(o);return{V:g.V,T:[[0,1,5],[0,5,4],[3,2,5],[3,5,4]],c:g.c,rig:1}};
+ const gableEnds=o=>{const w=o.w/2+.15,d=o.d/2,hh=o.at[2],ov=o.ov||0,r=o.h*(d/(d+ov)),h2=o.h,V=[],T=[];[-1,1].forEach(sx=>{const b=V.length,X=o.at[0]+sx*w;V.push([X,o.at[1]-d,hh-.5],[X,o.at[1]+d,hh-.5],[X,o.at[1]+d,hh+(o.h-r)],[X,o.at[1],hh+h2-.3],[X,o.at[1]-d,hh+(o.h-r)]);T.push([b,b+1,b+2],[b,b+2,b+4],[b+4,b+2,b+3])});return{V,T,c:[o.at[0],o.at[1],hh+o.h/3],rig:1}};
  // hip: tejado a cuatro aguas (pirámide truncada a punta) con la base alineada a los ejes; ov = alero
  const hip=o=>{const c=o.at,w=o.w/2+(o.ov||0),d=o.d/2+(o.ov||0),h=o.h,P=[[-w,-d,0],[w,-d,0],[w,d,0],[-w,d,0],[0,0,h]].map(v=>[c[0]+v[0],c[1]+v[1],c[2]+v[2]]);return{V:P,T:[[0,1,4],[1,2,4],[2,3,4],[3,0,4]],c:[c[0],c[1],c[2]+h/3],rig:1}};
  // tilt: gira una malla construida a lo largo de Z para que apunte a lo largo de X ('x') o de Y ('y', dir ±1) desde el punto at
@@ -587,12 +590,17 @@ const ORG=(()=>{
    [-L/2,L/2].forEach((px,i)=>M(g,x,y,B(2.4,2.4,11,[px,0,0]),'#9a6a3a',sm,95+i,RG));[4,8].forEach((z,i)=>M(g,x,y,B(L,1.4,1.8,[0,0,z]),'#b9803f',sm,97+i,RG))},
   barril(g,x,y,sm){soft(g,x,y,8);M(g,x,y,lathe({n:8,at:[0,0,0],r:[5,5],h:10,top:.95,seed:101}),'#9a6a3a',sm,101,RG);M(g,x,y,lathe({n:8,at:[0,0,4],r:[5.3,5.3],h:1.4,top:1,seed:102}),'#6e4a2a',0,102,{crease:0,paint:false})},
   caja(g,x,y,sm){soft(g,x,y,8);M(g,x,y,box(9,9,8,[0,0,0]),'#b9803f',sm,103,RG);M(g,x,y,box(9.4,2,8.2,[0,0,0]),'#8f5f2c',0,104,{crease:0,paint:false,ij:.3})},
-  taberna(g,x,y,sm,o){o=o||{};const w=o.w||36,d=o.d||26,hh=28,W=o.wall||'#eadcb8',rf=o.roof||'#9a4a3a',T='#6e4a2a';soft(g,x,y,w*.8);M(g,x,y,box(w,d,hh,[0,0,0]),W,sm,111,RG);
-   [-w*.32,0,w*.32].forEach((px,i)=>M(g,x,y,box(2,1.4,hh,[px,d/2,0]),T,0,112+i,{crease:0,paint:false,ij:.2}));[-d*.3,0,d*.3].forEach((py,i)=>M(g,x,y,box(1.4,2,hh,[w/2,py,0]),T,0,115+i,{crease:0,paint:false,ij:.2}));
-   M(g,x,y,box(w+.4,d+.4,2,[0,0,hh*.5]),T,0,118,{crease:0,paint:false,ij:.2});
-   M(g,x,y,box(8,1.4,13,[-w*.16,d/2,0]),'#5a3a22',0,119,{crease:0,paint:false});[w*.12,w*.3].forEach((px,i)=>M(g,x,y,box(5,1.4,5,[px,d/2,5]),'#9fd6e8',0,120+i,{crease:0,paint:false,ij:.3}));
-   [-w*.3,0,w*.3].forEach((px,i)=>M(g,x,y,box(5,1.4,5,[px,d/2,hh*.62]),'#9fd6e8',0,122+i,{crease:0,paint:false,ij:.3}));[-d*.22,d*.22].forEach((py,i)=>{M(g,x,y,box(1.4,5,5,[w/2,py,5]),'#9fd6e8',0,125+i,{crease:0,paint:false,ij:.3});M(g,x,y,box(1.4,5,5,[w/2,py,hh*.62]),'#9fd6e8',0,127+i,{crease:0,paint:false,ij:.3})});
-   M(g,x,y,gable({at:[0,0,hh],w:w,d:d,h:15,ov:2.4}),rf,sm,129,RG);M(g,x,y,box(6,6,13,[w*.28,-d*.16,hh+5]),'#a29d93',sm,130,RG);
+  taberna(g,x,y,sm,o){o=o||{};const w=o.w||36,d=o.d||26,hh=28,W=o.wall||'#eadcb8',rf=o.roof||'#9a4a3a',T='#6e4a2a',h1=hh*.5,J=.7;soft(g,x,y,w*.8);
+   // 14 oct 2026: piso de arriba MACIZO y del mismo color que el de abajo (voladizo de .7 px): antes solo había un muro y los pilares/ménsula formaban marcos que se leían como «ver por dentro»
+   M(g,x,y,box(w,d,h1,[0,0,0]),W,sm,111,RG);
+   [-w*.32,0,w*.32].forEach((px,i)=>M(g,x,y,box(2,1.4,h1,[px,d/2,0]),T,0,112+i,{crease:0,paint:false,ij:.2}));[-d*.36,d*.36].forEach((py,i)=>M(g,x,y,box(1.4,2,h1,[w/2,py,0]),T,0,115+i,{crease:0,paint:false,ij:.2}));
+   M(g,x,y,box(8,1.4,13,[-w*.16,d/2,0]),'#5a3a22',0,119,{crease:0,paint:false});
+  M(g,x,y,box(w+2*J+.6,d+2*J+.6,1.6,[0,0,h1-.6]),T,0,118,{crease:0,paint:false,ij:.2});M(g,x,y,box(w+2*J,d+2*J,hh-h1,[0,0,h1]),W,sm,110,RG);   // orden: el canto va ANTES del piso de arriba (M pinta en orden de llamada; si va después, su cara superior tapa la fachada y parece un suelo «hueco»)
+   // ventanas: marco hundido + cristal + alféizar, entre los pilares; las de arriba salen a la cara del voladizo
+   {let nn=300;const WN=(c,pz,fy,e)=>{const dd=d/2+e,ww=w/2+e,fr=fy?box(7,1.8,7,[c,dd-.3,pz-1.1]):box(1.8,7,7,[ww-.3,c,pz-1.1]),gl=fy?box(4.8,1.2,4.8,[c,dd+.5,pz]):box(1.2,4.8,4.8,[ww+.5,c,pz]),sl=fy?box(8,2.8,1.2,[c,dd+.4,pz-2.1]):box(2.8,8,1.2,[ww+.4,c,pz-2.1]);
+    M(g,x,y,fr,T,0,nn++,{crease:0,paint:false,ij:.2});M(g,x,y,gl,'#9fd6e8',0,nn++,{crease:0,paint:false,ij:.3});M(g,x,y,sl,'#8a5a30',0,nn++,{crease:0,paint:false,ij:.2})};
+    WN(w*.16,5.6,1,0);WN(-w*.16,hh*.64,1,J);WN(w*.16,hh*.64,1,J);[-d*.17,d*.17].forEach(c=>{WN(c,5.6,0,0);WN(c,hh*.64,0,J)})}
+   M(g,x,y,gableEnds({at:[0,0,hh],w:w+2*J+.3,d:d+2*J,h:15,ov:2.4}),W,sm,128,RG);M(g,x,y,gableOpen({at:[0,0,hh],w:w,d:d,h:15,ov:2.4}),rf,sm,129,RG);M(g,x,y,box(6,6,13,[w*.28,-d*.16,hh+5]),'#a29d93',sm,130,RG);
    M(g,x,y,box(1.6,1.6,14,[w/2+5,d/2+2,0]),T,sm,131,RG);M(g,x,y,box(1.4,10,7,[w/2+5,d/2-3,8]),'#d9a05a',0,132,{crease:0,paint:false,ij:.3})},   // cartel colgante
   granero(g,x,y,sm,o){o=o||{};const w=o.w||42,d=o.d||30,hh=20,W=o.wall||'#c0583c',rf=o.roof||'#7a4a3a';soft(g,x,y,w*.8);M(g,x,y,box(w,d,hh,[0,0,0]),W,sm,141,RG);
    M(g,x,y,box(16,1.4,15,[0,d/2,0]),'#6e4a2a',0,142,{crease:0,paint:false});M(g,x,y,box(16.6,1.8,1.6,[0,d/2,7]),'#f1e4c4',0,143,{crease:0,paint:false,ij:.2});M(g,x,y,box(1.6,1.9,16.6,[0,d/2,0]),'#f1e4c4',0,144,{crease:0,paint:false,ij:.2});
@@ -767,6 +775,26 @@ const ORG=(()=>{
    else{M(g,x,y,box(14,10,5,[0,0,0]),'#7d8290',sm,81,RG);M(g,x,y,box(8,6,5,[0,0,5]),'#6e7380',sm,82,RG)}
    M(g,x,y,box(18,8,5,[0,0,10]),a===5?'#8a8f98':'#a3a9b6',sm,83,RG);
    M(g,x,y,tilt(cone({at:[0,0,0],r:[2.6,3.4],h:8,n:4,amp:0,seed:4}),[9,0,12.5],'x',1),a===5?'#8a8f98':'#a3a9b6',sm,84,RG)},
+  // lote C1b-1: Armero (Herrería): maniquí de armadura de placa sobre tarima, con yelmo, peto, hombreras y escudo apoyado; `arch` cambia el metal por bioma. Todo a escala K para que se lea junto al yunque.
+  armero(g,x,y,sm,o){o=o||{};const a=o.arch||0,K=1.45,MT=['#b4bac8','#a8b8a8','#bcb4a0','#c4ccdc','#c8b8a8','#7a7480'][a]||'#b4bac8',MD2=STY.mix(MT,'#000000',.28),WD2=['#7a5a34','#6a5030','#5a4a30','#7a6a52','#8a2e22','#3a3034'][a]||'#7a5a34',
+    bx=(w,d,h,p)=>box(w*K,d*K,h*K,p.map(v=>v*K)),bl=(at,r,seed)=>blob({at:at.map(v=>v*K),r:r.map(v=>v*K),amp:.04,seed});soft(g,x,y,26);
+   M(g,x,y,bx(22,13,2.4,[0,0,0]),WD2,sm,170,RG);                                    // tarima
+   M(g,x,y,lathe({n:6,at:[0,0,2.4*K],r:[2.2*K,1.8*K],h:14*K,top:1,seed:171}),WD2,sm,171,RG);  // poste
+   M(g,x,y,bx(13,7.4,11,[0,0,10]),MT,sm,172,RG);                                    // peto
+   M(g,x,y,bx(13.6,8,1.6,[0,0,15]),MD2,0,173,{crease:0,paint:false,ij:.25});          // faja del peto
+   [-1,1].forEach((sg,i)=>M(g,x,y,bl([0,sg*8,19.5],[3.6,3.2,2.6],174+i),MT,sm,174+i,RG));   // hombreras
+   M(g,x,y,bl([0,0,26.5],[4.2,4,4.2],176),MT,sm,176,RG);                             // yelmo
+   M(g,x,y,bx(1.2,5.6,1.1,[3.9,0,26.2]),'#2a2c34',0,177,{crease:0,paint:false,ij:.2}); // visera
+   M(g,x,y,cone({at:[0,0,30*K],r:[.9*K,1.6*K],h:4*K,n:4,amp:0,seed:178}),'#d0453a',sm,178,RG);   // penacho
+   M(g,x,y,bx(2.2,9,12,[-8.6,6.2,2.4]),MD2,sm,179,RG);M(g,x,y,bx(2.6,6,7,[-8.9,6.2,5]),'#e0b84a',0,180,{crease:0,paint:false,ij:.25})}, // escudo apoyado con emblema
+  // lote C1b-1: Banco de curtidor (Taller): bastidor con una piel tensada, tina de curtido y cuchilla. Escala K.
+  curtidor(g,x,y,sm,o){o=o||{};const a=o.arch||0,K=1.5,WD2=['#5a3c22','#4e3a22','#473a26','#5e5040','#6a2820','#2e2628'][a]||'#5a3c22',bx=(w,d,h,p)=>box(w*K,d*K,h*K,p.map(v=>v*K));soft(g,x,y,26);
+   [-1,1].forEach((sg,i)=>M(g,x,y,bx(2,2,22,[-3,sg*8,0]),WD2,sm,190+i,RG));          // postes
+   M(g,x,y,bx(2,18,2,[-3,-9,22]),WD2,sm,192,RG);M(g,x,y,bx(2,18,2,[-3,-9,6]),WD2,sm,193,RG);   // travesaños
+   M(g,x,y,bx(.9,13,15,[-2,-6.5,7.5]),'#c98a4a',sm,194,RG);                          // piel tensada
+   M(g,x,y,bx(.7,9,10,[-1.6,-4.5,9.8]),'#e0a868',0,195,{crease:0,paint:false,ij:.3});
+   M(g,x,y,lathe({n:7,at:[8*K,-6*K,0],r:[4.6*K,4.2*K],h:7*K,top:.9,seed:196}),'#6a4a2a',sm,196,RG); M(g,x,y,lathe({n:7,at:[8*K,-6*K,6.2*K],r:[3.6*K,3.6*K],h:.9*K,top:1,seed:197}),'#2a1e18',0,197,{crease:0,paint:false,ij:.2}); // tina
+   M(g,x,y,bx(7,2.4,1,[3,6.5,0]),WD2,sm,198,RG);M(g,x,y,bx(5,.9,.5,[3.5,6.5,1]),'#c4ccd8',0,199,{crease:0,paint:false,ij:.3})}, // cuchilla
   slime(g,x,y,sm){soft(g,x,y,20);const gm=.8,body='#7fd08a',core='#4faa72';
    M(g,x,y,blob({at:at(2,2,.6),r:[19,19,.8],amp:.12,seed:100}),STY.mix(body,'#ffffff',.3),0,100,{paint:false,ij:.6});   // charco plano bajo el cuerpo
    M(g,x,y,blob({at:at(1,1,8),r:[10,10,7],amp:.1,seed:93}),core,gm,93);                                   // núcleo oscuro visible por transparencia

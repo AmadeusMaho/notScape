@@ -88,9 +88,11 @@
   // portón y empalizada del campamento orco (se mueven con él)
   const DOC=sh(2077,768);old.props.filter(e=>(e.n==='portonOrco'||e.n==='empalizada')&&e.x===1900).forEach(e=>props.push(DOC.prop(e)));
   // ── guaridas: las ya decoradas, movidas a su anillo ──
-  const sp={ing:sh(778,1440).spot(S0.ing),camp:sh(1503,345).spot(S0.camp),orc:sh(2077,768).spot(S0.orc)};
+  const sp={ing:sh(778,1440).spot(S0.ing),camp:sh(1503,345).spot(S0.camp),orc:sh(2077,768).spot(S0.orc),
+   pack:{id:'prado',t:'🐑 Prado de ovejas',z:[2960,3340,1360,1740],mobs:[['oveja',3040,1450],['oveja',3170,1410],['oveja',3270,1520],['oveja',3120,1610],['oveja',3020,1620]],
+    decor:[P('arbusto',3000,1400),P('arbusto',3300,1640),P('arbusto',3230,1380),P('heno',3090,1520),P('heno',3104,1530),P('roble',3330,1450,null,{fp:[6,6]})]}};   // 14 oct 2026: las ovejas, aparte del rancho
   const st=[],plaza=[[CX,CY,175],[CX+60,CY-395,105],[CX+345,CY+255,95],[CX-285,CY-230,85],[CX+285,CY-230,85]],routes=[],dirt=[];
-  ['ing','camp','orc'].forEach(k=>{sp[k].decor.forEach(e=>props.push(e));(sp[k].dirt||[]).forEach(d=>plaza.push(d));(sp[k].routes||[]).forEach(r=>routes.push(r));st.push(...(sp[k].stone||[]))});
+  ['ing','camp','orc','pack'].forEach(k=>{sp[k].decor.forEach(e=>props.push(e));(sp[k].dirt||[]).forEach(d=>plaza.push(d));(sp[k].routes||[]).forEach(r=>routes.push(r));st.push(...(sp[k].stone||[]))});
   B.spots=sp;
   applyAdj(props,PRA_ADJ);   // lote D7: la Pradera tal como la dejó el dueño con el editor (F2)
   B.village=Object.assign({},old,{props,stations:[['bank','Banco',CX-125,CY-105],['shop','Tienda',CX+125,CY-105],['fire','Fogata',CX+345,CY+255,['co']],['furnace','Horno',CX+77,CY-415,['sm']],['anvil','Yunque',CX+31,CY-373,['sm']],['bench','Taller',CX-285,CY-230,['cr','es']],['altar','Escritorio',CX+285,CY-230,['ins']],['shrine','Altar de oración',CX+100,CY+20]],

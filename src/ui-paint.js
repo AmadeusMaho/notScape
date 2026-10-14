@@ -103,6 +103,10 @@ const UI=(()=>{
    c.beginPath();c.moveTo(20,56);c.lineTo(20,42);c.quadraticCurveTo(32,28,44,42);c.lineTo(44,56);c.closePath();fs(c,'#3a2a22');c.beginPath();c.moveTo(25,56);c.quadraticCurveTo(26,44,32,42);c.quadraticCurveTo(38,46,39,56);c.closePath();fs(c,'#ff9a3a','#ffd95a')},
   anvil:c=>{c.beginPath();c.moveTo(8,16);c.lineTo(56,16);c.quadraticCurveTo(54,28,40,28);c.lineTo(40,36);c.lineTo(48,44);c.lineTo(48,52);c.lineTo(16,52);c.lineTo(16,44);c.lineTo(24,36);c.lineTo(24,28);c.quadraticCurveTo(12,28,8,16);c.closePath();fs(c,'#8f9aa6','#d4dce3');
    c.beginPath();c.moveTo(8,16);c.lineTo(2,12);c.lineTo(10,12);c.stroke()},
+  armero:c=>{c.beginPath();c.moveTo(14,24);c.quadraticCurveTo(14,8,32,8);c.quadraticCurveTo(50,8,50,24);c.lineTo(50,30);c.lineTo(14,30);c.closePath();fs(c,'#9aa5b0','#d4dce3');
+   c.beginPath();c.rect(22,22,20,4);fs(c,'#3a3e48');c.beginPath();c.moveTo(12,36);c.lineTo(52,36);c.lineTo(46,58);c.lineTo(18,58);c.closePath();fs(c,'#8f9aa6','#d4dce3')}, // lote C1b-1: Armero
+  curtidor:c=>{c.lineWidth=3.6;c.beginPath();c.moveTo(14,8);c.lineTo(14,58);c.moveTo(50,8);c.lineTo(50,58);c.stroke();c.beginPath();c.rect(10,8,44,5);fs(c,'#bd7a45','#e0a468');
+   c.beginPath();c.moveTo(19,16);c.lineTo(45,16);c.lineTo(41,32);c.lineTo(45,50);c.lineTo(19,50);c.lineTo(23,32);c.closePath();fs(c,'#b98a55','#e0b784')}, // lote C1b-1: Banco de curtidor
   bench:c=>{c.beginPath();c.rect(6,26,52,9);fs(c,'#bd7a45','#e0a468');c.lineWidth=3.6;c.beginPath();c.moveTo(12,35);c.lineTo(12,56);c.moveTo(52,35);c.lineTo(52,56);c.stroke();c.lineWidth=3.4;
    c.save();c.translate(30,14);c.rotate(-.5);c.beginPath();c.rect(-3,-2,6,22);fs(c,'#9b6a3f','#c98a5a');c.beginPath();c.rect(-9,-9,18,9);fs(c,'#9aa5b0','#d4dce3');c.restore()},
   altar:c=>{c.beginPath();c.moveTo(10,30);c.lineTo(54,30);c.lineTo(50,56);c.lineTo(14,56);c.closePath();fs(c,'#bd7a45','#e0a468');
