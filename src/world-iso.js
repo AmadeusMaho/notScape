@@ -310,6 +310,6 @@ const TER=(()=>{
   else{for(let u=a0;u<=a1;u+=19)post(u,26);const a=pt(a0),b=pt(a1);g.strokeStyle='#5a3a1a';g.lineWidth=3*s;g.beginPath();g.moveTo(a.x,a.y-18*s);g.lineTo(b.x,b.y-18*s);g.stroke();
    const m=pt((a0+a1)/2);g.font=Math.round(13*s)+'px VT323, monospace';g.textAlign='center';g.fillStyle=INK;g.fillText('🔒 Derrota al jefe anterior',m.x,m.y-38*s)}
   g.restore()}
- return{PAL,PAPER,heightAt,standZ,cliffNear,tileH,sandAt,isLand,rk,draw,preload,gate,NX,NY,CFG,reset,stats,ripple,env}
+ return{PAL,PAPER,heightAt,standZ,cliffNear,tileH,sandAt,isLand,rk,draw,preload,gate,NX,NY,CFG,reset,stats,ripple,env,fields:()=>{grid();return{PF,PC,PM,DK,SG:4}},biomeOf}   // fields/biomeOf: R3D (terrain3d.js) lee caminos y adoquines de aquí
 })();
 if(typeof module!=='undefined')module.exports=TER;

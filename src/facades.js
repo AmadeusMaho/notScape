@@ -85,5 +85,5 @@
    // chimenea con humo: la sueltan la herrería, la taberna y el taller (partículas del juego)
   }finally{ctx.restore()}
   };
- window.FACADE={TR,MAT};
+ window.FACADE={TR,MAT,FH,MKE};
 })();

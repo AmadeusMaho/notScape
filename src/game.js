@@ -124,7 +124,23 @@ function gs(k){let t=0;for(const sl of EQK){const it=LOOT[S.eq[sl]];if(it&&it.st
  return t}
 function pv(id){let t=0;for(const sl of EQK){const it=LOOT[S.eq[sl]];if(it&&it.pa)it.pa.forEach(p=>{if(p.id===id)t+=p.v})}return t}
 // equipo visible en el sprite: escudo, piernas, guantes, peto (hombreras), yelmo (tier→cimera) y arma a la espalda
-function gearOpts(){const q=S.eq,w=q.w,t=w?wtype():null,k=id=>id?ARC(id):null;return{sh:k(q.s),lg:k(q.l),gl:k(q.g),pl:q.a?1:0,cp:k(q.c),ht:q.h?(LOOT[q.h]?(LOOT[q.h].r>=3?'mitril':LOOT[q.h].r===2?'acero':''):tierOf(q.h)):'',wp:w?{t:t==='r'?'bow':t==='g'?'staff':'sword',wk:wKind(),col:t==='g'?(ORB[tierOf(w)]||'#9cf'):wColor()}:null,two:wKind()==='great'?1:0}}
+// Lote R3D-ANIM-2 · DOBLE EMPUÑE (solo visual en 3D): si en la ranura del escudo (S.eq.s) hay un arma de UNA mano (espada sw_* o daga lw_*d), sale como gear.wp2 y el
+// héroe 3D pelea con un arma en cada mano. Las reglas de juego (¿se puede equipar un arma en esa ranura?, daño, velocidad) están POR DECIDIR con el dueño.
+const offW=id=>id&&(SW[id]&&!/^lw_\d+[mbc]/.test(id)||/^lw_\d+d/.test(id))?id:null;
+// R3D-ARMADURAS: descripción estructurada del equipo para el héroe 3D ({a:{f,t},l,g,s,h:{k,q,leg},f,c}); ar_cuero→cuero/bronce; lt_<k><slot><q> → bioma+calidad; lg_helm/lg_boots/legendarios → q4
+// R3D-CULTURAS: cultura (0 Pradera · 1 Bosque · 2 Pantano · 3 Cumbres · 4 Oriental · 5 Volcán) de un objeto: tier/madera → bioma donde se mina/tala; botín lt_/lw_ = su bioma. Misma tabla que CULT_OF (src/r3d/armorcult3d.js).
+const CULT_OF={cobre:0,estano:0,bronce:0,hierro:1,acero:1,plata:2,mitril:3,adam:4,runita:4,oricalco:5,celestita:5,madera:0,cuero:0,pino:0,abedul:0,roble:0,fresno:1,sauce:1,arce:2,tejo:3,ebano:4,caoba:4,baobab:5,mundo:5},
+ cultOfId=id=>{if(!id)return 0;const b=id.split('~')[0],m=/^l[tw]_(\d)/.exec(b);if(m)return +m[1];if(b==='lg_helm'||b==='lg_boots')return 5;return CULT_OF[tierOf(b)]??0};
+function armorInfo(){const q=S.eq,TI=['cobre','estano','bronce','hierro','acero','plata','mitril','adam','runita','oricalco','celestita'],cl=t=>TI.includes(t)?t:t==='cuero'?'bronce':t==='madera'?'cobre':'hierro',
+ fam=id=>{const m=/^(?:ar|sh|lg|gl)_(cu|tu)_/.exec(id);return m?m[1]:id==='ar_cuero'?'cu':'m'},
+ piece=id=>id?{f:fam(id),t:cl(tierOf(id)),cu:cultOfId(id)}:null,
+ lt=id=>{const m=/^lt_(\d)([a-z])(\d)/.exec((id||'').split('~')[0]);return m?{k:+m[1],q:+m[3]}:null};
+ const o={a:piece(q.a),l:piece(q.l),g:piece(q.g),s:piece(q.s)};
+ ['h','f','c'].forEach(sl=>{const id=q[sl];if(!id)return;const b=id.split('~')[0];if(b==='lg_helm'||b==='lg_boots')o[sl]={k:5,q:4,leg:1};else{const l=lt(b);o[sl]=l||{k:0,q:1}}});
+ // piezas de loot en torso/piernas/guantes/escudo: tomar el bioma como familia (k%3: 0 metal · 1 cuero · 2 túnica) y tier por bioma
+ [['a','a'],['l','l'],['g','g'],['s','s']].forEach(([sl])=>{const id=q[sl];const l=lt(id);if(l)o[sl]={f:['m','cu','tu'][l.k%3],t:TI[Math.min(10,l.k*2+l.q-1)],cu:l.k}});
+ return o}
+function gearOpts(){const q=S.eq,w=q.w,t=w?wtype():null,k=id=>id?ARC(id):null,w2=w&&t==='m'&&wKind()!=='great'?offW(q.s):null;return{wp2:w2?{t:'sword',wk:/^lw_\d+d/.test(w2)?'dagger':'sword',col:TCOL[tierOf(w2)]||'#cfd8e0',cu:cultOfId(w2)}:null,sh:w2?null:k(q.s),lg:k(q.l),gl:k(q.g),pl:q.a?1:0,cp:k(q.c),ht:q.h?(LOOT[q.h]?(LOOT[q.h].r>=3?'mitril':LOOT[q.h].r===2?'acero':''):tierOf(q.h)):'',wp:w?{t:t==='r'?'bow':t==='g'?'staff':'sword',wk:wKind(),col:t==='g'?(ORB[tierOf(w)]||'#9cf'):wColor(),cu:cultOfId(w)}:null,two:wKind()==='great'?1:0}}
 function wtype(){const w=S.eq.w;return !w||SW[w]?'m':BOW[w]?'r':'g'}
 // forma del arma para la animación (lote G1, oct 2026): 'sword' (sw_*, una mano), 'dagger' (lw_*d), 'great' (lw_*m mandoble, DOS manos), 'xbow' (lw_*b ballesta), 'scepter' (lw_*c cetro), 'bow', 'staff'
 function wKind(){const w=S.eq.w;if(!w)return null;const m=/^lw_\d+([dmbc])/.exec(w);if(m)return{d:'dagger',m:'great',b:'xbow',c:'scepter'}[m[1]];const t=wtype();return t==='r'?'bow':t==='g'?'staff':'sword'}
@@ -322,7 +338,15 @@ function migOld(){const ver=S.ver||0,mp={cobre:'pino',estano:'abedul',bronce:'ro
  S.inv=S.inv.map(fx);for(const k of Object.keys(S.bank)){const n=fx(k);if(n!==k){S.bank[n]=(S.bank[n]||0)+S.bank[k];delete S.bank[k]}}for(const k of Object.keys(S.eq))S.eq[k]=fx(S.eq[k]);for(const k of Object.keys(S.disc)){const n=fx(k);if(n!==k){S.disc[n]=1;delete S.disc[k]}}
  if(ver<9)for(const k in S.tool)S.tool[k]=[0,3,4,5,7,8][S.tool[k]]??S.tool[k];
  for(const k of ['wc','mi','fi']){const t=S.tool[k]||0;if(!S.eq[k]&&t>0)S.eq[k]=(k==='wc'?'ax_':k==='mi'?'pk_':'rd_')+(k==='fi'?WON[t-1]:TNM[t-1])}}
-const save=()=>{if(WIPE)return;S.t=Date.now();prSync();try{localStorage.setItem('tdo2',JSON.stringify(S))}catch(e){}};
+let SAVEWARN=0;
+// Guardado: se comprueba que lo escrito se lee de vuelta (navegadores en modo privado, vistas previas o carpetas sin permiso descartan el guardado en silencio) y se avisa UNA vez.
+const save=()=>{if(WIPE)return;S.t=Date.now();prSync();let ok=0;try{const j=JSON.stringify(S);localStorage.setItem('tdo2',j);ok=localStorage.getItem('tdo2')===j}catch(e){}
+ if(!ok&&!SAVEWARN){SAVEWARN=1;try{log('⚠ Este navegador NO deja guardar la partida (modo privado, vista previa o almacenamiento bloqueado). Usa «Guardar en archivo» en el panel para no perder el progreso.')}catch(e){}}};
+// guardar también al cerrar/ocultar la pestaña (antes solo cada 5 s) y pedir almacenamiento persistente (el navegador no lo borra por falta de espacio)
+addEventListener('pagehide',()=>save());addEventListener('beforeunload',()=>save());document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+function exportSave(){save();const j=JSON.stringify(S),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([j],{type:'application/json'}));a.download='notscape-partida-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function importSave(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;f.text().then(t=>{const r=JSON.parse(t);if(!r||typeof r!=='object'||!r.xp||!r.inv)throw 0;WIPE=1;localStorage.setItem('tdo2',JSON.stringify(r));location.reload()}).catch(()=>alert('Ese archivo no es una partida de NotScape.'))};i.click()}
 function resetGame(){const b=$('#rstb');if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='¿Seguro? Clic otra vez para borrar';clearTimeout(rtm);rtm=setTimeout(()=>{b.dataset.arm='0';b.textContent='Reiniciar'},4000);return}WIPE=1;try{localStorage.removeItem('tdo2')}catch(e){}location.reload()}
 const L=sk=>lvlOf(S.xp[sk]),count=id=>S.inv.filter(x=>x===id).length,maxHp=()=>10+Math.floor(CBL()/2)+gs('hp')+S.vig,wb=()=>WB[S.eq.w]||0,ab=()=>(AR[S.eq.a]||0)+(SHL[S.eq.s]||0)+(LGL[S.eq.l]||0)+(GLL[S.eq.g]||0)+gs('def')+S.dfs+(S.buf.def>Date.now()?5:0),maxHit=()=>{if(wtype()==='g')return Math.max(1,Math.round(Math.max(1,...SPL.filter(s=>s.atk&&L('mg')>=s.lv).map(spMax))*(1+pry('str'))));const w=S.eq.w,l=L(wtype()==='r'?'ra':'cb'),ef=l+8+S.fzr+(S.buf.dmg>Date.now()?3+Math.floor(l*.1):0);return Math.floor(.5+ef*(FZ+(w?SB[w]||0:0)+gs('str')+(wtype()==='r'?ammoStr():0))*(1+pry('str'))/(FZ*10))};
 // lote C5: munición activa. La ballesta (`lw_<bioma>b<q>`) usa virotes; el resto de armas a distancia, flechas. Sin la adecuada equipada: flechas estándar (sin bonus ni gasto).
@@ -699,7 +723,7 @@ function upd(dt,now){if(!INT){zoneCheck(now);weather(now,dt);AMBI.update(now,dt,
  if(dx||dy){if(P.g||P.mv||A||CK){P.g=P.mv=null;stopA();CK=null}}
  else{const tg=P.g?P.g.e:P.mv;if(tg){const ex=tg.x-P.x,ey=tg.y-P.y,d=Math.hypot(ex,ey);
   if(d>(P.g?(P.g.e.d?(wtype()!=='m'?120:24):P.g.e.t==='fi'?FISHR:24):3)){const mt=P.g&&tg.st&&tg.st.length&&d>FISHR?(q=>({x:q[0],y:q[1]}))(tg.st.reduce((b,c)=>Math.hypot(c[0]-P.x,c[1]-P.y)<Math.hypot(b[0]-P.x,b[1]-P.y)?c:b)):tg,wp=bridgeWp(mt),wx=wp?wp.x-P.x:mt.x-P.x,wy=wp?wp.y-P.y:mt.y-P.y,wd=Math.hypot(wx,wy)||1;dx=wx/wd;dy=wy/wd}else if(P.g){const e=P.g.e;P.g=null;engage(e,now)}else P.mv=null}}
- P.mvg=0;if(dx||dy){if(!S.hintR&&typeof runHintTick==='function')runHintTick(dt);const l=Math.hypot(dx,dy);dx/=l;dy/=l;const run=RUN,sv=95*(1+pv('swift')/100)*(1+.05*S.trv)*(S.buf.spd>Date.now()?1.35:1)*(run?1.15:1);const ox=P.x,oy=P.y;step(dx*sv*dt,0);step(0,dy*sv*dt);P.mvg=1;if(P.g&&Math.hypot(P.x-ox,P.y-oy)<.02)STK+=dt;else STK=0;if(STK>.4&&P.g){const e=P.g.e;if(Math.hypot(e.x-P.x,e.y-P.y)<(e.t==='fi'?FISHR+20:90)){P.g=null;STK=0;engage(e,now)}}if(run){S.agd=(S.agd||0)+sv*dt;if(S.agd>=32){S.st.run=(S.st.run||0)+(S.agd/32|0);S.agd%=32;chk()}}if(Math.abs(dx-dy)>.01)P.f=dx-dy>0?1:-1;P.dir=HERO.dirOf(dx,dy);P.wr=sv*2*Math.PI/(RUN?STRR:STRW);P.w+=dt*P.wr;P.anm=1;P.wt=null}
+ P.mvg=0;if(dx||dy){if(!S.hintR&&typeof runHintTick==='function')runHintTick(dt);const l=Math.hypot(dx,dy);dx/=l;dy/=l;const run=RUN,sv=WALK_V*(1+pv('swift')/100)*(1+.05*S.trv)*(S.buf.spd>Date.now()?1.35:1)*(run?RUN_MUL:1);const ox=P.x,oy=P.y;step(dx*sv*dt,0);step(0,dy*sv*dt);P.mvg=1;if(P.g&&Math.hypot(P.x-ox,P.y-oy)<.02)STK+=dt;else STK=0;if(STK>.4&&P.g){const e=P.g.e;if(Math.hypot(e.x-P.x,e.y-P.y)<(e.t==='fi'?FISHR+20:90)){P.g=null;STK=0;engage(e,now)}}if(run){S.agd=(S.agd||0)+sv*dt;if(S.agd>=32){S.st.run=(S.st.run||0)+(S.agd/32|0);S.agd%=32;chk()}}if(Math.abs(dx-dy)>.01)P.f=dx-dy>0?1:-1;P.dir=HERO.dirOf(dx,dy);P.wr=sv*2*Math.PI/(RUN?STRR:STRW);P.w+=dt*P.wr;P.anm=1;P.wt=null}
  else if(P.anm)settle(dt)
  if(P.mvg&&now-LD>(RUN?90:260)){LD=now;sp(P.x-P.f*3,P.y-1,['#c8b890','#a89870','#7a8a6a','#e8f0f8','#6a5050'][curB],RUN?3:1,14,12,20)}
  EN=Math.min(enMax(),EN+dt*ENREG);MN=Math.min(mnMax(),MN+dt*mreg());prTick(dt);if(TB==='pr'&&Math.floor(PP*2)!==PPL){PPL=Math.floor(PP*2);dirty=1}if(TB==='mg'&&Math.floor(MN)!==MNl){MNl=Math.floor(MN);dirty=1}PJ=PJ.filter(p=>{if(now>=p.t1){hitM(p.m,p.d,now,p.sk,p.mxv);return false}return true});if(CK)cookUpd(dt,now);
@@ -723,7 +747,7 @@ function upd(dt,now){if(!INT){zoneCheck(now);weather(now,dt);AMBI.update(now,dt,
  parts.forEach(p=>{p.x+=p.vx*DT;p.y+=p.vy*DT;p.vy+=p.g*DT;p.l-=DT*1.1});parts=parts.filter(p=>p.l>0)}
 
 // ---------- dibujo ----------
-const cv=$('#c');let ctx=cv.getContext('2d');if(typeof WGL!=='undefined')WGL.init(cv,{noGL:/[?&]nogl\b/.test(location.search)}); // F2-C4: canvas WebGL del agua bajo el 2D + capa de grano (?nogl fuerza el agua 2D)
+const cv=$('#c');let ctx=cv.getContext('2d');if(typeof WGL!=='undefined'&&!window.R3D_ON)WGL.init(cv,{noGL:/[?&]nogl\b/.test(location.search)}); // F2-C4: canvas WebGL del agua bajo el 2D + capa de grano (?nogl fuerza el agua 2D)
 let W=640,H=400; // unidades del HUD (1 unidad = hs px CSS, ver fitCv): W y H salen del tamaño de la ventana (pantalla completa)
 const GR=null,RD=null,WT=null,VG=null,SX=null,CH=null,SP=null; // TEMPORAL: módulos cenitales borrados; las ramas antiguas de sprites siguen vivas hasta F3–F5 (ver AGENTS.md)
 const lc=document.createElement('canvas');lc.width=W;lc.height=H;const lx=lc.getContext('2d'),DAYLEN=360,dayP=t=>(t/DAYLEN+.33)%1,sunS=t=>Math.sin(2*Math.PI*(dayP(t)-.25));
@@ -785,9 +809,10 @@ function dN0(e,t,now){const dead=!alive(e,now),on=A&&A.e===e,x=e.x,y=e.y;
  if(dead)return;const i=e.i,RCL=['#cfe8ff','#e0f0ff','#aad0ff','#b8e8c0','#ffb888','#9ad8a0','#80b0ff','#ffa040','#d0f0ff','#e0c0ff','#ffa0a0','#a0ffd0'][i]||'#fff',FCL=['#ff9a8a','#d8e0e8','#8ab0d8','#8ac88a','#ff8a4a','#4a8a5a','#4a6ac8','#ff6a1a','#6a8aff','#a06aff','#ff4a6a','#2ac89a'][i]||'#fff';
  ctx.strokeStyle=RCL;ctx.globalAlpha=.8-(t*2%1)*.6;ctx.beginPath();ctx.ellipse(x,y,5+(t*8%8),2+(t*4%4),0,0,7);ctx.stroke();ctx.globalAlpha=1;Rc(FCL,x+Math.sin(t*2+x)*4,y-2,4+Math.floor(i/3),2);
  if(i===7){ctx.globalAlpha=.3+.2*Math.sin(t*4);ctx.fillStyle='#ff9040';ctx.beginPath();ctx.arc(x,y,9,0,7);ctx.fill();ctx.globalAlpha=1}}
-function dS(e,t){const x=e.x,y=e.y,id=e.id,now=performance.now(),mine=A&&A.e===e,on=!!(mine||(CK&&S.stn===e&&id==='fire'));let ty;if(e.nodraw)return;if(id==='door'||id==='exit')return dDoor(e,t);
+function dS(e,t){const x=e.x,y=e.y,id=e.id,now=performance.now(),mine=A&&A.e===e,on=!!(mine||(CK&&S.stn===e&&id==='fire'));let ty;if(e.nodraw)return;if(id==='door'&&window.R3D&&R3D.facOn)return;if(id==='door'||id==='exit')return dDoor(e,t);
  if(e.inroom&&id==='bank'&&window.intBankDraw){const ty=intBankDraw(e,t);TC(e.n,x,y-ty,'#fff');return}   // lote V8: banco de interior = mostrador + cajeros (interiors.js)
- if(PROPS.ST[id]){const lh=e.lh=PROPS.station(ctx,e,{on:id==='furnace'?!!mine:on,night:id==='bank'&&sunS(t)<-.05,t,ox:SPX,oy:SPY,sil:SIL});TC(e.n,x,y-lh/SPR,'#fff');if(id==='ru'&&S.gseen!==S.goal)T('!',x,y-(lh+16)/SPR+Math.sin(t*5)*2,'#ffe629');return}
+ if(PROPS.ST[id]){const lh=e.lh=(id==='ru'&&window.R3D&&R3D.actors.has(e))?R3D.actors.labelH(e):(window.R3D&&R3D.stOn&&id!=='ru'&&!e.inroom)?PROPS.ST[id].lh:PROPS.station(ctx,e,{on:id==='furnace'?!!mine:on,night:id==='bank'&&sunS(t)<-.05,t,ox:SPX,oy:SPY,sil:SIL});   // Lote R3D-ACTORES: Ru es una figura 3D (sin sprite 2D)
+  TC(e.n,x,y-lh/SPR,'#fff');if(id==='ru'&&S.gseen!==S.goal)T('!',x,y-(lh+16)/SPR+Math.sin(t*5)*2,'#ffe629');return}
  if(SX){ // Fase 3 paso 2 (src/stations.js): fotograma entero 0..7; con una acción en la estación se sincroniza con la fase del golpe (swPh) y el golpe cae en fr 6–7/0
   const fr=mine&&id!=='fire'?Math.floor(swPh(now)*8)&7:Math.floor(t*8)&7,o={fr,on,near:Math.hypot(P.x-x,P.y-y)<80,wave:id==='shop'&&t%7<1,night:id==='bank'||id==='shop'?WN(t):''};
   if(SP&&!BAKE)ty=bk('s2|'+id+'|'+(on?1:0)+'|'+fr+'|'+(o.near?1:0)+'|'+(o.wave?1:0)+'|'+o.night,x,y,96,80,48,66,(ax,ay)=>dSb(e,t,ax,ay,on,o));else ty=dSb(e,t,x,y,on,o);
@@ -808,6 +833,9 @@ function dSb(e,t,x,y,on,o){if(SX)return SX.draw(e.id,x,y,o);let ty=22;
  return ty}
 function dM(m,t,now){if(!alive(m,now))return;const d=m.d,x=m.x,y=m.y,h=d.h,w=d.w;if(d.boss){ctx.globalAlpha=.16+.1*Math.sin(t*3);ctx.fillStyle=d.boss===2?'#40b0ff':'#ff3030';ctx.beginPath();ctx.ellipse(x,m.y-h/2,w*.9,h*.8,0,0,7);ctx.fill();ctx.globalAlpha=1}
  PROPS.mob(ctx,m,{now,ox:SPX,oy:SPY,sil:SIL}); // F5: sprite «galleta» de src/creatures.js (horneado por pose); la respiración/paso/golpe ya van dentro
+ dMo(m,t,now)}
+// Lote R3D-ACTORES: SOLO la barra de vida y la etiqueta del enemigo (con ?r3d=1 el cuerpo ya lo dibuja src/r3d/actors3d.js en el mundo 3D y se omite el sprite)
+function dMo(m,t,now){if(!alive(m,now))return;const d=m.d,x=m.x,y=m.y,h=(window.R3D&&R3D.actors.topPx(m))||d.h;
  if(m.hp<m.mh){Rc('#400',x-12,y-h-9,24,4);Rc('#3c3',x-12,y-h-9,24*m.hp/m.mh,4)}
  TC((d.boss===1?'👑 '+(sealed(m)?'🔒 ':'')+d.n+' ':d.boss===2?'🗝️ '+d.n+' ':m.d.ag?'⚔ ':'')+'Lv'+m.lv,x,y-h-12,(g=>g>10?'#f55':g>4?'#fa5':g<-6?'#7e7':'#fff')(m.lv-CBL()))}
 function swordAt(hx,hy,a,f,col,len){const dx=f*Math.cos(a),dy=Math.sin(a),p=[hx+dx*3,hy+dy*3],q=[hx+dx*(3+len),hy+dy*(3+len)];ctx.lineWidth=2;ctx.strokeStyle='#6b4a2a';ctx.beginPath();ctx.moveTo(hx,hy);ctx.lineTo(p[0],p[1]);ctx.stroke();
@@ -835,7 +863,9 @@ function animPh(per,tau,sg,Dk){const D=Math.min(Dk,per),R=Math.min(260,per-D);if
 const q4=v=>Math.floor(Math.max(0,Math.min(.999,v))*4)/4;
 // Ritmo de pasos ligado a la velocidad (oct 2026): un ciclo (dos pasos) cada STRW px de mundo andando y STRR corriendo. Antes la fase avanzaba por tiempo
 // (12 rad/s ×1.5 al correr) aunque correr solo es ×1.15 más rápido → los pies «patinaban» y la carrera parecía acelerada. Con buffs de velocidad la cadencia sube sola.
-const STRW=47,STRR=40;
+// F4 · VELOCIDAD (decisión del dueño, 17 oct 2026; hecha el 18 oct): andar = WALK_V px/s (antes 95: con el héroe 3D a escala equivalía a un trote y el pie patinaba); correr = ×RUN_MUL (antes ×1,15; ahora ≈ el doble que andar, como OSRS).
+// Correr sigue siendo GRATIS (la Energía es la barra del especial). Los ciclos de paso 2D (STRW/STRR) se recalcularon para conservar la cadencia (~1,8 ciclos/s andando, ~2,7 corriendo); el héroe 3D ajusta zancada y cadencia solo por la velocidad medida (heroanim3d.js).
+const WALK_V=70,RUN_MUL=1.9,STRW=39,STRR=49;
 // Asentado al parar: en vez de saltar del medio paso al reposo, la fase sigue hasta el siguiente APOYO (seno = ±1: ambos pies en el suelo, w = π/2 + kπ) y entonces pasa a reposo.
 // Como mucho un cuarto de ciclo (~120 ms andando). Usa fotogramas ya horneados (no añade horneados). Si empieza una acción, se corta.
 function settle(dt){if(P.wt==null){const k=Math.ceil((P.w-Math.PI/2)/Math.PI-1e-3);P.wt=Math.PI/2+k*Math.PI}P.w=Math.min(P.wt,P.w+dt*(P.wr||12));if(P.w>=P.wt){P.anm=0;P.wt=null}}
@@ -850,6 +880,15 @@ function dP(t,now){const ac=S.eq.a?ARC(S.eq.a):null,tg=A&&A.e?A.e:(CK&&S.stn?S.s
   const k=SPR*ISO.scale(),p0=ISO.toCanvas(P.x,P.y,TER.standZ(P.x,P.y)),q=ISO.toCanvas(A.e.x,A.e.y,TER.standZ(A.e.x,A.e.y)),ex=P.x+(q.x-p0.x)/k,ey=P.y+(q.y-p0.y)/k,tx=P.x+r.tip[0]/SPR,ty=P.y+r.tip[1]/SPR,
    u=Math.min(1,Math.max(0,(act.ph||0)/.26)),fl=u<1?u*(2-u):1,bx=tx+(ex-tx)*fl,by=ty+(ey-ty)*fl-(u<1?Math.sin(u*Math.PI)*22:0);   // el flotador vuela en arco hasta el punto de pesca durante el lanzamiento
   ctx.lineWidth=1;ctx.strokeStyle='#fff';ctx.globalAlpha=.8;ctx.beginPath();ctx.moveTo(tx,ty);ctx.quadraticCurveTo((tx+bx)/2,Math.max(ty,by)-(u<1?2:6),bx,by);ctx.stroke();ctx.globalAlpha=1;Rc('#e33',bx-1,by-1+(u<1?0:Math.sin(t*5)*1.5),3,3)}}
+// R3D (?r3d=1): estado del héroe para src/r3d/hero3d.js. Misma lógica que dP (mirar al objetivo, acción, asentado al parar) pero sin dibujar.
+// look = apariencia + equipo (S.app, gearOpts()). ?capa=1 fuerza una capa para probar la tela (las capas serán objetos raros; por defecto lleva bufanda).
+function heroState3D(now){const t=now/1000,tg=A&&A.e?A.e:(CK&&S.stn?S.stn:null);let fx=null,fy=null;
+ const cbNow=!!(A&&A.ty==='f');if(cbNow)P.cbT=now;   // Lote R3D-ANIM: guardia de combate (se mantiene 2,5 s tras el último combate o golpe recibido)
+ if(tg&&!P.mvg&&tg.x!=null){fx=tg.x-P.x;fy=tg.y-P.y;P.dir=HERO.dirOf(fx,fy)}
+ const act=P.mvg?null:actState(now);if(act&&P.anm){P.anm=0;P.wt=null}const gear=gearOpts();if(/[?&]capa=1/.test(location.search)&&!gear.cp)gear.cp='#5a2230';
+ return{x:P.x,y:P.y,z:TER.standZ(P.x,P.y),mv:!!(P.mvg||P.anm),run:!!RUN,w:P.w||0,act,hurt:Math.max(0,1-(now-HURT)/320),fx,fy,cb:cbNow||now-(P.cbT||-1e9)<2500||now-HURT<2500,
+  aim:act&&act.k==='fi'&&A&&A.e?{x:A.e.x,y:A.e.y,ph:act.ph}:null,
+  look:{app:S.app,ar:S.eq.a?ARC(S.eq.a):null,helm:S.eq.h?ARC(S.eq.h):null,boot:S.eq.f?ARC(S.eq.f):null,gear,hood:'down',arm:armorInfo()}}}
 const bl=document.createElement('canvas');bl.width=W>>2;bl.height=H>>2;const bx=bl.getContext('2d'),gr=document.createElement('canvas');gr.width=gr.height=96;let GP=null,SHK=0,HURT=-1e9;
 try{const g=gr.getContext('2d'),im=g.createImageData(96,96);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255}g.putImageData(im,0,0)}catch(e){}
 let PFON=0;
@@ -867,27 +906,28 @@ function lgAt(x,y){const k0=biomeAt(x,y),k=k0<0?curB:k0,m=(a,b,t)=>a+(b-a)*t;let
 // calidad del reescalado de los mapas de luz (1/2-1/4 de resolución → pantalla). 'high' (bicúbico) costaba ~35 ms por mapa en equipos sin GPU potente y en capturas
 // comparadas no se distingue de 'low' (bilineal): el mapa ya es un degradado suave. Para volver al bicúbico: LIGHTQ='high'.
 var LIGHTQ='low';
-function lighting(now){const t=now/1000,s=sunS(t),d=Math.max(WXD,Math.max(0,Math.min(1,(.15-s)/.55))),w=Math.max(0,1-Math.abs(s)*4)*.16,vis=()=>true,lp=(x,y)=>{const q=ISO.toCanvas(x,y,1),f=cv.width/W;return[q.x/f,q.y/f]},LR=.9*ISO.scale()/(cv.width/W);
+function lighting(now){const R3=!!(window.R3D&&!INT);   // R3D (F3): el 3D ya trae su luz; aquí solo se oscurecen los PÍXELES 2D (sprites, héroe) con 'source-atop', con los huecos de luz de light.js
+ const t=now/1000,s=sunS(t),d=Math.max(WXD,Math.max(0,Math.min(1,(.15-s)/.55))),w=R3?0:Math.max(0,1-Math.abs(s)*4)*.16,vis=()=>true,lp=(x,y)=>{const q=ISO.toCanvas(x,y,1),f=cv.width/W;return[q.x/f,q.y/f]},LR=.9*ISO.scale()/(cv.width/W);
  const LGc=lgAt(P.x,P.y),dv=Math.max(0,Math.min(1,(s+.1)/.5))*(1-WXD*1.5>0?1-WXD*1.5:0);
- if(dv>.01&&LGc.dia[3]>0){ctx.fillStyle='rgba('+LGc.dia.slice(0,3).map(Math.round).join(',')+','+LGc.dia[3]*dv+')';ctx.fillRect(0,0,W,H)}
+ if(!R3&&dv>.01&&LGc.dia[3]>0){ctx.fillStyle='rgba('+LGc.dia.slice(0,3).map(Math.round).join(',')+','+LGc.dia[3]*dv+')';ctx.fillRect(0,0,W,H)}
  if(d>.01){ // luz dinámica (src/light.js): mapa de luz con sombras de los objetos; las luces se recogen en LIGHT.update() al inicio de draw()
   // lote V8 (rendimiento): la oscuridad se compone A LA RESOLUCIÓN DEL MAPA DE LUZ (≈1/3) y se reescala UNA vez a pantalla con suavizado alto. Antes se rellenaba un lienzo
   // de pantalla entera, se le restaba el mapa reescalado ('high') y se estampaba ese lienzo entero: 2 pasadas de pantalla completa más. Resultado idéntico (la resta y el reescalado conmutan).
   const LMp=LIGHT.render(),dk='rgba('+LGc.noche.map(Math.round).join(',')+','+d*.72*LGc.nf+')';
   if(LMp){const m=LMp.map,mw=m.width,mh=m.height;if(lc.width!==mw||lc.height!==mh){lc.width=mw;lc.height=mh}lx.setTransform(1,0,0,1,0,0);lx.globalCompositeOperation='source-over';lx.clearRect(0,0,mw,mh);lx.fillStyle=dk;lx.fillRect(0,0,mw,mh);
    lx.globalCompositeOperation='destination-out';lx.drawImage(m,0,0);lx.globalCompositeOperation='source-over';
-   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality=LIGHTQ;ctx.drawImage(lc,0,0,mw*LMp.sc,mh*LMp.sc);
+   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality=LIGHTQ;if(R3)ctx.globalCompositeOperation='source-atop';ctx.drawImage(lc,0,0,mw*LMp.sc,mh*LMp.sc);if(R3){ctx.globalCompositeOperation='source-over';ctx.imageSmoothingQuality='low'}else{
    ctx.globalCompositeOperation='lighter';ctx.globalAlpha=Math.min(1,.3*d);ctx.imageSmoothingQuality=LIGHTQ;if(LMp.bb){const[a,b,c,e]=LMp.bb,k=LMp.sc;ctx.drawImage(LMp.col,a,b,c,e,a*k,b*k,c*k,e*k)}   // solo la caja con luz (fuera, el mapa de color está vacío)
-ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.imageSmoothingQuality='low'}   // ¡volver a 'low'! antes se quedaba en 'high' y TODO el fotograma siguiente (terreno y sprites) se dibujaba con filtro bicúbico
-  else{ctx.fillStyle=dk;ctx.fillRect(0,0,W,H)}}
+ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.imageSmoothingQuality='low'}}   // ¡volver a 'low'! antes se quedaba en 'high' y TODO el fotograma siguiente (terreno y sprites) se dibujaba con filtro bicúbico
+  else{if(R3)ctx.globalCompositeOperation='source-atop';ctx.fillStyle=dk;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over'}}
  if(w>.01){ctx.fillStyle='rgba(255,130,50,'+w+')';ctx.fillRect(0,0,W,H)}
- ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=.26+d*.2;ctx.drawImage(vign(),0,0);ctx.restore()}
+ if(!R3){ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=.26+d*.2;ctx.drawImage(vign(),0,0);ctx.restore()}}
 // viñeta horneada (lote V8): el degradado radial de pantalla entera se pintaba en cada fotograma (≈5 ms en CPU); ahora se hornea al tamaño real del lienzo (alfa 1) y se estampa con globalAlpha = mismo resultado
 let VGC=null;function vign(){const w=cv.width,h=cv.height;if(VGC&&VGC.width===w&&VGC.height===h)return VGC;VGC=document.createElement('canvas');VGC.width=w;VGC.height=h;const g=VGC.getContext('2d'),q=g.createRadialGradient(w/2,h/2,h*.35,w/2,h/2,h*.9);q.addColorStop(0,'rgba(0,0,0,0)');q.addColorStop(1,'rgba(0,0,0,1)');g.fillStyle=q;g.fillRect(0,0,w,h);return VGC}
 // Luz dinámica: recoge luces y oclusores del fotograma (LIGHT.update) con la oscuridad actual; se llama antes de dibujar entidades para que cada sprite reciba su luz (LIGHT.at/tint).
 function lightUpd(now){const t=now/1000,d=Math.max(WXD,Math.max(0,Math.min(1,(.15-sunS(t))/.55))),f=cv.width/W;
  const LR=.9*ISO.scale()/f;   // near = radio (px de mundo) en el que se recogen luces y oclusores: sigue al tamaño de la vista (con zoom bajo y pantalla grande se veían farolas sin luz)
- LIGHT.update({t,d,W,H,dev:f,near:Math.max(640,.62*Math.hypot(W,H)/LR+120),proj:(x,y)=>{const q=ISO.toCanvas(x,y,1);return[q.x/f,q.y/f]},LR,P,ST,N,GD,props:PROPS.list,now,active:A})}
+ LIGHT.update({t,d,W,H,dev:f,noOcc:!!window.R3D,near:Math.max(640,.62*Math.hypot(W,H)/LR+120),proj:(x,y)=>{const q=ISO.toCanvas(x,y,1);return[q.x/f,q.y/f]},LR,P,ST,N,GD,props:PROPS.list,now,active:A})}
 let LFT=0;
 const SPR=1.5; // px lógicos por px de sprite cenital antiguo (marcadores provisionales hasta F4/F5)
 // Dibuja un sprite cenital antiguo con los pies en la posición isométrica de (x,y); lift = px de sprite hacia arriba
@@ -895,17 +935,20 @@ let SIL=0,SPX=0,SPY=0; // SIL: dibujando la silueta del contorno (sin texto ni s
 function spr(x,y,lift,fn){const p=ISO.toCanvas(x,y,TER.standZ(x,y)),k=SPR*ISO.scale();ctx.setTransform(k,0,0,k,p.x-SPX-x*k,p.y-SPY-(y+lift)*k);TXS=.5;try{fn()}finally{TXS=1}}
 const onScr=(x,y)=>{const p=ISO.toCanvas(x,y,1);return p.x>-140&&p.x<ISO.V.cw+140&&p.y>-200&&p.y<ISO.V.ch+140};
 // Calidad (oct 2026): tope de píxeles REALES del lienzo. En pantalla completa la GPU se ahoga si el lienzo es enorme; 'Auto' empieza en Media y baja sola si el juego va lento.
-const QCAPS=[4.5e6,3e6,2.2e6,1.5e6,1e6],QNAM=['Máxima','Alta','Media','Baja','Mínima'];let QA=1,QL=2;try{const q=localStorage.getItem('ns_q');if(q!=null&&q!=='a'){QA=0;QL=Math.max(0,Math.min(4,+q||0))}}catch(e){}
+const QCAPS=[4.5e6,3e6,2.2e6,1.8e6,1.4e6],QNAM=['Máxima','Alta','Media','Baja','Mínima'];let QA=1,QL=2;try{const q=localStorage.getItem('ns_q');if(q!=null&&q!=='a'){QA=0;QL=Math.max(0,Math.min(4,+q||0))}}catch(e){}
 let HUDS=1;
-function fitCv(){const cw=Math.max(320,innerWidth),ch=Math.max(240,innerHeight);let dpr=window.devicePixelRatio||1;dpr=Math.max(.5,Math.min(dpr,Math.sqrt(QCAPS[QL]/(cw*ch))));
+function fitCv(){const cw=Math.max(320,innerWidth),ch=Math.max(240,innerHeight);if(window.R3D_ON&&typeof zoom3==='function')ISO.V.zoom=zoom3(ZMI);let dpr=window.devicePixelRatio||1;dpr=Math.max(.5,Math.min(dpr,Math.sqrt(QCAPS[QL]/(cw*ch))));
  ISO.resize(cw,ch,dpr);if(cv.width!==ISO.V.cw||cv.height!==ISO.V.ch){cv.width=ISO.V.cw;cv.height=ISO.V.ch}
  const hs=HUDS=Math.min(1.75,Math.max(1,ch/520)); // escala del HUD dibujado en el lienzo (1 unidad = hs px CSS): crece con la pantalla pero no tanto como la ventana
  W=cw/hs;H=ch/hs;document.documentElement.style.setProperty('--hs',hs.toFixed(3));
  const lw=Math.ceil(W),lh=Math.ceil(H);if(lc.width!==lw||lc.height!==lh){lc.width=lw;lc.height=lh}const bw=Math.max(1,lw>>2),bh=Math.max(1,lh>>2);if(bl.width!==bw||bl.height!==bh){bl.width=bw;bl.height=bh}
  if(typeof WGL!=='undefined'){WGL.res=[.75,.6,.5,.4,.33][QL];WGL.fit()}}
 // Zoom (oct 2026): pasos fijos (cada paso reconstruye chunks y sprites a esa escala, un tirón puntual). Rueda, +/-, pellizco. Se guarda en ns_zoom.
-const ZMS=[1,1.25,1.6,2,2.5];let ZMI=2,ZMT=0;try{const z=+localStorage.getItem('ns_zoom');if(localStorage.getItem('ns_zoom')!==null&&z>=0&&z<ZMS.length)ZMI=z|0}catch(e){}ISO.V.zoom=ZMS[ZMI];
-function setZoom(i){i=Math.max(0,Math.min(ZMS.length-1,i));if(i===ZMI)return;ZMI=i;ISO.V.zoom=ZMS[i];try{localStorage.setItem('ns_zoom',i)}catch(e){}fitCv()}
+// R3D (Lote R3D-F2a): el zoom 3D se define por el TAMAÑO DEL HÉROE EN PANTALLA (fracción del alto de la ventana), no por un factor fijo: así se lee igual
+// en un portátil que en un monitor grande (como en Diablo/PoE). ZF = fracciones; el héroe mide ≈ 43 px lógicos (1,25 unidades × 34,3).
+const ZF=[.07,.09,.11,.135,.165,.2].map(v=>v*(/[?&]hero=old/.test(location.search)?1:1.25)),zoom3=i=>Math.max(1,Math.min(8,ZF[i]*Math.max(240,innerHeight)/43));
+const ZK=window.R3D_ON?'ns_zoom3d2':'ns_zoom',ZMS=window.R3D_ON?ZF:[1,1.25,1.6,2,2.5];let ZMI=window.R3D_ON?3:2,ZMT=0;try{const z=+localStorage.getItem(ZK);if(localStorage.getItem(ZK)!==null&&z>=0&&z<ZMS.length)ZMI=z|0}catch(e){}ISO.V.zoom=window.R3D_ON?zoom3(ZMI):ZMS[ZMI];
+function setZoom(i){i=Math.max(0,Math.min(ZMS.length-1,i));if(i===ZMI)return;ZMI=i;ISO.V.zoom=window.R3D_ON?zoom3(i):ZMS[i];try{localStorage.setItem(ZK,i)}catch(e){}fitCv()}
 cv.addEventListener('wheel',e=>{e.preventDefault();const n=performance.now();if(n-ZMT<140)return;ZMT=n;setZoom(ZMI+(e.deltaY<0?1:-1))},{passive:false});
 let ZMP=0,ZMD=0;cv.addEventListener('touchstart',e=>{if(e.touches.length===2){ZMP=1;ZMD=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);P.mv=null}},{passive:true});
 cv.addEventListener('touchmove',e=>{if(e.touches.length===2&&ZMD){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(d>ZMD*1.3){setZoom(ZMI+1);ZMD=d}else if(d<ZMD*.77){setZoom(ZMI-1);ZMD=d}e.preventDefault()}},{passive:false});
@@ -1040,18 +1083,18 @@ function dCur(t){CUR.tx=CUR.ty=-1;if(!CURON||!CUR.on||CK)return;
 function draw(now){const t=now/1000;cx=Math.max(0,Math.min(WW-W,P.x-W/2))|0;cy=Math.max(0,Math.min(WH-H,P.y-H/2))|0;
  {const s0=sunS(t),ph0=2*Math.PI*(dayP(t)-.25),d0=Math.max(0,s0);SHD.dx=-Math.cos(ph0)*(8+20*(1-d0));SHD.dy=2+3*(1-d0);SHD.a=Math.max(0,Math.min(.28,(s0+.15)*.5))}
  const dt=LFT?Math.min(.1,(now-LFT)/1000):1/60,sk=now<SHK?(SHK-now)/200*3:0;if(LFT)ISO.follow(P.x,P.y,TER.standZ(P.x,P.y),dt);else ISO.snap(P.x,P.y,TER.standZ(P.x,P.y));LFT=now;OCDT=dt;
- ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='low';if(typeof WGL!=='undefined'&&WGL.ok)ctx.clearRect(0,0,cv.width,cv.height);else{ctx.fillStyle=TER.PAPER;ctx.fillRect(0,0,cv.width,cv.height)}
- if(INT){intScene(now,t);ctx.setTransform(cv.width/W,0,0,cv.height/H,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}else{
+ ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='low';if((typeof WGL!=='undefined'&&WGL.ok)||(window.R3D&&!INT))ctx.clearRect(0,0,cv.width,cv.height);else{ctx.fillStyle=TER.PAPER;ctx.fillRect(0,0,cv.width,cv.height)}
+ if(INT){if(window.R3D)R3D.show(0);intScene(now,t);ctx.setTransform(cv.width/W,0,0,cv.height/H,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}else{
  if(sk)ISO.cam.x+=(Math.random()-.5)*2*sk,ISO.cam.y+=(Math.random()-.5)*2*sk;
- TER.env(P.x,P.y,t,sunS(t));TER.draw(ctx,t);dCur(t);hovUpdate();lightUpd(now);
- const ents=[...N.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>{hl(e,()=>dN(e,t,now),t);occ(e,()=>dN(e,t,now))}]),...ST.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>{hl(e,()=>dS(e,t),t);occ(e,()=>dS(e,t))}]),...M.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>{hl(e,()=>dM(e,t,now),t);litSpr(e.x,e.y,()=>dM(e,t,now),e)}]),...PO.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>{hlImg(e,t);PROPS.draw(ctx,e,P,OCDT)}]),...PROPS.list.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>PROPS.draw(ctx,e,P,OCDT)]),...GD.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>spr(e.x,e.y,0,()=>dDrop(e,t,now))]),[ISO.depth(P.x,P.y),()=>litSpr(P.x,P.y,()=>dP(t,now),P)],...GA.map(a=>[ISO.depth(P.x,P.y)+.5,()=>spr(a.x,a.y,0,()=>dPick(a,t,now))])];
+ TER.env(P.x,P.y,t,sunS(t));if(window.R3D){R3D.show(1);R3D.frame(now)}else TER.draw(ctx,t);dCur(t);hovUpdate();lightUpd(now);
+ const ents=[...N.filter(e=>onScr(e.x,e.y)&&!(window.R3D&&R3D.resOn&&(e.t==='wc'||e.t==='mi'))).map(e=>[ISO.depth(e.x,e.y),()=>{hl(e,()=>dN(e,t,now),t);occ(e,()=>dN(e,t,now))}]),...ST.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>{hl(e,()=>dS(e,t),t);occ(e,()=>dS(e,t))}]),...M.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>{if(window.R3D&&R3D.actors.has(e)){spr(e.x,e.y,0,()=>dMo(e,t,now));return}hl(e,()=>dM(e,t,now),t);litSpr(e.x,e.y,()=>dM(e,t,now),e)}]),...PO.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>{if(window.R3D&&R3D.poOn)return;hlImg(e,t);PROPS.draw(ctx,e,P,OCDT)}]),...(window.R3D&&R3D.propsOn?[]:PROPS.list).filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>PROPS.draw(ctx,e,P,OCDT)]),...GD.filter(e=>onScr(e.x,e.y)).map(e=>[ISO.depth(e.x,e.y),()=>spr(e.x,e.y,0,()=>dDrop(e,t,now))]),[ISO.depth(P.x,P.y),()=>window.R3D?R3D.drawHero(ctx):litSpr(P.x,P.y,()=>dP(t,now),P)],...GA.map(a=>[ISO.depth(P.x,P.y)+.5,()=>spr(a.x,a.y,0,()=>dPick(a,t,now))])];
  BIOMES.gates.forEach(g=>{const gx=g.vert?g.x:(g.x0+g.x1)/2,gy=g.vert?(g.y0+g.y1)/2:g.y;if(onScr(gx,gy))ents.push([ISO.depth(g.vert?g.x:g.x1,g.vert?g.y1:g.y),()=>{ctx.setTransform(1,0,0,1,0,0);TER.gate(ctx,g.b,!!S.boss[g.b-1],t)}])});
  AMBI.draw(ctx,'ground');
  ents.sort((a,b)=>a[0]-b[0]).forEach(o=>o[1]());
  PJ.forEach(p=>{if(now>=p.t0)drawPJ(p,now)});drawTel(now);drawHFX(now);
  parts.forEach(p=>p.hs?hsDraw(p):spr(p.x,p.y,12,()=>{ctx.globalAlpha=Math.min(1,p.l);if(p.sp){ctx.beginPath();ctx.arc(p.x,p.y,7,0,7);ctx.fillStyle=p.sp;ctx.fill();T(p.tx,p.x,p.y+4,'#fff')}else if(p.tx)T(p.tx,p.x,p.y,p.c);else Rc(p.c,p.x,p.y,2,2);ctx.globalAlpha=1}));
  AMBI.draw(ctx,'over');
- if(!(typeof WGL!=='undefined'&&WGL.grain))PAINT.grain(ctx,cv.width,cv.height,ISO.V.dpr,.55); // grano de papel: con WGL lo pone un div con multiply (sin coste por frame); este es el plan B
+ if(!window.R3D&&!(typeof WGL!=='undefined'&&WGL.grain))PAINT.grain(ctx,cv.width,cv.height,ISO.V.dpr,.55); // grano de papel: con WGL lo pone un div con multiply (sin coste por frame); este es el plan B
  ctx.setTransform(cv.width/W,0,0,cv.height/H,0,0);ctx.globalAlpha=1;lighting(now);AMBI.draw(ctx,'late');ctx.setTransform(cv.width/W,0,0,cv.height/H,0,0);post(now);}
  if(CK){const a=ACT.co[CK.i],bx=W/2-150,by=H/2-40;Rc('#000000bb',bx-14,by-34,328,110);Rc('#000',bx-2,by-2,304,24);Rc('#3a3226',bx,by,300,20);Rc('#2a7a2a',bx+300*(CK.c-CK.hw),by,300*CK.hw*2,20);Rc('#ffe629',bx+300*(CK.c-CK.hw*.35),by,300*CK.hw*.7,20);Rc('#fff',bx+300*CK.pos-2,by-4,4,28);
  T((CK.bonus?'🎲 ¡Bonus de cocina! ':'')+a[0],W/2,by-12,'#ff981f');T(CK.res===null?'Espacio / clic: detén la barra en la zona verde':(CK.bonus?['Sin bonus esta vez','¡Plato extra!','¡PERFECTO! XP doble + plato extra']:['¡Quemado!','¡Bien!','¡PERFECTO!'])[CK.res],W/2,by+44,CK.res===2?'#ffe629':CK.res===0?'#e5533d':'#fff');T(CK.bonus?'Acierta: más XP y un plato extra (Esc: saltar)':'Racha: '+CK.streak+' · Esc para salir',W/2,by+62,'#aaa')}
@@ -1176,7 +1219,7 @@ function skLive(k){const d=document.querySelector('#pn [data-sk="'+k+'"]');if(!d
 function panelHTML(TB,win){let h='';
  if(TB==='ch'){const cell=(k,l,ph,pos)=>`<div class="dc" style="grid-area:${pos}"><button class="slot" ${S.eq[k]?`data-i="${S.eq[k]}" onclick="unq('${k}')"`:`data-x="${l}: vacío"`} style="${S.eq[k]?'':'opacity:.5;'}${rr(S.eq[k])?'border:2px solid '+RAR[rr(S.eq[k])][1]:''}">${S.eq[k]?ic(S.eq[k]):ph}${k==='u'&&S.eq.u&&S.amn>1?'<span class="cnt">'+S.amn+'</span>':''}</button><div class="hint">${l}</div></div>`,
   tcell=k=>`<div class="dc"><div class="slot" data-x="${TOOLS[k][0]} ${tn(k,S.tool[k])}. Golpea cada ${(hitPeriod(k)/1000).toFixed(1)} s con ${toolDmg(k).toFixed(1)} de daño; los recursos tienen vida (más tier = más vida), así que una herramienta mejor los rompe en menos golpes. Se mejora fabricando.">${ic('tl:'+k+':'+S.tool[k])||TOOLS[k][1]}</div><div class="hint">${TOOLS[k][0]}</div></div>`;
-  h='<div class="doll">'+cell('c','Capa','🧣','c')+cell('h','Casco','🪖','h')+cell('n','Amuleto','📿','n')+cell('w','Arma','⚔️','w')+cell('a','Armadura','🛡️','a')+cell('s','Escudo','🛡️','s')+cell('l','Pantalones','👖','l')+cell('g','Guantes','🧤','g')+cell('f','Botas','👢','f')+cell('r','Anillo','💍','r')+cell('m','Carcaj','🏹','m')+cell('r2','Anillo 2','💍','r2')+cell('u','Munición','➶','u')+'<canvas id="doll" width="300" height="420"></canvas></div><div class="tools">'+tcell('wc')+tcell('mi')+tcell('fi')+'</div><div class="stats"><span>⚔️ Golpe máx. <b>'+maxHit()+'</b></span><span>🛡️ Defensa <b>+'+ab()+'</b></span><span data-x="Daño que te evitas (o sufres de más) por tu armadura contra cada estilo: malla resiste cuerpo a cuerpo, cuero distancia, túnica magia; cada clase es débil a otra.">🧥 Resist. <b>'+armInfo()+'</b></span><span>⏱ Ataque <b>'+(atkMs()/1000).toFixed(1)+' s</b></span></div>'}
+  h='<div class="doll">'+cell('c','Capa','🧣','c')+cell('h','Casco','🪖','h')+cell('n','Amuleto','📿','n')+cell('w','Arma','⚔️','w')+cell('a','Armadura','🛡️','a')+cell('s','Escudo','🛡️','s')+cell('l','Pantalones','👖','l')+cell('g','Guantes','🧤','g')+cell('f','Botas','👢','f')+cell('r','Anillo','💍','r')+cell('m','Carcaj','🏹','m')+cell('r2','Anillo 2','💍','r2')+cell('u','Munición','➶','u')+'<canvas id="doll" width="300" height="420"></canvas></div><div class="tools">'+tcell('wc')+tcell('mi')+tcell('fi')+'</div><div class="stats"><span>⚔️ Golpe máx. <b>'+maxHit()+'</b></span><span>🛡️ Defensa <b>+'+ab()+'</b></span><span data-x="Daño que te evitas (o sufres de más) por tu armadura contra cada estilo: malla resiste cuerpo a cuerpo, cuero distancia, túnica magia; cada clase es débil a otra.">🧥 Resist. <b>'+armInfo()+'</b></span><span>⏱ Ataque <b>'+(atkMs()/1000).toFixed(1)+' s</b></span></div>'+(window.R3D_ON&&window.R3D&&window.R3D.outfits?'<div style="text-align:center;margin-top:6px"><button class="bt" onclick="openOutfit()" data-x="Cambia las prendas de tu personaje. El equipo que llevas puesto se superpone.">🧥 Atuendo: '+window.R3D.outfits.of(S.app&&S.app.outfit).name+'</button></div>':'')}
  else if(TB==='inv'){const sl=invSlots();h='<h2>Mochila '+sl.length+'/'+cap()+'</h2><div class="inv">'+Array.from({length:Math.max(cap(),sl.length)},(_,i)=>{const z=sl[i];if(!z)return '<div class="slot"></div>';const d=z.id;return `<button class="slot" data-i="${d}"${rr(d)?' style="border:2px solid '+RAR[rr(d)][1]+'"':''} onclick="use(${z.i})">${ic(d)}${z.n>1?'<span class="cnt">'+z.n+'</span>':''}</button>`}).join('')+'</div>'}
  else if(TB==='sk'){h=SKL.map(k=>{const l=L(k),x=S.xp[k],pc=l>=99?100:(x-XT[l])/(XT[l+1]-XT[l])*100;return `<div data-sk="${k}" style="margin-bottom:8px">${SK[k][1]} ${SK[k][0]} <span class="gold">${l}/99</span><span class="hint" style="float:right;margin:0">${fmt(x)} XP</span><div class="bar"><i style="width:${pc}%"></i></div></div>`}).join('')}
  else if(TB==='qm')h=qmHTML();else if(TB==='q'){h='<h2>🏆 Logros</h2>'+Q.map((q,i)=>{const v=Math.min(q[3],S.st[q[2]]||0),d=S.done[i];return `<div style="margin-bottom:7px;opacity:${d?.5:1}">${d?'✔ ':''}<b class="gold">${q[0]}</b> · ${q[4]} oro<div class="hint" style="margin:0">${q[1]} (${fmt(v)}/${fmt(q[3])})</div><div class="bar"><i style="width:${v/q[3]*100}%"></i></div></div>`}).join('')}
@@ -1237,7 +1280,7 @@ let last=performance.now();
 // Panel de rendimiento (tecla F3 o ?perf): fps, mediana/p95/máx de frame, ms de JS del dibujo, chunks síncronos, calidad. Sirve para decir QUÉ tirones hay.
 let PF=null,PFT=[],PFJ=0,PFU=0;const pfEl=()=>PF||(PF=Object.assign(document.createElement('pre'),{id:'perf',hidden:true}),document.body.appendChild(PF),PF);
 function perfTog(){const e=pfEl();e.hidden=!e.hidden}
-function perfUpd(now){if(!PF||PF.hidden||now-PFU<500)return;PFU=now;const a=PFT.slice().sort((x,y)=>x-y),n=a.length;if(!n)return;const st=TER.stats?TER.stats():{};PF.textContent='fps '+(1000/(a.reduce((x,y)=>x+y,0)/n)).toFixed(0)+'  frame med '+a[n>>1].toFixed(1)+' p95 '+a[Math.floor(n*.95)].toFixed(1)+' máx '+a[n-1].toFixed(0)+' ms\n>33ms: '+a.filter(x=>x>33).length+'/'+n+'  JS dibujo '+(PFJ/Math.max(1,n)).toFixed(1)+' ms\nchunks sync '+st.sync+' ('+(st.syncMs||0).toFixed(0)+' ms) · caché '+((st.bytes||0)/1e6).toFixed(0)+' MB ('+st.pintados+' chunks)\ncalidad '+(QA?'auto ':'')+QNAM[QL]+' · lienzo '+cv.width+'×'+cv.height+' · agua ×'+(WGL.res||1)+'\nsprites '+PROPS.cacheN+'/'+PROPS.mcaN+'/'+PROPS.plcN+' · zoom '+ZS_()+'\n(F3 oculta)';PFT=[];PFJ=0}
+function perfUpd(now){if(!PF||PF.hidden||now-PFU<500)return;PFU=now;const a=PFT.slice().sort((x,y)=>x-y),n=a.length;if(!n)return;const st=TER.stats?TER.stats():{};PF.textContent='fps '+(1000/(a.reduce((x,y)=>x+y,0)/n)).toFixed(0)+'  frame med '+a[n>>1].toFixed(1)+' p95 '+a[Math.floor(n*.95)].toFixed(1)+' máx '+a[n-1].toFixed(0)+' ms\n>33ms: '+a.filter(x=>x>33).length+'/'+n+'  JS dibujo '+(PFJ/Math.max(1,n)).toFixed(1)+' ms\nchunks sync '+st.sync+' ('+(st.syncMs||0).toFixed(0)+' ms) · caché '+((st.bytes||0)/1e6).toFixed(0)+' MB ('+st.pintados+' chunks)\ncalidad '+(QA?'auto ':'')+QNAM[QL]+' · lienzo '+cv.width+'×'+cv.height+' · agua ×'+(WGL.res||1)+(window.R3D&&R3D.gpu&&R3D.gpu.mundo!=null?'\nGPU mundo '+R3D.gpu.mundo.toFixed(1)+' ms · héroe '+(R3D.gpu.heroe||0).toFixed(1)+' ms':(window.R3D?'\n(sin medidor de GPU en este navegador)':''))+'\nsprites '+PROPS.cacheN+'/'+PROPS.mcaN+'/'+PROPS.plcN+' · zoom '+ZS_()+'\n(F3 oculta)';PFT=[];PFJ=0}
 const ZS_=()=>ISO.V.zoom;
 function loop(now){const fdt=now-last;DT=Math.min(.05,fdt/1000);last=now;if(fdt<400)PFT.push(fdt);upd(DT,now);bgm(now,DT);const j0=performance.now();draw(now);PFJ+=performance.now()-j0;perfUpd(now);iwFrame();qmon(now,fdt);if(fdt<26)PROPS.warm([N,ST,PO,PROPS.list],fdt<20?3:1.2);if(dirty&&!pd&&now-lr>250){dirty=0;lr=now;panel()}requestAnimationFrame(loop)}
 // ---------- pantalla de carga y precalentado (oct 2026) ----------
@@ -1269,5 +1312,6 @@ async function bootRun(){
  pct(1);last=performance.now();requestAnimationFrame(loop);
  el.classList.add('out');setTimeout(()=>el.classList.add('off'),520)}
 {const el=$('#boot'),skip=/[?&]noload\b/.test(location.search)||(navigator.webdriver&&!/[?&]load\b/.test(location.search));
- if(skip||!el){if(el)el.classList.add('off');requestAnimationFrame(loop)}else bootRun()}
+ const go=()=>{if(window.R3D){fitCv();ISO.snap(P.x,P.y,TER.standZ(P.x,P.y));for(let i=0;i<40&&R3D.preload()>0;i++);} if(skip||!el){if(el)el.classList.add('off');requestAnimationFrame(loop)}else bootRun()};
+ if(window.R3D_READY)window.R3D_READY.then(go,go);else go()}   // R3D: espera al módulo de three (?r3d=1) y precarga los chunks a la vista
 

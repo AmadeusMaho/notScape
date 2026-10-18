@@ -33,10 +33,11 @@ const LIGHT=(()=>{
  const DISC=new Map();
  const disc=rq=>{let c=DISC.get(rq);if(c)return c;c=mk(rq*2,rq*2);const g=c.getContext('2d'),q=g.createRadialGradient(rq,rq,0,rq,rq,rq);
   [[0,1],[.2,.86],[.45,.52],[.7,.2],[.88,.05],[1,0]].forEach(([s,a])=>q.addColorStop(s,'rgba(0,0,0,'+a+')'));g.fillStyle=q;g.fillRect(0,0,rq*2,rq*2);if(DISC.size>40)DISC.delete(DISC.keys().next().value);DISC.set(rq,c);return c};
- const rect=(x,y,hw,hh,h,id)=>occ.push({x,y,hw,hh,h,id,rr:Math.max(hw,hh)});
+ let NOOCC=0;   // R3D: el mundo es 3D y ya tiene sus propias sombras; aquí solo se iluminan sprites 2D → sin oclusores (ahorra los cascos y las sombras del mapa de luz)
+ const rect=(x,y,hw,hh,h,id)=>{if(!NOOCC)occ.push({x,y,hw,hh,h,id,rr:Math.max(hw,hh)})};
  // ---- recogida por fotograma ----
  // o: {t, d (0..1 oscuridad), W,H (px lógicos), proj(x,y)->[sx,sy] lógico, LR (px lógicos por px de mundo), P, ST, N (recursos), props, now, active (estación en uso o null), near (radio de recogida)}
- function update(o){fr++;spi=0;d=o.d;proj=o.proj;LR=o.LR;tm=o.t;lights.length=0;occ.length=0;own=null;PL=o.P;if(d<.02)return;DEV=o.dev||1;SC=Math.max(2,Math.min(4,Math.round(6/DEV)));init(o.W,o.H);   // texel ≈ 6 px reales como máximo (en pantallas HiDPI el mapa 1/4 se veía a bloques)
+ function update(o){fr++;spi=0;NOOCC=!!o.noOcc;d=o.d;proj=o.proj;LR=o.LR;tm=o.t;lights.length=0;occ.length=0;own=null;PL=o.P;if(d<.02)return;DEV=o.dev||1;SC=Math.max(2,Math.min(4,Math.round(6/DEV)));init(o.W,o.H);   // texel ≈ 6 px reales como máximo (en pantallas HiDPI el mapa 1/4 se veía a bloques)
   const P=o.P,R=o.near||640,near=(x,y,m)=>Math.abs(x-P.x)<R+(m||0)&&Math.abs(y-P.y)<R+(m||0),T=o.t,L=(x,y,def,key,extra)=>{const D=DEFS[def];if(!D)return;lights.push(Object.assign({x,y,r:D.r,k:D.k,c:D.c,fl:D.fl,key},extra||{}))};
   o.ST.forEach(e=>{if(!near(e.x,e.y))return;const on=o.active&&o.active.e===e;
    if(e.id==='fire')L(e.x,e.y-2,on?'fireOn':'fire',e);else if(e.id==='furnace')L(e.x,e.y-4,on?'furnaceOn':'furnace',e);else if(e.id==='shop'||e.id==='bank'||e.id==='altar')L(e.x,e.y-14,e.id,e);

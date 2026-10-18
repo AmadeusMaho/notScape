@@ -39,9 +39,10 @@ const AMBI=(()=>{
  function update(now,dt,o){dt=Math.min(.1,dt||0);st.k=o.k;st.wx=o.wx||'';st.t=now/1000;const sun=o.sun,day=cl((sun+.1)/.5,0,1);st.day=day;
   const area=(W()*H())/(1280*800),ks=[];for(let k=st.k-1;k<=st.k+1;k++)if(k>=0&&k<E.length)ks.push(k);
   const wet=st.wx==='rain'||st.wx==='storm';
-  ks.forEach(k=>E[k].forEach(e=>{if(wet&&(e.t==='bf'))return;const cond=e.w==='day'?day>.35:e.w==='night'?day<.55:true;if(!cond)return;
+  const P3=!!(window.R3D&&window.R3D.parts3d);   // R3D-F3e: con ?r3d=1 el 3D (src/r3d/particles3d.js) dibuja luciérnagas, hojas, pétalos, nieve, brasas, ceniza y lluvia; aquí quedan mariposas, niebla y sombras de nubes
+  ks.forEach(k=>E[k].forEach(e=>{if(wet&&(e.t==='bf'))return;if(P3&&(e.t==='fog'||e.t==='ff'||e.t==='lf'||e.t==='pt'||e.t==='sn'||e.t==='em'||e.t==='as'))return;const cond=e.w==='day'?day>.35:e.w==='night'?day<.55:true;if(!cond)return;
    const n=e.r*area*dt*(e.w==='night'?1-day:1)*(k===st.k?1:1),cnt=Math.floor(n)+(Math.random()<n%1?1:0);for(let i=0;i<cnt;i++)spawn(e,k)}));
-  if(wet)rain(dt,st.wx==='storm');
+  if(wet&&!P3)rain(dt,st.wx==='storm');
   // nubes (sombras): 4 blobs en el mundo cerca del jugador, viento hacia el SE
   if(typeof P!=='undefined'){while(CL.length<4)CL.push({x:P.x+rnd(-900,900),y:P.y+rnd(-700,700),r:rnd(90,170)});
    CL.forEach(c=>{c.x+=14*dt;c.y+=5*dt;if(Math.abs(c.x-P.x)>1000||Math.abs(c.y-P.y)>800){c.x=P.x-900+rnd(0,200);c.y=P.y+rnd(-700,700);c.r=rnd(90,170)}})}

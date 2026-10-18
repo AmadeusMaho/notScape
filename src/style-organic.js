@@ -43,7 +43,8 @@ const ORG=(()=>{
  const ink=(g,a,b,R,ij)=>{g.beginPath();g.moveTo(a[0],a[1]);for(let s=1;s<=4;s++){const t=s/4,e=s<4?(R()-.5)*ij:0;g.lineTo(a[0]+(b[0]-a[0])*t+e,a[1]+(b[1]-a[1])*t+e)}g.stroke()};
 
  // drawMesh: pinta una malla. o={smooth:0..1, seed, inner:alpha de aristas interiores (0 = ninguna), paint:true|false, ink:true|false}
- function drawMesh(g,ox,oy,m,col,o){o=o||{};const sm=o.smooth||0,R=STY.rng((o.seed||1)*6007+m.V.length);
+ let CAP=null; // R3D (oct 2026): mientras no es null, drawMesh NO dibuja: apunta la malla (para el porteo a three.js, ver docs/GUIA_3D_PORTEO.md §3)
+ function drawMesh(g,ox,oy,m,col,o){o=o||{};if(CAP){CAP.push({V:m.V,T:m.T,c:m.c||null,col,k:o.k||1,ink:o.ink!==false,rig:!!m.rig});return}const sm=o.smooth||0,R=STY.rng((o.seed||1)*6007+m.V.length);
   const k=o.k||1,P=m.V.map(v=>[ox+k*C*(v[0]-v[1]),oy+k*(KY*(v[0]+v[1])-KZ*v[2])]);
   // orientar hacia fuera y calcular normales de cara y de vértice (suaves)
   const F=m.T.map(t=>{const A=m.V[t[0]],B=m.V[t[1]],D=m.V[t[2]];let n=cross(sub(B,A),sub(D,A));const ce=[(A[0]+B[0]+D[0])/3,(A[1]+B[1]+D[1])/3,(A[2]+B[2]+D[2])/3];
@@ -941,5 +942,7 @@ const ORG=(()=>{
   return bad}
  // ORG.add(nombre, fn(g,x,y,sm,o), escala): registra un modelo nuevo desde otro archivo (src/spots.js) con las mismas utilidades que los de aquí (M = malla con tema/espejo, soft = sombra de apoyo, RG = pliegues).
  const add=(n,f,ks)=>{KSC[n]=ks||1;U[n]=(g,x,y,sm,a,b,c)=>{KS=KSC[n]||1;try{f(g,x,y,sm,a,b,c)}finally{KS=1}}};
- return{HK,add,M:(...a)=>M(...a),soft:(...a)=>soft(...a),RG,STY_:STY,KSC,HAIRS,PEOPLE,noSoft:v=>{NOSOFT=!!v},theme:m=>{TH=m||null},rot:v=>{ROT=!!v},A,B,U,TIER,checks,COW,trunkH,SPECIES,BUILD,blob,cone,lathe,box,gable,tilt,ico,drawMesh,clump,tier,at,lit,ramp,C,KY}})();
+ // R3D: ORG.capture(()=>ORG.U[n](g,0,0,0,o)) → [{V,T,c,col,k,ink,rig}] (mallas en unidades de modelo SIN escalar: multiplicar por k). No dibuja nada.
+ const capture=fn=>{const prev=CAP,out=[];CAP=out;try{fn()}finally{CAP=prev}return out};
+ return{capture,HK,add,M:(...a)=>M(...a),soft:(...a)=>soft(...a),RG,STY_:STY,KSC,HAIRS,PEOPLE,noSoft:v=>{NOSOFT=!!v},theme:m=>{TH=m||null},rot:v=>{ROT=!!v},A,B,U,TIER,checks,COW,trunkH,SPECIES,BUILD,blob,cone,lathe,box,gable,tilt,ico,drawMesh,clump,tier,at,lit,ramp,C,KY}})();
 if(typeof module!=='undefined')module.exports={ORG};
