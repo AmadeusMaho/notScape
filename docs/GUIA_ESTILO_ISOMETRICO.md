@@ -1,26 +1,49 @@
-# NotScape: guía isométrica pintada «cozy»
+# NotScape: guía isométrica pintada «cozy» (2D) — ACTUALIZADA el 17 oct 2026
 
-Guía de estilo y assets para un agente de código, válida para cualquier versión del juego · 11 de octubre de 2026
+Guía de estilo del **modo 2D isométrico** y fuente de **datos del mundo** (tiers, especies, biomas, jefes, diorama, bloqueos). Escrita el 11 oct 2026; revisada el 17 oct 2026 para convivir con el porteo a three.js.
+
+> ### ¿Sigue haciendo falta? SÍ, pero con otro papel
+> - **El 2D sigue siendo el modo predeterminado hasta el corte F9** (`?r3d=1` activa el 3D). Mientras tanto, esta guía manda en **todo lo que se dibuje en 2D**.
+> - **En lo visual del 3D manda `docs/GUIA_3D_PORTEO.md`** (diorama pintado, §4.9 **estilo objetivo «óleo oscuro» No Rest for the Wicked**) y `docs/GUIA_PERSONAJES_3D.md` para personajes. Donde esta guía diga algo de color, luz, grano o ambiente y choque con ellas, **gana la 3D**.
+> - **Lo que de aquí sigue valiendo también en 3D:** la jerarquía de datos (§3 tabla de tiers, §13 biomas/monstruos/jefes/especies), el formato diorama (§11), los bloqueos por jefe y la transición entre biomas (§12), y el lenguaje de formas aprobado (§4, «Formas aprobadas»).
+> - **Lo que ya NO aplica:** «nada de 3D», `INVENTARIO.md`, los atlas de assets (§6), el plan F0–F8 (§7), el modo antiguo `?old`, y el grano de papel / la paleta pastel como look final del 3D.
+> - Cuando se llegue a F9 (corte) y se retire el 2D, esta guía se archiva en `docs/HISTORIAL.md` conservando §3 (tiers), §11–§13.
+
+| § | Tema | Estado hoy |
+| --- | --- | --- |
+| 0 | Cómo usar | **Reescrito** |
+| 1 | Decisiones | **Actualizado** (la regla «nada de 3D» está superada) |
+| 2 | Geometría isométrica | Vigente en 2D; el 3D usa la misma cámara (ortográfica 30°, 45°) con acimut giratorio |
+| 3 | Paleta | Colores pastel = **2D**; la **tabla de tiers es dato vigente** (en 3D el óleo los modifica: ver nota) |
+| 4 | Lenguaje de formas | **Vigente** (las formas aprobadas son las que se portean a 3D) |
+| 5 | Técnica de pintado | Solo 2D (pincel, grano de papel). **En 3D y óleo no hay grano ni trama** |
+| 6 | Catálogo de assets | **Histórico** (los atlas no se hacen; todo sale de código) |
+| 7 | Plan de trabajo | **Sustituido** por `GUIA_3D_PORTEO.md` §6 y la «HOJA DE RUTA ÚNICA» de `AGENTS.md` |
+| 8 | Riesgos | Parcial (memoria y filtros por frame siguen valiendo en 2D) |
+| 9 | Criterios de aceptación | Vigente |
+| 10 | Reglas | Vigente (preguntas ya respondidas) |
+| 11 | Formato diorama | **Vigente** (también en 3D) |
+| 12 | Bloqueos, transiciones, luz por bioma | **Vigente**; la luz por bioma en 3D son filas de `TOD` por bioma (guía 3D §4.8) |
+| 13 | Datos reales del juego | **Vigente con correcciones** (hoy 11 tiers y 11 maderas) |
 
 ## 0. Cómo usar este documento
 
-Esta guía fija el estilo, la geometría y los assets, pero no nombres de archivos ni de funciones, porque la versión actual del juego puede haber cambiado. Donde aparezca [verificar], confirma el dato en el código antes de usarlo.
-
-- **Primer entregable: `INVENTARIO.md`.** Antes de tocar nada, documenta el estado real del juego: tamaño del canvas, unidad de coordenadas del mundo, orden de dibujo, entidades, cuántos ítems, biomas, estaciones, NPC y monstruos existen, y qué parte de la interfaz es HTML.
-- **Referencia visual:** la demo `notscape-diorama.html` (cópiala a `docs/style-reference/`). De ella salen los **colores y la técnica de pincel**; sus **formas no** están aprobadas (sección 4). `notscape-cenital.html` es una demo en vista cenital: sirve como referencia de **composición, proporciones y pincel**, no de la vista ni de las formas (el dueño descartó las formas redondeadas; ver sección 4).
-- **Prioridad:** en lo visual manda este documento; en lo técnico manda el `AGENTS.md` (o la guía equivalente) del repositorio: no tocar lógica, guardado ni colisiones, y una rama por fase.
-- Todo el arte se genera por código. No hay arte pintado a mano.
-- **Desviaciones decididas después por el dueño** (cursor de tile, resalte de entidades, escala visual, etc.): ver la sección «Desviaciones de la guía» de `AGENTS.md`. Donde choquen, gana `AGENTS.md`.
+- **Antes de nada**, lee `AGENTS.md` (decisiones y registro) y, si vas a tocar el 3D, `docs/GUIA_3D_PORTEO.md` + `docs/GUIA_PERSONAJES_3D.md`. Esta guía es de apoyo para el 2D y para los datos del mundo.
+- **Referencia visual 2D:** `docs/style-reference/notscape-diorama.html` (colores y técnica de pincel; sus formas **no** están aprobadas) y `notscape-cenital.html` (composición y proporciones). Las formas aprobadas están en `prueba_formas_v3.png`. **Referencia visual 3D:** `r3d/referencia-3d.html` y la demo del estilo objetivo `r3d/demo-nrftw.html`.
+- **Prioridad:** en lo visual del 2D manda este documento; en lo visual del 3D, las guías 3D; en lo técnico, `AGENTS.md`: no tocar lógica, guardado ni colisiones, una rama por fase.
+- Donde aparezca [verificar], confirma el dato en el código antes de usarlo. Todo el arte se genera por código; no hay arte pintado a mano.
+- Las desviaciones decididas por el dueño (cursor de tile, resalte de entidades, escala visual, etc.) están en «Decisiones ya tomadas por el dueño» de `AGENTS.md`. Donde choquen, gana `AGENTS.md`.
 
 ## 1. Decisiones ya tomadas
 
-- **2D con proyección isométrica 2:1.** Nada de 3D ni Three.js.
+- **2D con proyección isométrica 2:1** (modo predeterminado hasta F9). ~~Nada de 3D ni Three.js~~: **superado el 17 oct 2026**; el dueño aprobó portear el mundo a three.js (solo con `?r3d=1`, ver `GUIA_3D_PORTEO.md`). La excepción previa del agua en WebGL sigue vigente en 2D.
 - **La lógica no cambia.** El mundo sigue siendo una cuadrícula plana; la isometría solo se aplica al dibujar y, a la inversa, al convertir clics en posiciones.
 - **Colores:** aprobados (sección 3).
 - **Formas (dirección actual, tentativa):** poligonales con pocos polígonos, al estilo OSRS, pintadas con la paleta pastel y el pincel de la sección 5. Las formas redondeadas no convencieron al dueño y tampoco quiere «todo cubitos». **Desde el 12 oct 2026 cualquier técnica de dibujo vale mientras mantenga la vista isométrica 2:1** (sección 4). **El 12 oct (noche) el dueño aprobó el lenguaje unificado de `prueba_formas_v3.png`** (sección 4, «Formas aprobadas»).
 - **Resolución:** el arte estático se prerenderiza a la escala real de pantalla, `ISO.scale()` = zoom × `devicePixelRatio` (hasta 3,2), no a un 2× fijo. El dueño aceptó el coste de memoria (≈129 MB con 12 chunks a 3,2×).
 - **Alturas:** niveles discretos (agua, suelo, acantilado), no un mapa 3D real.
 - **Formato diorama por bioma (decidido por el dueño).** Cada bioma es un bloque isométrico flotante con el corte de tierra visible, como en la primera demo. Ver sección 11.
+- **Estilo objetivo (17 oct 2026): «óleo oscuro» tipo *No Rest for the Wicked*** (`GUIA_3D_PORTEO.md` §4.9; el dueño puede bajar su intensidad si estorba a la lectura). Aplica al 3D; el 2D conserva su look pastel hasta el corte.
 
 ## 2. Geometría isométrica
 
@@ -36,7 +59,7 @@ Para convertir un clic en posición del mundo, con z = altura del suelo en ese p
 u = \frac{s_x - O_x}{28},\quad v = \frac{s_y - O_y + 22z}{14},\quad x = \frac{u + v}{2},\quad y = \frac{v - u}{2}
 ```
 
-- **Escala del mundo [verificar].** Si el juego usa píxeles como unidad, define cuántos equivalen a un tile y documéntalo en `INVENTARIO.md`. Colisiones y pathfinding siguen en la cuadrícula plana original.
+- **Escala del mundo [verificar].** Si el juego usa píxeles como unidad, define cuántos equivalen a un tile y ya está documentada en `AGENTS.md` (`ISO.TILE = 32` px de mundo por tile). Colisiones y pathfinding siguen en la cuadrícula plana original.
 - **Orden de dibujo.** Tiles por (x + y) ascendente, desempate por x. Entidades por la posición de sus pies. Objetos que ocupan varios tiles se ordenan por su tile más cercano a la cámara.
 - **Alturas:** agua 0,75; suelo 1; acantilado 2. Una cara lateral solo se dibuja donde el vecino es más bajo.
 - **Luz arriba a la izquierda.** Cara superior la más clara, cara izquierda media y cara derecha un 28 % más oscura (mezcla hacia `#6a3a3a`). Las sombras proyectadas caen hacia abajo a la derecha.
@@ -45,6 +68,8 @@ u = \frac{s_x - O_x}{28},\quad v = \frac{s_y - O_y + 22z}{14},\quad x = \frac{u 
 - **Cursor.** El tile bajo el puntero se resalta con un rombo suave.
 
 ## 3. Paleta
+
+> **Nota (17 oct 2026):** estos colores pastel son el look del **2D**. En 3D el estilo objetivo (óleo oscuro) es más sucio y apagado: los modelos portan sus colores base, pero el grado los desatura (×0,58) y los enfría/calienta. **La tabla de tiers de abajo sigue siendo la fuente de datos** (principal/luz; la sombra se calcula) y hoy hay **11 tiers** (ver §13). Pendiente con el dueño: cómo mantener distinguibles los tiers bajo el óleo (`GUIA_3D_PORTEO.md` §4.9). El papel `#fdf9e3` y el contorno `#5b3a29` son del 2D; en 3D los contornos los fija §4.3 de la guía 3D.
 
 Los colores de la demo están aprobados y se usan tal cual. Contorno `#5b3a29` (nunca negro puro) y papel `#fdf9e3`.
 
@@ -87,6 +112,8 @@ Los colores de la demo están aprobados y se usan tal cual. Contorno `#5b3a29` (
 
 ## 4. Lenguaje de formas
 
+> **Nota (17 oct 2026):** el lenguaje de formas (facetado, mallas triangulares con luz por normal, chaflanes, «modelos que no se cortan») es el que ya se porta a 3D vía `ORG.capture`; no se rehace. Los modelos de personaje y su proporción mandan en `GUIA_PERSONAJES_3D.md`. Las reglas de contorno y los colores de esta sección son del 2D.
+
 **Dirección actual (11 oct 2026, tentativa).** Al dueño no le convencieron las formas redondeadas; prefiere formas **poligonales con pocos polígonos, al estilo OSRS**, pero visualmente atractivas. Sigue sin aprobar ninguna forma concreta: F2 empieza con una **prueba de formas** (ver sección 7) y él decide. La demo cenital (`blobz`/`bp`) y las formas de la demo diorama **no son el objetivo**.
 
 - **Marco obligatorio (lo único fijo):** proyección isométrica 2:1 (`ISO.proj`), luz arriba a la izquierda (cara superior la más clara, izquierda media, derecha más oscura), contorno `#5b3a29` en la silueta, papel `#fdf9e3`, determinismo por hash y prerenderizado a caché. Dentro de eso, el agente elige y combina técnicas.
@@ -113,11 +140,13 @@ Los colores de la demo están aprobados y se usan tal cual. Contorno `#5b3a29` (
 
 ## 5. Técnica de pintado
 
+> **Nota (17 oct 2026):** técnica del **2D**. En 3D y en el estilo óleo oscuro **no hay grano de papel, de película ni trama de lienzo** (el dueño rechazó los «puntitos blancos»); el aspecto pictórico lo da el filtro Kuwahara y las manchas de pigmento suaves (`GUIA_3D_PORTEO.md` §4.9).
+
 Todo se compone de cuatro piezas, copiadas de la demo (sin sus formas):
 
 1. **Relleno con pincel (`paint`).** Se rellena la forma con el color base y se recorta a ella; encima van trazos cortos de luz y sombra, con punta plana, alpha entre 0,18 y 0,5 y ángulo con ±0,45 rad de variación.
 2. **Contorno irregular (`ink`).** Línea `#5b3a29` de 1,3–1,5 px, alpha 0,85, partida en 4 segmentos con ±0,6 px de desvío. Solo en aristas de silueta y de contacto; nunca entre tiles contiguos de la misma altura.
-3. **Grano de papel.** Patrón de 128×128 con valores 228–255 y un 4 % de manchas a 185, aplicado con `multiply` al 55 % sobre todo el mundo.
+3. **Grano de papel (SOLO 2D).** Patrón de 128×128 con valores 228–255 y un 4 % de manchas a 185, aplicado con `multiply` al 55 % sobre todo el mundo.
 4. **Luz.** Tinte multiplicado para la hora y luces aditivas encima.
 
 **Recetas de trazos** (a 1×; duplica longitudes y grosores a 2×):
@@ -135,6 +164,8 @@ Todo se compone de cuatro piezas, copiadas de la demo (sin sus formas):
 - **Agua.** Se dibuja antes de la capa estática (que deja ese hueco transparente) para que los bordes de pasto la tapen bien. Lleva destellos desplazándose, manchas fijas, peces y ondas.
 
 ## 6. Catálogo de assets
+
+> **Nota (17 oct 2026): sección HISTÓRICA.** El juego no usa atlas PNG ni estos nombres de archivo: todo el arte se genera por código (`style-organic.js`, `props.js`, `creatures.js`, `item-icons.js`…) y en 3D salen de `ORG.capture`. Se conserva solo como **lista de categorías de contenido que debe existir** (terreno, agua, vegetación, estructuras, personajes, criaturas, ítems, efectos, interfaz); para saber qué hay realmente, mira el código y `docs/CONTEXTO.md`.
 
 La lista parte de lo que tenía la versión que se analizó (5 biomas, estaciones de campamento, skills, misiones, colección, magia, fabricación). **Contrasta cada categoría con el inventario real [verificar]**: añade lo que falte y descarta lo que ya no exista. Tamaños en píxeles a 2×; el ancla de todo sprite de mundo está en los pies.
 
@@ -167,27 +198,23 @@ La lista parte de lo que tenía la versión que se analizó (5 biomas, estacione
 
 ## 7. Plan de trabajo
 
-Una rama por fase. Cada fase termina con capturas y con el visto bueno del dueño antes de pasar a la siguiente.
-
-1. **F0 · Inventario.** Entrega `INVENTARIO.md` (sección 0). *Hecho cuando:* el dueño confirma que refleja su versión actual.
-2. **F1 · Núcleo isométrico.** Proyección, proyección inversa, orden de dibujo, cámara, cursor de tile y oclusión, sobre un terreno de prueba con tres alturas. Sin arte final: rombos de color plano. *Hecho cuando:* el jugador camina por el mapa de prueba, los clics caen en el tile correcto en cualquier altura y las colisiones se comportan igual que antes.
-3. **F2 · Estilo y terreno.** **Primero, prueba de formas** (árbol, piedra, casa, cofre y personaje en poligonal, con 2 niveles de `facets`, para que el dueño elija). Después, módulo de estilo (`STYLE`, `facet`, `paint`, `ink`, grano, tinte), bloques de terreno con caras, transiciones, caminos y agua animada para los biomas. **Puerta de aprobación:** 3 capturas (Pradera de día, de atardecer y un bioma distinto). El dueño decide si la forma de las cosas le gusta antes de seguir.
-4. **F3 · Decoración, recursos y estructuras.** Vegetación, rocas, árboles talables, aldea, estaciones de campamento, puentes, portones y carteles, con sus huellas de colisión.
-5. **F4 · Personaje y equipo.** Capas, paleta-swap por tier, atlas cacheado, animaciones de acción. *Hecho cuando:* cambiar de equipo se ve al instante y no cuesta más de un frame de recomposición.
-6. **F5 · NPC, monstruos y efectos.** Con destello de golpe, muerte, partículas y sombras.
-7. **F6 · Luz, clima y post.** Día y atardecer con tinte multiplicado, luces aditivas, lluvia, tormenta, nieve, ceniza y grano de papel. Reemplaza cualquier filtro de canvas por frame por multiplicaciones y superposiciones.
-8. **F7 · Interfaz e iconos de ítems.** Paneles, botones, barras, iconos de skills e ítems por recolor, minimapa cenital.
-9. **F8 · Pulido y rendimiento.** Medir, ajustar la caché de chunks, revisar memoria en móvil y limpiar código viejo.
+> **Sección sustituida (17 oct 2026).** El plan F0–F8 de esta guía (inventario, núcleo isométrico, terreno, decoración, personaje, NPC, luz, interfaz, pulido) **se completó o quedó reemplazado**. Hoy mandan:
+> - `docs/GUIA_3D_PORTEO.md` **§6 Plan por fases** (F0–F9 del porteo a 3D, incl. **F3d estilo óleo oscuro**),
+> - la **«HOJA DE RUTA ÚNICA»** de `AGENTS.md` (contenido del juego: ítems, magia, alquimia, biomas…),
+> - el bloque «SIGUIENTE AGENTE» del Estado en `AGENTS.md`.
+>
+> Se mantiene del plan antiguo la **regla de trabajo**: una rama por fase, capturas y visto bueno del dueño antes de pasar a la siguiente, y **una sola cosa por entrega**.
 
 ## 8. Riesgos y restricciones técnicas
 
-- **Colocar lo existente en isométrico.** Un mapa cenital con rectángulos de colisión se convierte en rombos. Mantén los datos planos y proyecta solo al dibujar; documenta la escala en `INVENTARIO.md`.
+> **Nota (17 oct 2026):** sección parcialmente histórica. Siguen valiendo **Memoria** (caché LRU de chunks, ≈129 MB aceptados), **Nada de filtros por frame** (en 2D) y **Alturas y oclusión**. El interruptor `?old` se descartó (no hay modo antiguo); el 2D convive con el 3D por `?r3d=1` hasta F9. En 3D el rendimiento se mide según `GUIA_3D_PORTEO.md` §8.
+
+- **Colocar lo existente en isométrico.** Un mapa cenital con rectángulos de colisión se convierte en rombos. Mantén los datos planos y proyecta solo al dibujar; la escala ya está documentada en `AGENTS.md`.
 - **Esquinas vacías.** Con el formato diorama cada bioma es un bloque flotante, así que el rombo vacío deja de ser un problema. Rellena el exterior con el papel `#fdf9e3`, y cada bioma lleva su corte de tierra visible (como la demo).
 - **Alturas y oclusión.** Los acantilados tapan lo que está detrás; el orden por (x + y) debe respetar eso. Prueba escenas con personaje pegado a un acantilado.
 - **Memoria.** A 2×, un bioma entero pre-renderizado ocupa decenas de MB. Usa chunks con caché LRU y libera los lejanos.
 - **Nada de filtros por frame.** `ctx.filter` o copiar el canvas sobre sí mismo cada frame es caro en móvil.
 - **Nombres globales.** Usa un prefijo propio (por ejemplo `ISO` y `SY`) y comprueba que no choque con variables existentes [verificar].
-- **Fallback.** Mientras convivan la versión vieja y la nueva, conserva un interruptor (por ejemplo `?old`) [verificar si existe].
 - **Consistencia.** Si el dueño ya cambió cosas respecto a esta guía, lo que esté en el código actual gana en lógica; esta guía gana en estilo.
 
 ## 9. Criterios de aceptación
@@ -205,9 +232,11 @@ Una rama por fase. Cada fase termina con capturas y con el visto bueno del dueñ
 - Un cambio por vez; tras cada uno, comprobar que el guardado carga.
 - Textos del juego en español.
 - Si dudas entre dos aspectos, entrega ambos en capturas y deja elegir al dueño. El gusto no se decide por él.
-- **Preguntas que el agente debe plantear al dueño, no resolver solo:** ¿el canvas es fijo o responsivo?; ¿movimiento en 4 u 8 direcciones?; ¿se conservan todos los biomas actuales?; ¿qué tiers de equipo existen hoy?; ¿se mantiene el minimapa cenital?
+- **Preguntas iniciales del antiguo inventario: ya respondidas** (canvas responsivo, 8 direcciones, 5 biomas con más por venir, 11 tiers, minimapa cenital); ver «Respuestas del dueño…» en `AGENTS.md`. Las dudas nuevas (intensidad del óleo, día óleo, tiers bajo el óleo) están en `GUIA_3D_PORTEO.md` §4.9.
 
 ## 11. Formato diorama por bioma
+
+> **Nota (17 oct 2026): VIGENTE también en 3D.** El diorama por bioma (bloque flotante con corte de tierra, sombra de apoyo, pasarelas) es la base del 3D (`terrain3d.js`, borde y estratos). Los nombres de assets `block_*`/`bridge_*` son orientativos; en 3D son geometría, no sprites.
 
 Cada bioma se dibuja como una maqueta: un bloque isométrico flotante sobre el papel `#fdf9e3`, con las caras laterales a la vista y una sombra suave debajo. Es lo que da el aire «cozy» y distinto de la demo.
 
@@ -223,6 +252,8 @@ Cada bioma se dibuja como una maqueta: un bloque isométrico flotante sobre el p
 - **Fase.** Se añade a F2 como entregable propio: primero un solo bloque (Pradera) con borde, sombra y una pasarela, y capturas para aprobación antes de seguir con los demás biomas.
 
 ## 12. Bloqueos por jefe, transiciones e iluminación por bioma
+
+> **Nota (17 oct 2026): VIGENTE.** Bloqueos, estados (`closed`/`opening`/`open`) y transición por mezcla (0–1 a lo largo de la pasarela) valen igual en 3D. La **iluminación por bioma** de esta sección (tintes multiplicados) es del 2D: en 3D se expresa como **una fila de modificadores por bioma sobre las filas de `TOD`** (`GUIA_3D_PORTEO.md` §4.8, «Paleta por bioma») y, con el estilo objetivo, pasa por la derivación óleo (§4.9). Los tintes de aquí sirven como intención de color por bioma, no como valores finales.
 
 Cada bioma se desbloquea al derrotar a su jefe, y la barrera entre biomas debe contar esa historia: el obstáculo es distinto según el jefe. La luz también cambia de un bioma a otro para que se distingan a simple vista. Los jefes son los del juego (Gruk, Fenrir, Rey Ciénaga, Yeti Milenario, Señor del Fuego), que el dueño considera placeholders: **ignora cualquier otro nombre de jefe**. Lo que sigue siendo propuesta son las barreras de cada bioma.
 
@@ -274,6 +305,8 @@ Cada bioma se desbloquea al derrotar a su jefe, y la barrera entre biomas debe c
 **Fase.** Las barreras entran en F3 (estructuras) y la iluminación y partículas por bioma en F6. Primero se hace solo la Pradera: el portón del orco con sus tres estados, la pasarela y la mezcla de luz hacia el Bosque, con capturas para aprobación antes de seguir.
 
 ## 13. Datos reales del juego (verificados en el código el 11 oct 2026)
+
+> **Correcciones (17 oct 2026):** esta tabla se verificó el 11 oct y **ha crecido**. Hoy hay **11 tiers** de metal (cobre, estaño, bronce, hierro, acero, plata, mitril, adamantita, runita, oricalco, celestita) y **11 maderas** (pino, abedul, roble, fresno, sauce, arce, tejo, ébano, caoba, baobab, Árbol del Mundo), más cuero por tier; los datos reales están en `TI`/`TNM`/`WO`/`WON` de `game.js` y en `FOL`/`SPECIES` (3D). La lista de biomas, monstruos y jefes sigue siendo la del juego pero los jefes son **placeholders**. Si choca con el código, gana el código. Donde esta sección dice «9 tiers», léase «los que haya en `TI`».
 
 Esta sección corrige lo que la guía original supuso sin ver el juego. Si choca con otra sección, **gana esta**.
 

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Modelos con óleo</title>
+<!-- NotScape · R3D · DEMO DE MODELOS PARA EL ESTILO ÓLEO (17 oct 2026, pedido del dueño: «algo más estilizado y bonito como WoW, RuneScape Dragonwilds o
+     Valheim, para que los skins se vean bien»). Propuesta: modelos glTF HECHOS A MANO, modulares (piezas que se ponen y quitan = skins) y con animaciones,
+     en lugar del héroe generado por código. Modelos: KayKit Adventurers 1.0 + Skeletons 1.0 de Kay Lousberg, licencia CC0 (modelos/kaykit/LICENCIA_*.txt).
+     El grado es EL MISMO del juego (src/r3d/materials3d.js OIL_GLSL + Kuwahara de r3d.js) y las filas de hora TOD con la perilla OIL.K.
+     Abrir con servidor local desde la raíz del repo: python3 -m http.server → /docs/style-reference/r3d/demo-modelos.html
+     Parámetros: ?t=noche|atardecer|dia · ?still (sin animar, para capturas) · ?anim=idle|walk|run|attack|cast|cheer|chop · ?zoom=juego · ?mat=kaykit · ?prop=chibi|estilizado|heroico · ?oil=0..100 -->
+<style>
+:root{--bg:#141210;--pan:rgba(24,20,17,.86);--ink:#e8dcc0;--dim:#a89878;--acc:#d8a24a;--edge:#4a3c2c}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#141210}}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+canvas{display:block;width:100vw;height:100vh;touch-action:none}
+#ui{position:fixed;left:12px;top:12px;width:300px;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:auto;background:var(--pan);border:1px solid var(--edge);border-radius:10px;padding:10px 12px;backdrop-filter:blur(4px)}
+#ui.min>*:not(h1){display:none}
+h1{font-size:15px;margin:0 0 6px;color:var(--acc);cursor:pointer;display:flex;justify-content:space-between}
+h1 small{color:var(--dim);font-weight:400}
+.g{margin:8px 0}.g>b{display:block;font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.row{display:flex;flex-wrap:wrap;gap:4px}
+button{font:inherit;font-size:13px;background:#2a231c;color:var(--ink);border:1px solid var(--edge);border-radius:6px;padding:4px 8px;cursor:pointer}
+button.on{border-color:var(--acc);color:var(--acc);background:#3a2e1e}
+input[type=range]{width:100%;accent-color:var(--acc)}
+label.ck{display:inline-flex;gap:4px;align-items:center;margin-right:8px;font-size:13px;cursor:pointer}
+.note{font-size:12px;color:var(--dim);margin-top:8px}
+#labels div{position:fixed;transform:translate(-50%,0);font-size:12px;color:#f0e4c8;text-shadow:0 1px 2px #000,0 0 6px #000;pointer-events:none;white-space:nowrap;text-align:center}
+#labels div i{display:block;font-style:normal;font-size:11px;color:#c8b48a}
+#load{position:fixed;inset:0;display:grid;place-items:center;color:var(--dim);font-size:16px;pointer-events:none}
+@media (max-width:600px){#ui{width:auto;right:12px;max-height:45vh}}
+</style></head><body>
+<canvas id="c"></canvas><div id="labels"></div><div id="load">Cargando modelos…</div>
+<script>if(location.protocol==='file:')document.getElementById('load').innerHTML='<div style="text-align:center;max-width:460px;padding:0 16px">Esta página necesita un servidor local (el navegador bloquea los modelos al abrirla con doble clic).<br><br>Ejecuta <b>VER_DEMO.bat</b> (Windows) o <b>ver_demo.command</b> (Mac/Linux) en la carpeta del proyecto, o en una terminal: <b>python3 -m http.server</b> y abre <b>http://localhost:8000/docs/style-reference/r3d/demo-modelos.html</b></div>'</script>
+<div id="ui"><h1 id="tg">Modelos + óleo <small>ocultar</small></h1>
+ <div class="g"><b>Hora</b><div class="row" id="hora"></div></div>
+ <div class="g"><b>Óleo <span id="ovv"></span></b><input type="range" id="ov" min="0" max="100"></div>
+ <div class="g"><b>Material</b><div class="row" id="mat"></div></div>
+ <div class="g"><b>Proporción</b><div class="row" id="prop"></div></div>
+ <div class="g"><b>Animación</b><div class="row" id="anim"></div></div>
+ <div class="g"><b>Vista</b><div class="row" id="zoom"></div><label class="ck" style="margin-top:6px"><input type="checkbox" id="ink" checked> Contorno fino</label></div>
+ <div class="g"><b>Skins · piezas</b><div class="row" id="who"></div><div id="pieces" style="margin-top:6px"></div><div class="row" style="margin-top:6px"><button id="tint">🎨 Variante de color</button></div></div>
+ <div class="note">Arrastra para girar · rueda para acercar. Modelos KayKit (Kay Lousberg, CC0). A la derecha, el héroe actual generado por código para comparar.</div>
+</div>
+<script type="importmap">{"imports":{"three":"../../../vendor/three/build/three.module.js","three/addons/":"../../../vendor/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+import {G,TOD,OIL,OIL_GLSL,setOil,setInk,toon,inkMat,hash} from '../../../src/r3d/materials3d.js';
+import {Hero} from '../../../src/r3d/hero3d.js';
+
+const Q=new URLSearchParams(location.search),STILL=Q.has('still');
+// ── personajes: archivo, nombre, papel, qué mostrar de sus armas/piezas, ataque propio. hide = piezas del glb que no lleva por defecto ──
+const CH=[
+ {f:'Knight',n:'Caballero',r:'cuerpo a cuerpo',hide:['1H_Sword_Offhand','Rectangle_Shield','Round_Shield','Spike_Shield','2H_Sword'],skin:['Knight_Helmet','Knight_Cape','Badge_Shield'],atk:'1H_Melee_Attack_Slice_Diagonal'},
+ {f:'Barbarian',n:'Bárbaro',r:'mandoble / tala',hide:['1H_Axe_Offhand','1H_Axe','Mug','Barbarian_Round_Shield'],skin:['Barbarian_Hat','Barbarian_Cape'],atk:'2H_Melee_Attack_Chop',idle:'2H_Melee_Idle'},
+ {f:'Mage',n:'Maga',r:'magia',hide:['Spellbook','Spellbook_open','1H_Wand'],skin:['Mage_Hat','Mage_Cape'],atk:'Spellcast_Shoot'},
+ {f:'Rogue_Hooded',n:'Pícara',r:'a distancia / sigilo',hide:['1H_Crossbow','Throwable','Knife','Knife_Offhand'],skin:['Rogue_Cape','2H_Crossbow'],atk:'2H_Ranged_Shoot'},
+ {f:'Skeleton_Warrior',n:'Esqueleto guerrero',r:'enemigo',hide:[],skin:['Skeleton_Warrior_Helmet','Skeleton_Warrior_Cloak'],atk:'1H_Melee_Attack_Chop',eyes:'#7fe0ff'},
+ {f:'Skeleton_Mage',n:'Esqueleto mago',r:'enemigo',hide:[],skin:['Skeleton_Mage_Hat'],atk:'Spellcast_Shoot',eyes:'#c08aff'}];
+const MODES=[['idle','Reposo'],['walk','Andar'],['run','Correr'],['attack','Atacar'],['chop','Talar'],['cast','Hechizo'],['cheer','Celebrar']];
+const CLIP={idle:'Idle',walk:'Walking_A',run:'Running_A',chop:'2H_Melee_Attack_Chop',cast:'Spellcasting',cheer:'Cheer'};
+const HT=1.32;   // altura en el mundo (el héroe actual mide 1,25: estos tienen cabeza grande, así que la cara se lee a tamaño de juego)
+
+// ── renderer, escena, cámara isométrica como la del juego (elevación 30°) ──
+const cv=document.getElementById('c'),r=new THREE.WebGLRenderer({canvas:cv,antialias:false,powerPreference:'high-performance'});
+r.setPixelRatio(Math.min(2,devicePixelRatio||1));r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;r.toneMapping=THREE.NoToneMapping;
+const scene=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);
+const hemi=new THREE.HemisphereLight(),sun=new THREE.DirectionalLight();sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.0005;sun.shadow.normalBias=.02;
+Object.assign(sun.shadow.camera,{left:-7,right:7,top:7,bottom:-7,near:.5,far:60});
+const back=new THREE.DirectionalLight('#7fa3ad',.8);scene.add(hemi,sun,sun.target,back,back.target);
+// suelo: claro de pradera con tierra pisada y unas piedras; fogata detrás del grupo
+{const g=new THREE.CircleGeometry(40,96).rotateX(-Math.PI/2),c=[],p=g.attributes.position,A=new THREE.Color('#4a6230'),B=new THREE.Color('#6a5038'),C=new THREE.Color();
+ for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),d=Math.hypot(x,z+.3),k=Math.max(0,Math.min(1,(2.2-d)/1.4+(hash(x,z,3)-.5)*.5));C.copy(A).lerp(B,k).multiplyScalar(.9+hash(x*3,z*3,1)*.2);c.push(C.r,C.g,C.b)}
+ g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));const m=new THREE.Mesh(g,toon('#ffffff',{vc:1}));m.receiveShadow=true;scene.add(m);
+ for(let i=0;i<9;i++){const a=i/9*6.28+.4,rr=4.4+hash(i,1,2)*2.4,s=.18+hash(i,2,2)*.3;let rg=new THREE.IcosahedronGeometry(s,0);rg.scale(1,.6,1);
+  const rk=new THREE.Mesh(rg,toon('#6a6458',{flat:1,mossUp:.8}));rk.position.set(Math.cos(a)*rr,s*.25,Math.sin(a)*rr);rk.castShadow=rk.receiveShadow=true;scene.add(rk)}}
+const fireP=new THREE.Vector3(),fireL=new THREE.PointLight('#ff8a30',0,7,1.2);scene.add(fireL);const fire=new THREE.Group();scene.add(fire);
+{for(let i=0;i<6;i++){const l=new THREE.Mesh(new THREE.CylinderGeometry(.05,.06,.7,5).rotateZ(Math.PI/2),toon('#4a3020',{flat:1}));l.rotation.y=i/6*Math.PI;l.position.y=.05;l.castShadow=true;fire.add(l)}
+ const fl=new THREE.Mesh(new THREE.ConeGeometry(.22,.6,6),new THREE.MeshBasicMaterial({color:new THREE.Color('#ff9a40').multiplyScalar(2.4)}));fl.position.y=.35;fire.add(fl);fire.userData.fl=fl}
+// ── grado óleo: MISMA receta que el juego ──
+const composer=new EffectComposer(r,new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:4}));composer.addPass(new RenderPass(scene,cam));
+const bloom=new UnrealBloomPass(new THREE.Vector2(256,256),.35,.6,.85);composer.addPass(bloom);
+const grade=new ShaderPass({uniforms:{tDiffuse:{value:null},uRes:{value:new THREE.Vector2(1,1)},uLift:{value:new THREE.Color('#000')},uVig:{value:.28},uK:{value:0},uBrush:{value:0}},
+ vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+ fragmentShader:`uniform sampler2D tDiffuse;uniform vec2 uRes;uniform float uVig,uK,uBrush;uniform vec3 uLift;varying vec2 vUv;
+  ${OIL_GLSL}
+  vec3 kuw(vec2 uv,float s){vec2 px=s/uRes;vec3 bm=vec3(0.);float bv=1e9;
+   for(int q=0;q<4;q++){vec2 sg=vec2(q==0||q==2?-1.:1.,q<2?-1.:1.);vec3 m=vec3(0.);float l2=0.;
+    for(int i=0;i<3;i++)for(int j=0;j<3;j++){vec3 c=texture2D(tDiffuse,uv+px*sg*vec2(float(i),float(j))).rgb;m+=c;float l=olum(c);l2+=l*l;}
+    m/=9.;float l=olum(m);float v=l2/9.-l*l;if(v<bv){bv=v;bm=m;}}
+   return bm;}
+  void main(){float sc=max(1.,uRes.y/620.);vec3 c=texture2D(tDiffuse,vUv).rgb;if(uBrush>.01)c=mix(c,kuw(vUv,sc),uBrush);
+   c=oilGrade(c,vUv*uRes/sc,uLift,uK);c*=oilVig(vUv,uRes,uVig);gl_FragColor=vec4(c,1.);}`});
+composer.addPass(grade);composer.addPass(new OutputPass());
+
+// ── estado de la interfaz ──
+const PROPS={chibi:['Chibi (original)',1,1,1],estilizado:['Estilizado',.8,1.22,1.12],heroico:['Heroico',.68,1.42,1.22]};   // [nombre, cabeza, piernas, brazos]
+let prop=Q.get('prop')||'estilizado';
+let hour=Q.get('t')||'atardecer',mode=Q.get('anim')||'idle',matMode=Q.get('mat')||'pintado',az=Math.PI/4,zoomH=Q.get('zoom')==='juego'?0:3.2,sel=0,inkOn=true;
+setOil(Q.has('oil')?+Q.get('oil')/100:OIL.K);
+// material «pintado NotScape»: el toon del juego (bandas suaves + pincel + pies en sombra + relleno de cámara + rim) con la textura de paleta del modelo
+const BASE=toon('#ffffff',{chr:1,rim:1.4});
+function painted(src){const m=new THREE.MeshToonMaterial({color:'#ffffff',map:src.map||null});m.defines={CHR:''};m.onBeforeCompile=BASE.onBeforeCompile;m.customProgramCacheKey=()=>'kk|'+BASE.customProgramCacheKey();return m}
+// variante de color (skin): gira el tono de la textura de paleta (sin tocar la geometría)
+function hueTex(tex,shift){const im=tex.image,c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);const d=x.getImageData(0,0,c.width,c.height),a=d.data,C=new THREE.Color(),h={};
+ for(let i=0;i<a.length;i+=4){C.setRGB(a[i]/255,a[i+1]/255,a[i+2]/255,THREE.SRGBColorSpace);C.getHSL(h,THREE.SRGBColorSpace);if(h.s>.18)C.setHSL((h.h+shift)%1,h.s,h.l,THREE.SRGBColorSpace);const o={};C.getRGB(o,THREE.SRGBColorSpace);a[i]=o.r*255;a[i+1]=o.g*255;a[i+2]=o.b*255}
+ x.putImageData(d,0,0);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.flipY=tex.flipY;t.magFilter=tex.magFilter;t.minFilter=tex.minFilter;return t}
+
+const right=()=>new THREE.Vector3(Math.cos(az),0,-Math.sin(az)),N=CH.length+1,SP=1.55;
+const slotPos=i=>right().multiplyScalar((i-(N-1)/2)*SP).add(new THREE.Vector3(Math.sin(az),0,Math.cos(az)).multiplyScalar(i%2?-.35:.25));
+const loader=new GLTFLoader(),chars=[];let hero=null;
+async function load(){await Promise.all(CH.map(async(c,i)=>{const g=await loader.loadAsync('modelos/kaykit/'+c.f+'.glb');const root=g.scene;root.traverse(o=>{if(c.hide.includes(o.name))o.visible=false});
+  const meshes=[];root.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;o.frustumCulled=false;o.userData.orig=o.material;o.userData.paint=painted(o.material);
+   if(c.eyes&&/Eyes/.test(o.name)){o.userData.paint=o.userData.orig=new THREE.MeshBasicMaterial({color:new THREE.Color(c.eyes).multiplyScalar(2.2)});o.userData.glow=1}meshes.push(o)}});
+  // escala: misma altura para todos, medida con las piezas por defecto visibles
+  root.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(root,true),h=bb.max.y-bb.min.y,k=HT/h;const holder=new THREE.Group();holder.add(root);root.scale.setScalar(k);root.position.y=-bb.min.y*k;scene.add(holder);
+  // contorno fino oscuro (casco por shader, igual que la tela del héroe): grosor en unidades LOCALES del modelo
+  const t=.011/k;meshes.forEach(o=>{if(o.userData.glow)return;let ink;if(o.isSkinnedMesh){ink=new THREE.SkinnedMesh(o.geometry,inkMat(+t.toFixed(4)));ink.bind(o.skeleton,o.bindMatrix);ink.bindMode=o.bindMode}else ink=new THREE.Mesh(o.geometry,inkMat(+t.toFixed(4)));
+   ink.frustumCulled=false;ink.userData.ink=1;ink.position.copy(o.position);ink.quaternion.copy(o.quaternion);ink.scale.copy(o.scale);o.parent.add(ink);o.userData.inkM=ink});
+  // PROPORCIONES (esqueleto): escalar la cabeza; alargar piernas y brazos escalando el hueso SUPERIOR (arrastra a toda la cadena) y contraescalando pie y muñeca para que
+  // pies y manos no se estiren. Se aplica cada fotograma DESPUÉS de la animación. Medidas en reposo: largo de pierna LL y alto de cabeza HH (en unidades del modelo escalado).
+  const B=n=>root.getObjectByName(n.replace(/[.\[\]:\/]/g,'')),   // GLTFLoader quita . [ ] : / de los nombres («upperleg.l» → «upperlegl»)
+  axI=v=>{const a=[Math.abs(v.x),Math.abs(v.y),Math.abs(v.z)];return a.indexOf(Math.max(...a))};
+  root.updateMatrixWorld(true);const wy=n=>new THREE.Vector3().setFromMatrixPosition(B(n).matrixWorld).y;
+  const LL=wy('upperleg.l')-wy('foot.l'),HH=(bb.max.y-bb.min.y)+bb.min.y-wy('head');
+  const lim=(up,child,ctr)=>{const U=B(up),C=B(ctr),ax=axI(B(child).position),v=new THREE.Vector3();v.setComponent(ax,1);v.applyQuaternion(C.quaternion.clone().invert());return{U,ax,C,cx:axI(v)}};
+  const bones={head:B('head'),legs:['l','r'].map(q=>lim('upperleg.'+q,'lowerleg.'+q,'foot.'+q)),arms:['l','r'].map(q=>lim('upperarm.'+q,'lowerarm.'+q,'wrist.'+q))};
+  const mixer=new THREE.AnimationMixer(root),clips={};g.animations.forEach(a=>clips[a.name]=a);
+  chars[i]=Object.assign({},c,{root,holder,mixer,clips,meshes,act:null,tint:0,ph:hash(i,4,4)*2,bones,k0:k,y0:bb.min.y,LL,HH})}));
+ hero=new Hero();hero.setLook({app:{g:'m',hair:'cut',hc:'#4a3022',skin:'#d9a878',col:'#5a5a3a'},outfit:{top:'gambeson',topC:'#7a6a4a',bag:'#6a4a30',pouches:1,knife:1,skirt:'corta'},gear:{wp:{t:'sword',wk:'sword',col:'#b8c0c8'}}});scene.add(hero.obj);
+ document.getElementById('load').remove();applyMat();applyInk();setProp(prop);setMode(mode);buildWho();place()}
+function fit(c){const [,kh,kl]=PROPS[prop],H0=HT,Hn=H0+c.LL*c.k0*(kl-1)+c.HH*c.k0*(kh-1),f=HT/Hn;c.root.scale.setScalar(c.k0*f);c.root.position.y=-(c.y0*c.k0-c.LL*c.k0*(kl-1))*f}
+function proportions(c){const [,kh,kl,ka]=PROPS[prop],B=c.bones,one=(L,k)=>{L.U.scale.set(1,1,1).setComponent(L.ax,k);L.C.scale.set(1,1,1).setComponent(L.cx,1/k)};B.head.scale.setScalar(kh);B.legs.forEach(L=>one(L,kl));B.arms.forEach(L=>one(L,ka))}
+function setProp(v){prop=v;chars.forEach(fit);btns('prop',Object.entries(PROPS).map(([k,a])=>[k,a[0]]),prop,setProp)}
+function place(){chars.forEach((c,i)=>{const p=slotPos(i);c.holder.position.copy(p);c.holder.rotation.y=az-.35});if(hero)hero._slot=slotPos(N-1)}
+function play(c,name){const clip=c.clips[name]||c.clips[c.idle||'Idle']||c.clips.Idle;if(!clip)return;const a=c.mixer.clipAction(clip);if(c.act===a)return;
+ if(STILL){c.mixer.stopAllAction();a.reset().setEffectiveWeight(1).play();a.time=clip.duration*(.3+c.ph*.1);c.mixer.update(0);c.act=a;return}   // captura: pose fija sin fundido
+ a.reset().setEffectiveWeight(1).fadeIn(.25).play();if(c.act)c.act.fadeOut(.25);c.act=a}
+function setMode(m){mode=m;chars.forEach(c=>play(c,m==='attack'?c.atk:m==='idle'?(c.idle||'Idle'):CLIP[m]));btns('anim',MODES,mode,setMode)}
+function applyMat(){chars.forEach(c=>c.meshes.forEach(o=>{const t=c.tint;if(!o.userData.base)o.userData.base={orig:o.userData.orig.map,paint:o.userData.paint.map};
+ o.material=matMode==='kaykit'?o.userData.orig:o.userData.paint}));btns('mat',[['pintado','Pintado NotScape'],['kaykit','Original KayKit']],matMode,v=>{matMode=v;applyMat()})}
+function applyInk(){chars.forEach(c=>c.meshes.forEach(o=>{if(o.userData.inkM)o.userData.inkM.visible=inkOn&&o.visible}))}
+function buildWho(){btns('who',chars.map((c,i)=>[i,c.n]),sel,v=>{sel=+v;buildWho()});const c=chars[sel],el=document.getElementById('pieces');el.innerHTML='';
+ c.skin.forEach(nm=>{const o=c.root.getObjectByName(nm);if(!o)return;const l=document.createElement('label');l.className='ck';l.innerHTML=`<input type="checkbox" ${o.visible?'checked':''}> ${nm.replace(/^(Knight|Barbarian|Mage|Rogue|Skeleton_Warrior|Skeleton_Mage)_/,'').replace(/_/g,' ')}`;
+  l.querySelector('input').onchange=e=>{o.visible=e.target.checked;o.traverse(q=>{if(q.isMesh)q.visible=e.target.checked});applyInk()};el.appendChild(l)})}
+document.getElementById('tint').onclick=()=>{const c=chars[sel];if(!c)return;c.tint=(c.tint+1)%4;const sh=[0,.12,.55,.78][c.tint];
+ c.meshes.forEach(o=>{if(o.userData.glow)return;const b=o.userData.base||(o.userData.base={orig:o.userData.orig.map,paint:o.userData.paint.map});if(!b.orig)return;
+  const t=sh?hueTex(b.orig,sh):b.orig;o.userData.orig.map=t;o.userData.paint.map=t;o.userData.orig.needsUpdate=o.userData.paint.needsUpdate=true})};
+function btns(id,list,cur,fn){const el=document.getElementById(id);el.innerHTML='';list.forEach(([v,l])=>{const b=document.createElement('button');b.textContent=l;if(String(v)===String(cur))b.className='on';b.onclick=()=>fn(v);el.appendChild(b)})}
+btns('hora',[['noche','Noche'],['atardecer','Atardecer'],['dia','Día']],hour,function f(v){hour=v;btns('hora',[['noche','Noche'],['atardecer','Atardecer'],['dia','Día']],hour,f)});
+btns('zoom',[[3.2,'Grupo'],[1.4,'Cerca'],[0,'Tamaño de juego']],zoomH,function f(v){zoomH=+v;btns('zoom',[[3.2,'Grupo'],[1.4,'Cerca'],[0,'Tamaño de juego']],zoomH,f)});
+const ov=document.getElementById('ov'),ovv=document.getElementById('ovv');ov.value=Math.round(OIL.K*100);ovv.textContent=ov.value+' %';ov.oninput=()=>{setOil(ov.value/100);ovv.textContent=ov.value+' %'};
+document.getElementById('ink').onchange=e=>{inkOn=e.target.checked;applyInk()};
+document.getElementById('tg').onclick=()=>document.getElementById('ui').classList.toggle('min');
+// girar y acercar
+let drag=null;cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,a:az};cv.setPointerCapture(e.pointerId)});cv.addEventListener('pointermove',e=>{if(drag){az=drag.a-(e.clientX-drag.x)*.008;place()}});
+cv.addEventListener('pointerup',()=>drag=null);cv.addEventListener('wheel',e=>{e.preventDefault();zoomH=Math.max(.8,Math.min(5,(zoomH||1.9)*(e.deltaY>0?1.1:.9)))},{passive:false});
+// etiquetas
+const LB=document.getElementById('labels');function labels(W,H){if(LB.childElementCount!==N){LB.innerHTML='';for(let i=0;i<N;i++)LB.appendChild(document.createElement('div'))}
+ const list=[...chars.map(c=>[c.holder.position,c.n,c.r]),[hero?hero.root.position:new THREE.Vector3(),'Héroe actual','generado por código']];
+ list.forEach(([p,n,rr],i)=>{const v=p.clone();v.y=-.08;v.project(cam);const d=LB.children[i];d.style.left=((v.x+1)/2*W)+'px';d.style.top=((1-v.y)/2*H)+'px';d.innerHTML=`${n}<i>${rr}</i>`;d.style.display=zoomH===0?'none':''})}
+// bucle
+let last=performance.now();
+function frame(now){requestAnimationFrame(frame);const dt=STILL?0:Math.min(.1,(now-last)/1000);last=now;const t=STILL?2.3:now/1000;G.uTime.value=t;
+ const W=innerWidth,H=innerHeight;if(cv.width!==Math.round(W*r.getPixelRatio())||cv.height!==Math.round(H*r.getPixelRatio())){r.setSize(W,H,false);composer.setPixelRatio(r.getPixelRatio());composer.setSize(W,H);bloom.resolution.set(W/2,H/2)}
+ grade.uniforms.uRes.value.set(W*r.getPixelRatio(),H*r.getPixelRatio());
+ // luz de la hora (filas TOD del juego, ya mezcladas con el óleo por setOil)
+ const p=TOD[hour];hemi.color.set(p.hemS);hemi.groundColor.set(p.hemG);hemi.intensity=p.hemI;sun.color.set(p.sun);sun.intensity=p.sunI;sun.position.set(...p.sunP).normalize().multiplyScalar(20);
+ G.uSat.value=p.sat;G.uLive.value=p.live;G.uNight.value=p.night;G.uRimCol.value.set(p.rim);setInk(p.ink,p.inkK);r.setClearColor(p.sky);
+ back.position.set(-Math.sin(az)*8,5,-Math.cos(az)*8);back.intensity=.8-.4*p.night;
+ fireP.copy(right().multiplyScalar(0)).add(new THREE.Vector3(-Math.sin(az),0,-Math.cos(az)).multiplyScalar(3.4));fire.position.copy(fireP);fireL.position.copy(fireP).setY(.6);
+ const fl=1+Math.sin(t*11)*.12+Math.sin(t*5)*.08;fireL.intensity=4.5*p.fire*fl;fire.userData.fl.scale.set(1,fl,1);G.uChrB.value.set(0,HT);
+ bloom.strength=p.bloom;grade.uniforms.uLift.value.set(p.lift);grade.uniforms.uVig.value=p.vig;grade.uniforms.uK.value=OIL.K;grade.uniforms.uBrush.value=.85*Math.pow(OIL.K,1.6);
+ chars.forEach(c=>{c.mixer.update(dt);proportions(c)});
+ if(hero){const sp=hero._slot||new THREE.Vector3(),mv=mode==='walk'||mode==='run';hero.update({x:sp.x,y:0,z:sp.z,mv,run:mode==='run',speed:mv?(mode==='run'?3.4:1.5):undefined,t,face:[Math.sin(az-.35),Math.cos(az-.35)],night:p.night,wind:[.9,.4]},STILL?1/60:dt);G.uChrB.value.set(0,HT)}
+ // cámara: ortográfica a 30°, encuadre por altura visible (0 = «tamaño de juego»: el personaje ocupa el 13,5 % del alto, como el zoom por defecto del juego)
+ const asp=W/H,hh=zoomH===0?HT/.135/2:zoomH,tg=zoomH===0&&chars[sel]?chars[sel].holder.position.clone().setY(.6):new THREE.Vector3(0,.55,0);
+ cam.left=-hh*asp;cam.right=hh*asp;cam.top=hh;cam.bottom=-hh;cam.updateProjectionMatrix();const EL=Math.PI/6;cam.position.set(tg.x+Math.sin(az)*Math.cos(EL)*30,tg.y+Math.sin(EL)*30,tg.z+Math.cos(az)*Math.cos(EL)*30);cam.lookAt(tg);
+ sun.target.position.set(0,0,0);composer.render(dt);labels(W,H)}
+load().then(()=>requestAnimationFrame(frame)).catch(e=>{document.getElementById('load').textContent='Error cargando modelos: '+e.message;console.error(e)});
+</script></body></html>

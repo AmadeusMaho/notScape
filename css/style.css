@@ -130,3 +130,6 @@ button.slot:hover{background:#4a3f31;border-color:var(--or)!important}
 .pchip{display:inline-block;margin-bottom:4px;padding:1px 9px;font-size:14px;color:var(--ink);background:var(--acc,#ffd75a);border:2px solid var(--ink);border-radius:12px 10px 13px 9px;cursor:var(--cur-hand,pointer);box-shadow:1px 2px 0 var(--sh)}
 #rh{position:fixed;left:50%;bottom:24vh;transform:translate(-50%,10px);z-index:7;display:flex;align-items:center;gap:8px;padding:4px 14px 4px 5px;background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:2px 3px 0 var(--sh);font:600 17px var(--f);color:var(--tx);opacity:0;pointer-events:none;transition:opacity .5s,transform .5s}#rh.on{opacity:1;transform:translate(-50%,0)}
 #rh kbd{display:inline-grid;place-items:center;min-width:30px;height:30px;background:var(--acc,#ffd75a);color:#1c140d;border:2.5px solid var(--ink);border-radius:8px;font:600 18px var(--f);box-shadow:0 2px 0 var(--ink)}
+
+/* F6b · editor de personaje: modo «solo atuendo» y vista previa 3D */
+.ce-op.of-only>*:not(#ce-of):not(#ce-sc){display:none}.ce-pv #ce-cv3{width:100%;height:auto;aspect-ratio:300/310;background:radial-gradient(ellipse at 50% 80%,#4a4a42,#24221e);border-radius:6px}.ce-b.dis{opacity:.4}

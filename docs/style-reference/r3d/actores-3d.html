@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<meta charset="utf-8"><title>Actores 3D · enemigos, animales y jefes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#171a1c;--fg:#dcd6cc;--mut:#9a948a;--line:#2e3234;--on:#3b4a3e}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:13px/1.4 system-ui,sans-serif}
+body{display:flex;flex-direction:column}
+header{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 12px}
+h1{font:600 17px Georgia,serif;margin:0 10px 0 0}
+select,button,input{background:#202426;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 9px;font:inherit}
+button{cursor:pointer}button[aria-pressed="true"]{background:var(--on)}
+#st{flex:1;position:relative;min-height:320px}#st canvas{position:absolute;inset:0;width:100%;height:100%}
+#lb{position:absolute;inset:0;pointer-events:none;font:11px system-ui;color:#e8e2d8}
+#lb span{position:absolute;transform:translateX(-50%);text-shadow:0 1px 2px #000;white-space:nowrap}
+#err{position:absolute;left:12px;bottom:12px;color:#ffb3b3;font:12px monospace;white-space:pre-wrap}
+</style>
+<header><h1>Actores 3D · criaturas del juego</h1>
+<select id="stt" aria-label="Estado"><option value="idle">Reposo</option><option value="walk">Andar</option><option value="attack">Ataque (bucle)</option><option value="hit">Daño (destello)</option><option value="hover">Resalte (hover)</option><option value="die">Muerte (bucle)</option></select>
+<select id="grp" aria-label="Grupo"><option value="all">Todas</option><option value="hum">Humanoides</option><option value="quad">Cuadrúpedos, ave y rana</option><option value="boss">Jefes y capitanes</option><option value="ru">Ru (PNJ)</option></select>
+<button id="bpl" aria-pressed="true">⏯ Reproducir</button><button id="baz">↻ Girar cámara</button>
+</header>
+<div id="st"><canvas id="gl"></canvas><div id="lb"></div><div id="err"></div></div>
+<script type="importmap">{"imports":{"three":"../../../vendor/three/build/three.module.js","three/addons/":"../../../vendor/three/examples/jsm/"}}</script>
+<script type="module">
+// Visor de los actores 3D del juego (Lote R3D-ACTORES). Usa el MISMO código (src/r3d/actors3d.js): plantillas horneadas (SkinnedMesh) + ANIM por tipo.
+// Parámetros: ?ids=lobo,goblin,…  ?grp=all|hum|quad|boss|ru  ?state=idle|walk|attack|hit|hover|die  ?az=<grados> (45 = la del juego)  ?still  (congela en t=?t=1.2)  ?cols=8
+import * as THREE from 'three';
+import {makeActor,ANIM,ACTOR_IDS} from '../../../src/r3d/actors3d.js';
+import {G,TODH,setInk} from '../../../src/r3d/materials3d.js';
+const ERR=document.getElementById('err');const fail=m=>{ERR.textContent+=m+'\n';window.__err=(window.__err||'')+m+'\n'};addEventListener('error',e=>fail(e.message));addEventListener('unhandledrejection',e=>fail(String(e.reason)));
+try{
+const Q=new URLSearchParams(location.search),cv=document.getElementById('gl'),lb=document.getElementById('lb'),DPR=Math.min(devicePixelRatio||1,2),still=Q.has('still');
+const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,stencil:true});r.setPixelRatio(DPR);r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;r.toneMapping=THREE.NoToneMapping;
+const scene=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);
+const D=TODH.dia,hemi=new THREE.HemisphereLight(D.hemS,D.hemG,D.hemI*.8),sun=new THREE.DirectionalLight(D.sun,D.sunI*.8),back=new THREE.DirectionalLight('#7fa3ad',.6);
+sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.0008;sun.shadow.normalBias=.02;scene.add(hemi,sun,sun.target,back,back.target);
+G.uSat.value=D.sat;G.uLive.value=D.live;G.uNight.value=0;G.uRimCol.value.set(D.rim);setInk(D.ink,D.inkK);r.setClearColor('#3a4332');
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(80,80).rotateX(-Math.PI/2),new THREE.MeshToonMaterial({color:'#5a6a44'}));ground.receiveShadow=true;scene.add(ground);
+const HUM=['goblin','orco','ogro','oni','demonio','esqueleto','bandido','bruja','gigante','shinobi','golem'],BOSS=['b0','b1','b2','b3','b4','b5','k0','k1','k2','k3','k4','k5'];
+const QD=ACTOR_IDS.filter(k=>!HUM.includes(k)&&!BOSS.includes(k)&&k!=='ru');
+const pick=Q.get('ids')?Q.get('ids').split(','):({all:ACTOR_IDS.filter(k=>k!=='ru'),hum:HUM,quad:QD,boss:BOSS,ru:['ru']})[Q.get('grp')||'all'];
+let state=Q.get('state')||'idle',az=(Q.has('az')?+Q.get('az'):45)*Math.PI/180,play=!still,T=+(Q.get('t')||1.2);const EL=Math.PI/6;
+const cols=+(Q.get('cols')||Math.min(8,Math.ceil(Math.sqrt(pick.length*1.4)))),SP=+(Q.get('sp')||2.4),acts=[];
+pick.forEach((id,i)=>{const A=makeActor(id);if(!A){fail('sin plantilla: '+id);return}const c=i%cols,rw=Math.floor(i/cols);A.home=new THREE.Vector3((c-(cols-1)/2)*SP,0,(rw-(Math.ceil(pick.length/cols)-1)/2)*SP);A.grp.position.copy(A.home);scene.add(A.grp);A.id=id;acts.push(A);
+ const s=document.createElement('span');s.textContent=id;lb.appendChild(s);A.lab=s});
+function layout(){const W=cv.clientWidth,H=cv.clientHeight;r.setSize(W,H,false);const asp=W/H;
+ cam.position.set(Math.sin(az)*Math.cos(EL)*40,Math.sin(EL)*40+.8,Math.cos(az)*Math.cos(EL)*40);cam.lookAt(0,.8,0);cam.updateMatrixWorld();
+ // encuadre: caja de las posiciones en el espacio de cámara (+ margen para cuerpos altos y etiquetas)
+ const inv=cam.matrixWorldInverse.copy(cam.matrixWorld).invert();let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;acts.forEach(A=>{[[0,0],[0,2.6]].forEach(([dy,h])=>{const v=new THREE.Vector3(A.home.x,h,A.home.z).applyMatrix4(inv);x0=Math.min(x0,v.x-1.3);x1=Math.max(x1,v.x+1.3);y0=Math.min(y0,v.y-.9);y1=Math.max(y1,v.y+.6)})});
+ const cx=(x0+x1)/2,cy=(y0+y1)/2;let hw=(x1-x0)/2,hh=(y1-y0)/2;if(hw/hh<asp)hw=hh*asp;else hh=hw/asp;
+ cam.left=cx-hw;cam.right=cx+hw;cam.top=cy+hh;cam.bottom=cy-hh;cam.updateProjectionMatrix();
+ sun.position.set(-6,12,4).normalize().multiplyScalar(30);sun.target.position.set(0,0,0);const e=Math.max(hw,hh)*1.4;Object.assign(sun.shadow.camera,{left:-e,right:e,top:e,bottom:-e,near:1,far:80});sun.shadow.camera.updateProjectionMatrix();back.position.set(-Math.sin(az)*6,4,-Math.cos(az)*6)}
+const stt=document.getElementById('stt'),grp=document.getElementById('grp');stt.value=state;grp.value=Q.get('grp')||'all';
+stt.onchange=()=>{state=stt.value;acts.forEach(A=>{A.state='live';A.ph=0;A.mv=0;A.grp.visible=true;A.grp.scale.setScalar(A.sc);A.b.root.rotation.set(0,0,0)})};grp.onchange=()=>{const u=new URL(location);u.searchParams.set('grp',grp.value);u.searchParams.set('state',state);u.searchParams.delete('ids');location=u};
+document.getElementById('bpl').onclick=e=>{play=!play;e.target.setAttribute('aria-pressed',play)};document.getElementById('baz').onclick=()=>{az+=Math.PI/4;layout()};
+const HV=new THREE.MeshBasicMaterial({color:'#ffe7a0',side:THREE.BackSide});
+function simulate(A,t,dt){let mv=0,at=-1,wave=0,look=0;const lp=(t*1000)%2400;
+ if(state==='walk')mv=1;if(state==='attack'){const u=lp/640;at=u<1?u:-1}if(state==='ru'||A.id==='ru'){wave=Math.sin(t*.8)>0?1:0;look=Math.sin(t*.5)*.6}
+ A.mv+=(mv-A.mv)*(1-Math.exp(-dt*12));if(mv)A.ph+=dt*(A.tpl.kind==='human'?7:A.tpl.kind==='frog'?4.5:9);
+ A.setFlash(state==='hit'&&lp<400&&((lp/100|0)%2===0));A.setHover(state==='hover');
+ A.grp.position.copy(A.home);A.grp.scale.setScalar(A.sc);A.b.root.rotation.set(0,0,0);A.b.root.position.copy(A.restP.root);
+ ANIM[A.tpl.kind](A,{t,dt,mv:A.mv,at,wave,look});
+ if(state==='die'){const u=(t*1000%2600)/900;if(u>=1){A.grp.scale.setScalar(.0001)}else{const f=u<.45?u/.45:1,h=u<.45?0:(u-.45)/.55;A.b.root.rotation.x=-1.45*f;A.b.root.position.y=A.restP.root.y-.1*f*A.sc;A.grp.scale.setScalar(A.sc*(1-h*.85));A.grp.position.y-=.25*h*A.sc}}}
+let last=performance.now(),t0=0;
+function frame(now){const dt=Math.min(.1,(now-last)/1000);last=now;if(play&&!still)t0+=dt;const t=still?T:t0;G.uTime.value=t;
+ if(still&&state==='walk'){acts.forEach(A=>{A.ph=0;A.mv=1;for(let i=0;i<Math.round(T*60);i++){A.ph+=(1/60)*(A.tpl.kind==='human'?7:A.tpl.kind==='frog'?4.5:9)}})}
+ acts.forEach(A=>{if(still&&state==='walk'){A.mv=1}simulate(A,t,still?1/60:dt)});scene.updateMatrixWorld(true);
+ const W=cv.clientWidth,H=cv.clientHeight;acts.forEach(A=>{const v=new THREE.Vector3(A.home.x,-.15,A.home.z).project(cam);A.lab.style.left=((v.x+1)/2*W)+'px';A.lab.style.top=((1-v.y)/2*H)+'px'});
+ r.render(scene,cam);window.__done=(window.__done||0)+1;if(!still)requestAnimationFrame(frame)}
+layout();addEventListener('resize',layout);requestAnimationFrame(frame);if(still)setTimeout(()=>requestAnimationFrame(frame),300);
+}catch(e){document.getElementById('err').textContent=String(e&&e.stack||e);window.__err=String(e)}
+</script>

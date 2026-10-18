@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<meta charset="utf-8"><title>NotScape · héroe 3D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#14111b;--fg:#d8cfe0;--mut:#a497b4;--line:#2c2538;--on:#3a2d52}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:13px/1.4 system-ui,sans-serif}
+body{display:flex;flex-direction:column}
+header{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 12px}
+h1{font:600 17px Georgia,serif;margin:0 10px 0 0}
+select,button{background:#1d1826;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 9px;font:inherit;cursor:pointer}
+button[aria-pressed="true"]{background:var(--on)}
+#st{flex:1;position:relative;min-height:300px}#st canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+#err{position:absolute;left:12px;bottom:12px;color:#ffb3b3;font:12px monospace;white-space:pre-wrap}
+#lb{position:absolute;inset:0;pointer-events:none;font:12px system-ui;color:#e8e0f0}
+#lb span{position:absolute;transform:translateX(-50%);text-shadow:0 1px 2px #000}
+</style>
+<header><h1>Héroe 3D</h1>
+<select id="pose" aria-label="Pose"></select>
+<button id="bapp">🎲 Aspecto</button>
+<button id="bgen" aria-pressed="false">Mujer</button>
+<button id="bcape" aria-pressed="false">Capa (rara)</button>
+<button id="bhood" aria-pressed="false">Capucha</button>
+<button id="barm" aria-pressed="false">Placas</button>
+<button id="bhelm" aria-pressed="false">Yelmo</button>
+<button id="bsh" aria-pressed="false">Escudo</button>
+<button id="bnight" aria-pressed="false">Noche</button>
+</header>
+<div id="st"><canvas id="gl"></canvas><div id="lb"></div><div id="err"></div></div>
+<script src="../../../src/hero.js"></script>
+<script type="importmap">{"imports":{"three":"../../../vendor/three/build/three.module.js","three/addons/":"../../../vendor/three/examples/jsm/"}}</script>
+<script type="module">
+// Visor del héroe 3D (R3D). Parámetros: ?pose=<id> ?az=<grados> ?time=<s> (congela: simula hasta ese segundo, para capturas deterministas)
+// ?sheet = hoja de las 16 poses en rejilla 4×4 · ?cape=1 ?hood=1 ?plate=1 ?helm=1 ?f=1 ?night=1 ?hair=<id>
+import * as THREE from 'three';
+import {Hero} from '../../../src/r3d/hero3d.js';
+import {G,TOD,setInk,toon} from '../../../src/r3d/materials3d.js';
+const ERR=document.getElementById('err');const fail=m=>{ERR.textContent+=m+'\n'};addEventListener('error',e=>fail(e.message));
+try{
+const Q=new URLSearchParams(location.search),st=document.getElementById('st'),cv=document.getElementById('gl'),DPR=Math.min(devicePixelRatio||1,2);
+const r=new THREE.WebGLRenderer({canvas:cv,antialias:true});r.setPixelRatio(DPR);r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;r.toneMapping=THREE.NoToneMapping;
+const scene=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);
+const hemi=new THREE.HemisphereLight();scene.add(hemi);const sun=new THREE.DirectionalLight();sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.0005;sun.shadow.normalBias=.01;
+Object.assign(sun.shadow.camera,{left:-6,right:6,top:6,bottom:-6,near:.1,far:40});scene.add(sun,sun.target);
+const lamp=new THREE.PointLight(0xffb866,0,3,1.5);scene.add(lamp);
+function setTod(n){const p=TOD[n];hemi.color.set(p.hemS);hemi.groundColor.set(p.hemG);hemi.intensity=p.hemI;sun.color.set(p.sun);sun.intensity=p.sunI;sun.position.set(...p.sunP);
+ G.uSat.value=p.sat;G.uLive.value=p.live;G.uNight.value=p.night;G.uRimCol.value.set(p.rim);setInk(p.ink,p.inkK);scene.background=new THREE.Color(n==='noche'?'#14111b':'#93cbe8');lamp.intensity=n==='noche'?1.8:0}
+// POSES: act = lo que devuelve actState() de game.js (mismo formato) · wp = arma equipada para esa pose
+const sw=(d,t)=>((t%d)/d);
+const POSES=[
+ ['idle','Reposo',t=>null],['walk','Caminar',t=>({mv:1})],['run','Correr',t=>({mv:1,run:1})],
+ ['wc','Talar',t=>({k:'wc',ph:sw(1.1,t),col:'#9aa2b0'})],['mi','Minar',t=>({k:'mi',ph:sw(1.1,t),col:'#b8623a'})],['sm','Forjar',t=>({k:'sm',ph:sw(.9,t),id:'anvil'})],
+ ['sword','Espada',t=>({k:'f',wt:'m',wk:'sword',wcol:'#cfd8e0',ph:sw(1,t)}),{t:'sword',wk:'sword',col:'#cfd8e0'}],
+ ['great','Mandoble',t=>({k:'f',wt:'m',wk:'great',wcol:'#9a9aa8',ph:sw(1.2,t)}),{t:'sword',wk:'great',col:'#9a9aa8'}],
+ ['punch','Puños',t=>({k:'f',wt:'m',wk:'',ph:sw(.7,t)})],
+ ['bow','Arco',t=>({k:'f',wt:'r',wk:'bow',wcol:'#8a5a2a',ph:sw(1.3,t)}),{t:'bow',wk:'bow',col:'#8a5a2a'}],
+ ['xbow','Ballesta',t=>({k:'f',wt:'r',wk:'xbow',wcol:'#8a8f98',ph:sw(1.3,t)}),{t:'bow',wk:'xbow',col:'#8a8f98'}],
+ ['staff','Báculo',t=>({k:'f',wt:'g',wk:'staff',orb:'#9cf',ph:sw(1.1,t)}),{t:'staff',wk:'staff',col:'#9cf'}],
+ ['heavy','Estocada (máx.)',t=>({k:'f',wt:'m',wk:'sword',wcol:'#cfd8e0',ph:sw(1.1,t),hv:1}),{t:'sword',wk:'sword',col:'#cfd8e0'}],
+ ['fi','Pescar',t=>({k:'fi',ph:Math.min(.99,(t%6)/2.4),tug:(t%6)>3&&(t%1.5)<.3?1:0})],['eat','Comer',t=>({k:'eat',ph:sw(1.2,t)})],['co','Cocinar',t=>({k:'co',ph:0})],
+ ['pk','Recoger',t=>({k:'pk',ph:sw(.8,t)})],['hurt','Daño',t=>({hurt:1-sw(.9,t)})]];
+const SHEET=['idle','walk','run','wc','mi','sm','sword','great','punch','bow','xbow','staff','heavy','fi','eat','hurt'];
+const sel=document.getElementById('pose');POSES.forEach(p=>sel.add(new Option(p[1],p[0])));sel.value=Q.get('pose')||'walk';
+const HAIRS={m:['cut','spiky','side','curly','mane','bald'],f:['long','bun','pony','bob','twin','bald']},SKIN=['#f6d4b0','#f0c08a','#d9a066','#b5764a','#8a5232','#5e3a25'],
+ HC=['#5a3a22','#2a1a12','#c08a3a','#e8c872','#a83a22','#dcdcdc'],COL=['#c0392b','#e0906a','#d8a030','#6a9a3a','#2f8a6a','#3a7ac0','#6a4ac0','#8a8f98'];
+let seed=+(Q.get('seed')||1);const pk=(a,k)=>a[Math.floor(Math.abs(Math.sin(seed*91.7+k*13.1))*1e4)%a.length];
+const opt={f:Q.has('f'),cape:Q.has('cape'),hood:Q.has('hood'),plate:Q.has('plate'),helm:Q.has('helm'),sh:Q.has('sh'),night:Q.has('night')};
+const app=()=>{const g=opt.f?'f':'m';return{g,hair:Q.get('hair')||HAIRS[g][(seed-1)%HAIRS[g].length],hc:pk(HC,2),skin:pk(SKIN,3),col:pk(COL,4),eye:'#2a1a14',face:seed%4}};
+function look(pose){const P=POSES.find(p=>p[0]===pose)||POSES[0];return{app:app(),ar:opt.plate?'#9a9aa8':null,helm:opt.helm?'#9a9aa8':null,boot:null,hood:opt.hood?'up':'down',
+ gear:{wp:P[3]||(pose==='idle'||pose==='walk'||pose==='run'?{t:'sword',wk:'sword',col:'#cfd8e0'}:null),pl:opt.plate?1:0,ht:opt.helm?'acero':'',sh:opt.sh?'#7a4a2a':null,cp:opt.cape?'#5a2230':null}}}
+// suelo: disco de pasto con el campo de color de la guía
+const gnd=new THREE.Mesh(new THREE.CircleGeometry(30,48).rotateX(-Math.PI/2),toon('#5e7a38',{}));gnd.receiveShadow=true;scene.add(gnd);
+const heroes=[],labels=document.getElementById('lb');
+function build(){heroes.forEach(h=>scene.remove(h.obj));heroes.length=0;labels.innerHTML='';
+ const list=Q.has('sheet')?SHEET:[sel.value];list.forEach((id,i)=>{const h=new Hero();const x=Q.has('sheet')?(i%4-1.5)*1.7:0,z=Q.has('sheet')?(Math.floor(i/4)-1.5)*1.7:0;
+  h.setLook(look(id));h.id=id;h.px=x;h.pz=z;h.wph=0;scene.add(h.obj);heroes.push(h);
+  if(Q.has('sheet')){const s=document.createElement('span');s.textContent=POSES.find(p=>p[0]===id)[1];labels.appendChild(s);h.lab=s}})}
+let az=(+(Q.get('az')??35))*Math.PI/180,zoom=+(Q.get('zoom')||1);const EL=Math.PI/6;
+function place(){const w=st.clientWidth,h=st.clientHeight,a=w/h,vh=(Q.has('sheet')?7.4:2.1)/zoom;r.setSize(w,h,false);cam.left=-vh*a/2;cam.right=vh*a/2;cam.top=vh/2;cam.bottom=-vh/2;cam.updateProjectionMatrix()}
+const tgt=new THREE.Vector3(0,Q.has('sheet')?.3:.6,0);
+function step(t,dt){G.uTime.value=t;heroes.forEach(h=>{const P=POSES.find(p=>p[0]===h.id),a=P[2](t)||{},mv=!!a.mv;h.wph+=dt*(a.run?1.15*95:95)*2*Math.PI/(a.run?40:47);   // ~95 px/s andando, como el juego
+  if(Q.has('move')&&mv){const sp=(a.run?1.15:1)*95/32,R=2.5;h.ang=(h.ang||0)+dt*sp/R;h.px=Math.sin(h.ang)*R;h.pz=Math.cos(h.ang)*R;tgt.set(h.px,.6,h.pz)}   // ?move: se desplaza de verdad (círculo)
+  h.update({x:h.px,y:0,z:h.pz,mv,run:!!a.run,w:h.wph,act:a.k?a:null,hurt:a.hurt||0,t,face:null,wind:[.9,.4],virt:mv&&!Q.has('move')?[0,(a.run?1.15:1)*95/32]:[0,0],speed:mv&&!Q.has('move')?(a.run?1.15:1)*95/32:null},dt)})}
+function render(){cam.position.set(tgt.x+Math.sin(az)*Math.cos(EL)*30,tgt.y+Math.sin(EL)*30,tgt.z+Math.cos(az)*Math.cos(EL)*30);cam.lookAt(tgt);
+ if(heroes[0]){const p=heroes[0].obj.position;lamp.position.set(heroes[0].px+.25,.6,heroes[0].pz+.2)}
+ r.render(scene,cam);heroes.forEach(h=>{if(!h.lab)return;const v=new THREE.Vector3(h.px+.35,0,h.pz+.35).project(cam);h.lab.style.left=((v.x+1)/2*100)+'%';h.lab.style.top=((1-v.y)/2*100)+'%'})}
+const TB=(id,k,re)=>{const b=document.getElementById(id);b.setAttribute('aria-pressed',String(!!opt[k]));b.onclick=()=>{opt[k]=!opt[k];b.setAttribute('aria-pressed',String(opt[k]));if(k==='night')setTod(opt.night?'noche':'dia');else build()}};
+TB('bgen','f');TB('bcape','cape');TB('bhood','hood');TB('barm','plate');TB('bhelm','helm');TB('bsh','sh');TB('bnight','night');
+document.getElementById('bapp').onclick=()=>{seed++;build()};sel.onchange=build;
+let drag=0,lx=0;cv.onpointerdown=e=>{drag=1;lx=e.clientX;cv.setPointerCapture(e.pointerId)};cv.onpointermove=e=>{if(drag){az-=(e.clientX-lx)*.01;lx=e.clientX}};cv.onpointerup=()=>drag=0;
+cv.onwheel=e=>{e.preventDefault();zoom=Math.min(4,Math.max(.4,zoom*Math.exp(-e.deltaY*.0012)));place()};
+setTod(opt.night?'noche':'dia');build();place();new ResizeObserver(place).observe(st);
+if(Q.has('time')){const T=+Q.get('time');for(let t=0;t<T;t+=1/60)step(t,1/60);render();window.READY=1}
+else{const clk=new THREE.Clock();(function loop(){const dt=Math.min(clk.getDelta(),.05);step(clk.elapsedTime,dt);render();requestAnimationFrame(loop)})()}
+}catch(e){fail(e.stack||String(e))}
+</script>

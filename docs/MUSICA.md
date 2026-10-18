@@ -1,5 +1,11 @@
 # NotScape · guía de música por bioma (13 oct 2026, para generar en Suno)
 
+> ### ⚠ ESTADO (revisado el 17 oct 2026): **DOCUMENTO SUPERADO — no generes música con los prompts de este archivo**
+> - **Prompts vigentes:** `docs/PROMPTS_SUNO.md` (v9). El «Banco de pistas v2» y los prompts de la primera tabla de aquí son anteriores (v1–v2) y **contradicen** a la v9 (tonalidades, uso de *Cover*, leitmotiv).
+> - **Obsoleto en la primera parte (v1):** la técnica de *Cover* con la pista de la Pradera y el leitmotiv obligatorio en todos los biomas (el banco v2 ya lo descartaba), y la frase «hoy síntesis simple; F6 lo cambiará»: el juego ya reproduce archivos `assets/music/<bioma>_<tipo>.mp3` desde `src/music.js` (`MUSIC.DIRS`).
+> - **Sigue valiendo como contexto de diseño:** la columna «Arquitectura / civilización» de la primera tabla (Pradera medieval, Bosque silvano, Pantano palafitos, Cumbres nórdica, Oriental japonesa, Volcán mesoamericana) y la convención de archivos y tipos de pista (aldea, mundo, combate, jefe, noche).
+> - **Estado real de las pistas y créditos:** `docs/CREDITOS.md` (varias son placeholders; las 5 de la Pradera tienen copyright y son temporales) y `AGENTS.md` (registro de música).
+
 **Leitmotiv único** (el tema de «casa», nace en la Pradera y se «remasteriza» en cada bioma con los instrumentos de esa civilización).
 Motivo propuesto: 4 compases, 5 notas, cantable: **1 – 5 – 6 – 5 – 3 – 2 – 1** (do–sol–la–sol–mi–re–do) en negras/corcheas, ~80–100 BPM. Mantener **la misma tónica (re/D)** y cambiar el modo por bioma.
 Truco en Suno: genera primero la Pradera; para los demás usa *Upload audio → Cover* (o *Remaster/Cover*) con esa pista y un prompt de estilo nuevo, con la influencia de audio alta, para conservar la melodía. Añade a TODOS los prompts: `same main melody, memorable 4-bar leitmotif, instrumental, loopable, no vocals` y en la letra `[Instrumental]`.
