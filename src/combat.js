@@ -49,10 +49,9 @@ function telUpd(m,now){if(!m.tel)return false;m.f=P.x-m.x-(P.y-m.y)>=0?1:-1;if(n
  const T=m.tel,cx=T.cx==null?m.x:T.cx,cy=T.cy==null?m.y:T.cy,dp=Math.hypot(P.x-cx,P.y-cy),r=T.r;m.tel=null;m.nt=now+1200*(m.asx||1);snd('thunder');SHK=now+180;sp(cx,cy-4,'#ff6a3a',14,r*1.4,40,100);
  if(dp<=r&&P.hp>0&&!dashInv()){const q=prMod(m,Math.max(1,Math.round((m.dm||1)*(T.f||2.2))),1),d=q.d;if(q.blocked&&!d){splat(P.x,P.y,0,'#6ab0ff',26);log('🙏 Tu oración absorbió el golpe pesado de '+m.d.n+'.');return true}P.hp-=d;splat(P.x,P.y,d,q.blocked?'#6ab0ff':'#d4261c',26);snd('hurt');HURT=now;P.pjM=m;P.pj=now+4800;bossHit(m,d,now);if(P.hp<=0)die()}
  else if(P.hp>0){log('Esquivaste el golpe pesado de '+m.d.n+'.');if(dp<=r)splat(P.x,P.y,0,'#e8cf94',26)}return true}
-function drawTel(now){const s=ISO.scale();for(const m of M){if(!m.tel)continue;const u=Math.min(1,(now-m.tel.t0)/1200),r=m.tel.r;ctx.save();ctx.setTransform(1,0,0,1,0,0);
-  const ring=k=>{const cx=m.tel.cx==null?m.x:m.tel.cx,cy=m.tel.cy==null?m.y:m.tel.cy;ctx.beginPath();for(let i=0;i<=28;i++){const a=i/28*6.283,q=ISO.toCanvas(cx+Math.cos(a)*r*k,cy+Math.sin(a)*r*k,TER.standZ(cx,cy));i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)}ctx.closePath()};
-  const sc=SCOL[mst(m)];ring(1);ctx.globalAlpha=.18+.12*Math.sin(now/90);ctx.fillStyle=sc;ctx.fill();ctx.globalAlpha=.85;ctx.strokeStyle=sc;ctx.lineWidth=Math.max(2,s*1.4);ctx.stroke();
-  ring(u);ctx.globalAlpha=.32;ctx.fillStyle=sc;ctx.fill();
+function drawTel(now){const s=ISO.scale();for(const m of M){if(!m.tel)continue;const u=Math.min(1,(now-m.tel.t0)/1200),r=m.tel.r,cx=m.tel.cx==null?m.x:m.tel.cx,cy=m.tel.cy==null?m.y:m.tel.cy;
+  try{R3D.spell.tele(m.tel,cx,cy,0,r,7,u,SCOL[mst(m)])}catch(e){}   // círculo en el suelo = decal 3D de bordes suaves (spellfx3d.js); solo el rótulo sigue en 2D
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);
   const c=ISO.toCanvas(m.x,m.y,TER.standZ(m.x,m.y)),k2=SPR*s;ctx.globalAlpha=1;ctx.font='bold '+Math.round(14*s+8)+'px sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.strokeStyle='#8a1208';ctx.lineWidth=3;const ty=c.y-((m.d.h||20)+22)*k2;const lb=SEMO[mst(m)]+'!';ctx.strokeText(lb,c.x,ty);ctx.fillText(lb,c.x,ty);ctx.restore()}}
 
 // ═══ LOTE B2 · MECÁNICAS DE JEFES Y CAPITANES ═══

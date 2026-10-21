@@ -640,18 +640,20 @@ function hitM(m,d,now,sk,mxv,wt){if(!alive(m,now))return;fightAt=now;m.lx=m.x;m.
   if(F.shake>0)SHK=Math.max(SHK,now+60+F.shake*140);
   if(F.knock>0){const dx=m.x-P.x,dy=m.y-P.y,l=Math.hypot(dx,dy)||1,nx=m.x+dx/l*F.knock,ny=m.y+dy/l*F.knock;if(!blk(nx,ny)){m.x=nx;m.y=ny}}}
  const mx=d>=2&&d>=(mxv||maxHit());
+ if(d>0&&sk!=='mg'&&window.R3D&&R3D.spell){try{R3D.spell.hit(m.x,m.y,Math.atan2(m.y-P.y,m.x-P.x),mx?1:0)}catch(e){}}   // impacto 3D: destello + chispas en la dirección del golpe
  if(d>0&&sk!=='mg'&&mxv!==99&&window.R3D&&R3D.blood){try{R3D.blood.hit(m,d,now,{wt:wt==='r'?'r':'m',mx})}catch(e){}}   // Lote R3D-SANGRE (solo ?r3d=1): golpes físicos directos sangran; hechizos (sk='mg'), espinas y sangrado por turnos (mxv=99) no. wt='r' = flecha/virote
  splat(m.x,m.y,d,mx?'#c9a24a':null,m.d.h+6,mx);if(mx){sp(m.x,m.y-m.d.h/2,'#e8cf94',16,120,80,170);sp(m.x,m.y-m.d.h/2,'#fff1c8',8,70,60,190);SHK=now+160;HFX.push({k:'star',tx:m.x,ty:m.y,th:m.d.h/2,t0:now,d:380})}if(d)gain(sk||WSK(),d*xpMul(m));if(m.hp<=0){kill(m,now);if(A&&A.e===m)reseek(m,now)}}
 const inVilla=(x,y)=>{const k=ownAt(x,y);if(k<0)return false;const b=BI[k],v=b.village.safe||[210,770,245,225];return Math.abs(x-(b.ox+v[0]))<v[2]&&Math.abs(y-(b.oy+v[1]))<v[3]}; // zona segura de la aldea (BIOMES.list[k].village.safe = [cx,cy,semiancho,semialto])
 /* AVISO DE GOLPE de los enemigos (21 oct 2026; pedido del dueño: «avisos de golpe»): ya no pegan al instante. Se paran ~0,42–0,72 s (≈ 22 % de su cadencia) con una pose de preparación y un CONO ROJO en el suelo que se va llenando; al terminar,
    el golpe solo cuenta si sigues dentro del cono (±52°) y del alcance → se esquiva con un paso al lado o con el DASH (i-frames). Los jefes y capitanes conservan además su golpe pesado telegrafado (combat.js). */
 function windHit(m,w,now,dx,dy,dp){const reach=46+(m.d.w||16)*.3+18;let df=Math.abs(Math.atan2(dy,dx)-w.ang);df=df>Math.PI?2*Math.PI-df:df;const hit=P.hp>0&&dp<=reach&&df<=.9;
+ m.flare=now;   // fogonazo de ojos al soltar el golpe (actors3d.js)
  if(hit)monHit(m,now);else{m.at0=now;if(P.hp>0&&dp<reach*1.8){splat(P.x,P.y,0,'#e8cf94',26);inc('dodge')}}m.at0=now-.18*(m.d.boss?760:640)}   // la animación del golpe arranca en el tajo
-function drawWind(now){let s=null;for(const m of M){const w=m.wind;if(!w||now>=w.t1||!alive(m,now))continue;if(!s){s=ISO.scale();ctx.save();ctx.setTransform(1,0,0,1,0,0)}
-  const u=Math.max(0,Math.min(1,(now-w.t0)/(w.t1-w.t0))),reach=46+(m.d.w||16)*.3+18,z=TER.standZ(m.x,m.y),c0=ISO.toCanvas(m.x,m.y,z);ctx.beginPath();ctx.moveTo(c0.x,c0.y);
-  for(let i=0;i<=12;i++){const t=w.ang-.9+1.8*i/12,q=ISO.toCanvas(m.x+Math.cos(t)*reach,m.y+Math.sin(t)*reach,z);ctx.lineTo(q.x,q.y)}ctx.closePath();
-  ctx.fillStyle='rgba(212,38,28,'+(.08+.3*u*u)+')';ctx.fill();ctx.strokeStyle='rgba(255,130,96,'+(.25+.55*u)+')';ctx.lineWidth=2*s;ctx.stroke()}
- if(s)ctx.restore()}
+/* 21 oct 2026 (pedido del dueño): los enemigos NORMALES ya no dibujan cono en el suelo: avisan 0,8 s encendiendo los ojos (actors3d.js `eyeFx`) y el fogonazo marca el tajo. El arco en el suelo (decal 3D de spellfx3d.js `tele`)
+   queda solo para los "grandes": jefes, élites (m.elite) y enemigos de nivel ≥ 40 (`bigFoe`). */
+const bigFoe=m=>!!(m.d.boss||m.elite||(m.lv||0)>=40);
+function drawWind(now){if(!window.R3D||!R3D.spell)return;for(const m of M){const w=m.wind;if(!w||!w.big||now>=w.t1||!alive(m,now))continue;
+  const u=Math.max(0,Math.min(1,(now-w.t0)/(w.t1-w.t0))),reach=46+(m.d.w||16)*.3+18;R3D.spell.tele(m,m.x,m.y,w.ang,reach,.9,u)}}
 function monHit(m,now){m.at0=now;fightAt=now;if(S.ar!==0&&P.hp>0&&!INT&&(!A||A.ty!=='f')&&alive(m,now)&&!sealed(m)){stopA();startF(m,now);log('⚔️ Te defiendes de <b>'+m.d.n+'</b>.')}P.pjM=m;P.pj=now+4800;const d0=!dashInv()&&Math.random()<monAcc(m)?R(0,m.dm):0,pm=d0?prMod(m,d0,0):null,d=d0?Math.max(0,pm.d-Math.round(pv('stone'))):0;P.hp-=d;splat(P.x,P.y,d,pm&&pm.blocked&&d<d0?'#6ab0ff':null,26);
  if(d){bossHit(m,d,now);snd('hurt');HURT=now;if(d>=maxHp()*.25)SHK=now+200;if(Math.random()*100<pv('thorns'))hitM(m,2,now,WSK(),99)}
  if(P.hp>0&&P.hp<maxHp()*.3&&pv('last')>0&&now>LSCD){P.hp=Math.min(maxHp(),P.hp+Math.ceil(maxHp()*pv('last')/100));LSCD=now+60000;toast('💖 ¡Segundo aliento!');snd('magic')}
@@ -672,7 +674,9 @@ const SWG={t0:0,ms:0,wind:0,dx:1,dy:0,ang:0,done:1,c:0,wt:'m',cd:0,last:0,tg:nul
 /* CARGA (21 oct 2026; propuesta del dueño): MANTENER el clic (o E) carga el golpe y SOLTAR lo lanza: un toque corto (< 0,22 s) es el golpe normal; cargando 0,22→1,1 s el golpe gana hasta +100 % de daño con arco, +80 % cuerpo a cuerpo
    y, con el báculo, la BOLA DE FUEGO crece (+120 %), cuesta más maná y a partir de media carga deja al enemigo ARDIENDO. Mientras cargas el héroe aguanta la pose y mira al cursor; la barra de swing se llena de naranja. Un golpe cargado no avanza el combo. */
 const CHG={on:0,t0:0},chgK=now=>Math.max(0,Math.min(1,(now-CHG.t0-220)/880));
-function chargeStart(now){if(INT||CK||P.hp<=0||(typeof CINE!=='undefined'&&CINE.on)||CHG.on)return;CHG.on=1;CHG.t0=now;ATKIN.held=1}
+function chargeStart(now){if(INT||CK||P.hp<=0||(typeof CINE!=='undefined'&&CINE.on)||CHG.on)return;CHG.on=1;CHG.t0=now;ATKIN.held=1;P.g=P.mv=null;if(A)stopA()}   // atacar CANCELA la ruta pendiente (antes el héroe seguía andando hacia el último clic derecho mientras golpeaba)
+/* COMPROMISO DEL GOLPE (21 oct 2026): mientras cargas o dura la preparación/recuperación del swing el héroe se mueve al 30 %; y un golpe cuerpo a cuerpo hacia un enemigo cercano pero fuera de alcance da una pequeña EMBESTIDA (`SWG.lg` px) en vez de caminar. */
+const swSlow=now=>CHG.on||(now>=SWG.t0&&now<SWG.t0+SWG.wind+280);
 function chargeEnd(){if(!CHG.on)return;const now=performance.now(),k=chgK(now);CHG.on=0;ATKIN.held=0;try{R3D.spell.charge(0,0,-1)}catch(e){}swing(now,undefined,k)}
 const fbCost=k=>1+Math.round(k);
 const aimOn=()=>manual()&&(typeof FEEL==='undefined'||FEEL.aim!==0);
@@ -683,7 +687,10 @@ function swing(now,ang,k=0){if(INT||CK||P.hp<=0||(typeof CINE!=='undefined'&&CIN
  if(!S.hintAtk){S.hintAtk=1;toast('⚔️ Apunta con el ratón y haz <b>clic</b> para golpear; <b>mantén</b> el clic para cargar el golpe y suéltalo (también tecla <b>E</b>). <b>Clic derecho</b> mueve, <b>Espacio</b> esquiva.',7000)}
  inc('swing');if(k>=.3)inc('charged');
  const fb=wKind()==='staff'&&MN>=fbCost(k),chg=k>.04,ms=fb?1500:manMs(),c=chg?SWG.c:(now-SWG.last<ms*1.9)?(SWG.c+1)%3:0;if(ang==null)ang=aimAng();
- Object.assign(SWG,{t0:now,ms,wind:Math.min(chg?90:150,Math.round(ms*.28)),ang,dx:Math.cos(ang),dy:Math.sin(ang),done:0,c,k,fb,wt:wtype(),cd:now+ms,last:now,hv:(c===2||k>.55)?1:0});ATKT=now+ms;P.g=P.mv=null;P.cbT=now;P.dir=HERO.dirOf(SWG.dx,SWG.dy);return true}
+ Object.assign(SWG,{t0:now,ms,wind:Math.min(chg?90:150,Math.round(ms*.28)),ang,dx:Math.cos(ang),dy:Math.sin(ang),done:0,c,k,fb,wt:wtype(),cd:now+ms,last:now,hv:(c===2||k>.55)?1:0,lg:0});ATKT=now+ms;P.g=P.mv=null;if(A)stopA();
+ if(SWG.wt==='m'&&!fb){   // melé: embestida corta hacia un enemigo cercano en el arco y estela 3D del golpe
+  const rch=(wKind()==='dagger'?66:wKind()==='great'?92:80);let bd=1e9;M.forEach(m=>{if(!alive(m,now)||sealed(m))return;const vx=m.x-P.x,vy=m.y-P.y,d=Math.hypot(vx,vy);let df=Math.abs(Math.atan2(vy,vx)-ang);df=df>Math.PI?2*Math.PI-df:df;if(df<.6&&d>rch*.7&&d<150&&d<bd){bd=d;SWG.lg=Math.min(18,d-rch*.7)}});
+  try{R3D.spell.slash(P.x,P.y,ang,rch+k*14,(c%2)?-1:1,wColor()||'#f0dcb0',SWG.hv,SWG.wind,150)}catch(e){}}P.cbT=now;P.dir=HERO.dirOf(SWG.dx,SWG.dy);return true}
 function rayHit(a0,range,pad){const now=performance.now(),dx=Math.cos(a0),dy=Math.sin(a0);let best=null,bt=range;
  M.forEach(m=>{if(!alive(m,now)||sealed(m))return;const vx=m.x-P.x,vy=m.y-P.y,t=vx*dx+vy*dy;if(t<8||t>range)return;const perp=Math.abs(vx*dy-vy*dx),rad=(m.d.w||16)*.55+pad;if(perp<=rad&&t<bt){bt=t;best=m}});return{m:best,t:bt}}
 // hechizo ELEGIDO para el báculo (S.selSp; por defecto el de ataque más alto desbloqueado); -1 si no hay ninguno
@@ -707,7 +714,8 @@ function swingResolve(now){const wt=SWG.wt,c=SWG.c,kc=SWG.k||0;SWG.done=1;let hi
  if(!hit)snd('miss');if(primary){SWG.tg=primary;P.pjM=primary;P.pj=now+4800}SLASH.push({a:a0,t0:now,c,hit});if(SLASH.length>6)SLASH.shift()}
 function burnTick(now){for(const m of M){const b=m.burn;if(!b)continue;if(!alive(m,now)){m.burn=null;continue}try{if(Math.random()<.5)R3D.spell.ember(m.x,m.y,m.d.h/28)}catch(e){}
   if(now>=b.t){b.t=now+800;b.n--;dotHit(m,b.d,now,'burn');if(b.n<=0)m.burn=null}}}   // QUEMADURA de la bola de fuego cargada: 1 golpe cada 0,8 s mientras dura
-function swingTick(now){burnTick(now);if(!aimOn())return;if(!SWG.done&&now>=SWG.t0+SWG.wind)swingResolve(now)}
+function swingTick(now,dt){burnTick(now);if(!aimOn())return;if(SWG.lg>0&&dt){const s=Math.min(SWG.lg,230*dt);SWG.lg-=s;step(SWG.dx*s,0);step(0,SWG.dy*s)}   // embestida del golpe
+ if(!SWG.done&&now>=SWG.t0+SWG.wind)swingResolve(now)}
 const aimTarget=now=>SWG.tg&&SWG.tg.hp>0&&now-SWG.last<5000?SWG.tg:null;
 function drawAim(now){}   // (21 oct 2026: se quitaron el arco guía y el destello circular a petición del dueño; solo queda la barra de swing del HUD)
 function swingHud(now){const col=document.getElementById('hs-col');if(!col)return;let el=document.getElementById('hs-sw');if(!el){el=document.createElement('div');el.id='hs-sw';el.innerHTML='<i></i><b></b><b></b><b></b>';const a=document.getElementById('hs-act');if(a&&a.nextSibling)col.insertBefore(el,a.nextSibling);else col.appendChild(el)}
@@ -874,14 +882,14 @@ const DZT={};
 function zoneAnnounce(bi,now){const b=BI[bi],lvl=CBL();if(now-(DZT[bi]||-1e9)<60000)return;DZT[bi]=now;
  if(!b.zone&&lvl<b.lv*.75){banner('⚠️ Zona peligrosa: '+b.n,'Nivel recomendado '+b.lv+'+ · tu nivel de combate es '+lvl+'. Puedes volver atrás.','#ff5a3a',4800);snd('miss')}
  toast(b.ic+' <b>'+b.n+'</b><br>Nivel recomendado: '+b.lv+'+')}
-function upd(dt,now){swingTick(now);if(typeof AMB!=='undefined')AMB.tick(now,dt);if(!INT){zoneCheck(now);weather(now,dt);AMBI.update(now,dt,{k:curB,sun:sunS(now/1000),wx:WX.t});if(typeof VILL!=='undefined')VILL.tick(dt);if(typeof ISLA!=='undefined')ISLA.tick(dt);if(now-BT>1000){BT=now;if(M.some(m=>m.d.boss&&!alive(m,now)))dirty=1}const bi=biomeAt(P.x,P.y);if(bi>=0&&bi!==curB){curB=bi;if(bi<BIOMES.L&&bi+1>(S.st.bio||0)){S.st.bio=bi+1;chk()}   /* Fase 49a: `bio` (logros, runas de viaje) sigue contando los 6 biomas originales; los esqueletos aún no puntúan */zoneAnnounce(bi,now)}
+function upd(dt,now){swingTick(now,dt);if(typeof AMB!=='undefined')AMB.tick(now,dt);if(!INT){zoneCheck(now);weather(now,dt);AMBI.update(now,dt,{k:curB,sun:sunS(now/1000),wx:WX.t});if(typeof VILL!=='undefined')VILL.tick(dt);if(typeof ISLA!=='undefined')ISLA.tick(dt);if(now-BT>1000){BT=now;if(M.some(m=>m.d.boss&&!alive(m,now)))dirty=1}const bi=biomeAt(P.x,P.y);if(bi>=0&&bi!==curB){curB=bi;if(bi<BIOMES.L&&bi+1>(S.st.bio||0)){S.st.bio=bi+1;chk()}   /* Fase 49a: `bio` (logros, runas de viaje) sigue contando los 6 biomas originales; los esqueletos aún no puntúan */zoneAnnounce(bi,now)}
  if(bi>=0&&S.home!==bi&&inVilla(P.x,P.y)){S.home=bi;log('🏘️ Reaparecerás en la aldea de <b>'+BI[bi].n+'</b>.');dirty=1}}   // Fase 44a: S.home = última aldea visitada
  const kd=ISO.keyDir(K.l,K.r,K.u,K.d);let dx=kd.x,dy=kd.y;
  if(dx||dy){if(P.g||P.mv||A||CK){P.g=P.mv=null;stopA();CK=null}}
  else{const tg=P.g?P.g.e:P.mv;if(tg){const ex=tg.x-P.x,ey=tg.y-P.y,d=Math.hypot(ex,ey);
   if(d>(P.g?(P.g.e.d?(wtype()!=='m'?120:24):P.g.e.t==='fi'?FISHR:24):3)){const mt=P.g&&tg.st&&tg.st.length&&d>FISHR?(q=>({x:q[0],y:q[1]}))(tg.st.reduce((b,c)=>Math.hypot(c[0]-P.x,c[1]-P.y)<Math.hypot(b[0]-P.x,b[1]-P.y)?c:b)):tg,wp=bridgeWp(mt),wx=wp?wp.x-P.x:mt.x-P.x,wy=wp?wp.y-P.y:mt.y-P.y,wd=Math.hypot(wx,wy)||1;dx=wx/wd;dy=wy/wd}else if(P.g){const e=P.g.e;P.g=null;engage(e,now)}else P.mv=null}}
  if(dashStep(dt,now)){dx=dy=0}   // ISLA-7: durante el impulso del dash no se aplica el movimiento normal
- P.mvg=0;if(dx||dy){if(!S.hintR&&typeof runHintTick==='function')runHintTick(dt);const l=Math.hypot(dx,dy);dx/=l;dy/=l;const run=RUN&&!S.exh,sv=WALK_V*(1+pv('swift')/100)*(1+.05*S.trv)*(S.buf.spd>Date.now()?1.35:1)*(run?RUN_MUL:1);const ox=P.x,oy=P.y;step(dx*sv*dt,0);step(0,dy*sv*dt);P.mvg=1;if(P.g&&Math.hypot(P.x-ox,P.y-oy)<.02)STK+=dt;else STK=0;if(STK>.4&&P.g){const e=P.g.e;if(Math.hypot(e.x-P.x,e.y-P.y)<(e.t==='fi'?FISHR+20:90)){P.g=null;STK=0;engage(e,now)}}if(run){S.agd=(S.agd||0)+sv*dt;if(S.agd>=32){S.st.run=(S.st.run||0)+(S.agd/32|0);S.agd%=32;chk()}}if(Math.abs(dx-dy)>.01)P.f=dx-dy>0?1:-1;P.dir=HERO.dirOf(dx,dy);P.ldx=dx;P.ldy=dy;P.wr=sv*2*Math.PI/(RUN?STRR:STRW);P.w+=dt*P.wr;P.anm=1;P.wt=null;if(typeof FOOT!=='undefined')FOOT.tick(P,run)}   /* pasos: src/footsteps.js */
+ P.mvg=0;if(dx||dy){if(!S.hintR&&typeof runHintTick==='function')runHintTick(dt);const l=Math.hypot(dx,dy);dx/=l;dy/=l;const run=RUN&&!S.exh,sv=WALK_V*(1+pv('swift')/100)*(1+.05*S.trv)*(S.buf.spd>Date.now()?1.35:1)*(run?RUN_MUL:1)*(swSlow(now)?.3:1);const ox=P.x,oy=P.y;step(dx*sv*dt,0);step(0,dy*sv*dt);P.mvg=1;if(P.g&&Math.hypot(P.x-ox,P.y-oy)<.02)STK+=dt;else STK=0;if(STK>.4&&P.g){const e=P.g.e;if(Math.hypot(e.x-P.x,e.y-P.y)<(e.t==='fi'?FISHR+20:90)){P.g=null;STK=0;engage(e,now)}}if(run){S.agd=(S.agd||0)+sv*dt;if(S.agd>=32){S.st.run=(S.st.run||0)+(S.agd/32|0);S.agd%=32;chk()}}if(Math.abs(dx-dy)>.01)P.f=dx-dy>0?1:-1;P.dir=HERO.dirOf(dx,dy);P.ldx=dx;P.ldy=dy;P.wr=sv*2*Math.PI/(RUN?STRR:STRW);P.w+=dt*P.wr;P.anm=1;P.wt=null;if(typeof FOOT!=='undefined')FOOT.tick(P,run)}   /* pasos: src/footsteps.js */
  else if(P.anm)settle(dt)
  if(P.mvg&&now-LD>(RUN?90:260)){LD=now;sp(P.x-P.f*3,P.y-1,['#c8b890','#a89870','#7a8a6a','#e8f0f8','#6a5050'][curB],RUN?3:1,14,12,20)}
  staTick(dt);EN=Math.min(enMax(),EN+dt*ENREG);MN=Math.min(mnMax(),MN+dt*mreg());prTick(dt);if(TB==='pr'&&Math.floor(PP*2)!==PPL){PPL=Math.floor(PP*2);dirty=1}if(TB==='mg'&&Math.floor(MN)!==MNl){MNl=Math.floor(MN);dirty=1}PJ=PJ.filter(p=>{if(now>=p.t1){if(p.m)hitM(p.m,p.d,now,p.sk,p.mxv,p.wt);return false}return true});if(CK)cookUpd(dt,now);
@@ -897,7 +905,7 @@ function upd(dt,now){swingTick(now);if(typeof AMB!=='undefined')AMB.tick(now,dt)
    if(m.d.boss)bossTick(m,now);
    if(telOn(m)&&telUpd(m,now))return;
    if(m.wind){const w=m.wind;if(now<w.t1){m.f=dx-dy>=0?1:-1;return}m.wind=null;windHit(m,w,now,dx,dy,dp);return}   // AVISO DE GOLPE: el enemigo se queda quieto con el cono rojo y golpea al terminar
-   if(dp>40){const sp2=(m.d.ag?58:45)*dt,nx=m.x+dx/dp*sp2,ny=m.y+dy/dp*sp2;if(!inVilla(nx,ny)){m.x=nx;m.y=ny;m.mv=now;m.f=dx-dy>=0?1:-1}}else if(!busy){m.f=dx-dy>=0?1:-1;if(now>=m.nt){if(telOn(m)&&now>=(m.tn||(m.tn=now+4000)))telStart(m,now);else if(!m.wind){const wd=Math.max(420,Math.min(720,(m.d.as||2400)*.22*(m.asx||1)));m.wind={t0:now,t1:now+wd,ang:Math.atan2(dy,dx)};m.nt=now+(m.d.as||2400)*(m.asx||1)+wd}}if(!A&&!P.g&&!P.mv&&!(K.l||K.r||K.u||K.d))startF(m,now)}return}
+   if(dp>40){const sp2=(m.d.ag?58:45)*dt,nx=m.x+dx/dp*sp2,ny=m.y+dy/dp*sp2;if(!inVilla(nx,ny)){m.x=nx;m.y=ny;m.mv=now;m.f=dx-dy>=0?1:-1}}else if(!busy){m.f=dx-dy>=0?1:-1;if(now>=m.nt){if(telOn(m)&&now>=(m.tn||(m.tn=now+4000)))telStart(m,now);else if(!m.wind){const big=bigFoe(m),wd=big?Math.max(420,Math.min(720,(m.d.as||2400)*.22*(m.asx||1))):800;m.wind={t0:now,t1:now+wd,ang:Math.atan2(dy,dx),big};m.nt=now+(m.d.as||2400)*(m.asx||1)+wd}}if(!A&&!P.g&&!P.mv&&!(K.l||K.r||K.u||K.d))startF(m,now)}return}
   if(now>m.wt){m.wt=now+R(2000,5000);m.tx=m.hx+R(-16,16);m.ty=m.hy+R(-12,12)}
   const ex=m.tx-m.x,ey=m.ty-m.y,d=Math.hypot(ex,ey);if(d>2){const sp3=d>60?55:18,nx=m.x+ex/d*sp3*dt,ny=m.y+ey/d*sp3*dt;if(!inVilla(nx,ny)){m.x=nx;m.y=ny;m.mv=now;m.f=ex-ey>=0?1:-1}}});
  if(A){const ph=swPh(now),imp=A.lp!=null&&ph<A.lp-.4;A.lp=ph;if(imp&&A.ty!=='f'){const e=A.e,k=A.sk;snd(k);

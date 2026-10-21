@@ -51,6 +51,7 @@ function bake(obj,boneObjs,skinHex){
  return{geo,hgeo:hg,local,parent,inv:inverses,names:boneObjs.map(b=>b[1]),tris:I.length/3|0}}
 
 // materiales del actor: 0 tela · 1 piel (rim bajo) · 2 doble cara. FLASH = destello de daño. HOVER = contorno claro bajo el puntero.
+const EYETEX=(()=>{const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d'),r=g.createRadialGradient(16,16,0,16,16,16);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.3,'rgba(255,255,255,.55)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,32,32);return new THREE.CanvasTexture(c)})();
 const VC={chr:1,vc:1,emit:1};
 const MATS=[toon('#ffffff',Object.assign({rim:1.4},VC)),toon('#ffffff',Object.assign({rim:.3},VC)),toon('#ffffff',Object.assign({rim:1.4,side:THREE.DoubleSide},VC))];
 const FLASHM=new THREE.MeshBasicMaterial({color:'#fff2e0'}),FLASH=[FLASHM,FLASHM,FLASHM],DEPTHM=new THREE.MeshBasicMaterial({colorWrite:false}),HOVER=new THREE.MeshBasicMaterial({color:'#ffe7a0',side:THREE.BackSide});
@@ -105,7 +106,7 @@ function buildQuad(id){const c=QUADS[id],s=c.s||1,k=U*s,P=new Proto(),bx=c.bx*k,
   P.part(sph(sn.ry*k*.32,1,.8,.7,6),'#2c2224',0,dy-sn.y*k+sn.ry*k*.25,dz+sn.x*k+sn.rx*k*.82,{p:neck,ink:0});
   if(c.fangs)[-1,1].forEach(q=>P.part(cone(sn.ry*k*.16,sn.ry*k*.7,5),'#f4f0e0',q*sn.ry*k*.55,dy-sn.y*k-sn.ry*k*.8,dz+sn.x*k+sn.rx*k*.35,{p:neck,ink:0,rot:[Math.PI,0,0]}));
   if(c.tusk)[-1,1].forEach(q=>P.part(cone(sn.ry*k*.2,sn.ry*k*1.1,5),'#efe6cc',q*sn.ry*k*.8,dy-sn.y*k+sn.ry*k*.2,dz+sn.x*k+sn.rx*k*.2,{p:neck,ink:.006,rot:[-.5,0,q*.35]}))}
- P.eyes(neck,hry*.74,dy+hry*.28,dz+hrz*.34,hry*.17,c.eye||'#1c1410',!!c.eye);
+ P.eyes(neck,hry*.74,dy+hry*.28,dz+hrz*.34,hry*.17,c.eye||'#1c1410',!!c.eye);P.eyePos=[hry*.74,dy+hry*.28,dz+hrz*.34,hry*.17];   // posición de los ojos (hueso 'head'): el destello de aviso de golpe se cuelga de ahí
  const ek=c.ear;if(ek&&ek!=='none')[-1,1].forEach(q=>{if(ek==='point')P.part(cone(hry*.34,hry*.95,5),hc,q*hry*.62,dy+hry*.95,dz-hrz*.15,{p:neck,ink:.01,rot:[-.15,0,-q*.25]});
   else if(ek==='side')P.part(sph(hry*.42,1.7,.3,.8,8),c.earC||hc,q*hry*1.25,dy+hry*.5,dz-hrz*.25,{p:neck,ink:.01,rot:[0,0,q*.25]});
   else if(ek==='round')P.part(sph(hry*.3,1,1.1,.6,8),hc,q*hry*.95,dy+hry*.7,dz-hrz*.2,{p:neck,ink:.01});
@@ -120,7 +121,7 @@ function buildQuad(id){const c=QUADS[id],s=c.s||1,k=U*s,P=new Proto(),bx=c.bx*k,
  else if(tk==='puff')P.part(sph(by*.38,1,1,1,8),c.wool||col,0,0,-by*.2,{p:tail,ink:.01});
  else if(tk==='curl')P.part(cyl(lw*.25,lw*.2,len*.8,5).translate(0,len*.35,-len*.15),shade(col,.7),0,0,0,{p:tail,ink:.006,rot:[-.8,0,0]});
  else if(tk==='stub')P.part(sph(by*.22,1,1,1,6),shade(col,.85),0,0,-by*.1,{p:tail,ink:.008});
- const t=bakeProto(P,null);t.kind='quad';t.k=s;t.h=len+by*1.8;t.rad=bx*1.3;t.tilt=c.tilt||0;t.cycle=bx*2*1.8;return t}
+ const t=bakeProto(P,null);t.kind='quad';t.k=s;t.h=len+by*1.8;t.rad=bx*1.3;t.tilt=c.tilt||0;t.cycle=bx*2*1.8;t.eye=P.eyePos;t.eyeCol=c.eye||'#ffd36a';return t}
 
 // ═══════════════════════════════ AVE (gallina) y RANA ═══════════════════════════════
 function buildBird(){const P=new Proto(),k=U,root=P.bone('root',null),body=P.bone('body',root,0,.17,0),W='#fff6dc',R='#d92a2a',Y='#f0a020';
@@ -288,7 +289,7 @@ export const NPC_IDS=['ru',...Object.keys(NPC_DEF)];
 function buildHuman(def){const s=Object.assign({},def.spec);s.k=1;s.id=def.id;Mini.detail=.62;let m;try{m=new Mini(s)}finally{Mini.detail=0}m.setInk(true);m.root.scale.setScalar(1);
  const bn=[[m.root,'root'],[m.pelvis,'pelvis'],[m.chest,'chest'],[m.body,'body'],[m.head,'head'],[m.legs[0],'legR'],[m.legs[1],'legL'],[m.knees[0],'kneeR'],[m.knees[1],'kneeL'],[m.ankles[0],'ankR'],[m.ankles[1],'ankL'],
   [m.arms[0],'armR'],[m.arms[1],'armL'],[m.elbows[0],'elbR'],[m.elbows[1],'elbL'],[m.grips[0],'gripR'],[m.grips[1],'gripL']];
- const t=bake(m.obj,bn,new THREE.Color(m.skinC).getHex());t.kind='human';t.k=(def.H/52)*HK/1.25*(s.k0||1);t.mini={W:m.W};t.lean=m.lean||0;t.dress=!!m.dress;t.rad=.9;t.h=def.H/52*HK;t.cycle=.85*def.H/52*HK;
+ const t=bake(m.obj,bn,new THREE.Color(m.skinC).getHex());t.kind='human';t.k=(def.H/52)*HK/1.25*(s.k0||1);t.mini={W:m.W};t.lean=m.lean||0;t.dress=!!m.dress;t.rad=.9;t.h=def.H/52*HK;t.cycle=.85*def.H/52*HK;t.eye=[.07,.012,.212,.04];t.eyeCol=s.eye||'#ffd36a';
  // las órbitas (Morgana) y otros objetos independientes no se hornean: quedan en m; no se usan (se animan sólo con huesos)
  m.obj.traverse(o=>{if(o.geometry)o.geometry.dispose()});return t}
 
@@ -309,6 +310,11 @@ export class Actor{
   this.mesh.frustumCulled=this.hull.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.hull.castShadow=false;this.grp.add(this.mesh,this.hull);
   this.sc=tpl.k;this.grp.scale.setScalar(this.sc);this.face=0;this.faceT=0;this.ph=hash(e.x,e.y,3)*6.28;this.mv=0;this.last=null;this.state='live';this.td=0;this.hov=false;this.fl=false;this.vis=true;
   this.E=new Euler0();this.aw=0;this.seed=hash(e.x*.01,e.y*.01,7)*6.28;this.breath=0;this.peck=0}
+ // DESTELLO DE OJOS (aviso de golpe de enemigos normales, 21 oct 2026): dos halos aditivos colgados del hueso 'head'; i = 0..1 (intensidad); >.85 = fogonazo blanco
+ eyeFx(i){const T=this.tpl;if(!T.eye||!this.b.head)return;
+  if(i<=.01){if(this.eg)this.eg.visible=false;return}
+  if(!this.eg){const g=this.eg=new THREE.Group(),r=T.eye[3];[-1,1].forEach(q=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:EYETEX,color:T.eyeCol,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));s.position.set(T.eye[0]*q,T.eye[1],T.eye[2]+r*1.2);g.add(s)});g.userData.r=r;this.b.head.add(g)}
+  const g=this.eg,r=g.userData.r,f=i>.85;g.visible=true;g.children.forEach(s=>{s.scale.setScalar(r*(3+i*3.5+(f?2.5:0)));s.material.color.set(f?'#fff4d0':T.eyeCol);s.material.opacity=Math.min(1,.35+i*.75)})}
  setHover(on){if(on===this.hov)return;this.hov=on;this.hull.material=on?HOVER:INK}
  setFlash(on){if(on===this.fl)return;this.fl=on;this.mesh.material=on?FLASH:MATS}
  dispose(){this.grp.removeFromParent();if(this.proxy)this.proxy.removeFromParent();this.mesh.skeleton&&this.mesh.skeleton.dispose()}
@@ -411,6 +417,9 @@ export class Actors{
   ANIM[A.tpl.kind](A,{t,dt,mv:A.mv,at:atk,wave:(isNpc&&e.job)?0:wave,look,job:isNpc?e.job:null});
   // daño: destello 120 ms (m.fl = hasta cuándo) y retroceso breve; hover
   const fl=!isNpc&&now<e.fl;A.setFlash(fl);A.setHover(e===hov);
+  // aviso de golpe: los ojos se encienden (rampa con parpadeo) y en el último tramo estallan en un fogonazo; tras el tajo se apagan en ~160 ms
+  let ei=0;if(!isNpc&&A.state==='live'){if(e.wind&&now<e.wind.t1){const u=(now-e.wind.t0)/(e.wind.t1-e.wind.t0);ei=Math.min(.55,u*4)+(u>.72?(u-.72)/.28*.45:0)+.06*Math.sin(now*.045)}else if(e.flare&&now-e.flare<160)ei=.9*(1-(now-e.flare)/160)}
+  A.eyeFx(Math.max(0,Math.min(1,ei)));
   if(!isNpc&&fl){const u=(e.fl-now)/120;A.b.root.position.z-= .05*u}
   // muerte: cae hacia atrás y se hunde/encoge ~0,9 s
   if(A.state==='dying'){const u=(now-A.td)/900;if(u>=1){A.state='gone';A.vis=false;A.grp.visible=false;if(A.proxy)A.proxy.visible=false;return}const f=ss(0,.45,u),h=ss(.45,1,u);A.b.root.rotation.x=-1.45*f;A.b.root.position.y=A.restP.root.y-.1*f*A.sc;A.grp.scale.setScalar(A.sc*(1-h*.85));A.grp.position.y-=.25*h*A.sc}

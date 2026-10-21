@@ -3,7 +3,7 @@
 //   game.js los lee en `atkMs()` (swing) y `hitM()` (stop, shake, knock). Con los valores por defecto el juego se comporta EXACTAMENTE como antes.
 // (2) `LAB` = un MUÑECO de entrenamiento (un goblin con vida casi infinita) junto al héroe, con un panel que mide el ritmo REAL: periodo entre golpes, daño del último, % de aciertos, DPS de 10 s y golpes totales, y deslizadores de FEEL.
 //   Abrir: `LAB.open()`, `?lab` en la URL, o el botón «Laboratorio de combate» del menú de trucos (F3, pestaña Mundo). Está pensado para probarlo en TU GPU: SwiftShader (sin GPU) va a ≈ 2 fps y no sirve para juzgar el tacto.
-const FEEL=(()=>{const D={swing:1,stop:0,shake:0,knock:0,manual:1,mk:1,aim:1,ver:2};let v=Object.assign({},D);try{const j=JSON.parse(localStorage.getItem('ns_feel')||'null');if(j){if((j.ver||0)<2){j.mk=1}v=Object.assign(v,j)}}catch(e){}
+const FEEL=(()=>{const D={swing:1,stop:35,shake:.2,knock:0,manual:1,mk:1,aim:1,ver:3};let v=Object.assign({},D);try{const j=JSON.parse(localStorage.getItem('ns_feel')||'null');if(j){if((j.ver||0)<2){j.mk=1}if((j.ver||0)<3){j.stop=35;j.shake=.2;j.ver=3}v=Object.assign(v,j)}}catch(e){}
  const save=()=>{try{localStorage.setItem('ns_feel',JSON.stringify(v))}catch(e){}};
  return{D,get v(){return v},set(k,x){if(k in D){v[k]=+x;save()}},reset(){v=Object.assign({},D);save()},get swing(){return v.swing},get stop(){return v.stop},get shake(){return v.shake},get knock(){return v.knock},get manual(){return v.manual},get mk(){return v.mk},get aim(){return v.aim}}})();
 const LAB=(()=>{
