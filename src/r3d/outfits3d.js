@@ -6,8 +6,8 @@
 // ── ATUENDOS DEL HÉROE ── `base` = el que lleva al empezar; el resto se desbloquean (plan F6b: ver GUIA_3D_PORTEO §6). `app` aquí es solo de muestra:
 //    en el juego la apariencia (género, pelo, piel, ojos) la pone el jugador en el editor y el atuendo solo aporta `outfit` + colores de prenda.
 export const OUTFITS=[
- {id:'errante',name:'Errante',sub:'gambesón, bufanda, bandolera',base:true,unlock:'inicial',
-  look:{app:{g:'m',hair:'cut',hc:'#4a3022',skin:'#d9a878',col:'#5a5a3a'},outfit:{top:'gambeson',topC:'#7a6a4a',bag:'#6a4a30',pouches:1,knife:1,skirt:'corta'},gear:{wp:{t:'sword',wk:'sword',col:'#b8c0c8'}}}},
+ {id:'errante',name:'Errante',sub:'camisa, correas de cuero, cinturón',base:true,unlock:'inicial',
+  look:{app:{g:'m',hair:'cut',hc:'#4a3022',skin:'#d9a878',col:'#5a5a3a'},outfit:{straps:'#5a3e2c',bag:'#6a4a30',pouches:1,knife:1,skirt:'corta'},gear:{wp:{t:'sword',wk:'sword',col:'#b8c0c8'}}}},
  {id:'penitente',name:'Penitente de ceniza',sub:'túnica larga, capelina, vendas',unlock:'Plegaria / Magia (propuesta)',
   look:{app:{g:'f',hair:'long',hc:'#2a1e18',skin:'#e6c4a0',col:'#6a6460'},outfit:{skirt:'larga',skirtC:'#5a5450',capelet:'#3e3a40',hood:'baja',hoodC:'#3e3a40',wraps:1,rope:'#a08a60',amulet:'#d8b050',scarf:false},gear:{wp:{t:'staff',wk:'staff',col:'#e8a050'}}}},
  {id:'mercenario',name:'Mercenario de frontera',sub:'brigantina, hombrera, piel',unlock:'Cuerpo a cuerpo (propuesta)',

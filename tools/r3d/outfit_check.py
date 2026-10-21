@@ -27,7 +27,7 @@ async def main():
       await pg.evaluate(f'(()=>{{S.app.outfit="{i}";R3D.parts.snap()}})()');await pg.wait_for_timeout(2500)
       await pg.screenshot(path=f'{OUT}/mundo_{i}.png',clip={'x':330,'y':170,'width':300,'height':300},timeout=120000)
     # el equipo manda: con armadura equipada (look.ar) sin prenda de torso
-    r=await pg.evaluate('(()=>{const a=R3D.outfits.resolve({app:{outfit:"errante"},ar:"#8a8a90"}).outfit,b=R3D.outfits.resolve({app:{outfit:"errante"}}).outfit;return [a.top||null,b.top||null]})()')
-    print('top con armadura / sin armadura:',r);ok=ok and r[0] is None and r[1]=='gambeson'
+    r=await pg.evaluate('(()=>{const a=R3D.outfits.resolve({app:{outfit:"mercenario"},ar:"#8a8a90"}).outfit,b=R3D.outfits.resolve({app:{outfit:"mercenario"}}).outfit;return [a.top||null,b.top||null]})()')
+    print('top con armadura / sin armadura:',r);ok=ok and r[0] is None and r[1]=='brigantina'
     print('errores:',errs or 'ninguno');ok=ok and not errs;print('RESULTADO: OK' if ok else 'RESULTADO: FALLO');await b.close()
 asyncio.run(main())

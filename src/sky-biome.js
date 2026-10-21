@@ -42,11 +42,13 @@
   [[12.8,-5.2],[19.2,-5.2],[12.8,-1.8],[19.2,-1.8]].forEach(([x,y])=>put('braseroG',x,y,null,[5,5]));
   put('anfora',13.5,-7,null,[3,3]);put('anfora',18.5,-7,null,[3,3]);
   put('columnaRota',27,-6,{v:0},[8,8]);put('columnaRota',-28,-8,{v:1},[8,8]);put('columnaRota',27.5,2,{v:2},[8,8]);put('estelaG',24,-9.5,{ruins:1},[7,4])}
+ // ARBOLEDAS REPARTIDAS (Lote CIELO-ARBOLES, 21 oct 2026): árboles del Cielo por toda la isla, no solo en el olivar. [x0,x1,y0,y1,n] en tiles desde el centro, lejos de edificios, lagos y camino; su «zona» es 1×1 tile (sin aviso de zona de tala).
+ const GR=[[-16,-6,8,14,8],[3,12,11,18,8],[-22,-12,-18,-11,7],[21,26,-16,-11,5],[24,29,8,13,5],[5,11,-15,-9,6]];
  const Z={n:'El Cielo',lv:80,ic:'☁️',g:['#9ed2ee','#8fc8e6','#aadcf4'],w:'#8fd8f0',sh:'#e8f8ff',noBoss:1,base:0,zone:true,id:'cielo',pal,dec,
   village:{stations:STN,props:PRP,cobs:COBZ,plaza:[],bridge:null,safe:[ce[0],ce[1],470,470],theme:{}},routes:[],pathW:B8.pathW,lake:false,camp:false,
-  res:{wc:[[[0,16]]],mi:[[[0,6],[1,6]]],fi:[[[0,5]]]},mobs:{ing:[],pack:B8.mobs.pack},music:B8.music,rvc:B8.rvc,bossResp:B8.bossResp,bossRunes:B8.bossRunes,
+  res:{wc:[[[0,16]],...GR.map(g=>[[0,g[4]]])],mi:[[[0,6],[1,6]]],fi:[[[0,5]]]},mobs:{ing:[],pack:B8.mobs.pack},music:B8.music,rvc:B8.rvc,bossResp:B8.bossResp,bossRunes:B8.bossRunes,
   w:W,h:H,ox:0,oy:0,spawn:[sp[0],sp[1]],cen:[ce[0],ce[1]],bossPos:[bo[0],bo[1]],exitE:[cy-57,cy+57],entryW:[cy-57,cy+57],
-  lay:{water:[],lakes:LK,hills:HL,wc:[{r:[RC(-24,-14,-8,1)],z:RC(-25,-13,-9,2)}],mi:[{r:[RC(-9,-2,-17,-12.5)],z:RC(-10,-1,-18,-12)}],fi:[{z:RC(3,11,-3.6,3.6),t:'Fuente de las ninfas'}]},spots:{},pois:[],_gdefs:[]};
+  lay:{water:[],lakes:LK,hills:HL,wc:[{r:[RC(-24,-14,-8,1)],z:RC(-25,-13,-9,2)},...GR.map(g=>({r:[RC(g[0],g[1],g[2],g[3])],z:RC((g[0]+g[1])/2-.5,(g[0]+g[1])/2+.5,(g[2]+g[3])/2-.5,(g[2]+g[3])/2+.5)}))],mi:[{r:[RC(-9,-2,-17,-12.5)],z:RC(-10,-1,-18,-12)}],fi:[{z:RC(3,11,-3.6,3.6),t:'Fuente de las ninfas'}]},spots:{},pois:[],_gdefs:[]};
  // DOS MONTAÑAS PEQUEÑAS de mármol (BIOMES.addRange: núcleo infranqueable de ≈ 4 tiles + falda transitable en 3 terrazas, cumbre de ≈ 3,6 unidades) detrás de los manantiales NO y N: la del NO será la CANTERA
  if(BIOMES.addRange&&!/[?&]range=0\b/.test(typeof location!=='undefined'?location.search:'')){const wx=tx=>3*W+cx+tx*T,wy=ty=>H+cy+ty*T,COLM=['#8a8578','#c2bba8','#f1ece0'];
   [[[-15,-12.5],[-11,-15.5],3.6,41],[[3,-14.8],[9,-14.8],3.2,42]].forEach(([a,b,pk,sd])=>BIOMES.addRange({id:'cielo',p:[[Math.round(wx(a[0])),Math.round(wy(a[1]))],[Math.round(wx(b[0])),Math.round(wy(b[1]))]],w:70,f:140,amp:26,seed:sd,pk,col:COLM}))}
