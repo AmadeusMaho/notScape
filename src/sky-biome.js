@@ -23,18 +23,20 @@
   for(let r=r0,q=0;r<40;r+=.85,q++){const wob=Math.sin(q*.8+k)*.5;LK.push({c:tp(Math.cos(a)*r-Math.sin(a)*wob,Math.sin(a)*r+Math.cos(a)*wob),r:[1.05*T,1.05*T],seed:sd+q,amp:.1,sand:20})}})
 
 
+ HL.push({c:tp(-19,5.5),r:[5.9*T,4.2*T],seed:77,amp:.06,lv:1});   // PROPÍLEOS: zócalo elevado de 1 nivel bajo toda la estructura (relieve DENTRO del edificio: se sube al pórtico, no se atraviesa a ras)
  // ISLA-4 (21 oct 2026) · VIDA de la isla: OLIVAR (tala; olivos y cipreses en lugar de pinos, ver nature3d.js `inZone`), CANTERA (cobre y estaño en menas de mármol claro), FUENTE DE LAS NINFAS (pesca de camarones),
  // estaciones del Ágora (horno, yunque, fogata) y el BANCO al pie de la Acrópolis, y el CAMINO DE LAJAS de mármol (cobs → adoquín; suena a mármol) desde la llegada hasta el templo. Zonas y estaciones según docs/PLAN_ISLA_CIELO.md §6.2.
  const RC=(x0,x1,y0,y1)=>{const a=tp(x0,y0),b=tp(x1,y1);return[a[0],b[0],a[1],b[1]]};
  const STN=[['fire','Fogata',...tp(-1.6,-3.7),['co']],['furnace','Horno',...tp(0.4,-5.4),['sm']],['anvil','Yunque',...tp(3.6,-5.4),['sm']],['bank','Banco',...tp(21,-3)]];
- const CAM=[[-26,12.4],[-22.5,12.8],[-22.5,6.2],[2,-6],[9,-6.4],[16,-6.4]],COBZ=[{p:CAM.map(q=>tp(q[0],q[1])),w:60},{p:[tp(16,-6.4),tp(21,-6.4),tp(21,-3.8)],w:44}];   // camino principal (propíleos → ágora → templo) y ramal al banco
+ const CAM=[[-26,12.4],[-19,12.4],[-19,-1.6],[2,-6],[9,-6.4],[16,-6.4]],COBZ=[{p:CAM.map(q=>tp(q[0],q[1])),w:60},{p:[tp(16,-6.4),tp(21,-6.4),tp(21,-3.8)],w:44}];   // camino principal (propíleos → ágora → templo) y ramal al banco
  // ISLA-3 (21 oct 2026) · ARQUITECTURA GRIEGA de MÁRMOL (src/r3d/propsdark_cielo3d.js): Propileos en la llegada, camino de columnas, Ágora, Acrópolis (templo + Altar Quebrado con sus 4 braseros) y ruinas del borde.
  // Coordenadas en tiles desde el centro (como tp); `fp`/`fps` = colisión en px SIN escalar (props.js la multiplica ×PROP_K). Todo es decoración + colisión: los oficios, PNJ y recursos llegan en ISLA-4.
  const PRP=[],put=(n,tx,ty,o,fp,fps,ex)=>{const q=tp(tx,ty);PRP.push(Object.assign({n,x:q[0],y:q[1]},o?{o}:{},fp?{fp}:{},fps?{fps}:{},ex||{}))};
- {const col4=(sx,zs)=>zs.map(z=>[z*T,sx*28.8,4.6,4.6]);       // propíleos (ya espejados: model z → x, model x → z)
-  put('propileos',-22.5,9.6,null,null,[...col4(-1,[-1.05,-.5,.5,1.05]),...col4(1,[-1.05,-.5,.5,1.05]),[-48,0,5.5,29],[48,0,5.5,29]]);
-  for(const t of [.25,.5,.75]){const px=-22.5+24.5*t,py=6.5-12.5*t;put('columnaG',px+1,py+1.96,null,[5,5]);put('columnaG',px-1,py-1.96,null,[5,5])}   // dos filas de columnas flanquean el CAMINO DE LAJAS (del propíleo al Ágora)
-  put('estelaG',-18.5,12.5,null,[7,4]);put('estelaG',-26.5,6.5,null,[7,4]);
+ {const KP=2.2,col4=(sx,zs)=>zs.map(z=>[z*T*KP,sx*28.8*KP,4.6*KP,4.6*KP]),
+   fill=sx=>{const y=sx*28.8*KP,h=4.6*KP,r=[];[-1,1].forEach(q=>{r.push([q*.775*T*KP,y,.275*T*KP+h,h]);r.push([q*1.275*T*KP,y,.225*T*KP+5.5*KP,h])});return r};   // COLONATA SÓLIDA: relleno continuo entre las columnas exteriores y hasta los muros (cierra los huecos laterales y las esquinas: solo queda libre el paso central N–S)       // propíleos MONUMENTALES (CI_SCALE.propileos = 2,2 → ≈ 11,6 × 8,3 tiles y 7 de alto con ×PROP_K): columnas y muros (ya espejados: model z → x, model x → z) escalados igual
+  put('propileos',-19,5.5,null,null,[...col4(-1,[-1.05,-.5,.5,1.05]),...col4(1,[-1.05,-.5,.5,1.05]),...fill(-1),...fill(1),[-48*KP,0,5.5*KP,29*KP],[48*KP,0,5.5*KP,29*KP]]);
+  for(const t of [.25,.5,.75]){const px=-19+21*t,py=-1.6-4.4*t;put('columnaG',px+.45,py+2.15,null,[5,5]);put('columnaG',px-.45,py-2.15,null,[5,5])}   // dos filas de columnas flanquean el CAMINO DE LAJAS (de los propíleos al Ágora)
+  put('estelaG',-22,14.3,null,[7,4]);put('estelaG',-16.5,13.8,null,[7,4]);put('estelaG',-27.4,8.5,null,[7,4]);
   put('agora',2,-6,null,null,Array.from({length:7},(_,i)=>{const a=Math.PI+i/6*Math.PI;return[Math.cos(a)*2.28*T,Math.sin(a)*2.28*T,4,4]}));
   put('bancoG',-2,-1.2,null,[11,4]);put('bancoG',1.6,-1.0,null,[11,4]);put('anfora',0.5,-3.1,null,[3,3]);put('anfora',3.5,-3.1,null,[3,3]);
   put('temploG',16,-12,null,[56,94]);
@@ -43,12 +45,12 @@
   put('anfora',13.5,-7,null,[3,3]);put('anfora',18.5,-7,null,[3,3]);
   put('columnaRota',27,-6,{v:0},[8,8]);put('columnaRota',-28,-8,{v:1},[8,8]);put('columnaRota',27.5,2,{v:2},[8,8]);put('estelaG',24,-9.5,{ruins:1},[7,4])}
  // ARBOLEDAS REPARTIDAS (Lote CIELO-ARBOLES, 21 oct 2026): árboles del Cielo por toda la isla, no solo en el olivar. [x0,x1,y0,y1,n] en tiles desde el centro, lejos de edificios, lagos y camino; su «zona» es 1×1 tile (sin aviso de zona de tala).
- const GR=[[-16,-6,8,14,8],[3,12,11,18,8],[-20,-12,-15,-11,7],[19,23,-13,-10,5],[22,26,7,11,5],[5,11,-15,-9,6]];   // rectángulos de arboledas DENTRO de la elipse de la isla (rx 32, ry 24): las esquinas de antes (p. ej. 29,13) caían al agua/acantilado (coast_check)
+ const GR=[[-12,-4,10,15,8],[3,12,11,18,8],[-20,-12,-15,-11,7],[19,23,-13,-10,5],[22,26,7,11,5],[5,11,-15,-9,6]];   // rectángulos de arboledas DENTRO de la elipse de la isla (rx 32, ry 24): las esquinas de antes (p. ej. 29,13) caían al agua/acantilado (coast_check)
  const Z={n:'El Cielo',lv:80,ic:'☁️',g:['#9ed2ee','#8fc8e6','#aadcf4'],w:'#8fd8f0',sh:'#e8f8ff',noBoss:1,base:0,zone:true,id:'cielo',pal,dec,
   village:{stations:STN,props:PRP,cobs:COBZ,plaza:[],bridge:null,safe:[ce[0],ce[1],470,470],theme:{}},routes:[],pathW:B8.pathW,lake:false,camp:false,
   res:{wc:[[[0,16]],...GR.map(g=>[[0,g[4]]])],mi:[[[0,6],[1,6]]],fi:[[[0,5]]]},mobs:{ing:[],pack:B8.mobs.pack},music:B8.music,rvc:B8.rvc,bossResp:B8.bossResp,bossRunes:B8.bossRunes,
   w:W,h:H,ox:0,oy:0,spawn:[sp[0],sp[1]],cen:[ce[0],ce[1]],bossPos:[bo[0],bo[1]],exitE:[cy-57,cy+57],entryW:[cy-57,cy+57],
-  lay:{water:[],lakes:LK,hills:HL,wc:[{r:[RC(-24,-14,-8,1)],z:RC(-25,-13,-9,2)},...GR.map(g=>({r:[RC(g[0],g[1],g[2],g[3])],z:RC((g[0]+g[1])/2-.5,(g[0]+g[1])/2+.5,(g[2]+g[3])/2-.5,(g[2]+g[3])/2+.5)}))],mi:[{r:[RC(-9,-2,-17,-12.5)],z:RC(-10,-1,-18,-12)}],fi:[{z:RC(3,11,-3.6,3.6),t:'Fuente de las ninfas'}]},spots:{},pois:[],_gdefs:[]};
+  lay:{water:[],lakes:LK,hills:HL,wc:[{r:[RC(-25,-15,-10,-3.5)],z:RC(-26,-14,-11,-2.5)},...GR.map(g=>({r:[RC(g[0],g[1],g[2],g[3])],z:RC((g[0]+g[1])/2-.5,(g[0]+g[1])/2+.5,(g[2]+g[3])/2-.5,(g[2]+g[3])/2+.5)}))],mi:[{r:[RC(-9,-2,-17,-12.5)],z:RC(-10,-1,-18,-12)}],fi:[{z:RC(3,11,-3.6,3.6),t:'Fuente de las ninfas'}]},spots:{},pois:[],_gdefs:[]};
  // DOS MONTAÑAS PEQUEÑAS de mármol (BIOMES.addRange: núcleo infranqueable de ≈ 4 tiles + falda transitable en 3 terrazas, cumbre de ≈ 3,6 unidades) detrás de los manantiales NO y N: la del NO será la CANTERA
  if(BIOMES.addRange&&!/[?&]range=0\b/.test(typeof location!=='undefined'?location.search:'')){const wx=tx=>3*W+cx+tx*T,wy=ty=>H+cy+ty*T,COLM=['#8a8578','#c2bba8','#f1ece0'];
   [[[-15,-12.5],[-11,-15.5],3.6,41],[[3,-14.8],[9,-14.8],3.2,42]].forEach(([a,b,pk,sd])=>BIOMES.addRange({id:'cielo',p:[[Math.round(wx(a[0])),Math.round(wy(a[1]))],[Math.round(wx(b[0])),Math.round(wy(b[1]))]],w:70,f:140,amp:26,seed:sd,pk,col:COLM}))}

@@ -176,7 +176,7 @@ export class Resources{
  update(now,t,hov,act,dt){const s=this.sign();if(s!==this.sig){this.sig=s;this.build(now)}if(this.falls.length)this.updFalls(t,dt||.016);
   const o3=new THREE.Object3D(),Z=new THREE.Matrix4().makeScale(0,0,0);
   // temblor SOLO al recibir el golpe (pedido del dueño): swPh() de game.js vale 0 en el impacto y crece hasta 1 en el siguiente golpe → amortiguado en el primer ~20 % del ciclo
-  const hitK=e=>{if(act!==e)return 0;try{if(typeof A!=='undefined'&&A&&A.wh){const f=(performance.now()-(A.h0+300))/340;return f>=0&&f<1?Math.pow(1-f,2):0}   // rueda de recolección: el temblor sale del golpe del jugador (impacto a los 300 ms de pulsar)
+  const hitK=e=>{if(act!==e)return 0;try{if(typeof A!=='undefined'&&A&&A.wh){const f=(performance.now()-(A.h0+(typeof WH_IMP!=='undefined'?WH_IMP:90)))/340;return f>=0&&f<1?Math.pow(1-f,2):0}   // rueda de recolección: el temblor sale del golpe del jugador (impacto a los 300 ms de pulsar)
    if(e.t!=='wc'||typeof swPh!=='function')return 0;const f=swPh(now);return f<.22?Math.pow(1-f/.22,2):0}catch(x){return 0}};
   const prog=e=>{try{return act===e&&typeof A!=='undefined'&&A&&A.wh?Math.min(1,A.pr||0):0}catch(x){return 0}};   // progreso de la rueda: el recurso se va deshaciendo / inclinando
   // Fase 49a (rendimiento): con 9 biomas hay ~13 700 recursos; recorrerlos todos cada fotograma costaba ~+6 ms. Solo cambian de estado los que están cerca del héroe (talar/minar) o los ya agotados (`pend`, hasta que reviven).

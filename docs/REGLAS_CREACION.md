@@ -80,6 +80,9 @@ Se comprueba y se cuenta en la entrega: (1) **ESCALA** vs. héroe (≈1 unidad �
 - **Nameplates de enemigos** = DOM `#nps` (`dMo`/`npSweep` en game.js); **vida del jugador con estado** = `data-st` (+ color en `DOTN`).
 - Táctil: pulsación larga = tooltip + icono 3D vivo (`touch.js`); zonas ≥ 40–44 px.
 
+- **Minijuegos (21 oct 2026):** todo minijuego usa el patrón común de `game.js` (`mgBegin/mgHintRows/mgUi/mgKey`): ayuda de controles suave junto a la estación las primeras 5 veces (sin bloques ni toasts) y enfoque de cámara `MG_ZOOM` (no cine). Detalle en el lote MINIJUEGOS-UI de AGENTS.md.
+- **Rendimiento de carga:** NO programar pasadas completas de `R3D.warmShaders` tras la carga (cada una congela ≈ 3 fotogramas de 115–220 ms aunque no compile nada); lo nuevo se precompila con `warmObjs()` y el vigilante `[R3D] shaders compilados EN JUEGO` avisa de lo que falte.
+
 ## 8 · Combate (parámetros que no se tocan sin hablarlo)
 - `FEEL` (combatlab.js): `swing`, `stop` 35, `shake` .2, `knock` 0 (el empujón rompió la distancia), `manual`, `aim`; el empujón visual NO existe.
 - Dash = quickstep (Espacio), i-frames, cuesta 45 de resistencia; correr = Mayús mantenido (R libre); correr en combate gasta ×4,5→×2,4.

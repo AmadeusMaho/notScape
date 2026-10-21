@@ -10,28 +10,40 @@ const ISLA=(()=>{
  const T=32,CAPS=['Llegada','Manos de tierra','Fuego','Agua y cocina','La Palestra','El cofre','El ritual','Escapa'];
  // ofrendas del ritual: [objeto, brasero (tiles desde el centro)] — los 4 braseros están en sky-biome.js alrededor del Altar Quebrado
  const OFR=[['logs',12.8,-5.2],['estano',19.2,-5.2],['sw_cobre',12.8,-1.8],['c_camaron',19.2,-1.8]];
+ // MISIONES TIPO WOW (21 oct 2026): cada maestro da UNA misión con 3 fases = 3 tipos de paso: `ph:'a'` (ACEPTAR: el maestro tiene un «!»; se acepta en su diálogo), los pasos de OBJETIVO (el maestro muestra un «?» gris) y `ph:'t'` (ENTREGAR: «?» dorado; hay que volver y entregar lo que pide `deliver`, y recibir `reward`). Los textos y datos de cada misión están en QUESTS.
+ const QUESTS=[
+  {npc:'v:9:raguel',name:'Despertar',hi:'Bienvenido, viajero.',desc:'Camina por el camino de lajas hasta la columna, corre un poco manteniendo Mayús y abre la Mochila. Después vuelve conmigo.',rem:'Camina hasta la columna, corre y abre la Mochila.',turn:'¿Has recorrido el camino?',done:'Bien. Ahora ve al olivar, al oeste, y habla con Sariel: ella te enseña a talar y minar.',coins:5},
+  {npc:'v:9:sariel',name:'Manos de tierra',hi:'Hay trabajo que hacer.',desc:'Necesito 3 troncos de olivo y, de la cantera del norte, 2 de cobre y 2 de estaño. Tráemelos.',rem:'Tala olivos y mina cobre y estaño en la cantera del norte.',turn:'¿Traes los materiales?',deliver:{logs:3,cobre:2,estano:2},reward:{cobre:2,estano:1,logs:1},coins:15,done:'Gracias. Quédate con lo que te sirva. Ve al Ágora y habla con Uriel.'},
+  {npc:'v:9:uriel',name:'Fuego',hi:'El fuego no espera.',desc:'Funde 2 barras de cobre en el horno y forja una espada de cobre en el yunque. Luego tráemela.',rem:'Funde las barras en el horno y forja la espada en el yunque.',turn:'¿Está lista la espada?',deliver:{sw_cobre:1},reward:{sw_cobre:1},coins:25,done:'Buen filo. Llévatela. Ve a la fuente y habla con Rafael.'},
+  {npc:'v:9:rafael',name:'Agua y cocina',hi:'Ven, siéntate un momento.',desc:'Pesca 3 camarones en la fuente y cocina 2 en la fogata del Ágora. Tráeme los cocinados.',rem:'Pesca en la fuente y cocina en la fogata del Ágora.',turn:'¿Los camarones?',deliver:{c_camaron:2},reward:{c_camaron:1},coins:25,done:'Excelente. Guarda uno. Ve a la Palestra y habla con Miguel.'},
+  {npc:'v:9:miguel',name:'La Palestra',hi:'Firme. Mirada al frente.',desc:'Las gallinas de la Palestra son tu práctica: golpea con puntería, carga un golpe, esquiva con Espacio y derrota a 3. Vuelve cuando acabes.',rem:'Practica con las gallinas de la Palestra.',turn:'¿Has terminado?',done:'Bien. Deposita todo en el banco, saca las 4 ofrendas (troncos, estaño, espada de cobre y camarón cocinado) y sube a la Acrópolis.',coins:40}];
+ const QS=(q,ph,o)=>Object.assign({q,ph,npc:QUESTS[q].npc,g:{t:'talk',k:QUESTS[q].npc}},o);
  const STEPS=[
-  {cap:0,txt:'Habla con Raguel',npc:'v:9:raguel',g:{t:'talk',k:'v:9:raguel'}},
-  {cap:0,txt:'Camina hasta la columna',at:[-16.4,3.4],g:{t:'reach',at:[-16.4,3.4],r:2.6}},
+  QS(0,'a',{cap:0,txt:'Habla con Raguel'}),
+  {cap:0,txt:'Camina hasta la columna',at:[-13.7,-2.7],g:{t:'reach',at:[-13.7,-2.7],r:2.6}},
   {cap:0,txt:'Corre (mantén Mayús) a lo largo del camino',at:[-4.1,-2.9],g:{t:'run',k:'run',n:12},hint:'Mayús'},
   {cap:0,txt:'Abre la Mochila',g:{t:'panel'},hint:'inv'},
-  {cap:0,txt:'Vuelve con Raguel',npc:'v:9:raguel',g:{t:'talk',k:'v:9:raguel'}},
-  {cap:1,txt:'Habla con Sariel, en el olivar',npc:'v:9:sariel',g:{t:'talk',k:'v:9:sariel'}},
-  {cap:1,txt:'Tala 3 troncos de olivo',at:[-19,-3],g:{t:'got',k:'logs',n:3}},
+  QS(0,'t',{cap:0,txt:'Vuelve con Raguel'}),
+  QS(1,'a',{cap:1,txt:'Habla con Sariel, en el olivar'}),
+  {cap:1,txt:'Tala 3 troncos de olivo',at:[-20,-6.5],g:{t:'got',k:'logs',n:3}},
   {cap:1,txt:'Mina 2 de cobre en la cantera',at:[-5.5,-14.8],g:{t:'got',k:'cobre',n:2}},
   {cap:1,txt:'Mina 2 de estaño',at:[-5.5,-14.8],g:{t:'got',k:'estano',n:2}},
-  {cap:2,txt:'Habla con Uriel, en el Ágora',npc:'v:9:uriel',g:{t:'talk',k:'v:9:uriel'}},
+  QS(1,'t',{cap:1,txt:'Vuelve con Sariel y entrégale los materiales'}),
+  QS(2,'a',{cap:2,txt:'Habla con Uriel, en el Ágora'}),
   {cap:2,txt:'Funde 2 barras de cobre en el horno',at:[.4,-5.4],g:{t:'make',k:'b_cobre',n:2}},
   {cap:2,txt:'Forja una espada de cobre en el yunque',at:[3.6,-5.4],g:{t:'make',k:'sw_cobre',n:1}},
-  {cap:3,txt:'Habla con Rafael, junto a la fuente',npc:'v:9:rafael',g:{t:'talk',k:'v:9:rafael'}},
+  QS(2,'t',{cap:2,txt:'Vuelve con Uriel y entrégale la espada'}),
+  QS(3,'a',{cap:3,txt:'Habla con Rafael, junto a la fuente'}),
   {cap:3,txt:'Pesca 3 camarones en la fuente',at:[8,0],g:{t:'got',k:'camaron',n:3}},
   {cap:3,txt:'Cocina 2 camarones en la fogata',at:[-1.6,-3.7],g:{t:'make',k:'c_camaron',n:2}},
-  {cap:4,txt:'Habla con Miguel, en la Palestra',npc:'v:9:miguel',g:{t:'talk',k:'v:9:miguel'}},
+  QS(3,'t',{cap:3,txt:'Vuelve con Rafael y entrégale los camarones'}),
+  QS(4,'a',{cap:4,txt:'Habla con Miguel, en la Palestra'}),
   {cap:4,txt:'Apunta con el ratón y haz clic: golpea a una gallina (3 golpes)',at:[14,10],g:{t:'cnt',k:'swing',n:3}},
   {cap:4,txt:'Mantén el clic para cargar un golpe y suéltalo',at:[14,10],g:{t:'cnt',k:'charged',n:1}},
   {cap:4,txt:'Esquiva con ESPACIO (2 veces)',g:{t:'dash',k:'dash',n:2},hint:'Espacio'},
   {cap:4,txt:'Evita un golpe: sal del cono rojo o esquiva',at:[14,10],g:{t:'cnt',k:'dodge',n:1}},
   {cap:4,txt:'Derrota 3 gallinas',at:[14,10],g:{t:'kill',k:'gallina',n:3}},
+  QS(4,'t',{cap:4,txt:'Vuelve con Miguel'}),
   {cap:5,txt:'Deposita todo en el banco',at:[21,-3],g:{t:'dep',k:'dep',n:1}},
   {cap:5,txt:'Saca las 4 ofrendas del banco',at:[21,-3],g:{t:'have',k:['logs','estano','sw_cobre','c_camaron']}},
   {cap:6,txt:'Sube a la Acrópolis',at:[16,-6.4],g:{t:'reach',at:[16,-6.4],r:3}},
@@ -64,6 +76,7 @@ const ISLA=(()=>{
   if(!S.islaInit){S.islaInit=1;if((S.goal||0)===0&&!(S.st&&S.st.talk)&&!/[?&](at=|zone=0)/.test(location.search)){st().lock=1;go(0);save()}}
   if(on()&&st().lock&&!S.islaTip&&!tipEl)setTimeout(tipShow,1800)   // PARTIDA NUEVA: se empieza en la isla (varadero); las partidas con progreso en la Pradera no se tocan
   const i=st();if(!on())return;
+  if(qpNpc){const e=ST.find(x=>x.id===qpNpc);if(!e||Math.hypot(e.x-P.x,e.y-P.y)>230)qpHide()}
   if(!sp){sp=1;base();[[12.5,9.5],[15.2,11],[16.5,8.6],[13,12]].forEach(([x,y])=>{const q=wp(x,y);if(typeof mob==='function'&&!M.some(m=>m.d.id==='gallina'&&m.hx>=zone().x0))mob('gallina',q.x,q.y)})}   // 4 gallinas en la Palestra (los cangrejos de nube del plan llegarán con su modelo)
   if(cur().esc&&!es)startEscape();
   i.t[cur().cap]=(i.t[cur().cap]||0)+dt;
@@ -73,7 +86,45 @@ const ISLA=(()=>{
   if(cur().g.t==='cine'&&!cs){cs=1;if(gm){gm.rt=1e15}const end=()=>adv();if(typeof CINE==='undefined'||!CINE.start('caida',{done:end}))end()}
   if(done())adv();dirty=dirty||0}
  // una conversación con un maestro: si es el que pide el paso actual, lo cumple (se llama desde npcTalk)
- function talk(id){if(!on())return;const g=cur().g;if(g.t==='talk'&&g.k===id)adv()}
+ function talk(id){}   // (antes avanzaba el paso al hablar; ahora lo hacen las MISIONES: dlg()/accept/turnIn)
+ // ── MISIONES TIPO WOW: marcador del PNJ y diálogo con opciones ──
+ const qIdx=(q,ph)=>STEPS.findIndex(x=>x.q===q&&x.ph===ph),qOf=id=>QUESTS.findIndex(x=>x.npc===id);
+ const needOk=q=>{const d=QUESTS[q].deliver;return !d||Object.entries(d).every(([k,n])=>have(k)>=n)};
+ // «!» = misión disponible (dorado) · «?» gris = aceptada, en curso · «?» dorado = lista para entregar. null = sin marcador.
+ function mark(id){if(!on())return null;const q=qOf(id);if(q<0)return null;const s=st().step,a=qIdx(q,'a'),t=qIdx(q,'t');
+  if(s===a)return{c:'!',k:'new'};if(s>a&&s<t)return{c:'?',k:'wait'};if(s===t)return{c:'?',k:needOk(q)?'done':'wait'};return null}
+ const nm=k=>(typeof I!=='undefined'&&I[k]?I[k][0]:k),close=()=>{try{HUDSU.dlgHide()}catch(e){}};
+ const list=(o,chk)=>Object.entries(o).map(([k,n])=>(chk?'<span style="color:'+(have(k)>=n?'#9bd04f':'#d86a5a')+'">'+Math.min(have(k),n)+'/'+n+'</span> ':n+' × ')+nm(k)).join(' · ');
+ function open(D,o){DL=Object.assign({n:D.n,id:D.id,c:D.c,i:0},o);dlgShow()}
+ // ── PANEL DE MISIÓN (estilo WoW con nuestra UI): lo abre la opción del diálogo. `ph` 'a' = aceptar/rechazar · 't' = completar. Título, descripción, objetivos, entrega y recompensa. ──
+ let qp=null,qpNpc=null;
+ const coin=n=>'<li class="qp-c"><i class="cn"></i><span>'+n+' monedas de cobre</span></li>';
+ const rwd=Q=>(Q.reward||Q.coins)?'<div class="qp-s">Recompensa</div><ul class="qp-i">'+(Q.reward?rows(Q.reward):'')+(Q.coins?coin(Q.coins):'')+'</ul>':'';
+ const rows=o=>Object.entries(o).map(([k,n])=>'<li>'+(typeof ic==='function'?ic(k):'')+'<span>'+n+' × '+nm(k)+'</span></li>').join('');
+ function qpHide(){if(qp){qp.classList.remove('on');const e=qp;setTimeout(()=>{if(qp!==e||!e.classList.contains('on'))e.style.display='none'},250)}qpNpc=null}
+ function qpShow(q,ph,D){const Q=QUESTS[q];if(!qp){qp=document.createElement('div');qp.id='qpn';document.body.appendChild(qp);qp.addEventListener('click',e=>e.stopPropagation())}
+  const a=qIdx(q,'a'),t=qIdx(q,'t'),obj=STEPS.slice(a+1,t).map(x=>'<li>'+x.txt+'</li>').join('');
+  let h='<div class="qp-h"><b>'+(ph==='a'?'!':'?')+'</b><div><div class="qp-t">'+Q.name+'</div><div class="qp-n">'+(D&&D.n?D.n.split(' · ')[0]:'')+'</div></div></div><div class="qp-r"></div>';
+  if(ph==='a'){h+='<div class="qp-d">'+Q.desc+'</div>'+(obj?'<div class="qp-s">Objetivos</div><ul class="qp-o">'+obj+'</ul>':'')+(Q.deliver?'<div class="qp-s">Debes entregar</div><ul class="qp-i">'+rows(Q.deliver)+'</ul>':'')+rwd(Q)
+   +'<div class="qp-b"><button data-a="ok">Aceptar</button><button data-a="no" class="g">Rechazar</button></div>'}
+  else{const ok=needOk(q);h+='<div class="qp-d">'+(Q.deliver?'Necesito:':'¿Has completado lo que te pedí?')+'</div>'+(Q.deliver?'<ul class="qp-i">'+Object.entries(Q.deliver).map(([k,n])=>'<li class="'+(have(k)>=n?'y':'n')+'">'+(typeof ic==='function'?ic(k):'')+'<span>'+Math.min(have(k),n)+'/'+n+' '+nm(k)+'</span></li>').join('')+'</ul>':'')+rwd(Q)
+   +'<div class="qp-b"><button data-a="ok"'+(ok?'':' disabled')+'>Completar misión</button><button data-a="no" class="g">Cerrar</button></div>'}
+  qp.innerHTML=h;qp.querySelectorAll('button').forEach(b=>b.onclick=()=>{const yes=b.dataset.a==='ok';qpHide();if(!yes)return;if(ph==='a')accept(q);else turnIn(q,D)});
+  qp.style.display='flex';void qp.offsetWidth;qp.classList.add('on');qpNpc=Q.npc}
+ addEventListener('keydown',e=>{if(!qpNpc)return;if(e.key==='Escape'){qpHide();e.preventDefault();e.stopImmediatePropagation()}},true);
+ function accept(q){const Q=QUESTS[q];if(!mark(Q.npc)||mark(Q.npc).k!=='new')return;adv();try{toast('❕ Misión aceptada: <b>'+Q.name+'</b>',2600);snd('quest')}catch(e){}}
+ function turnIn(q,D){const Q=QUESTS[q];if(!needOk(q)){try{toast('Te falta algo por entregar.',1800)}catch(e){}return}
+  if(Q.deliver)take(Q.deliver);let ex='';if(Q.reward){for(const[k,n]of Object.entries(Q.reward))for(let j=0;j<n;j++){if(typeof room==='function'&&!room(k))S.bank[k]=(S.bank[k]||0)+1;else add(k)}ex='<br><span style="color:#e8cf94">Recibes: '+list(Q.reward,0)+'</span>'}
+  if(Q.coins){earn(Q.coins);ex+=(ex?'<br>':'<br>')+'<span style="color:#e8cf94">'+Q.coins+' monedas de cobre</span>'}
+  adv();try{toast('✔ Misión completada: <b>'+Q.name+'</b>',2800);snd('quest')}catch(e){}
+  open(D,{p:[Q.done+ex]})}
+ // Aplica la misión del maestro `id` al diálogo `D` (lo llama npcTalk): saludo + OPCIONES numeradas (el nombre de la misión / salir). El detalle (descripción, recompensa, aceptar/rechazar) está en el PANEL DE MISIÓN.
+ function dlg(D,id){const m=mark(id);if(!m)return false;const q=qOf(id),Q=QUESTS[q],ex=['Salir',close];qpHide();
+  const pan=ph=>()=>{close();qpShow(q,ph,D)};
+  if(m.k==='new'){D.p=[Q.hi];D.opts=[[Q.name,pan('a')],ex]}
+  else if(st().step===qIdx(q,'t')){D.p=[Q.turn];D.opts=[[Q.name,pan('t')],ex]}
+  else{D.p=[Q.rem];D.opts=[ex]}
+  return true}
  // el Altar Quebrado: en el paso del ritual hace aparecer a GABRIEL (combate de 3 fases, `fight()`); fuera de él solo avisa
  function altar(){if(!on())return false;const g=cur().g;if(g.t!=='altar'){toast('El altar guarda silencio.',1800);return true}adv();fight();return true}
  // ── COMBATE DE GABRIEL (ISLA-6): jefe «elite» del tutorial. Fase 1 (100–66 % de vida): golpe pesado básico · Fase 2 (<66 %): además marca el suelo bajo tus pies (`met`) · Fase 3 (<33 %): onda expansiva (`nov`), furia y más rápido.
@@ -111,4 +162,4 @@ const ISLA=(()=>{
   const q=wp(-26,12.4);if(typeof CHEAT!=='undefined'&&CHEAT.tp)CHEAT.tp(q.x,q.y);return i.step}
  function reset(){endEscape();tipHide();if(gm&&M.includes(gm))M.splice(M.indexOf(gm),1);gm=null;gph=0;cs=0;S.isla={step:0,bs:0,off:[0,0,0,0],t:{},done:0,lock:1};S.awk={};S.islaTip=0;sp=0;if(S.cine)delete S.cine.gabriel;dirty=1;return go(0)}
  if(/[?&]isla=1\b/.test(typeof location!=='undefined'?location.search:''))setTimeout(()=>{try{go()}catch(e){}},4000);
- return{STEPS,CAPS,OFR,lock,on,tick,talk,altar,html,target,go,reset,prog,adv,altar2:fight,fight,noDie,get boss(){return gm},get step(){return st().step},get state(){return st()}}})();
+ return{STEPS,QUESTS,CAPS,OFR,lock,on,tick,talk,mark,dlg,altar,html,target,go,reset,prog,adv,altar2:fight,fight,noDie,get boss(){return gm},get step(){return st().step},get state(){return st()}}})();

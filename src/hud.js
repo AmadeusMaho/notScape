@@ -118,25 +118,30 @@ const HUDSU=(()=>{
   try{if(!dv)dv=R3D.preview(dcv);dv.draw(lookNow(now),{dir:dDir,H:.74,cy:.6,mode:'idle',t:now/1000})}catch(e){dcv=null;if(window.console)console.warn('[HUD] muñeco 3D',e)}}
  // ── diálogos (Fase 14): #dlg con el lenguaje Susurro + cabeza 3D del PNJ hablando (estilo OSRS: el PNJ aparece en primer plano y mueve la boca mientras habla) ──
  const dg=document.getElementById('dlg');document.body.appendChild(dg);   // fuera de #cw (z 0) para quedar POR ENCIMA del HUD
- dg.innerHTML='<div class="dl-head"><canvas></canvas></div><div class="dl-body"><div class="dl-name"></div><div class="dl-txt"></div><div class="dl-more"></div></div>';
- const dHead=dg.querySelector('.dl-head'),dCv=dg.querySelector('canvas'),dNm=dg.querySelector('.dl-name'),dTx=dg.querySelector('.dl-txt'),dMo=dg.querySelector('.dl-more');
+ dg.innerHTML='<div class="dl-head"><canvas></canvas></div><div class="dl-body"><div class="dl-name"></div><div class="dl-txt"></div><div class="dl-opts"></div><div class="dl-more"></div></div>';
+ const dHead=dg.querySelector('.dl-head'),dCv=dg.querySelector('canvas'),dNm=dg.querySelector('.dl-name'),dTx=dg.querySelector('.dl-txt'),dMo=dg.querySelector('.dl-more'),dOp=dg.querySelector('.dl-opts');let curOpts=null;
  let th=null,thKey='',dOn=0,dTyping=0,dT0=0,dFull='',dN=-1,dHide=0,dClose=0,dAuto=0,thNext=0,thFail=0;
  const esc=t=>t.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
  function dlg(D){if(!D)return;clearTimeout(dClose);
   const [nm,rol]=String(D.n||'').split(' · ');dNm.innerHTML='<span style="color:'+(D.c||'var(--gold)')+'">'+esc(nm||'')+'</span>'+(rol?'<small>'+esc(rol)+'</small>':'');
   dFull=D.p[D.i]||'';dT0=performance.now();dN=-1;dTyping=!/</.test(dFull);const last=D.i>=D.p.length-1;dMo.textContent=last?(D.then?'▸ clic para comerciar':'▸ clic para cerrar'):'▸ clic para continuar';dMo.classList.remove('on');
-  if(!dTyping){dTx.innerHTML=dFull;dMo.classList.add('on')}else dTx.innerHTML='<span class="v"></span><span class="r">'+esc(dFull)+'</span>';
+  // OPCIONES (misiones tipo WoW, 21 oct 2026): en la última página, `D.opts` = [[texto, función],…] como botones numerados (teclas 1, 2…); sin `opts` todo sigue igual
+  curOpts=last&&D.opts&&D.opts.length?D.opts:null;dOp.classList.remove('on');dOp.innerHTML=curOpts?curOpts.map((o,i)=>'<button type="button" data-i="'+i+'"><b>'+(i+1)+'.</b> '+esc(String(o[0]))+'</button>').join(''):'';if(curOpts)dMo.textContent='';
+  if(!dTyping){dTx.innerHTML=dFull;dMo.classList.add('on');if(curOpts)dOp.classList.add('on')}else dTx.innerHTML='<span class="v"></span><span class="r">'+esc(dFull)+'</span>';
   // cabeza del PNJ: se crea una sola vez (un contexto WebGL) y se reutiliza; si el PNJ no tiene modelo 3D (o en 2D) el cuadro va solo con texto
   let ok=false;try{if(D.id&&window.R3D&&R3D.talkHead&&!thFail){if(!th)th=R3D.talkHead(dCv);ok=th.setNpc(D.id)}}catch(e){thFail=1;if(window.console)console.warn('[HUD] cabeza de PNJ',e)}
   dHead.style.display=ok?'':'none';dg.classList.toggle('nohead',!ok);
   dg.style.display='flex';if(!dOn){void dg.offsetWidth;dg.classList.add('on');dOn=1;document.body.classList.add('dlg-on')}
-  clearTimeout(dAuto);if(!dTyping)dAuto=setTimeout(dlgHide,20000)}
+  clearTimeout(dAuto);if(!dTyping&&!curOpts)dAuto=setTimeout(dlgHide,20000)}
+ const pickOpt=i=>{const o=curOpts&&curOpts[i];if(!o||!dOp.classList.contains('on'))return false;o[1]();return true};
+ dOp.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('button');if(b)pickOpt(+b.dataset.i)});
+ addEventListener('keydown',e=>{if(!dOn||!curOpts||e.ctrlKey||e.metaKey||e.altKey)return;const i=parseInt(e.key,10)-1;if(i>=0&&pickOpt(i)){e.preventDefault();e.stopImmediatePropagation()}else if(e.key==='Escape'){dlgHide();e.preventDefault();e.stopImmediatePropagation()}},true);
  function dlgHide(){if(!dOn)return;dOn=0;dTyping=0;clearTimeout(dAuto);dg.classList.remove('on');document.body.classList.remove('dlg-on');clearTimeout(dClose);dClose=setTimeout(()=>{if(!dOn)dg.style.display='none'},320)}
- function dlgSkip(){if(!dOn||!dTyping)return false;dTyping=0;dTx.textContent=dFull;dMo.classList.add('on');dAuto=setTimeout(dlgHide,20000);return true}
+ function dlgSkip(){if(!dOn||!dTyping)return false;dTyping=0;dTx.textContent=dFull;dMo.classList.add('on');if(curOpts)dOp.classList.add('on');else dAuto=setTimeout(dlgHide,20000);return true}
  function dlgFrame(now){if(!dOn)return;
   if(dTyping){const n=Math.min(dFull.length,Math.floor((now-dT0)*.052)); // ~52 caracteres/s
    if(n!==dN){dN=n;dTx.innerHTML='<span class="v">'+esc(dFull.slice(0,n))+'</span><span class="r">'+esc(dFull.slice(n))+'</span>'}
-   if(n>=dFull.length){dTyping=0;dMo.classList.add('on');clearTimeout(dAuto);dAuto=setTimeout(dlgHide,20000)}}
+   if(n>=dFull.length){dTyping=0;dMo.classList.add('on');clearTimeout(dAuto);if(curOpts)dOp.classList.add('on');else dAuto=setTimeout(dlgHide,20000)}}
   if(th&&dHead.style.display!=='none'&&now>=thNext){thNext=now+33;try{th.draw({talk:!!dTyping})}catch(e){thFail=1;dHead.style.display='none';if(window.console)console.warn('[HUD] cabeza de PNJ',e)}}}
  // pestañas del menú: al cambiar de pestaña (o abrir el panel) el contenido entra con un fundido corto (clase .sw sobre #pn)
  {const pn0=document.getElementById('pn'),t0=window.tab;if(pn0&&typeof t0==='function')window.tab=function(t){const was=TB,wasClosed=document.getElementById('side').classList.contains('closed'),r=t0.apply(this,arguments);if(t!==was||wasClosed){pn0.classList.remove('sw');void pn0.offsetWidth;pn0.classList.add('sw')}return r}}
@@ -159,9 +164,11 @@ const HUDSU=(()=>{
    setBar(B.th,m.hp/m.mh,Math.round(Math.max(0,m.hp)/m.mh*100)+' %')}
   else if(tg.classList.contains('on')){if(!hideT)hideT=now+900;if(now>hideT){tg.classList.remove('on');tg._m=null;hideT=0}}
   // acción (talar, minar…): barra de progreso sobre el marco
-  const ac=A&&A.ty!=='f'&&!A.wh&&!A.fg;   /* con la rueda de recolección no hay barra de acción (la rueda lleva el progreso) */act.classList.toggle('on',!!ac);if(ac){$('#hs-al').textContent=actLabel();setBar(B.ac,Math.min(1,A.pr||0),null)}
+  const ac=A&&A.ty!=='f'&&!A.wh&&!A.fm&&!A.fg;   /* con la rueda de recolección no hay barra de acción (la rueda lleva el progreso) */act.classList.toggle('on',!!ac);if(ac){$('#hs-al').textContent=actLabel();setBar(B.ac,Math.min(1,A.pr||0),null)}
   // resistencia (E7/H7): el juego guarda S.sta (0–100) y S.exh; la rueda se ve solo si no está llena o se está corriendo
   if(typeof S.sta==='number'){const st=S.sta/100;wh.classList.toggle('show',S.sta<99.5||!!RUN);wh.classList.toggle('exh',!!S.exh);wh.classList.toggle('low',!S.exh&&st<.15);wh.classList.toggle('warn',!S.exh&&st>=.15&&st<.35);whf.setAttribute('stroke-dasharray',(st*100).toFixed(1)+' 100')}
   dlgFrame(now);dollFrame(now);if(tg.classList.contains('on'))tpFrame(now);fx(B.hp,tt,dt,low);fx(B.mp,tt,dt,0);if(tg.classList.contains('on'))fx(B.th,tt,dt,0);if(ac)fx(B.ac,tt,dt,0)}
- return{ok:true,frame,xp,banner,portraitDirty,doll,dlg,dlgHide,dlgSkip,get head(){return th},B,root}
+ function warm(){if(thFail||!window.R3D||!R3D.talkHead)return;try{if(!th)th=R3D.talkHead(dCv);th.warm('guardia');th.key=''}catch(e){thFail=1}
+ if(!tth&&!tthFail){try{tth=R3D.talkHead(tCv);tth.warm('goblin',true);tth.warm('lobo',true);tth.key=''}catch(e){tthFail=1}}}   // 21 oct 2026: el contexto WebGL del retrato del enemigo se creaba al 1.er objetivo (tirón de 100–200 ms medido): ahora en la carga, con un humanoide y una bestia compilados   // contexto WebGL de la cabeza de diálogo creado en la carga (antes: en la 1.ª conversación = tirón)
+ return{ok:true,warm,frame,xp,banner,hasOpts:()=>!!(dOn&&curOpts),portraitDirty,doll,dlg,dlgHide,dlgSkip,get head(){return th},B,root}
 })();

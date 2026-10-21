@@ -54,6 +54,10 @@ function bake(obj,boneObjs,skinHex){
 const EYETEX=(()=>{const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d'),r=g.createRadialGradient(16,16,0,16,16,16);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.3,'rgba(255,255,255,.55)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,32,32);return new THREE.CanvasTexture(c)})();
 const VC={chr:1,vc:1,emit:1};
 const MATS=[toon('#ffffff',Object.assign({rim:1.4},VC)),toon('#ffffff',Object.assign({rim:.3},VC)),toon('#ffffff',Object.assign({rim:1.4,side:THREE.DoubleSide},VC))];
+// SILUETA DE PNJ TAPADOS (21 oct 2026): el PNJ del tutorial de talar quedaba oculto tras los olivos. La malla `xr` (misma piel y esqueleto, material XRAYM) se pinta solo donde el PNJ queda DETRÁS de algo (depthFunc Greater) con el adelanto XR_D. SIN stencil: el stencil en el render target MSAA del composer costaba ≈ 12 ms a 1080p en Máxima (46→20 fps).
+const XRAYM=new THREE.MeshBasicMaterial({color:'#ffe6b8',transparent:true,opacity:.5,depthWrite:false,depthFunc:THREE.GreaterDepth});
+// la silueta solo sale si lo que tapa está AL MENOS `XR_D` unidades (de vista) por delante: el vértice se adelanta hacia la cámara (la cámara es ortográfica → no mueve nada en pantalla). Evita que parezca «translúcido» un PNJ que no está detrás de nada (partes propias solapadas, relieve del suelo, adoquines).
+const XR_D=.45;XRAYM.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\nmvPosition.z+='+XR_D.toFixed(3)+';gl_Position=projectionMatrix*mvPosition;')};XRAYM.customProgramCacheKey=()=>'xray'+XR_D;
 const FLASHM=new THREE.MeshBasicMaterial({color:'#fff2e0'}),FLASH=[FLASHM,FLASHM,FLASHM],DEPTHM=new THREE.MeshBasicMaterial({colorWrite:false}),HOVER=new THREE.MeshBasicMaterial({color:'#ffe7a0',side:THREE.BackSide});
 
 // ═══════════════════════════════ PROTO: constructor mínimo para cuadrúpedos, ave y rana (mismo `part` que Mini) ═══════════════════════════════
@@ -315,6 +319,7 @@ export class Actor{
   if(i<=.01){if(this.eg)this.eg.visible=false;return}
   if(!this.eg){const g=this.eg=new THREE.Group(),r=T.eye[3];[-1,1].forEach(q=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:EYETEX,color:T.eyeCol,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));s.position.set(T.eye[0]*q,T.eye[1],T.eye[2]+r*1.2);g.add(s)});g.userData.r=r;this.b.head.add(g)}
   const g=this.eg,r=g.userData.r,f=i>.85;g.visible=true;g.children.forEach(s=>{s.scale.setScalar(r*(3+i*3.5+(f?2.5:0)));s.material.color.set(f?'#fff4d0':T.eyeCol);s.material.opacity=Math.min(1,.35+i*.75)})}
+ addXray(){if(this.xr)return;this.xr=new THREE.SkinnedMesh(this.tpl.geo,XRAYM);this.xr.bind(this.mesh.skeleton,new M4());this.xr.frustumCulled=false;this.xr.renderOrder=6;this.grp.add(this.xr)}
  setHover(on){if(on===this.hov)return;this.hov=on;this.hull.material=on?HOVER:INK}
  setFlash(on){if(on===this.fl)return;this.fl=on;this.mesh.material=on?FLASH:MATS}
  dispose(){this.grp.removeFromParent();if(this.proxy)this.proxy.removeFromParent();this.mesh.skeleton&&this.mesh.skeleton.dispose()}
@@ -383,6 +388,10 @@ export class Actors{
   this.ringG=new THREE.RingGeometry(.55,.7,32).rotateX(-Math.PI/2);this.ringM={1:new THREE.MeshBasicMaterial({color:'#ff3030',transparent:true,opacity:.35,depthWrite:false}),2:new THREE.MeshBasicMaterial({color:'#40b0ff',transparent:true,opacity:.35,depthWrite:false})}}
  keyOf(e,isNpc){if(isNpc)return e.id==='ru'||(e.npc&&(NPC_DEF[e.id]||(typeof NPCLK!=='undefined'&&NPCLK[e.id])))?e.id:null;return e.d&&e.d.id}
  // ¿hay un actor 3D dibujándose para esta entidad? (game.js: si sí, omite el sprite 2D y dibuja solo barra de vida y etiqueta)
+ // PRECARGA (21 oct 2026): hornea TODAS las plantillas durante la carga (antes se horneaba la 1.ª vez que aparecía cada criatura = tirón)
+ bake(){try{ACTOR_IDS.concat(['ru'],Object.keys(NPC_DEF)).forEach(k=>tplFor(k))}catch(e){console.warn('[R3D actors bake]',e)}}
+ // objetos desechables para precompilar el programa de la silueta (R3D.warmShaders): un PNJ con su malla de rayos X
+ warmObjs(){try{const A=makeActor('ru');if(!A)return[];A.addXray();return[A.grp]}catch(e){return[]}}
  has(e){const a=this.map.get(e);return !!(a&&a.vis&&a.state!=='gone')}
  // Altura de la cabeza en «px de mundo» del sprite (1 unidad 3D = 34,3 px de pantalla a escala 1 = 22,9 px de mundo con SPR=1,5): game.js cuelga de ahí la barra de vida y la etiqueta
  topPx(e){const A=this.map.get(e);if(!A)return 0;return A.tpl.h*(ISO.HW*2/Math.SQRT2)*Math.cos(Math.PI/6)/(typeof SPR!=='undefined'?SPR:1.5)+4}
@@ -391,7 +400,7 @@ export class Actors{
  update(now,t,dt,tgt,R,hov,P_){if(!this.on)return;const TW=ISO.TILE,R2=R*R;let live=0;const seen=new Set();this.nw=0;   /* nw: actores nuevos este fotograma (tope 3: cada plantilla se hornea la 1.ª vez y un pueblo entero de golpe daba un tirón) */
   const consider=(e,isNpc)=>{const key=this.keyOf(e,isNpc);if(!key)return;const px=e.x/TW,pz=e.y/TW,dx=px-tgt.x,dz=pz-tgt.z;if(dx*dx+dz*dz>R2)return;seen.add(e);let A=this.map.get(e);
    const alive_=isNpc||alive(e,now);
-   if(!A){if(!alive_)return;if(this.nw>=3)return;const tpl=tplFor(key);if(!tpl)return;this.nw++;A=new Actor(tpl,key,e,this.W3);A.isNpc=isNpc;this.map.set(e,A);this.grp.add(A.grp);A.last=null;
+   if(!A){if(!alive_)return;if(this.nw>=3)return;const tpl=tplFor(key);if(!tpl)return;this.nw++;A=new Actor(tpl,key,e,this.W3);A.isNpc=isNpc;if(isNpc&&A.tpl.kind==='human')A.addXray();this.map.set(e,A);this.grp.add(A.grp);A.last=null;
     if(this.occ){A.proxy=new THREE.SkinnedMesh(tpl.geo,DEPTHM);A.proxy.bind(A.mesh.skeleton,new M4());A.proxy.layers.set(3);A.proxy.frustumCulled=false;this.occ.add(A.proxy)}}   // copia de solo profundidad para el renderer del héroe (capa 3)
    this.step(A,e,isNpc,alive_,now,t,dt,hov,P_);if(A.vis)live++};
   for(let i=0;i<M.length;i++)consider(M[i],false);for(let i=0;i<ST.length;i++)if(ST[i].id==='ru'||ST[i].npc)consider(ST[i],true);

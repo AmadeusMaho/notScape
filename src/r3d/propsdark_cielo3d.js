@@ -149,14 +149,14 @@ const MODELS={
 
 const GEO=new Map();
 // REGLA DE SENTIDO: el héroe mide ≈ 1 unidad (×PROP_K=1,5 → un modelo de 1 tile mide 1,5). Los objetos pequeños se redujeron a su tamaño real (brasero ceremonial ≈ 1 m, ánfora ≈ 70 cm, banco con asiento a 45 cm, estela ≈ 1,5 m); los edificios y columnas quedan a escala monumental.
-export const CI_SCALE={braseroG:.5,anfora:.6,bancoG:.65,estelaG:.65};
+export const CI_SCALE={braseroG:.5,anfora:.6,bancoG:.65,estelaG:.65,propileos:2.2};   // propileos ×2,2 (21 oct 2026, pedido del dueño: la puerta de la llegada debe ser IMPONENTE; sky-biome.js escala sus colisiones igual)
 export function cieloGeo(n,o,th){if(!MODELS[n])return null;const key='dk:ci:'+n+'|'+JSON.stringify(o||{});if(GEO.has(key))return GEO.get(key);
  let g=MODELS[n](o||{}).geo();const K=CI_SCALE[n];if(K){g.scale(K,K,K);g.computeBoundingBox();g.computeBoundingSphere()}if(o&&(o.rot||o.dir==='y'))g=swapXZ(g);const r={g,key};GEO.set(key,r);return r}
 export const CI_NAMES=Object.keys(MODELS);
 // props de MÁRMOL: props3d.js los dibuja con el material de las rocas (sombreado continuo, sin textura procedural)
 export const CI_ROCK=new Set(['columnaG','columnaRota','temploG','propileos','agora','estatuaAlada','estelaG','bancoG']);
 // huella y altura medidas (ancho x, alto y, fondo z; sin escalar ×PROP_K) → `python3 tools/r3d/props_sheet.py --medir` o `R3D.props.fp` en el juego. Medido el 21 oct 2026 con Node (`tools/r3d/cielo_check.py`); columna/templo/estatua con `ruins` varían (ver el script).
-export const CI_FOOT={columnaG:[.43,1.73,.43],columnaRota:[1.81,.71,1.31],temploG:[3.65,2.39,6.20],propileos:[3.59,2.14,2.94],agora:[5.20,1.29,5.20],estatuaAlada:[1.51,2.36,1.51],braseroG:[.24,.455,.23],anfora:[.19,.31,.17],estelaG:[.40,.77,.195],bancoG:[.65,.24,.22]};
+export const CI_FOOT={columnaG:[.43,1.73,.43],columnaRota:[1.81,.71,1.31],temploG:[3.65,2.39,6.20],propileos:[7.90,4.71,6.47],agora:[5.20,1.29,5.20],estatuaAlada:[1.51,2.36,1.51],braseroG:[.24,.455,.23],anfora:[.19,.31,.17],estelaG:[.40,.77,.195],bancoG:[.65,.24,.22]};
 export function CI_CASES(){return [['columnaG',{},'columnaG'],['columnaG',{ruins:1},'columnaG'],['columnaRota',{v:0},'columnaRota'],['temploG',{},'temploG'],['temploG',{ruins:1},'temploG'],['propileos',{},'propileos'],['agora',{},'agora'],['estatuaAlada',{},'estatuaAlada'],['estatuaAlada',{ruins:1},'estatuaAlada'],['braseroG',{},'braseroG'],['braseroG',{lit:0},'braseroG'],['anfora',{},'anfora'],['estelaG',{},'estelaG'],['bancoG',{},'bancoG']]}
 // verificador anti-clipping de tejados (regla ANTICLIP; lo usa tools/r3d/roof_clip_check.py)
 export function clipReport(n,o){const b=MODELS[n](o||{});return {clips:b.clips(),roofs:b.R.length}}

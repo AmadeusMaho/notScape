@@ -513,9 +513,10 @@ function stopA(m){A=null;S.cur=null;if(m)log(m);dirty=1}
    Sin Math.random en la lógica (PRNG `whR`, por si hay online). Pendiente: sonidos con grabaciones, balance de XP (meas_progresion.py), cocina con rueda. */
 const WHEEL_SK={wc:1,mi:1};   // la rueda es SOLO para extraer recursos de golpe (tala, minería); pesca y crafteo tendrán minijuegos distintos (decisión del dueño, 21 oct)
 let whSeed=7;const whR=()=>(whSeed=(whSeed*16807)%2147483647)/2147483647,TAU2=Math.PI*2;
+const WH_IMP=24,whImp=()=>A&&A.sk==='mi'?20:24,whArm=()=>A&&A.sk==='mi'?.86:.82;   /* minería (21 oct 2026): el pico espera ya casi al final del arco (ph .8 = k2 del clip) y el impacto cae a 50 ms: el arco completo desde arriba tardaba y se notaba retraso */   /* ms entre pulsar y el impacto visible (preparación corta: el golpe cae casi a la vez que el clic) */
 const whAng=now=>(((now-A.wm0)/A.wrev)%1+1)%1*TAU2,whDiff=(a,b)=>{let d=Math.abs(a-b)%TAU2;return d>Math.PI?TAU2-d:d};
 /* Golpes por recurso: `2 × vida del recurso ÷ daño de la herramienta SIN el bono del tier 0`, entre 3 y 12 (herramienta del tier del recurso ≈ 6; mejor = menos; peor = más). */
-const whHits=(sk,a)=>Math.max(3,Math.min(12,Math.round(2*nodeHp(a)/(Math.pow(NODER,S.tool[sk]||0)*(1+L(sk)*.01)*(1+.18*(S.tq[sk]||0))))));
+const whHits=(sk,a)=>Math.max(2,Math.min(8,Math.round(1.2*nodeHp(a)/(Math.pow(NODER,S.tool[sk]||0)*(1+L(sk)*.01)*(1+.18*(S.tq[sk]||0))))));
 const whHitsC=a=>Math.max(3,Math.min(8,Math.round(a[a.length-1]/650)));   // crafteo: más tiempo de receta = más golpes
 let QBON=1;   // bono de calidad por precisión (lo usa qv durante el crafteo)
 let PULSE_ON=true;try{PULSE_ON=localStorage.getItem('ns_pulse')!=='0'}catch(e){}let PLS=0;
@@ -523,10 +524,20 @@ function tgPulse(){PULSE_ON=!PULSE_ON;try{localStorage.setItem('ns_pulse',PULSE_
 setTimeout(()=>{const b=document.getElementById('pulb');if(b)b.textContent='✨ Parada de impacto: '+(PULSE_ON?'SÍ':'NO')},0);
 function whPulse(now){if(!PULSE_ON)return;if(window.R3D&&!(typeof CINE!=='undefined'&&CINE.on)){R3D.tscale=.06;clearTimeout(window.__hs);window.__hs=setTimeout(()=>{if(!(typeof CINE!=='undefined'&&CINE.on))R3D.tscale=1},45)}SHK=Math.max(SHK,now+70)}
 function whInit(now){const c=A.ty==='c',t=c?0:(S.tool[A.sk]||0),lv=L(A.sk),a=ACT[A.sk][A.i],gold=!c&&!!(A.e&&A.e.g);
- Object.assign(A,{wh:1,wrev:c?1650:Math.max(1000,1750-t*55),whalf:Math.min(.8,.4+lv*.003+t*.008)*(gold?.7:1),wm0:now,h0:-1e9,hq:0,wc:now+300,wl:now,fl:null,hit:0,gold,perf:0,tot:0,amt:1/(c?whHitsC(a):whHits(A.sk,a))});A.wper=A.whalf*.34;A.wa=(whAng(now)+Math.PI)%TAU2;
- if(!S.hintWh){S.hintWh=1;toast('🎯 Pulsa <b>clic</b> o <b>E</b> cuando el marcador esté en el arco dorado.',5000)}}
-function whPress(now){if(!A||!A.wh||now<A.wc)return;const th=whAng(now),d=whDiff(th,A.wa),q=d<=A.wper?2:d<=A.whalf?1:0;
- A.hq=q+1;A.h0=now;A.wc=now+260;A.wl=now;A.fl={t:now,q};A.tot++;if(q===2)A.perf++;A.wa=(th+Math.PI*(.55+.9*whR()))%TAU2;   // el arco salta lejos del marcador tras cada golpe
+ Object.assign(A,{wh:1,wrev:c?1650:Math.max(1300,2200-t*55),whalf:Math.min(.8,.4+lv*.003+t*.008)*(gold?.7:1),wm0:now,h0:-1e9,hq:0,wc:now+whImp(),wl:now,fl:null,hit:0,gold,perf:0,tot:0,amt:1/(c?whHitsC(a):whHits(A.sk,a))});A.wper=A.whalf*.34;A.wa=(whAng(now)+Math.PI)%TAU2;
+ mgBegin('wh')}
+/* POSE DEL ARMA EN LA RUEDA (tala/minería), siempre CONTINUA: espera «armada» (whArm) → al pulsar sube de `p0` (la fase en que estaba) a 1 en whImp ms → impacto → recuperación (`rc`) → vuelta suave a la espera (420 ms). Pulsar de nuevo en cualquier momento CORTA la vuelta y arranca desde la fase actual (sin saltos), y el impacto siempre cae a whImp() del clic (sincronía con el recurso). */
+const whEase=u=>u*u*(3-2*u);
+/* PATRÓN DE ANIMACIÓN POR INPUT (21 oct 2026): `armPose(sg,imp,fw,arm,p0)` = fase `ph` de una acción disparada por el jugador, SIEMPRE continua: espera «armada» (arm) → al pulsar sube de p0 a 1 en `imp` ms (el efecto/daño cae en ese instante) → recuperación (`rc`, hasta `fw`) → vuelta suave a la espera (420 ms). `armP0(sg,imp,fw,arm)` = fase de partida de la PRÓXIMA pulsación (donde esté la vuelta): un clic nuevo corta la vuelta sin saltos. Lo usan la rueda (whPose) y la forja; el combate usa la variante sin espera (ph .5→1 en SWG.wind). */
+const WH_REC=170,WH_RET=300;   // recuperación (retroceso del golpe) y subida de vuelta a la espera, en ms
+function armPose(sg,imp,fw,arm,p0){if(sg<0)return{ph:arm};if(sg<imp){const q=p0==null?arm:p0;return{ph:q+(1-q)*sg/imp}}if(sg<fw)return{ph:0,rc:q4((sg-imp)/WH_REC)};return{ph:Math.max(.001,arm*whEase(Math.min(1,(sg-fw)/WH_RET))),ret:1}}
+const armP0=(sg,imp,fw,arm)=>sg>=imp?Math.max(arm*.9,sg>=fw?arm*whEase(Math.min(1,(sg-fw)/WH_RET)):0):null;   // un clic nuevo SIEMPRE arranca cerca de la pose armada (≥ 90 %): si arrancaba de la fase baja de la vuelta, el brazo tenía que subir y bajar de nuevo y el impacto visual llegaba tarde (se desincronizaba a partir del 2.º golpe)
+/* POSE DEL ARMA EN LA RUEDA (tala/minería): ver armPose; el impacto siempre cae a whImp() del clic (sincronía con el recurso). */
+function whPose(now){const imp=whImp();return Object.assign(armPose(now-A.h0,imp,imp+WH_REC,whArm(),A.p0),{n:A.hn||0})}
+function whPress(now){if(!A||!A.wh||now<A.wc)return;A.hn=(A.hn||0)+1;{const imp=whImp();A.p0=armP0(now-A.h0,imp,imp+WH_REC,whArm())}   // fase de partida del nuevo golpe
+ const th=whAng(now),d=whDiff(th,A.wa),q=d<=A.wper?2:d<=A.whalf?1:0;
+ A.hq=q+1;A.h0=now;A.wc=now+220;A.wl=now;A.fl={t:now,q};A.tot++;whSnd(A.sk,q);   // el SONIDO sale al pulsar (instantáneo); el impacto visual lo retrasa WH_IMP
+ if(q===2)A.perf++;A.wa=(th+Math.PI*(.55+.9*whR()))%TAU2;   // el arco salta lejos del marcador tras cada golpe
  if(q===2)tone(700,.11,'triangle',.07);else if(q===1)tone(470,.08,'triangle',.05);else tone(170,.07,'sawtooth',.03)}
 /* sonido sintético por material (no hay grabaciones de hacha/pico en los packs): madera = golpe sordo con cuerpo, piedra = chasquido seco y metálico, pesca = salpicadura, forja = yunque */
 function whSnd(k,q){const r=whR(),v=q===2?1.2:q===1?1:.7;
@@ -544,7 +555,7 @@ function whFx(k,e,q){const f=window.R3D&&R3D.fx;if(!f)return;const n=q===2?1:q==
  else{f.chips('wood',e.x,e.y,18,q?6:3,'#c9b48a',{spread:1.2});f.smoke(e.x,e.y,16,'#d8c9a3',1,{size:.14,life:.6,up:.3,alpha:.32})}
  if(q===2)SHK=Math.max(SHK,performance.now()+60)}
 function whTick(now){if(now-A.wl>15000)return stopA();
- if(A.hq&&now>=A.h0+300){const q=A.hq-1,e=A.e,k=A.sk;A.hq=0;whSnd(k,q);whFx(k,e,q);if(q===2)whPulse(now);
+ if(A.hq&&now>=A.h0+whImp()){const q=A.hq-1,e=A.e,k=A.sk;A.hq=0;whFx(k,e,q);if(q===2)whPulse(now);
   A.pr+=A.amt*(q===2?1.3:q===1?1:.55);if(A.pr>=1){A.pr=.99;fin(now)}}}
 const whEl=(()=>{const c=document.createElement('canvas');c.id='whl';c.width=c.height=192;c.style.display='none';document.body.appendChild(c);return c})(),whX=whEl.getContext('2d');
 function whDraw(now){if(!(A&&A.wh)||INT||CK){whEl.style.display='none';return}const e=A.e,c0=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y)),r=cv.getBoundingClientRect(),k=r.width/cv.width,hh={wc:16,mi:10,fi:8}[A.sk]||14;
@@ -552,13 +563,76 @@ function whDraw(now){if(!(A&&A.wh)||INT||CK){whEl.style.display='none';return}co
  const g=whX,C=96,R=70,o=-Math.PI/2,th=whAng(now),GC=A.gold?'255,216,97':'232,207,148';g.clearRect(0,0,192,192);g.lineCap='butt';
  g.lineWidth=15;g.strokeStyle='rgba(14,12,10,.72)';g.beginPath();g.arc(C,C,R,0,TAU2);g.stroke();g.lineWidth=1.2;g.strokeStyle='rgba('+GC+',.6)';[R-7.5,R+7.5].forEach(rr=>{g.beginPath();g.arc(C,C,rr,0,TAU2);g.stroke()});
  // muescas: un segmento por golpe necesario; se iluminan con el progreso (así se ve cuánto falta sin texto)
- const pr=Math.min(1,A.pr||0),H=Math.max(3,Math.min(12,Math.round(1/A.amt))),seg=TAU2/H,gp=.09;g.lineWidth=5;
+ const pr=Math.min(1,A.pr||0),H=Math.max(2,Math.min(12,Math.round(1/A.amt))),seg=TAU2/H,gp=.09;g.lineWidth=5;
  for(let j=0;j<H;j++){const a0=o+j*seg+gp/2,a1=o+(j+1)*seg-gp/2,f=Math.max(0,Math.min(1,pr*H-j));g.strokeStyle='rgba(14,12,10,.65)';g.beginPath();g.arc(C,C,R-18,a0,a1);g.stroke();if(f>0){g.strokeStyle=A.gold?'#ffd861':'#9bd04f';g.beginPath();g.arc(C,C,R-18,a0,a0+(a1-a0)*f);g.stroke()}}
  g.lineWidth=12;g.strokeStyle='rgba('+GC+',.92)';g.beginPath();g.arc(C,C,R,o+A.wa-A.whalf,o+A.wa+A.whalf);g.stroke();   // arco de acierto
  g.save();g.shadowColor='#fff0b8';g.shadowBlur=10;g.lineWidth=12;g.strokeStyle='#fff6d8';g.beginPath();g.arc(C,C,R,o+A.wa-A.wper,o+A.wa+A.wper);g.stroke();g.restore();   // núcleo perfecto
  for(let i=1;i<=7;i++){g.lineWidth=7;g.strokeStyle='rgba(255,255,255,'+(.3*(1-i/8))+')';g.beginPath();g.arc(C,C,R,o+th-i*.07,o+th-(i-1)*.07);g.stroke()}   // estela del marcador
  const mx=C+Math.cos(o+th)*R,my=C+Math.sin(o+th)*R;g.save();g.shadowColor='#fff';g.shadowBlur=12;g.fillStyle='#fff';g.beginPath();g.arc(mx,my,7.5,0,TAU2);g.fill();g.restore();
  if(A.fl){const u=(now-A.fl.t)/320;if(u>=1)A.fl=null;else{const q=A.fl.q;g.lineWidth=5*(1-u)+1;g.strokeStyle=q===2?'rgba(255,242,192,'+(1-u)+')':q===1?'rgba('+GC+','+(.9*(1-u))+')':'rgba(190,80,64,'+(.8*(1-u))+')';g.beginPath();g.arc(C,C,R+8+u*(q===2?26:14),0,TAU2);g.stroke()}}}
+/* MINIJUEGO DE HERRERÍA (21 oct 2026; decisión del dueño: ritmo de martillo con calor). Solo en yunque/armero (el horno sigue automático).
+   · La pieza está al rojo (`fmHeat`: 1→0 en `FM_CT` ms) y un anillo se cierra sobre ella al compás (`fmBP`): clic/E justo al cerrarse = golpe (perfecto ±70 ms, bueno ±170 ms).
+   · Calor ≥.55 golpe pleno · .25–.55 medio (×.6) · <.25 en frío (clang sordo, casi no avanza ni suma calidad). R = recalentar (`FM_RH` ms sin golpear; el calor vuelve a 1).
+   · Precisión × calor de cada golpe → `A.perf/A.tot` → `QBON` (calidad superior). NUNCA se pierde la pieza ni materiales. El héroe espera con el martillo ARRIBA (ph .65) y al pulsar solo baja (impacto a `FM_IMP` ms). */
+/* AYUDA DE CONTROLES + ENFOQUE DE CÁMARA DE LOS MINIJUEGOS (21 oct 2026; pedido del dueño). Patrón COMÚN para todo minijuego nuevo:
+   · `mgBegin(key)` al empezar (cuenta las veces en `S.mgh[key]`); `mgHintRows(key)` devuelve las filas [[teclas…],'verbo'] según el estado; `mgUi(now)` (cada fotograma, tras los draw de los minijuegos) coloca/funde el aviso junto a la estación.
+   · El aviso sale las primeras `MG_HINTS` veces de cada minijuego y se funde suave (sin bloque ni toast). Para uno nuevo: añade su clave en `mgKey()` y sus filas en `mgHintRows`.
+   · Enfoque: mientras hay minijuego `mgK`→1 y la cámara se acerca ×`MG_ZOOM` hacia la estación (suave, sin cine; no actúa dentro de interiores ni durante una escena). */
+const MG_HINTS=5,MG_ZOOM=.42,MG_PULL=.4;let mgK=0;
+const mgEl=(()=>{const d=document.createElement('div');d.id='mgh';document.body.appendChild(d);return d})();let mgTx='';
+const mgKey=()=>A?(A.fm?'fm':A.wh?'wh':A.fg?'fg':null):null;
+/* MARCADORES DE MISIÓN (21 oct 2026): iconos DOM de la UI «Susurro» (círculo de cristal + trazo dorado, Cinzel) sobre el PNJ con misión: «!» disponible · «?» gris en curso · «?» dorado para entregar (ISLA.mark). Un div por PNJ en #qms; los que no tocan se ocultan. CSS al final de hud-susurro.css. */
+const qmBox=(()=>{const d=document.createElement('div');d.id='qms';document.body.appendChild(d);return d})(),qmEl=new Map();
+function qmUi(now){if(typeof ISLA==='undefined'||INT||(typeof CINE!=='undefined'&&CINE.on)||!ISLA.on()){if(qmEl.size){qmEl.forEach(e=>e.style.display='none')}return}
+ const r=cv.getBoundingClientRect(),k=r.width/cv.width,seen=new Set();
+ for(let i=0;i<ST.length;i++){const e=ST[i];if(!e.npc||e.k!==9)continue;const m=ISLA.mark(e.id);if(!m||!(window.R3D&&R3D.actors.has(e)))continue;seen.add(e.id);
+  let d=qmEl.get(e.id);if(!d){d=document.createElement('div');d.className='qm';d.innerHTML='<b></b>';qmBox.appendChild(d);qmEl.set(e.id,d)}
+  if(d.dataset.k!==m.k){d.dataset.k=m.k;d.firstChild.textContent=m.c}
+  const c0=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y)),lh=R3D.actors.labelH(e);
+  d.style.display='grid';d.style.transform='translate('+(r.left+c0.x*k).toFixed(1)+'px,'+(r.top+(c0.y-(lh/SPR+42)*ISO.scale())*k).toFixed(1)+'px) translate(-50%,-100%)'}
+ qmEl.forEach((d,id)=>{if(!seen.has(id))d.style.display='none'})}
+function mgBegin(key){S.mgh=S.mgh||{};S.mgh[key]=(S.mgh[key]||0)+1}
+const K_=(...k)=>k;
+function mgHintRows(key){const g=A&&A.fg;
+ if(key==='wh')return[[K_('Clic','E'),'golpear con el marcador en el arco dorado']];
+ if(key==='fm'){const r=[[K_('Clic','E'),'martillar al cerrarse el anillo']];if(A.fm&&fmHeat(performance.now())<.4)r.push([K_('R'),'recalentar la pieza']);return r}
+ if(key==='fg'){if(!g||g.st==='wait')return[[[],'espera la picada…']];if(g.st==='bite')return[[K_('Clic','E'),'¡ahora, clava el anzuelo!']];
+  if(g.st==='fight')return[[K_('W','A','S','D'),'muévete en dirección contraria al pez']];if(g.st==='reel')return[[K_('Clic'),'repetido para recogerlo']]}
+ return[]}
+function mgUi(now){const key=mgKey(),on=!!key&&!INT&&!CK&&!(typeof CINE!=='undefined'&&CINE.on);
+ const dt=Math.min(.1,OCDT||.016);mgK+=((on?1:0)-mgK)*Math.min(1,dt*3.2);if(mgK<.002&&!on&&mgK>0){mgK=0;if(window.R3D_ON)ISO.V.zoom=zoom3(ZMI)}
+ const show=on&&((S.mgh&&S.mgh[key])||0)<=MG_HINTS;
+ if(!show){mgEl.classList.remove('on');return}
+ const rows=mgHintRows(key),tx=rows.map(r=>r[0].join('+')+'|'+r[1]).join('/');
+ if(tx!==mgTx){mgTx=tx;mgEl.innerHTML=rows.map(r=>'<div>'+r[0].map(k=>'<kbd>'+k+'</kbd>').join('')+'<span>'+r[1]+'</span></div>').join('')}
+ const e=A.e,r=cv.getBoundingClientRect(),k=r.width/cv.width,c0=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y));
+ mgEl.style.transform='translate('+(r.left+c0.x*k).toFixed(1)+'px,'+(r.top+(c0.y+8*SPR*ISO.scale())*k).toFixed(1)+'px) translate(-50%,0)';mgEl.classList.add('on')}
+const FM_IMP=30,FM_CT=5500,FM_RH=900,fmBP=()=>Math.max(850,1200-L('sm')*3);
+const fmHeat=now=>now<A.rl?A.rh0+(1-A.rh0)*(1-(A.rl-now)/FM_RH):Math.max(0,1-(now-A.fh0)/FM_CT),fmDt=now=>{const bp=fmBP(),x=((now-A.fb0)%bp+bp)%bp;return Math.min(x,bp-x)};
+function fmInit(now){const a=ACT[A.sk][A.i];Object.assign(A,{fm:1,h0:-1e9,hq:0,wc:now+120,wl:now,fl:null,perf:0,tot:0,fb0:now+fmBP()*.5,fh0:now,rl:0,rh0:1,hm:1,hcold:0,amt:1/whHitsC(a)});
+ mgBegin('fm')}
+function fmPress(now){if(!A||!A.fm||now<A.wc||now<A.rl)return;A.hn=(A.hn||0)+1;A.p0=armP0(now-A.h0,FM_IMP,FM_IMP+WH_REC,.65);const ht=fmHeat(now),d=fmDt(now),tq=d<=70?2:d<=170?1:0,hf=ht>=.55?1:ht>=.25?.6:.1;
+ A.hq=tq+1;A.h0=now;A.wc=now+220;A.wl=now;A.fl={t:now,q:tq,c:ht<.25};A.hcold=ht<.25?1:0;A.hm=(tq===2?1.3:tq===1?1:.55)*hf;A.perf+=(tq===2?1:tq===1?.6:.2)*(ht>=.55?1:ht>=.25?.6:0);A.tot++;
+ if(tq===2&&!A.hcold)tone(700,.11,'triangle',.07);else if(tq===1&&!A.hcold)tone(470,.08,'triangle',.05);else tone(170,.07,'sawtooth',.03)}
+function fmReheat(now){if(!A||!A.fm||now<A.rl||now<A.h0+FM_IMP+120)return;A.rh0=fmHeat(now);A.rl=now+FM_RH;A.fh0=A.rl;A.wl=now;noise(.7,.09,700,'lowpass');tone(240,.7,'sawtooth',.025,220);
+ const f=window.R3D&&R3D.fx,e=A.e;if(f&&e){f.spark(e.x,e.y,14,'#ff9a2a',9,{spread:.8,up:2.2,g:-.5,size:.08,life:.8});f.smoke(e.x,e.y,14,'#8a867e',2,{size:.14,grow:2.4,life:.8,up:.5,alpha:.25})}}
+function fmTick(now){if(now-A.wl>20000)return stopA();
+ if(A.hq&&now>=A.h0+FM_IMP){const q=A.hq-1,e=A.e;A.hq=0;if(A.hcold){noise(.05,.1,420,'lowpass');tone(105,.12,'square',.05,-20)}else{whSnd('sm',q);whFx('sm',e,q);if(q===2)whPulse(now)}
+  A.pr+=A.amt*A.hm;if(A.pr>=1){A.pr=.99;fin(now)}}}
+const fgEl=(()=>{const c=document.createElement('canvas');c.id='fgl';c.width=c.height=192;c.style.display='none';document.body.appendChild(c);return c})(),fgX=fgEl.getContext('2d');
+const fmMix=(a,b,t)=>{const h=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));const u=h(a),v=h(b);return'rgb('+u.map((c,i)=>Math.round(c+(v[i]-c)*Math.max(0,Math.min(1,t)))).join(',')+')'};
+function fmDraw(now){if(!(A&&A.fm)||CK){fgEl.style.display='none';return}const e=A.e,r=cv.getBoundingClientRect(),k=r.width/cv.width;let x,y;
+ if(INT){x=r.left+r.width*.5;y=r.top+r.height*.36}else{const c0=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y));x=r.left+c0.x*k;y=r.top+(c0.y-14*SPR*ISO.scale())*k}   // en interiores (sin posición de pantalla fiable) se centra arriba
+ fgEl.style.display='block';fgEl.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) translate(-50%,-50%)';
+ const g=fgX,C=96,ht=fmHeat(now),lock=now<A.rl,col=ht>=.55?fmMix('#ffa23a','#fff2c0',(ht-.55)/.45):ht>=.25?fmMix('#8a2a10','#ff7a20',(ht-.25)/.3):fmMix('#2a2420','#8a2a10',ht/.25);g.clearRect(0,0,192,192);
+ g.save();g.shadowColor=col;g.shadowBlur=6+ht*26;g.fillStyle=col;g.beginPath();g.roundRect?g.roundRect(C-30,C-10,60,20,6):g.rect(C-30,C-10,60,20);g.fill();g.restore();   // la pieza: brilla más cuanto más caliente
+ g.strokeStyle='rgba(14,12,10,.7)';g.lineWidth=2;g.beginPath();g.roundRect?g.roundRect(C-30,C-10,60,20,6):g.rect(C-30,C-10,60,20);g.stroke();
+ if(!lock){const bp=fmBP(),u=(((now-A.fb0)%bp)+bp)%bp/bp,near=fmDt(now)<=70;   // anillo que se cierra sobre la pieza; en la ventana perfecta el aro objetivo se enciende
+  g.lineWidth=3;g.strokeStyle='rgba(232,207,148,'+(.2+.7*u)+')';g.beginPath();g.arc(C,C,20+52*(1-u),0,TAU2);g.stroke();
+  g.lineWidth=near?4:1.6;g.strokeStyle=near?'#fff6d8':'rgba(232,207,148,.7)';g.beginPath();g.arc(C,C,20,0,TAU2);g.stroke()}
+ const H=Math.max(2,Math.min(8,Math.round(1/A.amt))),pr=Math.min(1,A.pr||0);for(let j=0;j<H;j++){g.fillStyle=j<pr*H-.0001?'#e8cf94':'rgba(14,12,10,.65)';g.beginPath();g.arc(C+(j-(H-1)/2)*13,C+46,4,0,TAU2);g.fill()}   // un punto por golpe necesario
+ if(ht<.3&&!lock){const a=.55+.45*Math.sin(now/130);g.font='bold 15px Cinzel,serif';g.textAlign='center';g.fillStyle='rgba(232,207,148,'+a+')';g.fillText('R',C,C-44)}   // pieza fría: recalentar
+ if(A.fl){const u=(now-A.fl.t)/320;if(u>=1)A.fl=null;else{const q=A.fl.q;g.lineWidth=5*(1-u)+1;g.strokeStyle=A.fl.c?'rgba(120,120,130,'+(.7*(1-u))+')':q===2?'rgba(255,242,192,'+(1-u)+')':q===1?'rgba(232,207,148,'+(.9*(1-u))+')':'rgba(190,80,64,'+(.8*(1-u))+')';g.beginPath();g.arc(C,C,22+u*(q===2?30:16),0,TAU2);g.stroke()}}}
 /* MINIJUEGO DE PESCA v2 (21 oct 2026; el dueño: «que se vea visualmente, sin ruedas ni tan gráfico: el pez que se mueva y el jugador va en la dirección contraria con la caña, como Sea of Thieves»). TODO SE LEE EN EL MUNDO:
    · wait  — la caña echada; tras 2,5–6 s el pez pica: el flotador se hunde, salpica y suena; sale un «!» pequeño.
    · bite  — 1,3 s para pulsar CLIC (o E) y clavar el anzuelo; si no, se escapa (a la 3.ª se recoge la caña).
@@ -572,7 +646,7 @@ let FISH_MG=false;try{FISH_MG=localStorage.getItem('ns_fishmg')==='1'||/[?&]fish
 const FISHC=['#d9772e','#7f9a86','#b9a46a','#c9553a','#5f8a78'];
 const fishWait=()=>1500+whR()*13500;   // la picada tarda entre 1,5 y 15 s (decisión del dueño)
 function fishInit(now){const a=ACT.fi[A.i],tier=rq(a),t=S.tool.fi||0;A.fg={st:'wait',bt:now+fishWait(),b2:0,E:100,T:0,R:0,dir:0,hd:0,pull:0,tell:0,nd:0,s:.8+tier*.012,tk:1/(1+.15*t),tol:Math.min(1.25,.85+L('fi')*.004+t*.03),miss:0,fd:0,fx:A.e.x,fy:A.e.y,fx0:0,fy0:0,fl:null,al:false,rs:0,hx:P.x,hy:P.y,col:FISHC[tier%FISHC.length],len:.5+Math.min(.12,tier*.003),dirty:0};
- if(!S.hintFg){S.hintFg=1;toast(FISH_MG?'🎣 Cuando pique pulsa <b>clic</b>. Luego <b>muévete en dirección contraria</b> a donde tira el pez para cansarlo y, cuando se rinda, pulsa <b>clic</b> varias veces para recogerlo.':'🎣 Cuando pique (verás un <b>!</b>) pulsa <b>clic</b> para capturarlo.',7000)}}
+ mgBegin('fg')}
 function fishPress(now){const g=A&&A.fg;if(!g)return;
  if(g.st==='bite'){if(!FISH_MG){g.st='done';tone(620,.1,'triangle',.08);fin(now);return}   // pesca simple: el clic a tiempo captura
   g.st='fight';g.nd=now+700;g.fl=now;tone(620,.1,'triangle',.08);try{R3D.water.event('tug',A.e)}catch(e){}}
@@ -623,7 +697,7 @@ function rollAtk(m){const wt=wtype(),hit=Math.random()<hitChance(m),d0=hit?R(1,m
 function startF(e,now){if(!alive(e,now))return;if(aimOn()&&e.d){e.hunt=1;return}   // con el combate dirigido no hay «combate fijado»: se golpea apuntando (swing())
  dfpHint(e);if(manual()&&!S.hintAtk&&!e.lab){S.hintAtk=1;toast('⚔️ Mantén el clic sobre el enemigo (o la tecla <b>E</b>) para golpear. <b>Espacio</b> esquiva.',5200)}if(sealed(e)){const k=MB[e.d.id];toast('🔒 <b>'+e.d.n+'</b> está protegido por un sello. Derrota a <b>'+MD['k'+k].n+'</b> en la '+CAPN[k]+'.',4200);snd('miss');return}A={ty:'f',e,t0:now,ph:Math.max(now+(manual()?0:700),ATKT),sk:'cb',ms:manual()?manMs():atkMs()};A.nx=rollAtk(e);e.hunt=1;e.nt=Math.max(e.nt||0,now+1400);dirty=1}
 function startC(sk,i){const a=ACT[sk][i];if(ownT(a))return log('Ya tienes esa herramienta.');if(L(sk)<rq(a)||!gOk(a)||!hasIn(a[1]))return log('Te faltan materiales o nivel.');
- A={ty:'c',e:S.stn,sk,i,t0:performance.now(),d:dur(sk,a),pr:0,amt:hitAmt(sk,a),per:hitPeriod(sk),left:QTY||1e9};S.cur={sk,i};if(WHEEL_SK[sk])whInit(performance.now());dirty=1}
+ A={ty:'c',e:S.stn,sk,i,t0:performance.now(),d:dur(sk,a),pr:0,amt:hitAmt(sk,a),per:hitPeriod(sk),left:QTY||1e9};S.cur={sk,i};if(WHEEL_SK[sk])whInit(performance.now());if(sk==='sm'&&S.stn&&S.stn.id!=='furnace')fmInit(performance.now());dirty=1}
 function reseek(e,now){if(e.d&&(!S.auto||(e.d.ag&&(P.hp<maxHp()*.6||M.some(o=>o!==e&&o.hunt&&alive(o,now))))))return stopA();let b=null,bd=1e9;(e.d?M:N).forEach(o=>{if(o===e||!alive(o,now)||(e.d?o.d!==e.d:(o.t!==e.t||o.i!==e.i))||(e.d&&e.d.ag&&M.some(q=>q!==o&&q!==e&&alive(q,now)&&q.d.ag&&Math.hypot(q.x-o.x,q.y-o.y)<100)))return;const d=Math.hypot(o.x-e.x,o.y-e.y);if(d<bd){bd=d;b=o}});
  if(b){A=null;P.g={e:b}}else stopA('No quedan más cerca. Espera a que reaparezcan.')}
 // ---- puntos de interés: cofres (oro + XP + a veces un drop raro; los de campamento están custodiados) y santuarios (bendición permanente de una sola vez)
@@ -732,8 +806,8 @@ function kill(m,now){if(m.sm){snd('kill');m.rt=now+1;return}const d=m.d;if(windo
  snd('kill');m.rt=now+(d.boss===1?BRESP[MB[d.id]]*1000:d.boss===2?120000:12000);const dl=Math.max(0,m.lv-d.lv);earn(Math.round(R(d.co[0],d.co[1])*(1+.05*dl)*(1+pv('prosp')/100)));MN=Math.min(mnMax(),MN+Math.round(pv('siph')));d.dr.forEach(([id,p])=>{if(Math.random()<Math.min(DRMAX,p*(1+.03*dl)))dropGround(id,m.x,m.y)});(RUD[d.id]||[]).forEach(([k,a,b,p])=>{if(Math.random()<Math.min(DRMAX,p*.6*(1+.03*dl))){const n=R(a,b);S.runes[k]=(S.runes[k]||0)+n;disc('rn_'+k);log('<span style="color:#c8a0ff">+'+n+' runa'+(n>1?'s':'')+' de '+RNN[k]+'</span>')}});
  if(d.rare&&Math.random()<(1+.25*S.luck+.02*dl)/d.rare[1]){dropGround(d.rare[0],m.x,m.y,{rare:1});inc('rare');toast(ic(d.rare[0])+' ¡Drop raro: <b>'+I[d.rare[0]][0]+'</b>!',3000)}
  inc('kill:'+d.id);log('Mataste a '+d.n+' (nv. '+m.lv+').');if(d.boss===1)bossKill(m,now);else if(d.boss===2)capKill(m,now);rollLoot(m,d.boss===1?3:d.boss===2?2:1);if(m.tmp){qMobDead(m);dirty=1;return}rollLv(m);dirty=1}
-function fin(now){const{ty,sk,i,e}=A,a=ACT[sk][i],cb=sk==='co'?count(a[2]):0;if(ty==='c'&&A.wh)QBON=1+1.4*(A.tot?A.perf/A.tot:0);const okA=stepAct(sk,i,false,(A.wh&&ty==='g'&&sk!=='fi')?e:null);QBON=1;if(!okA){stopA();return}if(sk==='fi'&&window.R3D&&R3D.water)R3D.water.event('catch',e);   // R3D-AGUA-IMPL: captura = chapuzón + el pez vuela a la mano
- if(ty==='c'){if(A.wh){A.pr=0;A.perf=0;A.tot=0;A.wl=now}A.left--;if(sk==='co'&&count(a[2])>cb&&Math.random()<BONUSP+.04*S.cfg){BL=A.left;dirty=1;save();stopA();startBonus(i);return}
+function fin(now){const{ty,sk,i,e}=A,a=ACT[sk][i],cb=sk==='co'?count(a[2]):0;if(ty==='c'&&(A.wh||A.fm))QBON=1+1.4*(A.tot?A.perf/A.tot:0);const okA=stepAct(sk,i,false,(A.wh&&ty==='g'&&sk!=='fi')?e:null);QBON=1;if(!okA){stopA();return}if(sk==='fi'&&window.R3D&&R3D.water)R3D.water.event('catch',e);   // R3D-AGUA-IMPL: captura = chapuzón + el pez vuela a la mano
+ if(ty==='c'){if(A.wh){A.pr=0;A.perf=0;A.tot=0;A.wl=now}if(A.fm){A.pr=0;A.perf=0;A.tot=0;A.wl=now;A.fh0=now;A.rl=0}A.left--;if(sk==='co'&&count(a[2])>cb&&Math.random()<BONUSP+.04*S.cfg){BL=A.left;dirty=1;save();stopA();startBonus(i);return}
   if(!hasIn(a[1])){dirty=1;save();stopA('Te quedaste sin materiales.');return}if(A.left<=0){dirty=1;save();stopA('Listo: terminaste la tanda.');return}}
  if(ty==='g'&&e.g){gain(sk,xv(ACT[sk][i])*4);earn(20+L(sk)*2);toast('✨ ¡Recurso dorado! Bonus de XP y oro');snd('rare');if(A.wh&&sk!=='fi')for(let n=0;n<3;n++)dropGround(a[1],e.x,e.y,{au:1,rare:1})}if(ty==='g'){if((sk==='wc'||sk==='mi')&&window.R3D&&R3D.res){try{R3D.res.fell(e,P.x,P.y)}catch(x){}
    if(sk==='wc'){noise(.5,.1,320,'bandpass');tone(95,.55,'sawtooth',.05,-35);setTimeout(()=>{noise(.35,.2,140,'lowpass');tone(60,.3,'sine',.25,-20);noise(.5,.08,2500,'highpass')},1750)}
@@ -798,7 +872,7 @@ function swing(now,ang,k=0){if(INT||CK||P.hp<=0||(typeof CINE!=='undefined'&&CIN
  if(!S.hintAtk){S.hintAtk=1;toast('⚔️ Apunta con el ratón y haz <b>clic</b> para golpear; <b>mantén</b> el clic para cargar el golpe y suéltalo (también tecla <b>E</b>). <b>Clic derecho</b> mueve, <b>Espacio</b> esquiva.',7000)}
  inc('swing');if(k>=.3)inc('charged');
  const fb=wKind()==='staff'&&MN>=fbCost(k),chg=k>.04,ms=fb?1500:manMs(),c=chg?SWG.c:(now-SWG.last<ms*1.9)?(SWG.c+1)%3:0;if(ang==null)ang=aimAng();
- Object.assign(SWG,{t0:now,ms,wind:Math.min(chg?90:150,Math.round(ms*.28)),ang,dx:Math.cos(ang),dy:Math.sin(ang),done:0,c,k,fb,wt:wtype(),cd:now+ms,last:now,hv:(c===2||k>.55)?1:0,lg:0});ATKT=now+ms;P.g=P.mv=null;if(A)stopA();
+ Object.assign(SWG,{t0:now,ms,wind:Math.min(chg?60:55,Math.round(ms*.2)),ang,dx:Math.cos(ang),dy:Math.sin(ang),done:0,c,k,fb,wt:wtype(),cd:now+ms,last:now,hv:(c===2||k>.55)?1:0,lg:0});ATKT=now+ms;P.g=P.mv=null;if(A)stopA();
  if(SWG.wt==='m'&&!fb){   // melé: embestida corta hacia un enemigo cercano en el arco y estela 3D del golpe
   const rch=(wKind()==='dagger'?66:wKind()==='great'?92:80);let bd=1e9;M.forEach(m=>{if(!alive(m,now)||sealed(m))return;const vx=m.x-P.x,vy=m.y-P.y,d=Math.hypot(vx,vy);let df=Math.abs(Math.atan2(vy,vx)-ang);df=df>Math.PI?2*Math.PI-df:df;if(df<.6&&d>rch*.7&&d<150&&d<bd){bd=d;SWG.lg=Math.min(18,d-rch*.7)}});}/* estela 3D R3D.spell.slash quitada a petición del dueño */P.cbT=now;P.dir=HERO.dirOf(SWG.dx,SWG.dy);return true}
 function rayHit(a0,range,pad){const now=performance.now(),dx=Math.cos(a0),dy=Math.sin(a0);let best=null,bt=range;
@@ -832,7 +906,7 @@ function swingHud(now){const col=document.getElementById('hs-col');if(!col)retur
  const on=aimOn()&&!INT&&(now-SWG.last<3000||now-(P.cbT||-1e9)<2000||CHG.on);el.classList.toggle('on',on);try{if(CHG.on&&wKind()==='staff'&&now-CHG.t0>220)R3D.spell.charge(P.x,P.y,chgK(now));else if(!CHG.on)R3D.spell.charge(0,0,-1)}catch(e){}
  el.classList.toggle('chg',!!CHG.on);el.classList.toggle('cf',!!CHG.on&&chgK(now)>=1);if(!on)return;const u=CHG.on?chgK(now):Math.min(1,(now-SWG.t0)/Math.max(1,SWG.ms));el.firstChild.style.width=(u*100).toFixed(0)+'%';el.classList.toggle('rd',u>=1);
  const n=now-SWG.last<SWG.ms*1.9?SWG.c+1:0,ps=el.querySelectorAll('b');ps.forEach((b,i)=>b.classList.toggle('lit',i<n))}   // barra de swing: relleno = enfriamiento del golpe, 3 puntos = combo
-function atkKey(down){const now=performance.now();if(A&&A.wh){if(down)whPress(now);return}if(A&&A.fg){if(down)fishPress(now);return}if(!down){if(aimOn())chargeEnd();ATKIN.held=0;return}ATKIN.t=now;ATKIN.held=1;if(aimOn()){chargeStart(now);return}if(A&&A.ty==='f')return;
+function atkKey(down){const now=performance.now();if(A&&A.fm){if(down)fmPress(now);return}if(A&&A.wh){if(down)whPress(now);return}if(A&&A.fg){if(down)fishPress(now);return}if(!down){if(aimOn())chargeEnd();ATKIN.held=0;return}ATKIN.t=now;ATKIN.held=1;if(aimOn()){chargeStart(now);return}if(A&&A.ty==='f')return;
  let b=null,bd=150;M.forEach(m=>{if(!alive(m,now)||sealed(m))return;const d=Math.hypot(m.x-P.x,m.y-P.y);if(d<bd){bd=d;b=m}});if(b){if(A)stopA();P.g=null;P.mv=null;engage(b,now)}}
 function act(now){if(!A)return;
  if(A.ty==='f'){const m=A.e,dd=Math.hypot(P.x-m.x,P.y-m.y);if(dd>(wtype()==='m'?75:210)){if(!m.hunt)stopA();return}
@@ -868,6 +942,12 @@ const STA={drain:8,reg:22,pause:.9,exReg:11,rec:40};let STP=0;
 let SHRUN=0;
 const DSH={on:0,cd:0,t0:0,t1:0,an:0,dx:0,dy:1,inv:0,sp:520,len:.30,ifr:.28,cost:45,cdt:800,warn:0};   // QUICKSTEP estilo Bloodborne (21 oct 2026): arranque rápido y frenada suave (v = sp·(1−u)^1,5 → ≈ 62 px en 0,30 s), animación ≈ 0,42 s (`an`), i-frames 0,28 s, 16 de resistencia   // 21 oct 2026 (ajuste del dueño): VOLTERETA lenta: 120 px/s × 0,52 s ≈ 62 px; animación de ≈ 0,62 s (`an`), invulnerable los primeros 0,4 s (`ifr`), 16 de resistencia   // 21 oct 2026: MÁS LENTO y CORTO (220 px/s × 0,32 s ≈ 70 px ≈ 2,2 casillas; antes 118 px en 0,19 s); i-frames = impulso + 130 ms; enfriamiento 1,1 s
 const dashInv=()=>performance.now()<DSH.inv;
+/* SALTO (21 oct 2026; pedido del dueño): saltito de ≈ .55 niveles (≈ 35 cm de mundo) que NO gasta resistencia ni da invulnerabilidad; solo es visual (la colisión es 2D y no cambia). Botón `#jmpb` (HUD) o tecla V.
+   `JMP.u` = fase 0..1 (heroState3D → `jmp` para la animación y `z` + `jh`); no se puede encadenar en el aire. */
+const JMP={t0:-1e9,ms:480,h:.55,cd:0};
+const jmpU=now=>{const u=(now-JMP.t0)/JMP.ms;return u>0&&u<1?u:0},jmpH=u=>{const w=Math.max(0,Math.min(1,(u-.12)/.76));return JMP.h*4*w*(1-w)};
+function jump(){const now=performance.now();if(INT||CK||P.hp<=0||now<JMP.t0+JMP.ms+60||(typeof CINE!=='undefined'&&CINE.on))return false;JMP.t0=now;try{tone(260,.09,'sine',.04,180)}catch(e){}return true}
+const jmpEl=(()=>{const b=document.createElement('button');b.id='jmpb';b.type='button';b.title='Saltar (V)';b.setAttribute('aria-label','Saltar');b.innerHTML='<svg viewBox="0 0 24 24" width="100%" height="100%"><path d="M5 14l7-7 7 7M5 20l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();jump()});b.addEventListener('keydown',e=>e.preventDefault());document.body.appendChild(b);return b})();
 function dash(){const now=performance.now();if(INT||CK||P.hp<=0||now<DSH.cd||(typeof CINE!=='undefined'&&CINE.on))return false;if(S.sta==null)S.sta=100;
  if(S.sta<DSH.cost){if(now-DSH.warn>1500){DSH.warn=now;log('Sin aliento para esquivar.')}return false}
  const kd=ISO.keyDir(K.l,K.r,K.u,K.d);let dx=kd.x,dy=kd.y;if(!dx&&!dy){dx=P.ldx||0;dy=P.ldy||0}if(!dx&&!dy){dx=0;dy=1}const l=Math.hypot(dx,dy);dx/=l;dy/=l;
@@ -1017,8 +1097,9 @@ function upd(dt,now){swingTick(now,dt);if(typeof AMB!=='undefined')AMB.tick(now,
   if(now>m.wt){m.wt=now+R(2000,5000);m.tx=m.hx+R(-16,16);m.ty=m.hy+R(-12,12)}
   const ex=m.tx-m.x,ey=m.ty-m.y,d=Math.hypot(ex,ey);if(d>2){const sp3=d>60?55:18,nx=m.x+ex/d*sp3*dt,ny=m.y+ey/d*sp3*dt;if(!inVilla(nx,ny)){m.x=nx;m.y=ny;m.mv=now;m.f=ex-ey>=0?1:-1}}});
  if(A&&A.wh)whTick(now);
+ if(A&&A.fm)fmTick(now);
  if(A&&A.fg)fishTick(now,dt);
- if(A&&!A.wh&&!A.fg){const ph=swPh(now),imp=A.lp!=null&&ph<A.lp-.4;A.lp=ph;if(imp&&A.ty!=='f'){const e=A.e,k=A.sk;snd(k);
+ if(A&&!A.wh&&!A.fg&&!A.fm){const ph=swPh(now),imp=A.lp!=null&&ph<A.lp-.4;A.lp=ph;if(imp&&A.ty!=='f'){const e=A.e,k=A.sk;snd(k);
   if(k==='wc')sp(e.x,e.y-26,'#5ab04a',2,30,10,60);else if(k==='mi')sp(e.x,e.y-10,'#ffd27a',4,60,40,160);else if(k==='sm')sp(e.x,e.y-8,'#ff9a2a',5,70,50,200);
   else if(k==='fi'){sp(e.x,e.y,'#cfe8ff',3,30,30,100);TER.ripple(e.x,e.y);if(window.R3D&&R3D.water)R3D.water.event('tug',e)}else if(k==='co')sp(e.x,e.y-14,'#aaa',2,10,25,-10);else if(k==='cr'||k==='es')sp(e.x,e.y-10,'#d8c9a3',2,30,20,80);else if(k==='ins')sp(e.x,e.y-18,'#ffe8a0',4,60,60,-20);A.pr+=A.amt*hitMul(now);if(A.pr>=1){A.pr=Math.min(A.pr-1,.99);fin(now)}}}
  parts.forEach(p=>{p.x+=p.vx*DT;p.y+=p.vy*DT;p.vy+=p.g*DT;p.l-=DT*1.1});parts=parts.filter(p=>p.l>0)}
@@ -1082,13 +1163,14 @@ const wColor=()=>S.eq.w?TCOL[tierOf(S.eq.w)]||(LOOT[S.eq.w]?['#c8742a','#9a9aa8'
 function actState(now){
  if(CK&&S.stn)return{k:'co',ph:0,id:S.stn.id};
  if(aimOn()&&CHG.on&&now-CHG.t0>220&&!CK)return{k:'f',wt:wtype(),wk:wKind(),wcol:wColor(),orb:ORB[tierOf(S.eq.w||'')],hv:1,ph:Math.min(.9,.3+chgK(now)*.6)};   // cargando: pose de preparación sostenida
- if(aimOn()&&now<SWG.t0+Math.min(SWG.ms,SWG.wind+300)&&!CK){const imp=SWG.t0+SWG.wind,b={k:'f',wt:SWG.wt,wk:wKind(),wcol:wColor(),orb:ORB[tierOf(S.eq.w||'')],hv:SWG.hv};return now<imp?Object.assign(b,{ph:Math.max(0,Math.min(1,(now-SWG.t0)/Math.max(1,SWG.wind)))}):Object.assign(b,{ph:0,rc:q4((now-imp)/260)})}   // combate dirigido: preparación → impacto → recuperación
+ if(aimOn()&&now<SWG.t0+Math.min(SWG.ms,SWG.wind+900)&&!CK){const imp=SWG.t0+SWG.wind,b={k:'f',wt:SWG.wt,wk:wKind(),wcol:wColor(),orb:ORB[tierOf(S.eq.w||'')],hv:SWG.hv};return now<imp?Object.assign(b,{ph:.5+.5*Math.max(0,Math.min(1,(now-SWG.t0)/Math.max(1,SWG.wind)))}):Object.assign(b,{ph:0,rc:q4((now-imp)/260)})}   // combate dirigido: preparación → impacto → recuperación
  if(P.sp&&now-P.sp.t0<P.sp.d&&!CK)return{k:'sp',ph:(now-P.sp.t0)/P.sp.d,wt:P.sp.wt,wk:wKind(),wcol:wColor(),orb:ORB[tierOf(S.eq.w||'')]};
  if(P.eat&&now-P.eat<1000&&!CK)return{k:'eat',ph:(now-P.eat)/1000};
  if(!A){if(P.pk&&now-P.pk<420)return{k:'pk',ph:(now-P.pk)/420};return null}const ph=swPh(now);
  if(A.ty==='f'){const wt=wtype(),hv=A.nx&&A.nx.wt===wt&&A.nx.heavy?1:0,armed=!!wColor(),wk=wKind();return Object.assign({k:'f',wt,wk,wcol:wColor(),orb:ORB[tierOf(S.eq.w||'')],hv},animPh(A.ms,A.ph-now,A.lh!=null?now-A.lh:1e9,wt==='r'?(hv?1150:900):wt==='g'?(hv?900:750):hv?(wk==='great'?880:760):wk==='great'?740:wk==='dagger'?400:armed?560:440))} // hv: el golpe que viene es máximo → animación especial del arma (hero.js)
  if(A.fg){const g=A.fg,tg=g.st==='bite'?.5+.5*Math.sin(now/55):g.st==='fight'?(g.pull?.35+.65*Math.min(1,g.T/80):.1):g.st==='reel'?.7:0;return{k:'fi',ph:Math.min(.99,(now-A.t0)/2400),tug:tg}}   // pesca: la caña tironea con el pez
- if(A.wh&&A.ty==='g'){const sg=now-A.h0,an=sg<0||sg>=520?{ph:0,rd:1}:sg<300?{ph:sg/300}:{ph:0,rc:q4((sg-300)/220)};return Object.assign({k:A.sk,col:TCOL[TT[S.tool[A.sk]]]||'#aaa'},an)}   // rueda: preparación (ph 0→1) hasta el impacto a los 300 ms, luego recuperación, luego reposo   // rueda: el héroe solo golpea cuando pulsas (impacto a los 300 ms)
+ if(A.fm){const id=A.e&&A.e.id;if(now<A.rl)return{k:'sm',ph:0,id};return Object.assign({k:'sm',id,n:A.hn||0},armPose(now-A.h0,FM_IMP,FM_IMP+WH_REC,.65,A.p0))}   // herrería: martillo ARRIBA en espera; al pulsar solo baja
+ if(A.wh&&A.ty==='g'){const an=whPose(now);return Object.assign({k:A.sk,col:TCOL[TT[S.tool[A.sk]]]||'#aaa'},an)}   // rueda: el héroe solo golpea cuando pulsas; la pose sale de whPose (continua, ver más arriba)
  if(A.ty==='g'){const per=A.per||900;if(A.sk==='fi'){const sg=ph*per;return{k:'fi',ph:Math.min(.99,(now-A.t0)/2400),tug:sg<320&&now-A.t0>per?q4(1-sg/320):0}} // pesca: lanza UNA vez al empezar y espera; en cada «picada» (vuelta del ciclo) la caña da un tirón
   return Object.assign({k:A.sk,col:TCOL[TT[S.tool[A.sk]]]||'#aaa'},animPh(per,per*(1-ph),per*ph,A.sk==='wc'?720:680))}
  return{k:A.sk,ph,id:A.e&&A.e.id,...(A.sk==='sm'&&A.e&&A.e.id!=='furnace'?animPh(A.per||900,(A.per||900)*(1-ph),(A.per||900)*ph,650):{})}}
@@ -1110,7 +1192,8 @@ function visDir(now){const tg=P.dir==null?2:P.dir;if(P.vd==null)P.vd=tg;if(P.vd!
 
 // R3D (?r3d=1): estado del héroe para src/r3d/hero3d.js. Misma lógica que dP (mirar al objetivo, acción, asentado al parar) pero sin dibujar.
 // look = apariencia + equipo (S.app, gearOpts()). ?capa=1 fuerza una capa para probar la tela (las capas serán objetos raros; por defecto lleva bufanda).
-function heroState3D(now){const t=now/1000,tg=A&&A.e?A.e:(CK&&S.stn?S.stn:null);let fx=null,fy=null;
+function heroState3D(now){now=performance.now();   /* CLAVE (21 oct 2026): r3d.js llama con el reloj VIRTUAL (`now-vlag`); cada golpe crítico (parada de impacto, `R3D.tscale`) lo atrasaba ≈ 75 ms para SIEMPRE y la pose del golpe (sg=now-A.h0, con h0 en reloj real) llegaba cada vez más tarde = desync progresivo. Todo lo que compara con campos escritos con performance.now() (A.h0, SWG.t0, DSH, JMP…) debe usar el reloj REAL */
+ const t=now/1000,tg=A&&A.e?A.e:(CK&&S.stn?S.stn:null);let fx=null,fy=null;
  const cbNow=!!(A&&A.ty==='f');if(cbNow)P.cbT=now;   // Lote R3D-ANIM: guardia de combate (se mantiene 2,5 s tras el último combate o golpe recibido)
  if(tg&&!P.mvg&&tg.x!=null){fx=tg.x-P.x;fy=tg.y-P.y;P.dir=HERO.dirOf(fx,fy)}
  if(A&&A.fg&&A.fg.st!=='wait'){fx=(A.fg.fx||A.e.x)-P.x;fy=(A.fg.fy||A.e.y)-P.y;P.dir=HERO.dirOf(fx,fy)}   // pesca: el héroe siempre mira al pez, también al retroceder
@@ -1118,7 +1201,7 @@ function heroState3D(now){const t=now/1000,tg=A&&A.e?A.e:(CK&&S.stn?S.stn:null);
  if(aimOn()&&!(cn&&cn.look)){if(now-SWG.last<650&&!CHG.on){fx=SWG.dx;fy=SWG.dy;P.dir=HERO.dirOf(fx,fy)}else if((CHG.on||curHid()&&!P.mvg||!P.mvg&&now-(P.cbT||-1e9)<2500)&&CUR.on&&!CUR.touch){const w=ISO.toWorld(CUR.px,CUR.py,TER.heightAt);fx=w.x-P.x;fy=w.y-P.y;P.dir=HERO.dirOf(fx,fy)}}   // el héroe mira al cursor
  const dsU=now<DSH.an?(now-DSH.t0)/Math.max(1,DSH.an-DSH.t0):0;if(dsU>0&&!(cn&&cn.look)){fx=DSH.dx;fy=DSH.dy;P.dir=HERO.dirOf(fx,fy)}   // el dash: el personaje mira hacia donde se lanza
  const act=P.mvg&&!(aimOn()&&(CHG.on||now<SWG.t0+SWG.ms*.8))?null:actState(now);if(act&&P.mvg&&act.k==='f')act.mv=1;if(act&&P.anm){P.anm=0;P.wt=null}const gear=gearOpts();if(/[?&]capa=1/.test(location.search)&&!gear.cp)gear.cp='#5a2230';
- return{recv:cn?cn.recv:0,x:P.x,y:P.y,z:TER.standZ(P.x,P.y),mv:!!(P.mvg||P.anm),run:!!RUN,w:P.w||0,act,dash:dsU>0&&dsU<1?dsU:0,hurt:Math.max(0,1-(now-HURT)/320),fx,fy,cb:cbNow||now-(P.cbT||-1e9)<2500||now-HURT<2500,
+ return{recv:cn?cn.recv:0,x:P.x,y:P.y,z:TER.standZ(P.x,P.y)+jmpH(jmpU(now)),jmp:jmpU(now),mv:!!(P.mvg||P.anm),run:!!RUN,w:P.w||0,act,dash:dsU>0&&dsU<1?dsU:0,hurt:Math.max(0,1-(now-HURT)/320),fx,fy,cb:cbNow||now-(P.cbT||-1e9)<2500||now-HURT<2500,
   aim:act&&act.k==='fi'&&A&&A.e?{x:(A.fg&&(A.fg.st==='fight'||A.fg.st==='reel'))?A.fg.fx:A.e.x,y:(A.fg&&(A.fg.st==='fight'||A.fg.st==='reel'))?A.fg.fy:A.e.y,ph:act.ph}:null,
   look:{app:S.app,ar:S.eq.a?ARC(S.eq.a):null,helm:S.eq.h?ARC(S.eq.h):null,boot:S.eq.f?ARC(S.eq.f):null,gear,hood:'down',arm:armorInfo()}}}
 const bl=document.createElement('canvas');bl.width=W>>2;bl.height=H>>2;const bx=bl.getContext('2d'),gr=document.createElement('canvas');gr.width=gr.height=96;let GP=null,SHK=0,HURT=-1e9;
@@ -1206,7 +1289,7 @@ function pickG(g,now){const i=GD.indexOf(g);if(i<0)return false;if(!room(g.it)){
  GD.splice(i,1);add(g.it);GA.push({it:g.it,x:g.x,y:g.y,t0:now,q:g.q,ph:g.ph});P.pk=now;snd(g.q>=2?'rare':'coin');dirty=1;return true}
 function dropUpd(now){for(let i=GD.length-1;i>=0;i--)if(now>GD[i].exp)GD.splice(i,1);for(let i=GA.length-1;i>=0;i--)if(now-GA[i].t0>420)GA.splice(i,1);
  // Lote R3D-DROPS-3D: YA NO se recogen solos al pasar por encima: hay que hacer clic (pickEnt → engage → pickG). Al caer, los raros suenan (poco común: campanilla suave; raro: «rare»; épico+: «epic»).
- for(const g of [...GD])if(g.au&&!INT&&now>=g.t0+650&&Math.hypot(g.x-P.x,g.y-P.y)<130)pickG(g,now);   // botín de la rueda: tras el salto vuela solo a tu mano
+ for(const g of [...GD])if(g.au&&!INT&&now>=g.t0+180&&Math.hypot(g.x-P.x,g.y-P.y)<130)pickG(g,now);   // botín de la rueda: tras el salto vuela solo a tu mano
  for(const g of GD)if(!g.sd&&now-g.t0>480){g.sd=1;if(g.q>=3)snd('epic');else if(g.q===2)snd('rare');else if(g.q===1)snd('xp')}}
 const GIC={},GCL={};
 
@@ -1224,7 +1307,10 @@ function dCur(t){CUR.tx=CUR.ty=-1;if(!CURON||!CUR.on||CK)return;
  ctx.lineWidth=Math.max(1,1.6*s);ctx.strokeStyle=no?'rgba(91,58,41,.85)':'rgba(253,249,227,.95)';ctx.stroke();ctx.restore()}
 function draw(now){const t=now/1000;cx=Math.max(0,Math.min(WW-W,P.x-W/2))|0;cy=Math.max(0,Math.min(WH-H,P.y-H/2))|0;
  {const s0=sunS(t),ph0=2*Math.PI*(dayP(t)-.25),d0=Math.max(0,s0);SHD.dx=-Math.cos(ph0)*(8+20*(1-d0));SHD.dy=2+3*(1-d0);SHD.a=Math.max(0,Math.min(.28,(s0+.15)*.5))}
- const dt=LFT?Math.min(.1,(now-LFT)/1000):1/60,sk=now<SHK?(SHK-now)/200*3:0;if(typeof CINE!=="undefined"&&CINE.on)CINE.cam();else if(LFT)ISO.follow(P.x,P.y,TER.standZ(P.x,P.y),dt);else ISO.snap(P.x,P.y,TER.standZ(P.x,P.y));LFT=now;OCDT=dt;
+ const dt=LFT?Math.min(.1,(now-LFT)/1000):1/60,sk=now<SHK?(SHK-now)/200*3:0;if(typeof CINE!=="undefined"&&CINE.on)CINE.cam();else{
+  if(window.R3D_ON&&(mgK>0||mgKey())){const me=mgKey()&&A.e&&!INT?A.e:null;ISO.V.zoom=Math.min(8,zoom3(ZMI)*(1+MG_ZOOM*mgK));   // enfoque de minijuego: acerca la cámara y la inclina hacia la estación
+   const fx=me?P.x+(me.x-P.x)*MG_PULL*mgK:P.x,fy=me?P.y+(me.y-P.y)*MG_PULL*mgK:P.y;if(LFT)ISO.follow(fx,fy,TER.standZ(P.x,P.y),dt);else ISO.snap(fx,fy,TER.standZ(P.x,P.y))}
+  else if(LFT)ISO.follow(P.x,P.y,TER.standZ(P.x,P.y),dt);else ISO.snap(P.x,P.y,TER.standZ(P.x,P.y))}LFT=now;OCDT=dt;
  if(typeof FOOT!=='undefined'&&window.R3D&&R3D.gait&&!(typeof CINE!=='undefined'&&CINE.on))FOOT.tick3(R3D.gait,P);   // PASOS por fase del pie (src/footsteps.js): suena en cada apoyo, a cualquier velocidad
  ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='low';if(window.R3D&&(!INT||R3D.intOn))ctx.clearRect(0,0,cv.width,cv.height);else{ctx.fillStyle=TER.PAPER;ctx.fillRect(0,0,cv.width,cv.height)}
  if(INT){R3D.show(1);intScene3(now,t);ctx.setTransform(cv.width/W,0,0,cv.height/H,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}else{
@@ -1234,7 +1320,7 @@ function draw(now){const t=now/1000;cx=Math.max(0,Math.min(WW-W,P.x-W/2))|0;cy=M
   ...(cin?[]:M).filter(e=>onScr(e.x,e.y)&&R3D.actors.has(e)).map(e=>[ISO.depth(e.x,e.y),()=>spr(e.x,e.y,0,()=>dMo(e,t,now))]),[ISO.depth(P.x,P.y),()=>R3D.drawHero(ctx)]];
  AMBI.draw(ctx,'ground');
  ents.sort((a,b)=>a[0]-b[0]).forEach(o=>o[1]());
- PJ.forEach(p=>{if(now>=p.t0)drawPJ(p,now)});npSweep();whDraw(now);fishDraw(now,OCDT);drawTel(now);drawWind(now);drawHFX(now);drawAim(now);swingHud(now);
+ PJ.forEach(p=>{if(now>=p.t0)drawPJ(p,now)});npSweep();whDraw(now);fmDraw(now);fishDraw(now,OCDT);mgUi(now);qmUi(now);drawTel(now);drawWind(now);drawHFX(now);drawAim(now);swingHud(now);
  parts.forEach(p=>p.hs?hsDraw(p):spr(p.x,p.y,12,()=>{ctx.globalAlpha=Math.min(1,p.l);if(p.sp){ctx.beginPath();ctx.arc(p.x,p.y,7,0,7);ctx.fillStyle=p.sp;ctx.fill();T(p.tx,p.x,p.y+4,'#fff')}else if(p.tx)T(p.tx,p.x,p.y,p.c);else Rc(p.c,p.x,p.y,2,2);ctx.globalAlpha=1}));
  AMBI.draw(ctx,'over');
  if(!window.R3D)PAINT.grain(ctx,cv.width,cv.height,ISO.V.dpr,.55); // grano de papel: con WGL lo pone un div con multiply (sin coste por frame); este es el plan B
@@ -1249,6 +1335,7 @@ let RPEND=null;   // clic derecho: «ir a» se decide al SOLTAR (si arrastraste,
 cv.addEventListener('pointerup',ev=>{if(ev.button!==2||!RPEND)return;const q=RPEND;RPEND=null;if(Math.abs(ev.clientX-q.cx)>6)return;/* arrastraste con el clic derecho: fue un giro de cámara (r3d.js) */if(CK||ZMP)return;const now=performance.now(),b=curHid()?null:pickEnt(q.px,q.py,now);if(A)stopA();if(b){P.g={e:b};P.mv=null}else{const w=ISO.toWorld(q.px,q.py,TER.heightAt);P.mv={x:w.x,y:w.y};P.g=null}});
 cv.addEventListener('pointerdown',ev=>{if(ev.button===1)return;if(ev.button===2&&!CK&&!ZMP){const r=cv.getBoundingClientRect();RPEND={px:(ev.clientX-r.left)*cv.width/r.width,py:(ev.clientY-r.top)*cv.height/r.height,cx:ev.clientX};return}if(CK){cookHit();return}if(ZMP)return;const r=cv.getBoundingClientRect(),px=(ev.clientX-r.left)*cv.width/r.width,py=(ev.clientY-r.top)*cv.height/r.height,now=performance.now(),sc=ISO.scale(),k=SPR*sc;
  const b=curHid()?null:pickEnt(px,py,now);   // cursor oculto: el clic nunca elige entidades (golpe / moverse)
+ if(A&&A.fm&&ev.button!==2&&(!b||b===A.e)){fmPress(now);return}   // herrería: el clic es el martillazo
  if(A&&A.wh&&ev.button!==2&&(!b||b===A.e)){whPress(now);return}   // rueda de recolección: el clic es el golpe
  if(A&&A.fg&&ev.button!==2&&(!b||b===A.e)){fishPress(now);return}   // pesca: el clic clava el anzuelo / recoge
  if(aimOn()&&ev.button!==2){CUR.touch=ev.pointerType==='touch';if(b&&b.d){chargeStart(now);return}if(!b&&!CUR.touch){chargeStart(now);return}}   // combate dirigido: clic izquierdo = swing hacia el cursor; clic derecho / táctil sobre el suelo = moverse
@@ -1257,7 +1344,7 @@ cv.addEventListener('pointerdown',ev=>{if(ev.button===1)return;if(ev.button===2&
 const KM={ArrowLeft:'l',a:'l',ArrowRight:'r',d:'r',ArrowUp:'u',w:'u',ArrowDown:'d',s:'d'};
 addEventListener('keydown',e=>{if(e.key==='Alt'){ALTK=1;e.preventDefault()}const k=KM[e.key]||KM[String(e.key).toLowerCase()];   // con Mayús pulsada (correr) las letras llegan en MAYÚSCULA: sin normalizar, W/A/S/D dejaban de dirigir al correr
  if(k){K[k]=1;e.preventDefault()}if(e.key==='Shift'&&!e.repeat&&!RUN){if(S.exh)log('Estás agotado: recupera el aliento para volver a correr.');else{RUN=1;SHRUN=1;S.hintR=1;if(typeof rhHide==='function')rhHide();runBtn()}}   // MAYÚS = CORRER (mantener); R quedó LIBRE (21 oct 2026)
-if((e.key==='t'||e.key==='T')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))arTog();if(e.key==='m'||e.key==='M')MM=(MM+1)%3;if(e.key==='g'||e.key==='G')tgCur();if(e.key==='F4'){perfTog();e.preventDefault()}if((e.key==='+'||e.key==='=')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setZoom(ZMI+1);if((e.key==='-'||e.key==='_')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setZoom(ZMI-1);if((e.key==='e'||e.key==='E')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||'')&&!CK&&!INT)atkKey(true);if((e.key===' '||e.key==='Enter')&&CK){cookHit();e.preventDefault()}else if(e.key===' '&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT|BUTTON/.test((e.target||{}).tagName||'')){if(dash())e.preventDefault()}if((e.key==='f'||e.key==='F')&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')&&!CK){useNear();e.preventDefault()}if(e.key==='Escape'){if(QOPEN)qCloseBoard();else if(CK)CK=null;else if(IW)closeIW();else if(panelOpen()){setPanel(false,1);document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('on'))}}if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')){const TK={i:'inv',p:'ch',k:'sk',q:'qm',l:'q',c:'col',z:'mg',o:'pr'}[(e.key||'').toLowerCase()];if(TK&&!CK)tabClick(TK);if(e.key==='v'||e.key==='V')specTog()}});addEventListener('keyup',e=>{if(e.key==='Alt'){ALTK=0;e.preventDefault()}const k=KM[e.key]||KM[String(e.key).toLowerCase()];if(k)K[k]=0;if(e.key==='e'||e.key==='E')atkKey(false);if(e.key==='Shift'&&SHRUN){SHRUN=0;RUN=0;runBtn()}});addEventListener('blur',()=>{ALTK=0;if(SHRUN){SHRUN=0;RUN=0;runBtn()}K.l=K.r=K.u=K.d=0;ATKIN.held=0});
+if((e.key==='v'||e.key==='V')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||''))jump();if((e.key==='t'||e.key==='T')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))arTog();if((e.key==='r'||e.key==='R')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||''))fmReheat(performance.now());if(e.key==='m'||e.key==='M')MM=(MM+1)%3;if(e.key==='g'||e.key==='G')tgCur();if(e.key==='F4'){perfTog();e.preventDefault()}if((e.key==='+'||e.key==='=')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setZoom(ZMI+1);if((e.key==='-'||e.key==='_')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setZoom(ZMI-1);if((e.key==='e'||e.key==='E')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||'')&&!CK&&!INT)atkKey(true);if((e.key===' '||e.key==='Enter')&&CK){cookHit();e.preventDefault()}else if(e.key===' '&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT|BUTTON/.test((e.target||{}).tagName||'')){if(dash())e.preventDefault()}if((e.key==='f'||e.key==='F')&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')&&!CK){useNear();e.preventDefault()}if(e.key==='Escape'){if(QOPEN)qCloseBoard();else if(CK)CK=null;else if(IW)closeIW();else if(panelOpen()){setPanel(false,1);document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('on'))}}if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')){const TK={i:'inv',p:'ch',k:'sk',q:'qm',l:'q',c:'col',z:'mg',o:'pr'}[(e.key||'').toLowerCase()];if(TK&&!CK)tabClick(TK);if(e.key==='v'||e.key==='V')specTog()}});addEventListener('keyup',e=>{if(e.key==='Alt'){ALTK=0;e.preventDefault()}const k=KM[e.key]||KM[String(e.key).toLowerCase()];if(k)K[k]=0;if(e.key==='e'||e.key==='E')atkKey(false);if(e.key==='Shift'&&SHRUN){SHRUN=0;RUN=0;runBtn()}});addEventListener('blur',()=>{ALTK=0;if(SHRUN){SHRUN=0;RUN=0;runBtn()}K.l=K.r=K.u=K.d=0;ATKIN.held=0});
 addEventListener('pointerdown',()=>pd=1);addEventListener('pointerup',()=>{if(aimOn())chargeEnd();ATKIN.held=0;setTimeout(()=>pd=0,60)});
 /* progreso offline retirado (21 oct 2026): al volver a la pestaña no se simulan acciones */
 
@@ -1316,7 +1403,8 @@ const travel=(k,c)=>{if(S.coins<c)return;if(INT)leaveRoom(1);S.coins-=c;stopA();
 let td,DL=null;
 function talk(){inc('talk');S.gseen=S.goal;if(S.goal===PCH&&!S.path){pathUI();return}const g=GOALS[S.goal];DL={n:'Ru · Tendero',id:'ru',p:(g?(g[4]||'¡Hola de nuevo, viajero!'):'¡Lo lograste todo, viajero! Ahora ve por el nivel 99 en cada skill y completa la colección.').split('|'),i:0};dlgShow();dirty=1;save()}
 function dlgShow(){if(hsOn()){HUDSU.dlg(DL);return}const d=$('#dlg');d.innerHTML='<b style="color:'+(DL.c||'var(--or)')+'">'+(DL.n||'Ru')+'</b><br>'+DL.p[DL.i]+(DL.i<DL.p.length-1?' <span style="color:var(--yl)">▸ clic</span>':'');d.style.display='block';clearTimeout(td);td=setTimeout(()=>d.style.display='none',20000)}
-function dlgNext(){if(hsOn()&&HUDSU.dlgSkip())return;if(!DL||DL.i>=DL.p.length-1){if(hsOn())HUDSU.dlgHide();else $('#dlg').style.display='none';if(DL&&DL.then){const f=DL.then;DL.then=null;try{f()}catch(e){}}return}DL.i++;dlgShow()}
+function dlgNext(){if(hsOn()&&HUDSU.dlgSkip())return;if(hsOn()&&DL&&DL.opts&&DL.i>=DL.p.length-1&&HUDSU.hasOpts())return;   // con opciones (misiones) el diálogo solo se cierra eligiendo una (o Esc)
+if(!DL||DL.i>=DL.p.length-1){if(hsOn())HUDSU.dlgHide();else $('#dlg').style.display='none';if(DL&&DL.then){const f=DL.then;DL.then=null;try{f()}catch(e){}}return}DL.i++;dlgShow()}
 const ROOMOF={furnace:'herreria',anvil:'herreria',armero:'herreria',curtidor:'taller',bench:'taller',altar:'taller',fire:'taberna',bank:'banco',shop:'tienda',market:'tienda',shrine:'templo'};
 function goTarget(s){if(!s)return null;const now=performance.now(),[k,a,b]=s.split(':');let l2=k==='S'?(()=>{let l=ST.filter(e=>e.id===a&&!e.deco);if(!l.length&&ROOMOF[a])l=INT?ST.filter(e=>e.id==='exit'):ST.filter(e=>e.id==='door'&&e.room===ROOMOF[a]);return l})():k==='N'?N.filter(e=>e.t===a&&e.i===+b&&alive(e,now)):k==='M'?M.filter(e=>e.d.id===a&&alive(e,now)):k==='B'?[spawnOf(+a)]:[],best=null,bd=1e9;l2.forEach(e=>{const d=Math.hypot(e.x-P.x,e.y-P.y);if(d<bd){bd=d;best=e}});return best}
 function recipeOf(id){for(const sk in ACT){const a=ACT[sk].find(a=>a.length===6&&(a[2]===id||(id.startsWith('rn_')&&String(a[2]).startsWith(id+':'))));if(a)return[sk,a]}return null}
@@ -1460,6 +1548,7 @@ let IL_DONE=false;function applyInterlock(){if(IL_DONE)return;IL_DONE=true;
  for(const a of ACT.cr||[]){if(a.length===6&&a[3]>3&&/^ar_/.test(String(a[2])))add(a,'lana',Math.ceil(a[3]/25))}
  for(const a of ACT.co||[]){if(a.length===6&&a[3]>3&&/^f_/.test(String(a[2])))add(a,'logs',1)}
  for(const a of ACT.es||[]){if(a.length===6&&a[3]>3&&/^bw_/.test(String(a[2])))add(a,'pluma',1+Math.floor(a[3]/40))}}
+let LOOPGO=false;const startLoop=()=>{if(LOOPGO)return;LOOPGO=true;last=performance.now();requestAnimationFrame(loop)};
 async function bootRun(){
  applyInterlock();
  const el=$('#boot'),fill=$('#bt-fill'),msg=$('#bt-msg'),T0=performance.now(),late=()=>performance.now()-T0>20000;
@@ -1475,8 +1564,10 @@ async function bootRun(){
   pct(.97,'¡Listo!');draw(performance.now());await frame();
  }catch(e){if(window.console)console.warn('[BOOT]',e)}
  if(window.R3D&&R3D.props)R3D.props.constructor.DEFER=false;
- if(window.R3D&&R3D.warmShaders&&!/[?&]nowarm/.test(location.search))[2500,9000,20000].forEach(t=>setTimeout(()=>R3D.warmShaders(15000,false),t));   // FREEZE-SHADERS: lo que se crea tras la carga (recursos, actores…) también se compila de antemano, sin forzar visibilidad
- pct(1);last=performance.now();requestAnimationFrame(loop);
+ try{if(window.HUDSU&&HUDSU.warm)HUDSU.warm()}catch(e){}
+ if(window.R3D&&R3D.warmShaders&&!/[?&]nowarm/.test(location.search)){try{pct(.98,'Preparando los shaders…');startLoop();await new Promise(r=>setTimeout(r,2800));await R3D.warmShaders(20000,false)}catch(e){}}   // 21 oct 2026: lo que crea el bucle en los primeros segundos (actores, bosque cercano: ≈200 programas) se compilaba a los 2,5 s DE JUEGO y congelaba el primer movimiento: ahora el juego corre ya DETRÁS de la pantalla de carga y se compila antes de mostrarlo
+ if(window.R3D&&R3D.warmShaders&&!/[?&]nowarm/.test(location.search)){const PI=R3D.renderer.info,base=PI.programs.length;let warned=0;setInterval(()=>{if(PI.programs.length>base+warned){warned=PI.programs.length-base;console.info('[R3D] shaders compilados EN JUEGO (+'+warned+'): falta un material en warmShaders/warmObjs',PI.programs.slice(base).map(p=>p.name))}},4000)}   /* 21 oct 2026: las 3 pasadas tardías de warmShaders (2,5/9/20 s) NO añadían ningún programa (medido: nuevos 0) pero cada una recorría 4 veces los 17k objetos y congelaba ≈3 fotogramas de 115–220 ms: eliminadas; ahora solo se VIGILA si algo se compila en juego */   // FREEZE-SHADERS: lo que se crea tras la carga (recursos, actores…) también se compila de antemano, sin forzar visibilidad
+ pct(1);startLoop();
  el.classList.add('out');setTimeout(()=>el.classList.add('off'),520)}
 {const el=$('#boot'),skip=/[?&]noload\b/.test(location.search)||(navigator.webdriver&&!/[?&]load\b/.test(location.search));
  const go=()=>{if(!window.R3D){const b=$('#boot');if(b){b.innerHTML='<div style=\"margin:auto;max-width:28em;padding:2em;text-align:center;color:#e8cf94;font:16px Spectral,Georgia,serif\"><b>NotScape necesita WebGL 2</b><br><br>Activa la aceleración por hardware del navegador o prueba con otro (Chrome, Edge o Firefox actualizados).</div>';b.style.display='flex'}return}if(window.R3D){fitCv();ISO.snap(P.x,P.y,TER.standZ(P.x,P.y));for(let i=0;i<40&&R3D.preload()>0;i++);} if(skip||!el){if(el)el.classList.add('off');requestAnimationFrame(loop)}else{if(window.R3D&&R3D.props)R3D.props.constructor.DEFER=true;bootRun()}};

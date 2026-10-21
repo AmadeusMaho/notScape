@@ -113,7 +113,7 @@ const VILL=(()=>{
  // chispas que suben, nunca comen…) viven aquí en `secret` y NO se dicen en ningún diálogo: LORE §1b y PLAN_ISLA_CIELO §7 (propuesta sin canon hasta que el dueño la apruebe).
  // `at` = tiles desde el centro de la isla (como sky-biome.js); `job`/`tool` = animación y objeto en la mano (actors3d.js JOBF/TOOLW); `to` = punto al que miran mientras trabajan.
  const EXILES=[
-  {id:'v:9:raguel',nm:'Raguel',rol:'Guía',fem:0,at:[-21.2,5.4],tool:'staff',wave:0,lines:['Bienvenido. Camina por el camino de lajas hasta la columna, corre un poco manteniendo Mayús y abre la Mochila. Después vuelve conmigo.','Bien. Ahora ve al olivar, al oeste, y habla con Sariel: ella te enseña a talar y minar.'],
+  {id:'v:9:raguel',nm:'Raguel',rol:'Guía',fem:0,at:[-24.3,11.2],to:[-26,12.4],tool:'staff',wave:0,lines:['Bienvenido. Camina por el camino de lajas hasta la columna, corre un poco manteniendo Mayús y abre la Mochila. Después vuelve conmigo.','Bien. Ahora ve al olivar, al oeste, y habla con Sariel: ella te enseña a talar y minar.'],
    o:{robe:'#d9d2bf',trim:'#c9a95e',belt:'#c9a95e',skin:'#e0bd98',hair:'#d4d0c6',hs:'cut',beard:.2,w:1.0,chestW:1.03,H:53},secret:'ordena sin mandar; se santigua al mirar la Acrópolis'},
   {id:'v:9:sariel',nm:'Sariel',rol:'De la tierra',fem:1,at:[-19.4,-0.6],job:'chop',tool:'axe',to:[-21,-3],wave:0,lines:['Necesito 3 troncos de olivo y, de la cantera del norte, 2 de cobre y 2 de estaño. Tráelos contigo.','Cuando tengas los troncos y las menas, ve al Ágora y habla con Uriel.'],
    o:{robe:'#9aa384',trim:'#c9a95e',belt:'#7a6a4a',skin:'#d7ab84',hair:'#5a4a3a',hs:'bun',dress:true,w:.95,chestW:1,H:50},secret:'una cicatriz recta en cada omóplato bajo la capa; trabaja mirando la luna'},

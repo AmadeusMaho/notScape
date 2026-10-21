@@ -467,7 +467,8 @@ export class HeroAnim{
    if(ak==='f'||WORK[ak]){const wkey=ak==='f'?cls:ak;
     // ph>0 = cargando/golpeando; al volver a 0 tras pasar de .5 = IMPACTO → seguimiento con reloj propio
     const ph=a.ph||0;
-    if(ph>0&&!this.inStrike){this.inStrike=1;this.vr=this.hits&1;this.hvNow=!!a.hv;if(this.impT>=0&&t-this.impT<FOLLOW[wkey])this.forceFade=.12}
+    if(a.n!=null&&a.n!==this.lastN){this.lastN=a.n;this.forceFade=.035}   // cada PULSACIÓN (oficios): mezcla desde la pose ACTUAL a la del golpe en 35 ms (sin saltos ni «ida y vuelta» del brazo)
+    if(ph>0&&!this.inStrike){this.inStrike=1;this.vr=this.hits&1;this.hvNow=!!a.hv;this.forceFade=a.ret?.28:.05}   /* 21 oct 2026: entrar en el golpe funde en 50 ms (antes 160 ms desde la guardia): la bajada llegaba tarde al impacto del juego (≈150 ms) */
     if(ph===0&&this.inStrike&&this.lastPh>.5){this.inStrike=0;this.impT=t;this.hits++}
     if(ph===0&&this.lastPh<=.5)this.inStrike=0;
     this.lastPh=ph;
@@ -508,6 +509,9 @@ export class HeroAnim{
   const h=st.hurt||0;if(h>.01){const e=h*h*(3-2*h);out[C.cx]-=.24*e;out[C.hx]-=.18*e;out[C.pz]-=.04*e;out[C.py]-=.035*e;out[C.cy]+=.1*e;out[C.rp+1]+=.04*e;out[C.lp+1]+=.05*e;out[C.rp+2]-=.01*e;out[C.lp+2]-=.01*e}
   // CINE-4 · pose de RECIBIR (st.recv 0..1, la fija CINE): la mano derecha sube al frente con la palma abierta (hacia arriba), el torso se inclina un poco y la cabeza sigue al objeto
   // DASH (ISLA-7/COMBATE): st.dash 0..1 = fase de la esquiva; el cuerpo se LANZA hacia delante (cabeceo 0 → .85 rad → 0, sin dar la vuelta: con la vuelta completa el pelo y la cabeza se volteaban), la cabeza compensa para seguir mirando adelante y baja un poco
+  // SALTO (st.jmp 0..1, 21 oct 2026): flexión de piernas al impulsarse (0–.2), en el aire los pies se recogen y las manos suben un poco, y una pequeña flexión al caer (.86–1). Aditivo sobre la pose final: no consume resistencia ni cambia de estado.
+  const jp=st.jmp||0;if(jp>.001){const sq=ss(0,.12,jp)*(1-ss(.12,.22,jp))+ss(.84,.92,jp)*(1-ss(.92,1,jp)),air=ss(.12,.26,jp)*(1-ss(.74,.88,jp));
+   out[C.py]-=.07*sq;out[C.cx]+=.06*sq;out[C.fl+2]+=.07*air;out[C.fr+2]+=.07*air;out[C.fl+1]+=.05*air;out[C.fr+1]-=.04*air;out[C.rp+1]+=.1*air;out[C.lp+1]+=.1*air;out[C.hx]-=.05*air}
   const rc=st.recv||0;if(rc>.001){const e=rc*rc*(3-2*rc),T=[-.17,.86,.34],D=[.1,.95,.3],E=[-.6,-.4,-.7];for(let i=0;i<3;i++){out[C.rp+i]+=(T[i]-out[C.rp+i])*e;out[C.rd+i]+=(D[i]-out[C.rd+i])*e;out[C.re+i]+=(E[i]-out[C.re+i])*e}out[C.hx]-=.14*e;out[C.cx]+=.06*e}
   this.apply(out,dt,feetStep&&this.key!=='mv'&&this.key!=='mvc'&&this.key!=='mvf');
   this.items(st);this.fx(out)}
@@ -591,7 +595,7 @@ export class HeroAnim{
   if(m.mouth)m.mouth.scale.y=1+v[C.mouth]*2.2;
   // brazos
   const pole=new V3(),tgt=new V3();
-  const mA=dt*16;this.mem=this.mem||[{},{},{},{}];this.px=this.px||[new V3(),new V3()];
+  const mA=dt*(this.inStrike?80:16);this.mem=this.mem||[{},{},{},{}];this.px=this.px||[new V3(),new V3()];
   tgt.set(v[C.rp],v[C.rp+1],v[C.rp+2]);pole.set(v[C.pr],v[C.pr+1],v[C.pr+2]);this.reach[0]=ik2(m.arms[0],m.elbows[0],tgt,pole,.18,.18,1,this.mem[0],mA);
   frameQ(v[C.rd],v[C.rd+1],v[C.rd+2],v[C.re],v[C.re+1],v[C.re+2],_q,this.px[0]);if(v[C.spin])_q.multiply(_q2.setFromAxisAngle(_v.set(0,1,0),v[C.spin]));
   this.qR=this.qR||new QT();this.qR.copy(_q);

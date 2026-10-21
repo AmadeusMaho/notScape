@@ -25,6 +25,7 @@ export class TalkHead{
   const m=new THREE.Mesh(new THREE.SphereGeometry(.5,12,8),new THREE.MeshBasicMaterial({color:'#3a1410'}));m.position.set(0,-.082,.212);m.scale.set(.075,.012,.016);
   if(A.b.head&&!mob){A.b.head.add(m);this.mm=m}
   return true}
+ warm(key,mob){try{if(this.setNpc(key,mob))this.r.compile(this.scene,this.cam)}catch(e){console.warn('[TalkHead warm]',e)}}   // precarga: crea el contexto, hornea el modelo y compila sus shaders antes de la 1.ª conversación
  size(){const w=this.cv.clientWidth||this.cv.width,h=this.cv.clientHeight||this.cv.height,dpr=Math.min(2,window.devicePixelRatio||1);
   if(w!==this.w||h!==this.h||dpr!==this.dpr){this.w=w;this.h=h;this.dpr=dpr;this.r.setPixelRatio(dpr);this.r.setSize(w,h,false)}}
  draw(o={}){if(!this.A)return;this.size();const A=this.A,now=performance.now()/1000,dt=this.last?Math.min(.1,now-this.last):1/60;this.last=now;const t=now-this.t0;

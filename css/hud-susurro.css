@@ -666,7 +666,7 @@ body.hs-on #fp .tap{filter:drop-shadow(0 0 2px rgba(232,207,148,.6))}
 #hs .hp[data-st="sangrado"]{filter:drop-shadow(0 0 .4em rgba(190,30,25,.6))}
 
 /* Rueda de recolección (21 oct 2026): canvas flotante sobre el recurso (game.js whDraw) */
-#whl{position:fixed;left:0;top:0;width:calc(var(--hu,16px)*5);height:calc(var(--hu,16px)*5);pointer-events:none;z-index:3;filter:drop-shadow(0 .15em .5em rgba(0,0,0,.55))}
+#whl,#fgl{position:fixed;left:0;top:0;width:calc(var(--hu,16px)*5);height:calc(var(--hu,16px)*5);pointer-events:none;z-index:3;filter:drop-shadow(0 .15em .5em rgba(0,0,0,.55))}
 
 /* Icono de picada de la pesca (21 oct 2026): cristal oscuro + trazo dorado + anillo de tiempo (--u), «!» en Cinzel; nace con un pequeño rebote */
 #fsh{position:fixed;left:0;top:0;z-index:3;pointer-events:none;width:calc(var(--hu,16px)*2.5);height:calc(var(--hu,16px)*2.5);border-radius:50%;place-items:center;font-family:"Cinzel",Georgia,serif;
@@ -674,3 +674,74 @@ body.hs-on #fp .tap{filter:drop-shadow(0 0 2px rgba(232,207,148,.6))}
 #fsh::before{content:"";position:absolute;inset:.17em;border-radius:50%;background:radial-gradient(circle at 38% 30%,rgba(60,50,36,.96),rgba(14,12,10,.94));box-shadow:inset 0 0 .5em rgba(0,0,0,.6)}
 #fsh b{position:relative;font-weight:700;font-size:1.35em;line-height:1;color:#e8cf94;text-shadow:0 0 .35em rgba(232,207,148,.55),0 .05em .1em #000}
 @keyframes fshp{from{opacity:0;scale:.4}to{opacity:1;scale:1}}
+
+/* Ayuda de controles de los minijuegos (21 oct 2026; game.js mgUi): sin bloque, teclas de cristal con trazo dorado y texto con sombra; se funde suave junto a la estación */
+#mgh{position:fixed;left:0;top:0;z-index:3;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:.35em;font-size:calc(var(--hu,16px)*.82);opacity:0;transition:opacity .6s ease;white-space:nowrap}
+#mgh.on{opacity:1}
+#mgh div{display:flex;align-items:center;gap:.4em;font-family:"Spectral",Georgia,serif;font-weight:600;color:#f3e8cc;text-shadow:0 0 .12em #000,0 0 .25em #000,0 .06em .3em #000,0 0 .8em rgba(0,0,0,.95)}
+#mgh kbd{font-family:"Cinzel",Georgia,serif;font-weight:700;font-size:.9em;min-width:1.7em;padding:.18em .5em;text-align:center;color:#e8cf94;background:rgba(16,13,10,.82);border:1px solid rgba(232,207,148,.7);border-radius:.35em;box-shadow:0 .12em .3em rgba(0,0,0,.5);animation:mghp 1.8s ease-in-out infinite}
+@keyframes mghp{50%{border-color:rgba(255,246,216,.95);color:#fff6d8}}
+
+/* el anillo de la forja se lee mejor algo mayor (la cámara también se acerca en el minijuego) */
+#fgl{width:calc(var(--hu,16px)*7.5);height:calc(var(--hu,16px)*7.5)}
+
+/* Botón de salto (21 oct 2026; game.js `jump`, tecla V): cristal oscuro con trazo dorado, junto al menú lateral */
+#jmpb{position:fixed;right:calc(var(--hu,16px)*4.6);bottom:calc(var(--hu,16px)*1.6);z-index:4;width:calc(var(--hu,16px)*3);height:calc(var(--hu,16px)*3);min-width:44px;min-height:44px;padding:.7em;border-radius:50%;cursor:pointer;color:#e8cf94;background:radial-gradient(circle at 38% 30%,rgba(60,50,36,.9),rgba(14,12,10,.88));border:1px solid rgba(232,207,148,.6);box-shadow:0 .15em .6em rgba(0,0,0,.55);transition:transform .15s,border-color .2s,color .2s;-webkit-tap-highlight-color:transparent}
+#jmpb:hover{border-color:#fff6d8;color:#fff6d8}#jmpb:active{transform:scale(.9)}
+body.cine #jmpb{opacity:0;pointer-events:none}
+
+/* Opciones del diálogo (misiones tipo WoW, 21 oct 2026): botones numerados de cristal con trazo dorado fino dentro del mismo cuadro de diálogo (hud.js `dl-opts`) */
+body.hs-on #dlg .dl-opts{display:none;flex-direction:column;gap:.3em;margin-top:.2em}
+body.hs-on #dlg .dl-opts.on{display:flex;animation:hsfade .3s ease both}
+body.hs-on #dlg .dl-opts button{all:unset;box-sizing:border-box;cursor:pointer;padding:.3em .8em;font:600 1em Spectral,Georgia,serif;color:#f3e8cc;background:rgba(16,13,10,.55);border:1px solid rgba(232,207,148,.3);border-radius:.4em;transition:border-color .2s,background .2s,color .2s}
+body.hs-on #dlg .dl-opts button b{font:700 .85em Cinzel,Georgia,serif;color:#e8cf94;margin-right:.35em}
+body.hs-on #dlg .dl-opts button:hover,body.hs-on #dlg .dl-opts button:focus-visible{border-color:#e8cf94;background:rgba(60,50,36,.7);color:#fff6d8}
+@keyframes hsfade{from{opacity:0;transform:translateY(.3em)}to{opacity:1;transform:none}}
+
+/* Marcadores de misión (21 oct 2026; game.js qmUi): «!» y «?» grandes y EXTRUIDOS (estilo WoW) en nuestro dorado: relleno degradado, grosor por sombras apiladas y giro suave en Y con flotación; «?» gris = en curso, apagado */
+#qms{position:fixed;left:0;top:0;width:0;height:0;z-index:8;pointer-events:none}
+.qm{position:fixed;left:0;top:0;display:none;place-items:center;perspective:14em;font-family:"Cinzel",Georgia,serif;pointer-events:none}
+.qm b{display:block;font-weight:700;font-size:calc(var(--hu,16px)*3.1);line-height:1;background:linear-gradient(180deg,#fff7d6 0%,#f0d98c 40%,#d2ab4e 75%,#a07a2a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .03em 0 #6a4a14) drop-shadow(0 .2em .15em rgba(0,0,0,.5)) drop-shadow(0 0 .3em rgba(255,214,110,.4));animation:qmr 3s ease-in-out infinite,qmb 1.6s ease-in-out infinite}
+.qm[data-k="wait"] b{background:linear-gradient(180deg,#f0eee6 0%,#bdb8aa 45%,#8d887c 80%,#6a665c 100%);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 .03em 0 #3a372f) drop-shadow(0 .2em .15em rgba(0,0,0,.5));animation:qmr 3s ease-in-out infinite}
+@keyframes qmr{0%,100%{transform:rotateY(-20deg)}50%{transform:rotateY(20deg)}}
+@keyframes qmb{50%{translate:0 -.15em}}
+body.cine #qms{opacity:0}
+
+/* Panel de misión estilo WoW (21 oct 2026; isla.js qpShow): se abre desde la opción del diálogo; cristal oscuro + trazo dorado, a la izquierda del centro */
+#qpn{position:fixed;left:max(2vw,calc(50% - 31em));top:12vh;z-index:9;width:min(27em,92vw);max-height:72vh;overflow:auto;display:none;flex-direction:column;gap:.5em;padding:1.1em 1.4em 1.2em;font-family:Spectral,Georgia,serif;font-size:calc(var(--hu,16px)*.95);color:#e8dcc0;background:linear-gradient(180deg,rgba(24,20,15,.94),rgba(14,12,10,.94));border:1px solid rgba(232,207,148,.35);border-radius:.8em;box-shadow:0 .6em 2em rgba(0,0,0,.6);opacity:0;transform:translateY(.6em);transition:opacity .25s,transform .25s}
+#qpn.on{opacity:1;transform:none}
+#qpn::before{content:"";position:absolute;left:1.4em;right:1.4em;top:-1px;height:1px;background:linear-gradient(90deg,transparent,#e8cf94,transparent)}
+#qpn .qp-t{font:700 1.45em Cinzel,Georgia,serif;letter-spacing:.08em;color:#e8cf94;text-shadow:0 0 .4em rgba(232,207,148,.3)}
+#qpn .qp-n{font:600 .7em Cinzel,Georgia,serif;letter-spacing:.2em;text-transform:uppercase;color:#a89870;margin-top:-.4em}
+#qpn .qp-d{font-size:1.1em;line-height:1.5}
+#qpn .qp-s{font:700 .8em Cinzel,Georgia,serif;letter-spacing:.16em;text-transform:uppercase;color:#e8cf94;margin-top:.5em;border-bottom:1px solid rgba(232,207,148,.2);padding-bottom:.2em}
+#qpn ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.25em}
+#qpn .qp-o li{padding-left:1.1em;position:relative}
+#qpn .qp-o li::before{content:"◆";position:absolute;left:0;color:#e8cf94;font-size:.6em;top:.5em}
+#qpn .qp-i li{display:flex;align-items:center;gap:.5em}
+#qpn .qp-i li img.ic{width:1.7em;height:1.7em;object-fit:contain}
+#qpn .qp-i li.y{color:#9bd04f}#qpn .qp-i li.n{color:#d86a5a}
+#qpn .qp-b{display:flex;gap:.6em;margin-top:.7em}
+#qpn .qp-b button{all:unset;box-sizing:border-box;flex:1;text-align:center;cursor:pointer;padding:.45em .8em;font:700 .9em Cinzel,Georgia,serif;letter-spacing:.1em;color:#1a140c;background:linear-gradient(180deg,#f0d98c,#c9a24a);border:1px solid #e8cf94;border-radius:.4em;transition:filter .2s,transform .1s}
+#qpn .qp-b button:hover{filter:brightness(1.12)}#qpn .qp-b button:active{transform:scale(.97)}
+#qpn .qp-b button.g{color:#e8dcc0;background:rgba(16,13,10,.6);border-color:rgba(232,207,148,.35)}
+#qpn .qp-b button[disabled]{opacity:.4;cursor:default;filter:grayscale(.6)}
+
+/* Panel de misión: acabado (21 oct 2026) — marco doble, brillo cálido superior, cabecera con signo, divisores con rombo y monedas */
+#qpn{background:radial-gradient(120% 60% at 50% 0%,rgba(80,62,34,.45),transparent 70%),linear-gradient(180deg,rgba(26,22,16,.96),rgba(12,10,8,.96));border:1px solid rgba(232,207,148,.5);box-shadow:0 .6em 2em rgba(0,0,0,.65),inset 0 0 0 .3em rgba(14,12,10,.9),inset 0 0 0 calc(.3em + 1px) rgba(232,207,148,.18)}
+#qpn .qp-h{display:flex;align-items:center;gap:.8em}
+#qpn .qp-h>b{font:700 2.6em/1 Cinzel,Georgia,serif;background:linear-gradient(180deg,#fff7d6,#d2ab4e 70%,#a07a2a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .04em 0 #6a4a14) drop-shadow(0 0 .25em rgba(255,214,110,.4))}
+#qpn .qp-r{height:1px;margin:.1em 0 .15em;background:linear-gradient(90deg,transparent,#e8cf94 20%,#e8cf94 80%,transparent);position:relative;overflow:visible}
+#qpn .qp-r::after{content:"◆";position:absolute;left:50%;top:50%;translate:-50% -50%;padding:0 .5em;font-size:.55em;color:#e8cf94;background:#14110c}
+#qpn .qp-s{border-bottom:0;margin-top:.7em;display:flex;align-items:center;gap:.6em}
+#qpn .qp-s::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(232,207,148,.45),transparent)}
+#qpn .qp-d{font-style:italic;color:#efe4c8}
+#qpn .qp-i li{padding:.2em .5em;background:rgba(232,207,148,.05);border:1px solid rgba(232,207,148,.12);border-radius:.4em}
+#qpn .qp-c .cn{flex:none;width:1.3em;height:1.3em;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffd9a8,#c8763a 55%,#7a4018);box-shadow:inset 0 0 0 .1em rgba(90,40,10,.6),0 .05em .15em rgba(0,0,0,.5)}
+#qpn .qp-c{color:#e7b98a}
+#qpn .qp-b button{padding:.55em .9em;box-shadow:0 .12em .4em rgba(0,0,0,.45)}
+#qpn .qp-i{display:grid;grid-template-columns:1fr 1fr;gap:.3em}
+#qpn .qp-i li{padding:.15em .45em;font-size:.92em;min-width:0}
+#qpn .qp-i li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#qpn .qp-i li img.ic{width:1.5em;height:1.5em}
+#qpn{max-height:78vh}
