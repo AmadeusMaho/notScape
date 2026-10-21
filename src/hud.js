@@ -40,14 +40,15 @@ const HUDSU=(()=>{
    [[.06,.4,'rgba(150,215,255,',.32],[.04,.6,'rgba(160,130,255,',.28],[.05,.25,'rgba(110,190,255,',.24]].forEach((q,i)=>{const bx=(Math.sin(tt*q[0]*6.3+i*2.1)*.5+.5)*(w+H*2)-H,by=H*(.5+.25*Math.sin(tt*q[1]+i*1.7)),r=H*(1.5+.25*Math.sin(tt*.5+i));const g=x.createRadialGradient(bx,by,0,bx,by,r);g.addColorStop(0,q[2]+q[3]+')');g.addColorStop(1,q[2]+'0)');x.fillStyle=g;x.fillRect(0,0,w,H)});
    const fl=.6+.4*Math.sin(tt*2.2);x.lineWidth=1;x.lineCap='round';
    for(let j=0;j<2;j++){x.beginPath();for(let px=0;px<=w;px+=2){const env=Math.sin(Math.min(1,px/(w||1))*Math.PI),yy=H*.5+Math.sin(px*.14+tt*(j?-1.4:1.2)+j*3)*H*.2*env+Math.sin(px*.33-tt*1.6+j)*H*.05*env;px?x.lineTo(px,yy):x.moveTo(px,yy)}x.strokeStyle='rgba('+(j?'200,170,255':'210,240,255')+','+(.14+.16*fl)*(j?.7:1)+')';x.stroke()}
-  }else if(k==='hp'){ // vida viva: bandas de luz que fluyen, LATIDO que recorre la barra (más rápido con poca vida) y un menisco ondulante en el borde superior
-   const I=.5+.5*Math.sin(tt*(low?2.6:.9)),sp=low?2.1:1,bd=H*1.3;x.fillStyle='rgba(255,255,255,'+(.02+.05*I)+')';x.fillRect(0,0,w,H);
-   const off=(tt*H*.5*sp)%bd;x.fillStyle='rgba(215,255,150,.075)';
-   for(let bx=-bd+off;bx<w+bd;bx+=bd){x.beginPath();x.moveTo(bx,H);x.lineTo(bx+H*.55,0);x.lineTo(bx+H*.9,0);x.lineTo(bx+H*.35,H);x.closePath();x.fill()}
-   const bt=((tt*.62*sp)%1.5)/1.5,bpx=bt*(w+H*4)-H*2,gl=x.createLinearGradient(bpx-H*1.6,0,bpx+H*1.6,0),ba=.34*Math.sin(Math.min(1,bt*1.15)*Math.PI*.5+.4)*(1-bt*.55);
-   gl.addColorStop(0,'rgba(220,255,170,0)');gl.addColorStop(.5,'rgba(236,255,196,'+ba+')');gl.addColorStop(1,'rgba(220,255,170,0)');x.fillStyle=gl;x.fillRect(bpx-H*1.6,0,H*3.2,H);
-   x.lineWidth=1;x.lineCap='round';x.strokeStyle='rgba(236,255,205,.38)';x.beginPath();for(let q=0;q<=w;q+=2){const yy=H*.17+Math.sin(q*.22+tt*2.3*sp)*H*.06+Math.sin(q*.07-tt*1.3)*H*.04;q?x.lineTo(q,yy):x.moveTo(q,yy)}x.stroke();
-   x.strokeStyle='rgba(20,60,10,.28)';x.beginPath();for(let q=0;q<=w;q+=2){const yy=H*.86+Math.sin(q*.18-tt*1.9*sp)*H*.05;q?x.lineTo(q,yy):x.moveTo(q,yy)}x.stroke()
+  }else if(k==='hp'){ // vida = FLUJO DE ENERGÍA (21 oct 2026): corrientes suaves que fluyen de izquierda a derecha (cintas ondulantes con degradado vertical, sin bandas diagonales), un pulso de luz que viaja por la barra (más rápido con poca vida) y un hilo brillante central
+   const I=.5+.5*Math.sin(tt*(low?2.6:.9)),sp=low?2.1:1;x.fillStyle='rgba(255,255,255,'+(.015+.04*I)+')';x.fillRect(0,0,w,H);
+   [[.30,.16,.9,0,'210,255,160',.20],[.55,.1,1.35,1.7,'150,235,140',.16],[.74,.08,.7,3.4,'235,255,190',.12]].forEach(([yc,am,spd,ph,cc,al])=>{   // [centro vertical, amplitud, velocidad, fase, color, opacidad]
+    const yy=q=>H*yc+Math.sin(q*.075-tt*spd*1.8*sp+ph)*H*am+Math.sin(q*.031-tt*spd*.9*sp+ph*2)*H*am*.6,th=H*.17;
+    const gr=x.createLinearGradient(0,H*(yc-.22),0,H*(yc+.22));gr.addColorStop(0,'rgba('+cc+',0)');gr.addColorStop(.5,'rgba('+cc+','+al*(.8+.4*I)+')');gr.addColorStop(1,'rgba('+cc+',0)');
+    x.fillStyle=gr;x.beginPath();for(let q=0;q<=w+3;q+=3){const y0=yy(q);q?x.lineTo(q,y0-th):x.moveTo(q,y0-th)}for(let q=w+3;q>=0;q-=3)x.lineTo(q,yy(q)+th);x.closePath();x.fill()});
+   const bt=((tt*.5*sp)%1.6)/1.6,bpx=bt*(w+H*4)-H*2,gl=x.createLinearGradient(bpx-H*2.2,0,bpx+H*2.2,0),ba=.3*Math.sin(Math.min(1,bt*1.1)*Math.PI*.5+.4)*(1-bt*.5);   // pulso de energía que recorre la barra
+   gl.addColorStop(0,'rgba(220,255,170,0)');gl.addColorStop(.5,'rgba(240,255,205,'+ba+')');gl.addColorStop(1,'rgba(220,255,170,0)');x.fillStyle=gl;x.fillRect(bpx-H*2.2,0,H*4.4,H);
+   x.lineWidth=1.1;x.lineCap='round';x.strokeStyle='rgba(240,255,215,'+(.26+.12*I)+')';x.beginPath();for(let q=0;q<=w;q+=2){const yy=H*.5+Math.sin(q*.11-tt*2.4*sp)*H*.12+Math.sin(q*.043-tt*1.2)*H*.08;q?x.lineTo(q,yy):x.moveTo(q,yy)}x.stroke()
   }else{const I=.5+.5*Math.sin(tt*(low?2.6:.9));x.fillStyle='rgba(255,255,255,'+(.02+.05*I)+')';x.fillRect(0,0,w,H)}
   const p=b.ps,rate=k==='mp'?2.2:1.6;if(Math.random()<rate*dt&&p.length<9&&w>12)p.push({x:Math.random()*w,y:H*(.25+Math.random()*.55),vx:(Math.random()-.5)*3,vy:-(1+Math.random()*2),r:.7+Math.random()*1.5,l:0,d:4.5+Math.random()*3,ph:Math.random()*6});
   const col=k==='mp'?'190,225,255':k==='th'?'255,190,130':k==='ac'?'255,220,150':'225,255,170';

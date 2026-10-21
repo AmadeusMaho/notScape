@@ -102,9 +102,9 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  ISO.depth=(wx,wy,w=0,h=0)=>isStraight()?O.depth(wx,wy,w,h):((wx+w)*Math.sin(az)+(wy+h)*Math.cos(az))*Math.SQRT2;
  ISO.keyDir=(l,rr,u,d)=>{if(isStraight())return O.keyDir(l,rr,u,d);const hh=(rr|0)-(l|0),v=(d|0)-(u|0),x=hh*Math.cos(az)+v*Math.sin(az),y=-hh*Math.sin(az)+v*Math.cos(az),n=Math.hypot(x,y);return n?{x:x/n,y:y/n}:{x:0,y:0}};
  // ── giro: rueda pulsada + arrastrar · teclas , y . · Inicio = 45° ──
- c2d.addEventListener('pointerdown',e=>{if(e.button===1){drag={x:e.clientX,a:azT};e.preventDefault();try{c2d.setPointerCapture(e.pointerId)}catch(x){}}},true);
- c2d.addEventListener('pointermove',e=>{if(drag){azT=drag.a-(e.clientX-drag.x)*.008}});
- const endDrag=()=>{if(!drag)return;drag=null;snap()};c2d.addEventListener('pointerup',endDrag);c2d.addEventListener('pointercancel',endDrag);
+ c2d.addEventListener('pointerdown',e=>{if(e.button===1||e.button===2){drag={x:e.clientX,a:azT,btn:e.button,moved:e.button===1};if(e.button===1)e.preventDefault();try{c2d.setPointerCapture(e.pointerId)}catch(x){}}},true);   // rueda: gira siempre; CLIC DERECHO: gira si arrastras más de 6 px (si no, es «ir a ese punto», lo resuelve game.js al soltar)
+ c2d.addEventListener('pointermove',e=>{if(drag){if(!drag.moved&&Math.abs(e.clientX-drag.x)>6){drag.moved=1;drag.x=e.clientX}if(drag.moved)azT=drag.a-(e.clientX-drag.x)*.008}});
+ const endDrag=()=>{if(!drag)return;window.CAMD={btn:drag.btn,moved:drag.moved};drag=null;if(window.CAMD.moved)snap()};c2d.addEventListener('pointerup',endDrag);c2d.addEventListener('pointercancel',endDrag);
  c2d.addEventListener('auxclick',e=>{if(e.button===1)e.preventDefault()});
  const snap=()=>{const k=((azT-A45)%(Math.PI*2)+Math.PI*3)%(Math.PI*2)-Math.PI;if(Math.abs(k)<.12)azT=A45+(azT-A45-k)};
  addEventListener('keydown',e=>{if(/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))return;if(e.key===',')keyRot=1;if(e.key==='.')keyRot=-1;if(e.key==='Home'){azT=A45+Math.round((azT-A45)/(Math.PI*2))*Math.PI*2}});

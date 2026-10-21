@@ -67,12 +67,20 @@ const UI=(()=>{
  };
  const icon=n=>IC[n]||(DRAW[n]?(IC[n]=mk(DRAW[n])):'');
  // ---------- cursor pintado ----------
- function cursorImg(kind){const cv=document.createElement('canvas');cv.width=cv.height=40;const c=cv.getContext('2d');c.lineJoin='round';c.lineCap='round';c.translate(3,3);
-  if(kind==='arrow'){c.beginPath();c.moveTo(0,0);c.lineTo(0,23);c.lineTo(6,18);c.lineTo(10,27);c.lineTo(14,25);c.lineTo(10,17);c.lineTo(18,17);c.closePath();c.fillStyle='rgba(0,0,0,.3)';c.save();c.translate(1.5,2);c.fill();c.restore();c.fillStyle=CURF;c.fill();c.lineWidth=2.4;c.strokeStyle=INK;c.stroke();
-   c.beginPath();c.moveTo(3,6);c.lineTo(3,16);c.strokeStyle='rgba(255,255,255,.9)';c.lineWidth=1.6;c.stroke()}
-  else{ // mano que señala
-   c.beginPath();c.moveTo(6,2);c.quadraticCurveTo(10,0,11,4);c.lineTo(11,13);c.lineTo(13,12);c.quadraticCurveTo(16,11,17,14);c.lineTo(18,14);c.quadraticCurveTo(21,13,22,16);c.lineTo(23,16);c.quadraticCurveTo(26,15,27,18);c.lineTo(27,25);c.quadraticCurveTo(26,33,17,33);c.quadraticCurveTo(9,33,6,26);c.lineTo(1,17);c.quadraticCurveTo(0,14,3,14);c.quadraticCurveTo(5,14,6,16);c.lineTo(6,6);c.quadraticCurveTo(6,3,6,2);c.closePath();
-   c.fillStyle='rgba(0,0,0,.3)';c.save();c.translate(1.5,2);c.fill();c.restore();c.fillStyle=CURF;c.fill();c.lineWidth=2.4;c.strokeStyle=INK;c.stroke();c.lineWidth=1.6;[[11,14,11,20],[17,15,17,20],[22,17,22,21]].forEach(([a,b,d,e])=>{c.beginPath();c.moveTo(a,b);c.lineTo(d,e);c.stroke()})}
+ function cursorImg(kind){const cv=document.createElement('canvas');cv.width=cv.height=40;const c=cv.getContext('2d');c.lineJoin='round';c.lineCap='round';
+  // CURSORES «Susurro» (21 oct 2026): cristal oscuro con filo dorado fino (el mismo lenguaje del HUD) en vez del papel crema; espada estilizada al pasar sobre un enemigo y espada «en tajo» (roja, con estela) al atacar
+  const G='#e8cf94',D='rgba(20,17,12,.95)',R='#e8705a',sh=()=>{c.shadowColor='rgba(0,0,0,.55)';c.shadowBlur=3;c.shadowOffsetY=1.5};
+  if(kind==='arrow'){c.translate(3,3);sh();c.beginPath();c.moveTo(0,0);c.lineTo(0,22);c.lineTo(5.5,17.2);c.lineTo(9.4,25.5);c.lineTo(13,24);c.lineTo(9,16);c.lineTo(16.5,16);c.closePath();c.fillStyle=D;c.fill();c.shadowColor='transparent';c.lineWidth=1.5;c.strokeStyle=G;c.stroke()}
+  else if(kind==='hand'){c.translate(3,3);sh();c.beginPath();c.moveTo(6,2);c.quadraticCurveTo(10,0,11,4);c.lineTo(11,13);c.lineTo(13,12);c.quadraticCurveTo(16,11,17,14);c.lineTo(18,14);c.quadraticCurveTo(21,13,22,16);c.lineTo(23,16);c.quadraticCurveTo(26,15,27,18);c.lineTo(27,25);c.quadraticCurveTo(26,33,17,33);c.quadraticCurveTo(9,33,6,26);c.lineTo(1,17);c.quadraticCurveTo(0,14,3,14);c.quadraticCurveTo(5,14,6,16);c.lineTo(6,6);c.quadraticCurveTo(6,3,6,2);c.closePath();c.fillStyle=D;c.fill();c.shadowColor='transparent';c.lineWidth=1.5;c.strokeStyle=G;c.stroke();c.lineWidth=1;c.strokeStyle='rgba(232,207,148,.5)';[[11,14,11,20],[17,15,17,20],[22,17,22,21]].forEach(([a,b,d,e])=>{c.beginPath();c.moveTo(a,b);c.lineTo(d,e);c.stroke()})}
+  else{ // espada con la punta en el punto activo (3,3), apuntando arriba-izquierda; 'slash' = ataque: filo rojizo, estela curva y destello
+   const at=kind==='slash',E=at?R:G;c.translate(3,3);
+   if(at){c.save();c.lineCap='round';c.strokeStyle='rgba(232,112,90,.85)';c.lineWidth=2.2;c.beginPath();c.moveTo(24,9);c.quadraticCurveTo(31,18,22,30);c.stroke();c.strokeStyle='rgba(255,200,150,.7)';c.lineWidth=1.2;c.beginPath();c.moveTo(28,11);c.quadraticCurveTo(34,20,26,32);c.stroke();c.restore()}
+   c.save();c.rotate(-Math.PI/4);sh();
+   c.beginPath();c.moveTo(0,0);c.lineTo(2.6,4.5);c.lineTo(2.6,19);c.lineTo(-2.6,19);c.lineTo(-2.6,4.5);c.closePath();c.fillStyle=at?'#3a2420':'#2b2822';c.fill();   // hoja
+   c.shadowColor='transparent';c.lineWidth=1.4;c.strokeStyle=E;c.stroke();c.beginPath();c.moveTo(0,3);c.lineTo(0,18);c.strokeStyle=at?'rgba(255,190,160,.8)':'rgba(232,207,148,.55)';c.lineWidth=1;c.stroke();   // filo central
+   c.beginPath();c.moveTo(-7,19);c.lineTo(7,19);c.lineTo(6,22);c.lineTo(-6,22);c.closePath();c.fillStyle=D;c.fill();c.lineWidth=1.4;c.strokeStyle=E;c.stroke();   // guarda
+   c.beginPath();c.rect(-1.6,22,3.2,6);c.fillStyle=D;c.fill();c.stroke();c.beginPath();c.arc(0,30,2.3,0,7);c.fillStyle=E;c.fill();   // empuñadura y pomo
+   c.restore()}
   return cv.toDataURL()}
  let CUR=null;
  function initDom(){
@@ -81,7 +89,7 @@ const UI=(()=>{
    const g=document.createElement('canvas');g.width=g.height=128;const x=g.getContext('2d'),im=x.createImageData(128,128);let s=7;const rnd=()=>(s=(s*16807)%2147483647)/2147483647;
    for(let i=0;i<im.data.length;i+=4){const v=rnd()<.04?185:228+Math.floor(rnd()*28);im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255}x.putImageData(im,0,0);
    r.setProperty('--grain','url('+g.toDataURL()+')');
-   CUR={arrow:'url('+cursorImg('arrow')+') 3 3, auto',hand:'url('+cursorImg('hand')+') 12 4, pointer'};
+   CUR={arrow:'url('+cursorImg('arrow')+') 3 3, auto',hand:'url('+cursorImg('hand')+') 12 4, pointer',sword:'url('+cursorImg('sword')+') 3 3, crosshair',slash:'url('+cursorImg('slash')+') 3 3, crosshair'};
    r.setProperty('--hand-img','url('+cursorImg('hand')+')');r.setProperty('--cur-arrow',CUR.arrow);r.setProperty('--cur-hand',CUR.hand);
    document.querySelectorAll('[data-ic]').forEach(e=>{e.style.backgroundImage='url('+icon(e.dataset.ic)+')'})
   }catch(e){}}
