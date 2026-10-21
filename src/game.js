@@ -689,8 +689,7 @@ function swing(now,ang,k=0){if(INT||CK||P.hp<=0||(typeof CINE!=='undefined'&&CIN
  const fb=wKind()==='staff'&&MN>=fbCost(k),chg=k>.04,ms=fb?1500:manMs(),c=chg?SWG.c:(now-SWG.last<ms*1.9)?(SWG.c+1)%3:0;if(ang==null)ang=aimAng();
  Object.assign(SWG,{t0:now,ms,wind:Math.min(chg?90:150,Math.round(ms*.28)),ang,dx:Math.cos(ang),dy:Math.sin(ang),done:0,c,k,fb,wt:wtype(),cd:now+ms,last:now,hv:(c===2||k>.55)?1:0,lg:0});ATKT=now+ms;P.g=P.mv=null;if(A)stopA();
  if(SWG.wt==='m'&&!fb){   // melé: embestida corta hacia un enemigo cercano en el arco y estela 3D del golpe
-  const rch=(wKind()==='dagger'?66:wKind()==='great'?92:80);let bd=1e9;M.forEach(m=>{if(!alive(m,now)||sealed(m))return;const vx=m.x-P.x,vy=m.y-P.y,d=Math.hypot(vx,vy);let df=Math.abs(Math.atan2(vy,vx)-ang);df=df>Math.PI?2*Math.PI-df:df;if(df<.6&&d>rch*.7&&d<150&&d<bd){bd=d;SWG.lg=Math.min(18,d-rch*.7)}});
-  try{R3D.spell.slash(P.x,P.y,ang,rch+k*14,(c%2)?-1:1,wColor()||'#f0dcb0',SWG.hv,SWG.wind,150)}catch(e){}}P.cbT=now;P.dir=HERO.dirOf(SWG.dx,SWG.dy);return true}
+  const rch=(wKind()==='dagger'?66:wKind()==='great'?92:80);let bd=1e9;M.forEach(m=>{if(!alive(m,now)||sealed(m))return;const vx=m.x-P.x,vy=m.y-P.y,d=Math.hypot(vx,vy);let df=Math.abs(Math.atan2(vy,vx)-ang);df=df>Math.PI?2*Math.PI-df:df;if(df<.6&&d>rch*.7&&d<150&&d<bd){bd=d;SWG.lg=Math.min(18,d-rch*.7)}});}/* estela 3D R3D.spell.slash quitada a petición del dueño */P.cbT=now;P.dir=HERO.dirOf(SWG.dx,SWG.dy);return true}
 function rayHit(a0,range,pad){const now=performance.now(),dx=Math.cos(a0),dy=Math.sin(a0);let best=null,bt=range;
  M.forEach(m=>{if(!alive(m,now)||sealed(m))return;const vx=m.x-P.x,vy=m.y-P.y,t=vx*dx+vy*dy;if(t<8||t>range)return;const perp=Math.abs(vx*dy-vy*dx),rad=(m.d.w||16)*.55+pad;if(perp<=rad&&t<bt){bt=t;best=m}});return{m:best,t:bt}}
 // hechizo ELEGIDO para el báculo (S.selSp; por defecto el de ataque más alto desbloqueado); -1 si no hay ninguno
