@@ -153,8 +153,8 @@ const MAGIC_ON=false;
 function wtype(){const w=S.eq.w;return !w||SW[w]?'m':BOW[w]?'r':MAGIC_ON?'g':'m'}
 /* VELOCIDAD DE ARMA ESTILO WoW (21 oct 2026; decisión del dueño): segundos por golpe según el tipo de arma, no por «ticks». Puños y dagas 1,2 s · espadas y cetros 1,5 s · arcos y bastones 2,4 s · pesadas (mandoble, ballesta) 3,0 s.
    El daño por golpe escala con la velocidad (×seg/2,4: lo rápido pega menos) para que el DPS siga parecido al de antes. Las tablas WSP (ticks) quedan solo para compatibilidad. */
-const SWSEC={fist:1.2,dagger:1.2,sword:1.5,scepter:1.5,bow:2.4,staff:2.4,great:3,xbow:3};
-const swingSecOf=w=>{if(!w)return SWSEC.fist;const m=/^lw_\d+([dmbc])/.exec(w);if(m)return SWSEC[{d:'dagger',m:'great',b:'xbow',c:'scepter'}[m[1]]];return SW[w]?SWSEC.sword:BOW[w]?SWSEC.bow:SWSEC.staff},swingSec=()=>swingSecOf(S.eq.w),spdK=()=>swingSec()/2.4,mxs=()=>Math.max(1,Math.round(maxHit()*spdK()))
+const SWSEC={fist:2,dagger:1.2,sword:1.5,scepter:1.5,bow:2.4,staff:2.4,great:3,xbow:3};
+const swingSecOf=w=>{if(!w)return SWSEC.fist;const m=/^lw_\d+([dmbc])/.exec(w);if(m)return SWSEC[{d:'dagger',m:'great',b:'xbow',c:'scepter'}[m[1]]];return SW[w]?SWSEC.sword:BOW[w]?SWSEC.bow:SWSEC.staff},swingSec=()=>swingSecOf(S.eq.w),spdK=()=>S.eq.w?swingSec()/2.4:.4,mxs=()=>Math.max(1,Math.round(maxHit()*spdK()))
 // forma del arma para la animación (lote G1, oct 2026): 'sword' (sw_*, una mano), 'dagger' (lw_*d), 'great' (lw_*m mandoble, DOS manos), 'xbow' (lw_*b ballesta), 'scepter' (lw_*c cetro), 'bow', 'staff'
 function wKind(){const w=S.eq.w;if(!w)return null;const m=/^lw_\d+([dmbc])/.exec(w);if(m)return{d:'dagger',m:'great',b:'xbow',c:'scepter'}[m[1]];if(STF[w])return 'staff';const t=wtype();return t==='r'?'bow':t==='g'?'staff':'sword'}
 function accFor(sk,b,m){return Math.max(.08,Math.min(.95,.6+.03*(L(sk)-m.lv)+.004*b))}
@@ -456,7 +456,8 @@ function spreadSpot(b,k,key,sp){const F=({'1:ing':2,'1:pack':1.8,'2:ing':2,'3:pa
  const zx=(sp.z[0]+sp.z[1])/2,zy=(sp.z[2]+sp.z[3])/2,hw=(sp.z[1]-sp.z[0])/2*F,hh=(sp.z[3]-sp.z[2])/2*F;sp.z=[Math.round(zx-hw),Math.round(zx+hw),Math.round(zy-hh),Math.round(zy+hh)]}
 function inVil(r){const b=BI[curB],c=b.cen;return Math.abs(P.x-(b.ox+c[0]))<r&&Math.abs(P.y-(b.oy+c[1]))<r-30}
 let bossAt=-1e9,NGT=0;
-function bgm(now,dt){if(A&&A.ty==='f'){fightAt=now;if(A.e&&A.e.d&&A.e.d.boss)bossAt=now}const fight=now-fightAt<2500,off=S.mute||!UNL;if(!INV&&inVil(410))INV=1;else if(INV&&!inVil(460))INV=0;
+function bgm(now,dt){if(!INT)for(const m of M){if(m.hunt&&alive(m,now)&&!sealed(m)&&Math.abs(m.x-P.x)<300&&Math.abs(m.y-P.y)<300&&Math.hypot(m.x-P.x,m.y-P.y)<300){fightAt=now;break}}   /* COMBATE REAL: un golpe al aire ya no pone la música de combate; solo daño a/de un enemigo, atacar a uno, o un enemigo que te persigue de cerca */
+ if(A&&A.ty==='f'){fightAt=now;if(A.e&&A.e.d&&A.e.d.boss)bossAt=now}const fight=now-fightAt<2500,off=S.mute||!UNL;if(!INV&&inVil(410))INV=1;else if(INV&&!inVil(460))INV=0;
  const sn=sunS(now/1000);if(!NGT&&sn<-.12)NGT=1;else if(NGT&&sn>-.02)NGT=0;
  // F6-música: si el bioma tiene pistas propias (MUSIC.DEF) suenan ellas; si no, la música antigua (síntesis / amber-tavern-dragon)
  const inI=!!INT,tav=inI&&INT.id==='taberna';   // dentro de un interior suena la música de la aldea más baja (×0,4); en la TABERNA, su canción única (assets/music/taberna.mp3, tools/tavern_song.py)
@@ -632,7 +633,7 @@ function fin(now){const{ty,sk,i,e}=A,a=ACT[sk][i],cb=sk==='co'?count(a[2]):0;if(
    sobre un enemigo (quemadura, sangrado…); los efectos que sufre el jugador usan los mismos colores (`DOTN` en combat.js). Se reorganizará con el motor de estados alterados (Fase 23). */
 const STC={burn:'#ff8a2a',bleed:'#d4261c',poison:'#6ad04a',frost:'#7ad0ff',shock:'#c9a0ff',stun:'#e8d36a'};
 function dotHit(m,d,now,kind){if(!alive(m,now)||!(d>0))return;m.hp-=d;m.fl=now+80;splat(m.x,m.y,d,STC[kind]||'#ffffff',m.d.h+6);if(m.hp<=0){kill(m,now);if(A&&A.e===m)reseek(m,now)}}
-function hitM(m,d,now,sk,mxv,wt){if(!alive(m,now))return;m.lx=m.x;m.ly=m.y;m.hp-=d;m.fl=now+120;snd(d?'hit':'miss');
+function hitM(m,d,now,sk,mxv,wt){if(!alive(m,now))return;fightAt=now;m.lx=m.x;m.ly=m.y;m.hp-=d;m.fl=now+120;snd(d?'hit':'miss');
  if(typeof LAB!=='undefined')LAB.hit(m,d,now);
  if(d>0&&typeof FEEL!=='undefined'){const F=FEEL.v;   // «sensación» del golpe (combatlab.js): hit-stop, temblor y empujón; todo a 0 = como antes
   if(F.stop>0&&window.R3D&&!(typeof CINE!=='undefined'&&CINE.on)){R3D.tscale=.05;clearTimeout(window.__hs);window.__hs=setTimeout(()=>{if(!(typeof CINE!=='undefined'&&CINE.on))R3D.tscale=1},F.stop)}
@@ -651,7 +652,7 @@ function drawWind(now){let s=null;for(const m of M){const w=m.wind;if(!w||now>=w
   for(let i=0;i<=12;i++){const t=w.ang-.9+1.8*i/12,q=ISO.toCanvas(m.x+Math.cos(t)*reach,m.y+Math.sin(t)*reach,z);ctx.lineTo(q.x,q.y)}ctx.closePath();
   ctx.fillStyle='rgba(212,38,28,'+(.08+.3*u*u)+')';ctx.fill();ctx.strokeStyle='rgba(255,130,96,'+(.25+.55*u)+')';ctx.lineWidth=2*s;ctx.stroke()}
  if(s)ctx.restore()}
-function monHit(m,now){m.at0=now;if(S.ar!==0&&P.hp>0&&!INT&&(!A||A.ty!=='f')&&alive(m,now)&&!sealed(m)){stopA();startF(m,now);log('⚔️ Te defiendes de <b>'+m.d.n+'</b>.')}P.pjM=m;P.pj=now+4800;const d0=!dashInv()&&Math.random()<monAcc(m)?R(0,m.dm):0,pm=d0?prMod(m,d0,0):null,d=d0?Math.max(0,pm.d-Math.round(pv('stone'))):0;P.hp-=d;splat(P.x,P.y,d,pm&&pm.blocked&&d<d0?'#6ab0ff':null,26);
+function monHit(m,now){m.at0=now;fightAt=now;if(S.ar!==0&&P.hp>0&&!INT&&(!A||A.ty!=='f')&&alive(m,now)&&!sealed(m)){stopA();startF(m,now);log('⚔️ Te defiendes de <b>'+m.d.n+'</b>.')}P.pjM=m;P.pj=now+4800;const d0=!dashInv()&&Math.random()<monAcc(m)?R(0,m.dm):0,pm=d0?prMod(m,d0,0):null,d=d0?Math.max(0,pm.d-Math.round(pv('stone'))):0;P.hp-=d;splat(P.x,P.y,d,pm&&pm.blocked&&d<d0?'#6ab0ff':null,26);
  if(d){bossHit(m,d,now);snd('hurt');HURT=now;if(d>=maxHp()*.25)SHK=now+200;if(Math.random()*100<pv('thorns'))hitM(m,2,now,WSK(),99)}
  if(P.hp>0&&P.hp<maxHp()*.3&&pv('last')>0&&now>LSCD){P.hp=Math.min(maxHp(),P.hp+Math.ceil(maxHp()*pv('last')/100));LSCD=now+60000;toast('💖 ¡Segundo aliento!');snd('magic')}
  if(P.hp<=0)die()}
@@ -682,7 +683,7 @@ function swing(now,ang,k=0){if(INT||CK||P.hp<=0||(typeof CINE!=='undefined'&&CIN
  if(!S.hintAtk){S.hintAtk=1;toast('⚔️ Apunta con el ratón y haz <b>clic</b> para golpear; <b>mantén</b> el clic para cargar el golpe y suéltalo (también tecla <b>E</b>). <b>Clic derecho</b> mueve, <b>Espacio</b> esquiva.',7000)}
  inc('swing');if(k>=.3)inc('charged');
  const fb=wKind()==='staff'&&MN>=fbCost(k),chg=k>.04,ms=fb?1500:manMs(),c=chg?SWG.c:(now-SWG.last<ms*1.9)?(SWG.c+1)%3:0;if(ang==null)ang=aimAng();
- Object.assign(SWG,{t0:now,ms,wind:Math.min(chg?90:150,Math.round(ms*.28)),ang,dx:Math.cos(ang),dy:Math.sin(ang),done:0,c,k,fb,wt:wtype(),cd:now+ms,last:now,hv:(c===2||k>.55)?1:0});ATKT=now+ms;P.g=P.mv=null;P.cbT=now;fightAt=now;P.dir=HERO.dirOf(SWG.dx,SWG.dy);return true}
+ Object.assign(SWG,{t0:now,ms,wind:Math.min(chg?90:150,Math.round(ms*.28)),ang,dx:Math.cos(ang),dy:Math.sin(ang),done:0,c,k,fb,wt:wtype(),cd:now+ms,last:now,hv:(c===2||k>.55)?1:0});ATKT=now+ms;P.g=P.mv=null;P.cbT=now;P.dir=HERO.dirOf(SWG.dx,SWG.dy);return true}
 function rayHit(a0,range,pad){const now=performance.now(),dx=Math.cos(a0),dy=Math.sin(a0);let best=null,bt=range;
  M.forEach(m=>{if(!alive(m,now)||sealed(m))return;const vx=m.x-P.x,vy=m.y-P.y,t=vx*dx+vy*dy;if(t<8||t>range)return;const perp=Math.abs(vx*dy-vy*dx),rad=(m.d.w||16)*.55+pad;if(perp<=rad&&t<bt){bt=t;best=m}});return{m:best,t:bt}}
 // hechizo ELEGIDO para el báculo (S.selSp; por defecto el de ataque más alto desbloqueado); -1 si no hay ninguno
@@ -980,7 +981,7 @@ function heroState3D(now){const t=now/1000,tg=A&&A.e?A.e:(CK&&S.stn?S.stn:null);
  const cbNow=!!(A&&A.ty==='f');if(cbNow)P.cbT=now;   // Lote R3D-ANIM: guardia de combate (se mantiene 2,5 s tras el último combate o golpe recibido)
  if(tg&&!P.mvg&&tg.x!=null){fx=tg.x-P.x;fy=tg.y-P.y;P.dir=HERO.dirOf(fx,fy)}
  const cn=typeof CINE!=="undefined"&&CINE.on?CINE:null;if(cn&&cn.look){fx=cn.look[0];fy=cn.look[1];P.dir=HERO.dirOf(fx,fy)}   // CINE-4: el héroe mira hacia donde dice la escena
- if(aimOn()&&!(cn&&cn.look)){if(now-SWG.last<650&&!CHG.on){fx=SWG.dx;fy=SWG.dy;P.dir=HERO.dirOf(fx,fy)}else if((CHG.on||!P.mvg&&now-(P.cbT||-1e9)<2500)&&CUR.on&&!CUR.touch){const w=ISO.toWorld(CUR.px,CUR.py,TER.heightAt);fx=w.x-P.x;fy=w.y-P.y;P.dir=HERO.dirOf(fx,fy)}}   // el héroe mira al cursor
+ if(aimOn()&&!(cn&&cn.look)){if(now-SWG.last<650&&!CHG.on){fx=SWG.dx;fy=SWG.dy;P.dir=HERO.dirOf(fx,fy)}else if((CHG.on||curHid()||!P.mvg&&now-(P.cbT||-1e9)<2500)&&CUR.on&&!CUR.touch){const w=ISO.toWorld(CUR.px,CUR.py,TER.heightAt);fx=w.x-P.x;fy=w.y-P.y;P.dir=HERO.dirOf(fx,fy)}}   // el héroe mira al cursor
  const dsU=now<DSH.an?(now-DSH.t0)/Math.max(1,DSH.an-DSH.t0):0;if(dsU>0&&!(cn&&cn.look)){fx=DSH.dx;fy=DSH.dy;P.dir=HERO.dirOf(fx,fy)}   // el dash: el personaje mira hacia donde se lanza
  const act=P.mvg&&!(aimOn()&&(CHG.on||now<SWG.t0+SWG.ms*.8))?null:actState(now);if(act&&P.mvg&&act.k==='f')act.mv=1;if(act&&P.anm){P.anm=0;P.wt=null}const gear=gearOpts();if(/[?&]capa=1/.test(location.search)&&!gear.cp)gear.cp='#5a2230';
  return{recv:cn?cn.recv:0,x:P.x,y:P.y,z:TER.standZ(P.x,P.y),mv:!!(P.mvg||P.anm),run:!!RUN,w:P.w||0,act,dash:dsU>0&&dsU<1?dsU:0,hurt:Math.max(0,1-(now-HURT)/320),fx,fy,cb:cbNow||now-(P.cbT||-1e9)<2500||now-HURT<2500,
@@ -1025,10 +1026,15 @@ cv.addEventListener('touchend',e=>{if(e.touches.length<2){ZMD=0;setTimeout(()=>{
 fitCv();addEventListener('resize',fitCv);if(window.ResizeObserver)new ResizeObserver(fitCv).observe($('#cw'));
 // ---- F1-C1 · cursor de tile: rombo suave bajo el puntero (solo ratón). No toca lógica ni colisiones. ----
 const CUR={px:0,py:0,on:0,tx:-1,ty:-1};
+/* MODO DE CURSOR (21 oct 2026; pedido del dueño, para el combate activo): por defecto el cursor está OCULTO sobre el mundo y mover el ratón solo orienta al personaje (clic izquierdo = golpe, derecho = moverse; para
+   interactuar con recursos/PNJ/estaciones están la tecla F y ALT). Mantener ALT muestra el cursor y devuelve el comportamiento normal (resaltado, clic para interactuar). Se muestra solo en interiores, con paneles/ventanas/tablón/cocina abiertos y en táctil. Opciones → «Cursor del mundo» lo desactiva (siempre visible). */
+let ALTK=0,CURHIDE=1;try{CURHIDE=localStorage.getItem('ns_curhide')==='0'?0:1}catch(e){}
+const curHid=()=>CURHIDE&&!ALTK&&aimOn()&&!CUR.touch&&!INT&&!CK&&!IW&&!QOPEN&&!panelOpen();
+const curHideBtn=()=>{const b=$('#chb');if(b)b.textContent='🖱 Cursor del mundo: '+(CURHIDE?'OCULTO (ALT lo muestra)':'VISIBLE')},tgCurHide=()=>{CURHIDE=CURHIDE?0:1;try{localStorage.setItem('ns_curhide',CURHIDE)}catch(e){}curHideBtn()};
 let CURON=0;try{CURON=+localStorage.getItem('ns_cursor')||0}catch(e){} // preferencia propia, fuera del guardado (tdo2)
 const qBtn=()=>{const b=$('#qb');if(b)b.textContent='🖼 Calidad: '+(QA?'Auto ('+QNAM[QL]+')':QNAM[QL])},tgQ=()=>{if(QA){QA=0;QL=0}else if(QL<4)QL++;else{QA=1;QL=2}try{localStorage.setItem('ns_q',QA?'a':QL)}catch(e){}fitCv();qBtn()};
 let QFW=[],QC=0;function qmon(now,fdt){if(!QA||document.hidden||QL>=4)return;if(fdt<250)QFW.push(fdt);if(QFW.length<150)return;const s=QFW.slice().sort((x,y)=>x-y),med=s[75];QFW=[];if(now<QC||now<6000)return;if(med>25){QL++;QC=now+10000;fitCv();qBtn()}} // mediana de 150 frames > 25 ms (menos de 40 fps sostenidos): baja un nivel. La mediana ignora los tirones sueltos (esos no se arreglan bajando resolución)
-const curBtn=()=>{const b=$('#curb');if(b)b.textContent='▱ Cursor: '+(CURON?'SÍ':'NO')+' (G)'},tgCur=()=>{CURON=CURON?0:1;try{localStorage.setItem('ns_cursor',CURON)}catch(e){}curBtn()};curBtn();qBtn();
+const curBtn=()=>{const b=$('#curb');if(b)b.textContent='▱ Cursor: '+(CURON?'SÍ':'NO')+' (G)'},tgCur=()=>{CURON=CURON?0:1;try{localStorage.setItem('ns_cursor',CURON)}catch(e){}curBtn()};curBtn();qBtn();curHideBtn();
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 cv.addEventListener('pointermove',ev=>{if(ev.pointerType==='touch')return;CUR.touch=false;const r=cv.getBoundingClientRect();CUR.px=(ev.clientX-r.left)*cv.width/r.width;CUR.py=(ev.clientY-r.top)*cv.height/r.height;CUR.on=1});
 cv.addEventListener('pointerleave',()=>{CUR.on=0;cv.style.cursor=''});
@@ -1049,7 +1055,7 @@ function resTip(){const e=HOV;if(!RTD){RTD=document.createElement('div');RTD.sty
  const a=ACT[e.t][e.i],lv=rq(a),tl=TLV(lv),tk=TOOLS[e.t],badL=L(e.t)<lv,badT=tk&&(S.tool[e.t]||0)<tl-1,R='var(--rd)',k=e.t+e.i+'|'+badL+badT+'|'+S.tool[e.t]+'|'+L(e.t);
  if(k!==RTK){RTK=k;RTD.innerHTML='<span style="font-weight:700;color:var(--or)">'+a[0]+'</span><br><span style="'+(badL?'color:'+R:'')+'">Nivel '+lv+'</span>'+(tk?' · <span style="'+(badT?'color:'+R:'')+'">'+tk[1]+' '+tk[0]+' '+tn(e.t,tl)+'</span>':'')}
  const r=cv.getBoundingClientRect();RTD.style.left=Math.round(r.left+CUR.px*r.width/cv.width+16)+'px';RTD.style.top=Math.round(r.top+CUR.py*r.height/cv.height+14)+'px';RTD.style.display='block'}
-function hovUpdate(){HOV=null;CUR.hov=null;if(!CUR.on||CK){cv.style.cursor='';resTip();return}HOV=pickEnt(CUR.px,CUR.py,performance.now());CUR.hov=HOV;cv.style.cursor=HOV?(UI.cursor('hand')||'pointer'):'';resTip()}
+function hovUpdate(){HOV=null;CUR.hov=null;if(curHid()){cv.style.cursor='none';resTip();return}if(!CUR.on||CK){cv.style.cursor='';resTip();return}HOV=pickEnt(CUR.px,CUR.py,performance.now());CUR.hov=HOV;cv.style.cursor=HOV?(UI.cursor('hand')||'pointer'):'';resTip()}
 
 
 // ---- Drops en el suelo (13 oct 2026): los objetos que sueltan los enemigos caen al suelo (ya no se pierden con la mochila llena). Clic = ir a recogerlo; también se recogen al pasar por encima (si hay sitio).
@@ -1099,14 +1105,14 @@ if(!(typeof CINE!=="undefined"&&CINE.on)){hudFx(now);if(MM&&!INT)drawMap(now);
 if(hsOn())HUDSU.frame(now);;hudPlate(now)}if(!(typeof CINE!=="undefined"&&CINE.on)&&ZB){const el=now-ZB.t0;if(el>3600)ZB=null;else{ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,(3600-el)/1400));ctx.font='16px VT323, monospace';const tw=ctx.measureText(ZB.t).width+28;UI.plate(ctx,W/2-tw/2,8,tw,24);ctx.fillStyle=UI.TXT;ctx.textAlign='center';ctx.fillText(ZB.t,W/2,25);ctx.restore()}}if(!hsOn()){let by=H-118;const chip=(tx)=>{ctx.save();ctx.font='600 11px '+UI.FONT;const tw=ctx.measureText(tx).width+14,bx=W/2-tw/2;UI.plate(ctx,bx,by,tw,17,{r:8});ctx.fillStyle=UI.TXT;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(tx,bx+7,by+9.5);ctx.restore();by-=21};[['xp','Sabiduría'],['dmg','Fuerza'],['spd','Rapidez'],['def','Piel de piedra']].forEach(([k,n])=>{const r=S.buf[k]-Date.now();if(r>0)chip(n+' '+Math.ceil(r/1000)+'s')});}
 }
 cv.addEventListener('pointerdown',ev=>{if(CK){cookHit();return}if(ZMP)return;const r=cv.getBoundingClientRect(),px=(ev.clientX-r.left)*cv.width/r.width,py=(ev.clientY-r.top)*cv.height/r.height,now=performance.now(),sc=ISO.scale(),k=SPR*sc;
- const b=pickEnt(px,py,now);
+ const b=curHid()?null:pickEnt(px,py,now);   // cursor oculto: el clic nunca elige entidades (golpe / moverse)
  if(aimOn()&&ev.button!==2){CUR.touch=ev.pointerType==='touch';if(b&&b.d){chargeStart(now);return}if(!b&&!CUR.touch){chargeStart(now);return}}   // combate dirigido: clic izquierdo = swing hacia el cursor; clic derecho / táctil sobre el suelo = moverse
  if(!aimOn()&&b&&b.d&&manual()){ATKIN.t=now;ATKIN.held=1;if(A&&A.ty==='f'&&A.e===b)return}   // combate activo: el clic es el golpe (mantener = seguidos); sobre el mismo objetivo no reinicia el combate
  if(A)stopA();if(b){P.g={e:b};P.mv=null}else{const w=ISO.toWorld(px,py,TER.heightAt);P.mv={x:w.x,y:w.y};P.g=null}});
 const KM={ArrowLeft:'l',a:'l',ArrowRight:'r',d:'r',ArrowUp:'u',w:'u',ArrowDown:'d',s:'d'};
-addEventListener('keydown',e=>{const k=KM[e.key]||KM[String(e.key).toLowerCase()];   // con Mayús pulsada (correr) las letras llegan en MAYÚSCULA: sin normalizar, W/A/S/D dejaban de dirigir al correr
+addEventListener('keydown',e=>{if(e.key==='Alt'){ALTK=1;e.preventDefault()}const k=KM[e.key]||KM[String(e.key).toLowerCase()];   // con Mayús pulsada (correr) las letras llegan en MAYÚSCULA: sin normalizar, W/A/S/D dejaban de dirigir al correr
  if(k){K[k]=1;e.preventDefault()}if(e.key==='Shift'&&!e.repeat&&!RUN){if(S.exh)log('Estás agotado: recupera el aliento para volver a correr.');else{RUN=1;SHRUN=1;S.hintR=1;if(typeof rhHide==='function')rhHide();runBtn()}}   // MAYÚS = CORRER (mantener); R quedó LIBRE (21 oct 2026)
-if((e.key==='t'||e.key==='T')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))arTog();if(e.key==='m'||e.key==='M')MM=(MM+1)%3;if(e.key==='g'||e.key==='G')tgCur();if(e.key==='F4'){perfTog();e.preventDefault()}if((e.key==='+'||e.key==='=')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setZoom(ZMI+1);if((e.key==='-'||e.key==='_')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setZoom(ZMI-1);if((e.key==='e'||e.key==='E')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||'')&&!CK&&!INT)atkKey(true);if((e.key===' '||e.key==='Enter')&&CK){cookHit();e.preventDefault()}else if(e.key===' '&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT|BUTTON/.test((e.target||{}).tagName||'')){if(dash())e.preventDefault()}if((e.key==='f'||e.key==='F')&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')&&!CK){useNear();e.preventDefault()}if(e.key==='Escape'){if(QOPEN)qCloseBoard();else if(CK)CK=null;else if(IW)closeIW();else if(panelOpen()){setPanel(false,1);document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('on'))}}if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')){const TK={i:'inv',p:'ch',k:'sk',q:'qm',l:'q',c:'col',z:'mg',o:'pr'}[(e.key||'').toLowerCase()];if(TK&&!CK)tabClick(TK);if(e.key==='v'||e.key==='V')specTog()}});addEventListener('keyup',e=>{const k=KM[e.key]||KM[String(e.key).toLowerCase()];if(k)K[k]=0;if(e.key==='e'||e.key==='E')atkKey(false);if(e.key==='Shift'&&SHRUN){SHRUN=0;RUN=0;runBtn()}});addEventListener('blur',()=>{if(SHRUN){SHRUN=0;RUN=0;runBtn()}K.l=K.r=K.u=K.d=0;ATKIN.held=0});
+if((e.key==='t'||e.key==='T')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))arTog();if(e.key==='m'||e.key==='M')MM=(MM+1)%3;if(e.key==='g'||e.key==='G')tgCur();if(e.key==='F4'){perfTog();e.preventDefault()}if((e.key==='+'||e.key==='=')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setZoom(ZMI+1);if((e.key==='-'||e.key==='_')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setZoom(ZMI-1);if((e.key==='e'||e.key==='E')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||'')&&!CK&&!INT)atkKey(true);if((e.key===' '||e.key==='Enter')&&CK){cookHit();e.preventDefault()}else if(e.key===' '&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT|BUTTON/.test((e.target||{}).tagName||'')){if(dash())e.preventDefault()}if((e.key==='f'||e.key==='F')&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')&&!CK){useNear();e.preventDefault()}if(e.key==='Escape'){if(QOPEN)qCloseBoard();else if(CK)CK=null;else if(IW)closeIW();else if(panelOpen()){setPanel(false,1);document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('on'))}}if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')){const TK={i:'inv',p:'ch',k:'sk',q:'qm',l:'q',c:'col',z:'mg',o:'pr'}[(e.key||'').toLowerCase()];if(TK&&!CK)tabClick(TK);if(e.key==='v'||e.key==='V')specTog()}});addEventListener('keyup',e=>{if(e.key==='Alt'){ALTK=0;e.preventDefault()}const k=KM[e.key]||KM[String(e.key).toLowerCase()];if(k)K[k]=0;if(e.key==='e'||e.key==='E')atkKey(false);if(e.key==='Shift'&&SHRUN){SHRUN=0;RUN=0;runBtn()}});addEventListener('blur',()=>{ALTK=0;if(SHRUN){SHRUN=0;RUN=0;runBtn()}K.l=K.r=K.u=K.d=0;ATKIN.held=0});
 addEventListener('pointerdown',()=>pd=1);addEventListener('pointerup',()=>{if(aimOn())chargeEnd();ATKIN.held=0;setTimeout(()=>pd=0,60)});
 let hid=0;document.addEventListener('visibilitychange',()=>{if(document.hidden)hid=Date.now();else if(A&&A.ty!=='f'&&Date.now()-hid>5000){offline(Date.now()-hid,A.sk,A.i);A.t0=performance.now()}});
 
@@ -1307,9 +1313,11 @@ async function bootRun(){
   pct(.06,'Preparando el terreno…');fitCv();ISO.snap(P.x,P.y,TER.standZ(P.x,P.y));await frame();
   pct(.4,'Preparando el agua…');await frame();draw(performance.now());pct(.48);await frame();
   if(window.R3D&&R3D.props){pct(.48,'Levantando los edificios…');const PR=R3D.props;for(let i=0;i<600&&!late();i++){const f=PR.warm(14);pct(.48+.1*f);if(f>=1)break;await frame()}}   // R3D-FIX-CARGA: los props 3D se construyen por tramos entre fotogramas (antes: ~1 s de bloqueo)
+  if(window.R3D&&R3D.warmShaders&&!/[?&]nowarm/.test(location.search)){pct(.6,'Preparando los shaders…');await R3D.warmShaders()}   // FREEZE-SHADERS
   pct(.97,'¡Listo!');draw(performance.now());await frame();
  }catch(e){if(window.console)console.warn('[BOOT]',e)}
  if(window.R3D&&R3D.props)R3D.props.constructor.DEFER=false;
+ if(window.R3D&&R3D.warmShaders&&!/[?&]nowarm/.test(location.search))[2500,9000,20000].forEach(t=>setTimeout(()=>R3D.warmShaders(15000,false),t));   // FREEZE-SHADERS: lo que se crea tras la carga (recursos, actores…) también se compila de antemano, sin forzar visibilidad
  pct(1);last=performance.now();requestAnimationFrame(loop);
  el.classList.add('out');setTimeout(()=>el.classList.add('off'),520)}
 {const el=$('#boot'),skip=/[?&]noload\b/.test(location.search)||(navigator.webdriver&&!/[?&]load\b/.test(location.search));

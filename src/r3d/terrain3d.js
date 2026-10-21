@@ -78,18 +78,19 @@ this.occ=o.occ||null;this.ogrp=null;   // Fase 49c: this.occ = escena de OCLUSI�
   return g(i,j)*(1-a)*(1-b)+g(i+1,j)*a*(1-b)+g(i,j+1)*(1-a)*b+g(i+1,j+1)*a*b}
  pathAt(x,z){const F=this.F;if(!F||!F.PF)return[0,0];const SG=F.SG,FW=this.NX*SG,i=Math.floor(x*SG),j=Math.floor(z*SG);if(i<0||j<0||i>=FW||j>=this.NY*SG)return[0,0];return[F.PF[j*FW+i]||0,F.PC[j*FW+i]||0]}
  update(cx,cz,rTiles,force){{const ux=Math.max(0,Math.min(this.NX-1,Math.floor(cx))),uz=Math.max(0,Math.min(this.NY-1,Math.floor(cz))),uk=TER.biomeOf?TER.biomeOf(ux,uz):0,uh=TER.tileH?TER.tileH(ux,uz):1;this.under.position.x=cx;this.under.position.z=cz;this.under.position.y=uk===9?-12:-1.25;this.underC.set(uh<1?'#2f6f78':GCOLS[uk][0]);if(uh>=1)this.underC.multiplyScalar(.7);this.under.material.color.lerp(this.underC,.04)}   // Fase 49c: color suave por bioma; sobre agua, verde-azulado de mar
+  const rTiles0=rTiles;if(!force)rTiles+=10;   // margen de carga: los chunks se piden 10 tiles más allá de lo visible (al correr se veían huecos sin cargar)
   const T0=performance.now(),c0=Math.floor((cx-rTiles)/CS),c1=Math.floor((cx+rTiles)/CS),r0=Math.floor((cz-rTiles)/CS),r1=Math.floor((cz+rTiles)/CS);this.tick++;let built=0;
   const want=[];for(let j=r0;j<=r1;j++)for(let i=c0;i<=c1;i++){if(!this.cin(i,j))continue;const d=Math.hypot((i+.5)*CS-cx,(j+.5)*CS-cz);want.push([d,i,j])}
   want.sort((a,b)=>a[0]-b[0]);
   // trabajo repartido: lo más cercano que falta (chunk de suelo o su pradera) se construye por trozos (generador) con ~2,5 ms por fotograma; `force` (precarga) lo hace todo de golpe
-  const T1=performance.now(),needs=[];
+  const T1=performance.now(),needs=[];let urgent=false;
   for(const[d,i,j]of want){const k=i+','+j;let c=this.ch.get(k);
-   if(!c){if(force){c=this.build(i,j);this.ch.set(k,c);built++}else{needs.push({k,kind:0,i,j});continue}}
+   if(!c){if(force){c=this.build(i,j);this.ch.set(k,c);built++}else{needs.push({k,kind:0,i,j});if(d<CS*(rTiles0/CS+.5))urgent=true;continue}}
    c.seen=this.tick;
    if(d<CS*1.6&&!c.grass&&this.q>0){if(force){c.grass=this.meadow(i,j);if(c.grass)c.g.add(c.grass);built++}else needs.push({k,kind:1,i,j})}}
   if(!force&&needs.length){let jb=this.job&&needs.some(n=>n.k===this.job.k&&n.kind===this.job.kind)?this.job:null;
    if(!jb){const n=needs[0];jb=this.job={k:n.k,kind:n.kind,it:n.kind?this.meadowG(n.i,n.j):this.buildG(n.i,n.j)}}
-   let r;do{r=jb.it.next()}while(!r.done&&performance.now()-T1<2.5);
+   let r;const BUD=urgent?9:3.5;do{r=jb.it.next()}while(!r.done&&performance.now()-T1<BUD);   // más tiempo por fotograma si falta un chunk dentro de lo visible (correr)
    if(r.done){this.job=null;built++;if(jb.kind===0)this.ch.set(jb.k,Object.assign(r.value,{seen:this.tick}));else{const c=this.ch.get(jb.k);if(c&&r.value){c.grass=r.value;c.g.add(r.value)}}}}
   else if(!needs.length)this.job=null;
   const MX=Math.max(MAXC,want.length+14);   // Fase 49c: con el zoom alejado se piden más chunks que MAXC y se expulsaban y reconstruían sin parar (suelo parpadeando/blanco)
