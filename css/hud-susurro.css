@@ -628,3 +628,10 @@ body.hs-on #fp .tap{filter:drop-shadow(0 0 2px rgba(232,207,148,.6))}
 #isla-tip kbd{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border:1px solid rgba(232,207,148,.6);border-radius:5px;background:rgba(232,207,148,.1);color:#e8cf94;font:600 13px Cinzel,serif}
 #isla-tip button{display:block;margin:12px auto 0;padding:5px 18px;background:rgba(232,207,148,.12);color:#e8cf94;border:1px solid rgba(232,207,148,.55);border-radius:6px;font:600 13px Cinzel,serif;letter-spacing:.1em;cursor:pointer}#isla-tip button:hover{background:rgba(232,207,148,.22)}
 @keyframes isla-tip-in{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* MIRA del cursor oculto (Lote AIM-RETICLE, 21 oct 2026): anillo dorado fino + punto, sigue al puntero; rojizo sobre un enemigo, se cierra al cargar el golpe */
+#aimr{position:fixed;left:0;top:0;width:0;height:0;z-index:6;pointer-events:none;display:none;will-change:transform}
+#aimr i{position:absolute;left:-.9em;top:-.9em;width:1.8em;height:1.8em;box-sizing:border-box;border:1.5px solid rgba(232,207,148,.8);border-radius:50%;box-shadow:0 0 .5em rgba(0,0,0,.6),inset 0 0 .4em rgba(0,0,0,.45);transition:transform .12s,border-color .12s,width .12s,height .12s,left .12s,top .12s}
+#aimr i::after{content:"";position:absolute;left:50%;top:50%;width:.32em;height:.32em;margin:-.16em 0 0 -.16em;border-radius:50%;background:#e8cf94;box-shadow:0 0 .3em rgba(0,0,0,.8)}
+#aimr.en i{border-color:rgba(224,96,72,.95);transform:scale(1.18)}#aimr.en i::after{background:#e86a52}
+#aimr.chg i{transform:scale(.62);border-color:rgba(255,160,70,.95)}

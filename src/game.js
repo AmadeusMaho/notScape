@@ -981,7 +981,7 @@ function heroState3D(now){const t=now/1000,tg=A&&A.e?A.e:(CK&&S.stn?S.stn:null);
  const cbNow=!!(A&&A.ty==='f');if(cbNow)P.cbT=now;   // Lote R3D-ANIM: guardia de combate (se mantiene 2,5 s tras el último combate o golpe recibido)
  if(tg&&!P.mvg&&tg.x!=null){fx=tg.x-P.x;fy=tg.y-P.y;P.dir=HERO.dirOf(fx,fy)}
  const cn=typeof CINE!=="undefined"&&CINE.on?CINE:null;if(cn&&cn.look){fx=cn.look[0];fy=cn.look[1];P.dir=HERO.dirOf(fx,fy)}   // CINE-4: el héroe mira hacia donde dice la escena
- if(aimOn()&&!(cn&&cn.look)){if(now-SWG.last<650&&!CHG.on){fx=SWG.dx;fy=SWG.dy;P.dir=HERO.dirOf(fx,fy)}else if((CHG.on||curHid()||!P.mvg&&now-(P.cbT||-1e9)<2500)&&CUR.on&&!CUR.touch){const w=ISO.toWorld(CUR.px,CUR.py,TER.heightAt);fx=w.x-P.x;fy=w.y-P.y;P.dir=HERO.dirOf(fx,fy)}}   // el héroe mira al cursor
+ if(aimOn()&&!(cn&&cn.look)){if(now-SWG.last<650&&!CHG.on){fx=SWG.dx;fy=SWG.dy;P.dir=HERO.dirOf(fx,fy)}else if((CHG.on||curHid()&&!P.mvg||!P.mvg&&now-(P.cbT||-1e9)<2500)&&CUR.on&&!CUR.touch){const w=ISO.toWorld(CUR.px,CUR.py,TER.heightAt);fx=w.x-P.x;fy=w.y-P.y;P.dir=HERO.dirOf(fx,fy)}}   // el héroe mira al cursor
  const dsU=now<DSH.an?(now-DSH.t0)/Math.max(1,DSH.an-DSH.t0):0;if(dsU>0&&!(cn&&cn.look)){fx=DSH.dx;fy=DSH.dy;P.dir=HERO.dirOf(fx,fy)}   // el dash: el personaje mira hacia donde se lanza
  const act=P.mvg&&!(aimOn()&&(CHG.on||now<SWG.t0+SWG.ms*.8))?null:actState(now);if(act&&P.mvg&&act.k==='f')act.mv=1;if(act&&P.anm){P.anm=0;P.wt=null}const gear=gearOpts();if(/[?&]capa=1/.test(location.search)&&!gear.cp)gear.cp='#5a2230';
  return{recv:cn?cn.recv:0,x:P.x,y:P.y,z:TER.standZ(P.x,P.y),mv:!!(P.mvg||P.anm),run:!!RUN,w:P.w||0,act,dash:dsU>0&&dsU<1?dsU:0,hurt:Math.max(0,1-(now-HURT)/320),fx,fy,cb:cbNow||now-(P.cbT||-1e9)<2500||now-HURT<2500,
@@ -1028,15 +1028,15 @@ fitCv();addEventListener('resize',fitCv);if(window.ResizeObserver)new ResizeObse
 const CUR={px:0,py:0,on:0,tx:-1,ty:-1};
 /* MODO DE CURSOR (21 oct 2026; pedido del dueño, para el combate activo): por defecto el cursor está OCULTO sobre el mundo y mover el ratón solo orienta al personaje (clic izquierdo = golpe, derecho = moverse; para
    interactuar con recursos/PNJ/estaciones están la tecla F y ALT). Mantener ALT muestra el cursor y devuelve el comportamiento normal (resaltado, clic para interactuar). Se muestra solo en interiores, con paneles/ventanas/tablón/cocina abiertos y en táctil. Opciones → «Cursor del mundo» lo desactiva (siempre visible). */
-let ALTK=0,CURHIDE=1;try{CURHIDE=localStorage.getItem('ns_curhide')==='0'?0:1}catch(e){}
+let ALTK=0,CURHIDE=0;try{CURHIDE=localStorage.getItem('ns_curhide2')==='1'?1:0}catch(e){}   // por defecto el cursor es VISIBLE (el modo oculto es opcional)
 const curHid=()=>CURHIDE&&!ALTK&&aimOn()&&!CUR.touch&&!INT&&!CK&&!IW&&!QOPEN&&!panelOpen();
-const curHideBtn=()=>{const b=$('#chb');if(b)b.textContent='🖱 Cursor del mundo: '+(CURHIDE?'OCULTO (ALT lo muestra)':'VISIBLE')},tgCurHide=()=>{CURHIDE=CURHIDE?0:1;try{localStorage.setItem('ns_curhide',CURHIDE)}catch(e){}curHideBtn()};
+const curHideBtn=()=>{const b=$('#chb');if(b)b.textContent='🖱 Cursor del mundo: '+(CURHIDE?'OCULTO (ALT lo muestra)':'VISIBLE')},tgCurHide=()=>{CURHIDE=CURHIDE?0:1;try{localStorage.setItem('ns_curhide2',CURHIDE)}catch(e){}curHideBtn()};
 let CURON=0;try{CURON=+localStorage.getItem('ns_cursor')||0}catch(e){} // preferencia propia, fuera del guardado (tdo2)
 const qBtn=()=>{const b=$('#qb');if(b)b.textContent='🖼 Calidad: '+(QA?'Auto ('+QNAM[QL]+')':QNAM[QL])},tgQ=()=>{if(QA){QA=0;QL=0}else if(QL<4)QL++;else{QA=1;QL=2}try{localStorage.setItem('ns_q',QA?'a':QL)}catch(e){}fitCv();qBtn()};
 let QFW=[],QC=0;function qmon(now,fdt){if(!QA||document.hidden||QL>=4)return;if(fdt<250)QFW.push(fdt);if(QFW.length<150)return;const s=QFW.slice().sort((x,y)=>x-y),med=s[75];QFW=[];if(now<QC||now<6000)return;if(med>25){QL++;QC=now+10000;fitCv();qBtn()}} // mediana de 150 frames > 25 ms (menos de 40 fps sostenidos): baja un nivel. La mediana ignora los tirones sueltos (esos no se arreglan bajando resolución)
 const curBtn=()=>{const b=$('#curb');if(b)b.textContent='▱ Cursor: '+(CURON?'SÍ':'NO')+' (G)'},tgCur=()=>{CURON=CURON?0:1;try{localStorage.setItem('ns_cursor',CURON)}catch(e){}curBtn()};curBtn();qBtn();curHideBtn();
 cv.addEventListener('contextmenu',e=>e.preventDefault());
-cv.addEventListener('pointermove',ev=>{if(ev.pointerType==='touch')return;CUR.touch=false;const r=cv.getBoundingClientRect();CUR.px=(ev.clientX-r.left)*cv.width/r.width;CUR.py=(ev.clientY-r.top)*cv.height/r.height;CUR.on=1});
+cv.addEventListener('pointermove',ev=>{if(ev.pointerType==='touch')return;CUR.touch=false;const r=cv.getBoundingClientRect();CUR.cx=ev.clientX;CUR.cy=ev.clientY;CUR.px=(ev.clientX-r.left)*cv.width/r.width;CUR.py=(ev.clientY-r.top)*cv.height/r.height;CUR.on=1});
 cv.addEventListener('pointerleave',()=>{CUR.on=0;cv.style.cursor=''});
 // Forma del rombo del cursor de tile (provisional, opcional). NO es el helper de formas de F2 (que será `facet`, ver AGENTS.md): no lo reutilices para sprites.
 function cursorPoly(pts,k){const n=pts.length;ctx.beginPath();for(let i=0;i<n;i++){const a=pts[(i+n-1)%n],b=pts[i],c=pts[(i+1)%n],p1={x:b.x+(a.x-b.x)*k,y:b.y+(a.y-b.y)*k},p2={x:b.x+(c.x-b.x)*k,y:b.y+(c.y-b.y)*k};if(i)ctx.lineTo(p1.x,p1.y);else ctx.moveTo(p1.x,p1.y);ctx.quadraticCurveTo(b.x,b.y,p2.x,p2.y)}ctx.closePath()}
@@ -1055,7 +1055,12 @@ function resTip(){const e=HOV;if(!RTD){RTD=document.createElement('div');RTD.sty
  const a=ACT[e.t][e.i],lv=rq(a),tl=TLV(lv),tk=TOOLS[e.t],badL=L(e.t)<lv,badT=tk&&(S.tool[e.t]||0)<tl-1,R='var(--rd)',k=e.t+e.i+'|'+badL+badT+'|'+S.tool[e.t]+'|'+L(e.t);
  if(k!==RTK){RTK=k;RTD.innerHTML='<span style="font-weight:700;color:var(--or)">'+a[0]+'</span><br><span style="'+(badL?'color:'+R:'')+'">Nivel '+lv+'</span>'+(tk?' · <span style="'+(badT?'color:'+R:'')+'">'+tk[1]+' '+tk[0]+' '+tn(e.t,tl)+'</span>':'')}
  const r=cv.getBoundingClientRect();RTD.style.left=Math.round(r.left+CUR.px*r.width/cv.width+16)+'px';RTD.style.top=Math.round(r.top+CUR.py*r.height/cv.height+14)+'px';RTD.style.display='block'}
-function hovUpdate(){HOV=null;CUR.hov=null;if(curHid()){cv.style.cursor='none';resTip();return}if(!CUR.on||CK){cv.style.cursor='';resTip();return}HOV=pickEnt(CUR.px,CUR.py,performance.now());CUR.hov=HOV;cv.style.cursor=HOV?(UI.cursor('hand')||'pointer'):'';resTip()}
+const AIMR=(()=>{const e=document.createElement('div');e.id='aimr';e.innerHTML='<i></i>';document.body.appendChild(e);return e})();let aimShow=0,aimEn=0;
+function aimReticle(on){   // MIRA del modo de cursor oculto (reemplaza al cursor): anillo dorado fino con punto; se pone rojizo sobre un enemigo y se achica al cargar el golpe
+ if(on!==aimShow){aimShow=on;AIMR.style.display=on?'block':'none'}if(!on)return;
+ const w=ISO.toWorld(CUR.px,CUR.py,TER.heightAt),now=performance.now();let en=0;for(const m of M){if(alive(m,now)&&!sealed(m)&&Math.hypot(m.x-w.x,m.y-w.y)<(m.d.w||16)*.7+10){en=1;break}}
+ if(en!==aimEn){aimEn=en;AIMR.classList.toggle('en',!!en)}AIMR.classList.toggle('chg',!!CHG.on);AIMR.style.transform='translate('+CUR.cx+'px,'+CUR.cy+'px)'}
+function hovUpdate(){HOV=null;CUR.hov=null;if(curHid()){cv.style.cursor='none';aimReticle(CUR.on?1:0);resTip();return}aimReticle(0);if(!CUR.on||CK){cv.style.cursor='';resTip();return}HOV=pickEnt(CUR.px,CUR.py,performance.now());CUR.hov=HOV;cv.style.cursor=HOV?(UI.cursor('hand')||'pointer'):'';resTip()}
 
 
 // ---- Drops en el suelo (13 oct 2026): los objetos que sueltan los enemigos caen al suelo (ya no se pierden con la mochila llena). Clic = ir a recogerlo; también se recogen al pasar por encima (si hay sitio).
