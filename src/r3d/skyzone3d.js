@@ -52,10 +52,11 @@ void main(){vec3 N=normalize(vN);float ndl=dot(N,normalize(uL));float dep=smooth
  vec3 c=cel(ndl+.12*(n2(vW.xz*.9+vW.y)-.5),N.y,dep);
  c=mix(c,uLo*.92+vec3(.02,.03,.08),dep*.42);                                   // las nubes más bajas se azulan (más lejos de la luz)
  float d=length(vW.xz-uCam)/110.;c=mix(c,uHor,smoothstep(uHS,1.1,d)*uHK);
- c=mix(c,uHi,pow(1.-ndv,2.4)*max(ndl,0.)*.3);                                    // luz de borde cálida en el lado del sol
+ c=mix(c,uHi,pow(max(1.-ndv,0.),2.4)*max(ndl,0.)*.3);                                    // luz de borde cálida en el lado del sol
  float er=n2(vW.xz*1.7+vW.y*2.3)*.6+n2(vW.xz*4.3-vW.y*3.1)*.4;                  // BORDES DIFUMINADOS: la silueta se deshace (perfil + erosión por ruido), no corta seca
- float al=pow(smoothstep(.02,.62,ndv+(er-.5)*.42),.85);
- gl_FragColor=vec4(c,al);\n#include <colorspace_fragment>\n}`;
+ float al=pow(max(smoothstep(.02,.62,ndv+(er-.5)*.42),0.),.85);
+ if(!(al>=0.)||any(isnan(c)))al=0.;   // un NaN aquí lo extiende el bloom como un parche negro
+ gl_FragColor=vec4(clamp(c,0.,1.),al);\n#include <colorspace_fragment>\n}`;
 const SEA_V=`uniform float uT;uniform vec2 uFB[8];varying vec3 vN;varying vec3 vW;varying float vH;`+CNZ+`
 float H0(vec2 w){vec2 q=w*.04+vec2(uT*.0035,uT*.002);float b=fbm(q)*1.1+.3*fbm(q*3.3+4.);float m=smoothstep(.26,.82,b);return m*m*3.4+.35*n2(w*.33)*m;}
 float H(vec2 w){float k=1.;for(int i=0;i<8;i++)k=min(k,smoothstep(2.2,6.5,length(w-uFB[i])));return H0(w)*k;}   // balsa plana en la base de cada cascada

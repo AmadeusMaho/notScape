@@ -191,6 +191,20 @@ const MODELS={
   if(v===1)return rockOf([[-.06,.135,-.02,.46,.31,.34,4,0,{st:[5,.95,.15],cr:[.05,.07]}],[.4,.05,.2,.2,.14,.16,2,0,{st:[3,.85,.11]}],S[1]],P,sd+3);
   if(v===2)return rockOf([[-.08,.13,-.02,.46,.3,.34,4,0,{cl:[a,.02,.17,.62],cr:[.045,.08]}],S[0],S[1]],P,sd+6);
   return rockOf([[-.08,.13,-.02,.46,.3,.34,4,0,{cr:[.07,.13]}],S[0],S[1]],P,sd)},
+ // MENA (Lote MINERIA-SUAVE, 21 oct 2026): recurso de minería. Misma técnica que `roca` (planos de corte, normales suaves, tono por faceta) en lugar del blob pastel de ORG:
+ //  · normal = peñasco de lajas con 4 vetas de mena (rocas más claras y de color de la mena, asomando) · o.crystal = base baja + racimo de prismas hexagonales de cristal · o.dead = escombro agotado (sin mena).
+ //  o.base = color de la roca, o.ore = color de la mena (los pone nature3d.js por mena/tier; en el Cielo la base es mármol claro). Determinista: la semilla sale del color de la base.
+ mena(o){const base=o.base||'#8a5a3a',ore=o.ore||'#c8742a',sd=601+(parseInt(base.slice(1,3),16)%23)*3,hx=(c,k)=>'#'+C(c).multiplyScalar(k).getHexString(),marble=base==='#d6cfbb';
+  const PR={rock:hx(base,.78),rockL:hx(base,1.18),moss:marble?0:.18,mossC:'#44583a',snow:0,ember:0};
+  if(o.dead)return rockOf([[0,.07,0,.3,.13,.24,2,0,{cr:[.05,.07]}],[.26,.03,.1,.12,.06,.1,1],[-.2,.025,-.14,.09,.05,.08,1]],{...PR,rock:hx(base,.6),rockL:hx(base,.9)},sd);
+  const G=[];
+  if(o.crystal){G.push(rockOf([[0,.07,0,.32,.14,.26,2,0,{cr:[.05,.06]}],[.27,.03,.1,.12,.07,.1,1]],PR,sd).geo());
+   const b=new B(sd+9),oc=C(ore);[[0,0,.62,.075],[-.12,.06,.4,.06],[.13,.04,.46,.065],[.04,-.12,.3,.05],[-.06,-.1,.26,.045]].forEach(([x,z,h,r],i)=>{const t=mix(oc,C('#ffffff'),.12+.1*hash(sd,i,4));b.cyl(x,.1,z,r,r*.2,h,6,mul(t,.85+.3*hash(sd,i,5)),{v:.05})});
+   G.push(b.geo());return {geo:()=>cat(G,['position','normal','color','aEmit'])}}
+  const OP={rock:hx(ore,.72),rockL:hx(ore,1.2),moss:0,mossC:'#000000',snow:0,ember:0};
+  G.push(rockOf([[0,.12,0,.34,.23,.28,2,0,{st:[3,.55,.08]}],[.3,.04,.12,.14,.1,.12,1],[-.27,.03,-.13,.1,.07,.09,1]],PR,sd).geo());
+  G.push(rockOf([[-.13,.2,.09,.1,.075,.09,1],[.14,.17,-.09,.085,.07,.08,1],[.06,.27,.12,.065,.055,.065,1],[-.04,.1,-.2,.07,.055,.065,1]],OP,sd+17).geo());
+  return {geo:()=>cat(G,['position','normal','color','aEmit'])}},
  // ARBUSTO (≈0,85 × 0,56 × 0,81): una forma por bioma (ver cabecera). Siempre oscuro, el acento (flor/baya/brasa/cristal) es pequeño.
  arbusto(o){const P=PB(o),b=new B(251+(o.bk|0)*11),sd=b.seed;SHRUB[P.shrub](b,P,sd);return b},
  // TOCÓN (≈0,43 × 0,25 × 0,44): raíces en abanico, tronco acampanado con corteza, corte con anillo oscuro, musgo / nieve / carbón según bioma.

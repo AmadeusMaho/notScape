@@ -356,7 +356,7 @@ function migOld(){const ver=S.ver||0,mp={cobre:'pino',estano:'abedul',bronce:'ro
  for(const k of ['wc','mi','fi']){const t=S.tool[k]||0;if(!S.eq[k]&&t>0)S.eq[k]=(k==='wc'?'ax_':k==='mi'?'pk_':'rd_')+(k==='fi'?WON[t-1]:TNM[t-1])}}
 let SAVEWARN=0;
 // Guardado: se comprueba que lo escrito se lee de vuelta (navegadores en modo privado, vistas previas o carpetas sin permiso descartan el guardado en silencio) y se avisa UNA vez.
-const save=()=>{if(WIPE)return;S.t=Date.now();prSync();let ok=0;try{const j=JSON.stringify(S);localStorage.setItem('tdo2',j);ok=localStorage.getItem('tdo2')===j}catch(e){}
+const save=()=>{if(WIPE)return;S.t=Date.now();try{if(!INT&&isFinite(P.x)&&isFinite(P.y))S.pos=[Math.round(P.x),Math.round(P.y)]}catch(e){}prSync();let ok=0;try{const j=JSON.stringify(S);localStorage.setItem('tdo2',j);ok=localStorage.getItem('tdo2')===j}catch(e){}
  if(!ok&&!SAVEWARN){SAVEWARN=1;try{log('⚠ Este navegador NO deja guardar la partida (modo privado, vista previa o almacenamiento bloqueado). Usa «Guardar en archivo» en el panel para no perder el progreso.')}catch(e){}}};
 // guardar también al cerrar/ocultar la pestaña (antes solo cada 5 s) y pedir almacenamiento persistente (el navegador no lo borra por falta de espacio)
 addEventListener('pagehide',()=>save());addEventListener('beforeunload',()=>save());document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
@@ -434,7 +434,8 @@ PROPS.scatter({ST,ZS,N,M});if(!/nodoors/.test(location.search))intDoorsInit();np
 const FISHR=104;   // alcance de la caña (px de mundo): se pesca desde la orilla sin pisar el agua
 const alive=(e,now)=>!e.rt||e.rt<=now,nearS=id=>ST.find(s=>s.id===id&&Math.hypot(P.x-s.x,P.y-s.y)<80);
 const P={x:spawnOf(0).x,y:spawnOf(0).y,f:1,w:0,hp:0,g:null,mv:null,mvg:0},K={};let A=null,parts=[],logs=['Bienvenido a Villa Pradera.'],dirty=1,pd=0,lr=0,lreg=0,lfx=0,DT=0,TB='inv',cx=0,cy=0,curB=0,swc=0;
-P.hp=maxHp();{const m=/[?&]at=(-?[\d.]+),(-?[\d.]+)/.exec(location.search);if(m){P.x=+m[1];P.y=+m[2];if(ISO.snap)ISO.snap(P.x,P.y,TER.standZ(P.x,P.y))}}   // ?at=x,y (px de mundo) = aparecer ahí (pruebas y capturas; no se guarda)
+P.hp=maxHp();{const m=/[?&]at=(-?[\d.]+),(-?[\d.]+)/.exec(location.search);if(m){P.x=+m[1];P.y=+m[2];if(ISO.snap)ISO.snap(P.x,P.y,TER.standZ(P.x,P.y))}   // ?at=x,y (px de mundo) = aparecer ahí (pruebas y capturas; no se guarda)
+ else if(Array.isArray(S.pos)&&isFinite(S.pos[0])&&isFinite(S.pos[1])){P.x=S.pos[0];P.y=S.pos[1];if(ISO.snap)ISO.snap(P.x,P.y,TER.standZ(P.x,P.y))}}   // F5: volver donde se quedó (guard() lo corrige si cae en sitio no válido)
 S.tq=S.tq||{wc:0,mi:0,fi:0};syncTools();S.st.bio=S.st.bio||1;if(!S.st.b44){S.st.b44=1;for(let k=0;k<(S.st.bio||1)-1;k++)S.boss[k]=1}   /* Fase 44a: los jefes ya no abren el camino; esta migración de partidas antiguas (bioma alcanzado ⇒ jefes anteriores vencidos) solo se hace UNA vez */
 if(S.home==null){S.home=0;for(let k=BIOMES.N-1;k>0;k--)if(S.map&&S.map['v'+k]){S.home=k;break}}   /* Fase 44a: S.home = última aldea visitada (donde reapareces al morir) */
 S.inv.forEach(x=>S.disc[x]=1);Object.keys(S.bank).forEach(x=>S.disc[x]=1);[S.eq.w,S.eq.a].forEach(x=>{if(x)S.disc[x]=1});S.st.disc=Object.keys(S.disc).length;
