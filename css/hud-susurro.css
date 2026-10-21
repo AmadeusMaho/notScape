@@ -635,3 +635,32 @@ body.hs-on #fp .tap{filter:drop-shadow(0 0 2px rgba(232,207,148,.6))}
 #aimr i::after{content:"";position:absolute;left:50%;top:50%;width:.32em;height:.32em;margin:-.16em 0 0 -.16em;border-radius:50%;background:#e8cf94;box-shadow:0 0 .3em rgba(0,0,0,.8)}
 #aimr.en i{border-color:rgba(224,96,72,.95);transform:scale(1.18)}#aimr.en i::after{background:#e86a52}
 #aimr.chg i{transform:scale(.62);border-color:rgba(255,160,70,.95)}
+
+/* ═══ Nameplates de enemigos (21 oct 2026): barra plana ancha con filo dorado, nombre a la izquierda, % a la derecha y el nivel en su propia caja (referencia: Forever Simple Skin) ═══ */
+#nps{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden;font-size:var(--hu,16px);font-family:"Cinzel",Georgia,serif}
+.np{position:absolute;left:0;top:0;display:flex;align-items:stretch;gap:.28em;will-change:transform;white-space:nowrap;--ac:#e8cf94;--lc:#f1e7d2}
+.npb{position:relative;width:9.4em;height:1.5em;display:flex;align-items:center;justify-content:space-between;gap:.5em;padding:0 .55em;border-radius:.3em;background:rgba(14,12,10,.84);border:1px solid var(--ac);box-shadow:0 .1em .55em rgba(0,0,0,.55),inset 0 0 .5em rgba(0,0,0,.5);overflow:hidden}
+.npb i,.npb u{position:absolute;left:0;top:0;bottom:0;width:100%;text-decoration:none}
+.npb u{background:rgba(240,225,190,.5);transition:width .5s ease-out}
+.npb i{background:linear-gradient(180deg,#d8493e,#8e1f1a);box-shadow:inset 0 .12em .2em rgba(255,255,255,.18);transition:width .18s ease-out;z-index:1}
+.npt,.npp{position:relative;z-index:2;font:700 .72em "Cinzel",Georgia,serif;letter-spacing:.06em;color:#f6ecd2;text-shadow:0 0 .3em #000,0 .06em .08em #000,0 0 .1em #000}
+.npt{overflow:hidden;text-overflow:ellipsis;max-width:6.2em}
+.npp{font-size:.68em;margin:0}.npp{font-style:normal}
+.npl{display:grid;place-items:center;min-width:1.8em;padding:0 .35em;border-radius:.3em;font:700 .74em "Cinzel",Georgia,serif;color:var(--lc);background:rgba(14,12,10,.84);border:1px solid var(--ac);box-shadow:0 .1em .55em rgba(0,0,0,.55),inset 0 0 .5em rgba(0,0,0,.5);text-shadow:0 0 .3em #000}
+.np.easy{--lc:#8fd48a}.np.mid{--lc:#f0b45a}.np.hard{--lc:#ff7a66}
+.np.boss{--ac:#d9a441}.np.boss .npb{width:12em;height:1.75em}.np.boss .npt{font-size:.8em;max-width:8.5em;color:#ffe7a8}
+.np.boss .npb i{background:linear-gradient(180deg,#f0b84a,#a8691a)}
+.np.seal .npb,.np.seal .npl{opacity:.65;filter:saturate(.5)}
+
+/* ═══ Vida con estado alterado (21 oct 2026): la barra de vida del jugador cambia de color mientras sufre un estado (P.dot.k). Veneno = verde oscuro enfermizo, quemadura = naranja, sangrado = rojo oscuro. El flujo animado (canvas verde) se tiñe con hue-rotate. Un estado nuevo = un bloque [data-st="clave"] (+ su color en DOTN). ═══ */
+#hs .hp i.f,#hs .hp canvas{transition:filter .4s}
+#hs .hp[data-st="veneno"] i.f{background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 50%,rgba(0,0,0,.4)),linear-gradient(90deg,#10300f,#1f5a1c 65%,#34802a)}
+#hs .hp[data-st="veneno"] canvas{filter:brightness(.55) saturate(.9)}
+#hs .hp[data-st="veneno"]{filter:drop-shadow(0 0 .4em rgba(70,170,50,.55))}
+#hs .hp[data-st="quemadura"] i.f{background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,0) 50%,rgba(0,0,0,.3)),linear-gradient(90deg,#8a3a0c,#e8801f 65%,#ffb04a)}
+#hs .hp[data-st="quemadura"] canvas{filter:hue-rotate(-75deg) saturate(1.5) brightness(1.15)}
+#hs .hp[data-st="quemadura"]{filter:drop-shadow(0 0 .45em rgba(255,130,40,.7));animation:hsburn .9s ease-in-out infinite}
+@keyframes hsburn{50%{filter:drop-shadow(0 0 .7em rgba(255,150,50,.95))}}
+#hs .hp[data-st="sangrado"] i.f{background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 50%,rgba(0,0,0,.4)),linear-gradient(90deg,#4a0b0b,#8f1c18 65%,#c23a30)}
+#hs .hp[data-st="sangrado"] canvas{filter:hue-rotate(-105deg) saturate(1.6) brightness(.85)}
+#hs .hp[data-st="sangrado"]{filter:drop-shadow(0 0 .4em rgba(190,30,25,.6))}

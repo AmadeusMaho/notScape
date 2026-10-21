@@ -947,10 +947,22 @@ function dS(e,t){const x=e.x,y=e.y,id=e.id;if(e.nodraw)return;if(id==='door'||id
 
 
 // Lote R3D-ACTORES: SOLO la barra de vida y la etiqueta del enemigo (con ?r3d=1 el cuerpo ya lo dibuja src/r3d/actors3d.js en el mundo 3D y se omite el sprite)
-function dMo(m,t,now){if(!alive(m,now))return;const d=m.d,x=m.x,y=m.y,h=(window.R3D&&R3D.actors.topPx(m))||d.h;
- if(m.hp<m.mh){Rc('#400',x-12,y-h-9,24,4);Rc('#3c3',x-12,y-h-9,24*m.hp/m.mh,4)}
- if(!d.boss&&!m.d.ag&&m.hp>=m.mh&&Math.hypot(x-P.x,y-P.y)>300)return;   // R3D-ESTETICA: «Lv» solo cerca (<300 px), en combate o si el enemigo es jefe/agresivo
- TC((d.boss===1?'👑 '+(sealed(m)?'🔒 ':'')+d.n+' ':d.boss===2?'🗝️ '+d.n+' ':m.d.ag?'⚔ ':'')+'Lv'+m.lv,x,y-h-12,(g=>g>10?'#f55':g>4?'#fa5':g<-6?'#7e7':'#fff')(m.lv-CBL()))}
+/* NAMEPLATE DE ENEMIGOS (21 oct 2026; pedido del dueño: «más estético, nombre del bicho y nivel, basado en nuestra UI»): ya no se dibuja en el lienzo 2D; es DOM de cristal con trazo dorado (css/hud-susurro.css, bloque «Nameplates»).
+   Muestra nombre (Cinzel), nivel en una insignia de color según la dificultad frente a tu nivel de combate y, solo si está herido, la barra de vida. Jefes = marco ámbar con «◆»; agresivos = «⚔». Se pide cada fotograma desde dMo y `npSweep()` oculta los no pedidos. */
+const NPS=new Map();let npRoot=null;
+function npGet(m){let e=NPS.get(m);if(e)return e;if(!npRoot){npRoot=document.createElement('div');npRoot.id='nps';document.body.appendChild(npRoot)}
+ const el=document.createElement('div');el.className='np';el.innerHTML='<div class="npb"><u></u><i></i><span class="npt"></span><em class="npp"></em></div><b class="npl"></b>';npRoot.appendChild(el);
+ e={el,l:el.querySelector('.npl'),t:el.querySelector('.npt'),p:el.querySelector('.npp'),f:el.querySelector('.npb i'),g:el.querySelector('.npb u'),hp:1,seen:0,key:''};NPS.set(m,e);return e}
+function npSweep(){for(const [m,e] of NPS)if(!e.seen){e.el.remove();NPS.delete(m)}else e.seen=0}
+function dMo(m,t,now){if(!alive(m,now))return;const d=m.d,h=(window.R3D&&R3D.actors.topPx(m))||d.h;
+ const dmg=m.hp<m.mh;if(!d.boss&&!d.ag&&!dmg&&Math.hypot(m.x-P.x,m.y-P.y)>300)return;   // «Lv» solo cerca (<300 px), en combate o si el enemigo es jefe/agresivo
+ const c=ISO.toCanvas(m.x,m.y,TER.standZ(m.x,m.y)),r=cv.getBoundingClientRect(),k=r.width/cv.width,sy=c.y-(h-6)*SPR*ISO.scale();
+ const e=npGet(m);e.seen=1;const gap=m.lv-CBL(),dif=gap>10?'hard':gap>4?'mid':gap<-6?'easy':'';
+ const key=d.n+'|'+m.lv+'|'+(d.boss||0)+'|'+(d.ag?1:0)+'|'+(sealed(m)?1:0)+'|'+dif;
+ if(e.key!==key){e.key=key;e.el.className='np'+(d.boss?' boss b'+d.boss:'')+(sealed(m)?' seal':'')+(d.ag?' ag':'')+(dif?' '+dif:'');e.l.textContent=m.lv;e.t.textContent=(d.boss===1?'◆ ':d.boss===2?'◇ ':d.ag?'⚔ ':'')+d.n}
+ e.el.classList.toggle('dmg',dmg);if(!e.p.textContent)e.p.textContent=Math.ceil(m.hp/m.mh*100)+'%';const pct=Math.max(0,Math.min(1,m.hp/m.mh));
+ if(pct!==e.hp){if(pct<e.hp)e.g.style.width=(e.hp*100)+'%';e.hp=pct;e.f.style.width=(pct*100)+'%';e.p.textContent=Math.ceil(pct*100)+'%';clearTimeout(e.gt);e.gt=setTimeout(()=>{e.g.style.width=(pct*100)+'%'},320)}
+ e.el.style.transform='translate('+(r.left+c.x*k).toFixed(1)+'px,'+(r.top+sy*k).toFixed(1)+'px) translate(-50%,-100%)'}
 
 
 
@@ -1107,7 +1119,7 @@ function draw(now){const t=now/1000;cx=Math.max(0,Math.min(WW-W,P.x-W/2))|0;cy=M
   ...(cin?[]:M).filter(e=>onScr(e.x,e.y)&&R3D.actors.has(e)).map(e=>[ISO.depth(e.x,e.y),()=>spr(e.x,e.y,0,()=>dMo(e,t,now))]),[ISO.depth(P.x,P.y),()=>R3D.drawHero(ctx)]];
  AMBI.draw(ctx,'ground');
  ents.sort((a,b)=>a[0]-b[0]).forEach(o=>o[1]());
- PJ.forEach(p=>{if(now>=p.t0)drawPJ(p,now)});drawTel(now);drawWind(now);drawHFX(now);drawAim(now);swingHud(now);
+ PJ.forEach(p=>{if(now>=p.t0)drawPJ(p,now)});npSweep();drawTel(now);drawWind(now);drawHFX(now);drawAim(now);swingHud(now);
  parts.forEach(p=>p.hs?hsDraw(p):spr(p.x,p.y,12,()=>{ctx.globalAlpha=Math.min(1,p.l);if(p.sp){ctx.beginPath();ctx.arc(p.x,p.y,7,0,7);ctx.fillStyle=p.sp;ctx.fill();T(p.tx,p.x,p.y+4,'#fff')}else if(p.tx)T(p.tx,p.x,p.y,p.c);else Rc(p.c,p.x,p.y,2,2);ctx.globalAlpha=1}));
  AMBI.draw(ctx,'over');
  if(!window.R3D)PAINT.grain(ctx,cv.width,cv.height,ISO.V.dpr,.55); // grano de papel: con WGL lo pone un div con multiply (sin coste por frame); este es el plan B

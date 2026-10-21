@@ -14,7 +14,7 @@ import {B,hash,vary,mix,mul,col,dirty} from './propsdark3d.js';
 
 export const TOL=.22;
 // huella y altura de la malla ORG ACTUAL (medida con Chromium el 20 oct 2026 con `?props=old`, PROP_K aparte): [ancho x, alto y, fondo z]
-export const NAT_FOOT={roca:[.70,.27,.47],piedra:[1.06,.46,.78],arbusto:[.85,.56,.81],tocon:[.43,.25,.44],seta:[.65,.39,.54],huesos:[.74,.32,.6],charco:[1.13,.06,.75],carpa:[1.09,1.25,.98],tronco:[1.06,.33,.3]};
+export const NAT_FOOT={roca:[.70,.27,.47],piedra:[1.06,.46,.78],arbusto:[.85,.56,.81],tocon:[.43,.25,.44],seta:[.65,.39,.54],huesos:[.74,.32,.6],charco:[1.13,.06,.75],carpa:[1.09,1.25,.98],tronco:[1.06,.33,.3],mena:[.79,.36,.59]};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 // cuadrilátero con 4 colores de vértice (B.quad repite los 3 primeros en el segundo triángulo)
 const Q=(b,p,q,r,s,cs,em,ctr)=>{b.tri(p,q,r,[cs[0],cs[1],cs[2]],em,ctr);b.tri(p,r,s,[cs[0],cs[2],cs[3]],em,ctr)};

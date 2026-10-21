@@ -149,7 +149,7 @@ const HUDSU=(()=>{
  let last=0,lvT=-1,nmT='',tgM=null,tgOff=0,hideT=0;
  function frame(now){if(document.hidden)return;const dt=Math.min(.05,last?(now-last)/1000:.016),tt=now/1000;last=now;
   const mh=maxHp(),hpv=Math.max(0,P.hp),low=hpv/mh<.3&&hpv>0;
-  setBar(B.hp,hpv/mh,Math.ceil(hpv)+' / '+mh);const mm=mnMax();setBar(B.mp,MN/Math.max(1,mm),Math.floor(MN)+' / '+mm);B.hp.el.classList.toggle('low',low);
+  setBar(B.hp,hpv/mh,Math.ceil(hpv)+' / '+mh);const mm=mnMax();setBar(B.mp,MN/Math.max(1,mm),Math.floor(MN)+' / '+mm);B.hp.el.classList.toggle('low',low);{const st=P.dot&&P.dot.k||'';if(B.hp.el.dataset.st!==st){if(st)B.hp.el.dataset.st=st;else delete B.hp.el.dataset.st}}   /* estado alterado del jugador (P.dot.k: veneno/quemadura/sangrado) tiñe la barra de vida; ver css «Vida con estado» */
   const lv=SKL.reduce((s,k)=>s+L(k),0);if(lv!==lvT){lvT=lv;$('#hs-lv').textContent=lv}
   const nm=(S.app&&S.app.name)||'Aventurero';if(nm!==nmT){nmT=nm;$('#hs-nm').textContent=nm}
   heroPortrait(now);buffs(now);

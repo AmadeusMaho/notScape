@@ -405,7 +405,7 @@ export class Actors{
   if(A.state==='gone'){A.vis=false;A.grp.visible=false;if(A.proxy)A.proxy.visible=false;return}
   const z=TER.standZ(e.x,e.y),p=this.W3(e.x,e.y,z);let dist=0;
   if(A.last){const dx=p.x-A.last.x,dz=p.z-A.last.z,d=Math.hypot(dx,dz);if(d<3)dist=d;if(d>1e-4&&(!isNpc||e.mvr))A.faceT=Math.atan2(dx,dz)}A.last=p.clone();A.grp.position.copy(p);
-  const d=e.d,atkP=!isNpc?(now-(e.at0||-1e9))/(d&&d.boss?760:640):2,atk=(!isNpc&&e.wind&&now<e.wind.t1)?.17:(atkP>=0&&atkP<1?atkP:-1);   // aviso de golpe: se mantiene la pose de anticipación (≈ .17) hasta el tajo
+  const rn=performance.now(),d=e.d,atkP=!isNpc?(rn-(e.at0||-1e9))/(d&&d.boss?760:640):2,atk=(!isNpc&&e.wind&&rn<e.wind.t1)?.17:(atkP>=0&&atkP<1?atkP:-1);   // aviso de golpe: se mantiene la pose de anticipación (≈ .17) hasta el tajo
   // mirar: al atacar o al hablar, hacia el jugador (suave)
   let look=0;const px=P_.x-e.x,py=P_.y-e.y,dp=Math.hypot(px,py);
   if(!isNpc){if(atk>=0||(e.hunt&&dp<120&&dist<1e-4))A.faceT=Math.atan2(px,py)}else if(!(e.mvr&&dist>1e-4)){if(A.baseFace==null)A.baseFace=e.face!=null?e.face:Math.atan2(px,py);A.faceT=(dp<260&&e.face==null)?Math.atan2(px,py):A.baseFace}   /* Fase 25: los que TRABAJAN (e.face) miran a su tajo; los que caminan, hacia donde van */
@@ -414,13 +414,14 @@ export class Actors{
   const spd=dt>0?dist/dt:0;A.mv+=(cl(spd/1.1,0,1.2)-A.mv)*(1-Math.exp(-dt*12));if(A.mv<.03)A.mv=0;
   A.ph+=dist/(A.tpl.cycle*(A.tpl.kind==='human'?1:1))*6.283;
   const wave=isNpc&&!A.tpl.nowave&&dp<110&&Math.sin(t*.35)>.3?1:0;if(isNpc){look=cl(Math.atan2(px,py)-A.face,-1,1)}
+  A.b.root.position.z-=A.pz||0;A.pz=0;   // deshace el retroceso del fotograma anterior (antes se ACUMULABA: el modelo se iba lejos del enemigo lógico)
   ANIM[A.tpl.kind](A,{t,dt,mv:A.mv,at:atk,wave:(isNpc&&e.job)?0:wave,look,job:isNpc?e.job:null});
   // daño: destello 120 ms (m.fl = hasta cuándo) y retroceso breve; hover
-  const fl=!isNpc&&now<e.fl;A.setFlash(fl);A.setHover(e===hov);
+  const fl=!isNpc&&rn<e.fl;A.setFlash(fl);A.setHover(e===hov);
   // aviso de golpe: los ojos se encienden (rampa con parpadeo) y en el último tramo estallan en un fogonazo; tras el tajo se apagan en ~160 ms
-  let ei=0;if(!isNpc&&A.state==='live'){if(e.wind&&now<e.wind.t1){const u=(now-e.wind.t0)/(e.wind.t1-e.wind.t0);ei=Math.min(.55,u*4)+(u>.72?(u-.72)/.28*.45:0)+.06*Math.sin(now*.045)}else if(e.flare&&now-e.flare<160)ei=.9*(1-(now-e.flare)/160)}
+  let ei=0;if(!isNpc&&A.state==='live'){if(e.wind&&rn<e.wind.t1){const u=(rn-e.wind.t0)/(e.wind.t1-e.wind.t0);ei=Math.min(.55,u*4)+(u>.72?(u-.72)/.28*.45:0)+.06*Math.sin(now*.045)}else if(e.flare&&rn-e.flare<160)ei=.9*(1-(rn-e.flare)/160)}
   A.eyeFx(Math.max(0,Math.min(1,ei)));
-  if(!isNpc&&fl){const u=(e.fl-now)/120;A.b.root.position.z-= .05*u}
+  if(!isNpc&&fl){const u=Math.min(1,(e.fl-rn)/120);A.pz=-.05*u;A.b.root.position.z+=A.pz}
   // muerte: cae hacia atrás y se hunde/encoge ~0,9 s
   if(A.state==='dying'){const u=(now-A.td)/900;if(u>=1){A.state='gone';A.vis=false;A.grp.visible=false;if(A.proxy)A.proxy.visible=false;return}const f=ss(0,.45,u),h=ss(.45,1,u);A.b.root.rotation.x=-1.45*f;A.b.root.position.y=A.restP.root.y-.1*f*A.sc;A.grp.scale.setScalar(A.sc*(1-h*.85));A.grp.position.y-=.25*h*A.sc}
   // copia de profundidad: solo si el héroe está cerca (no se dibuja el resto)
