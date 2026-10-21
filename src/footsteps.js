@@ -46,7 +46,7 @@ const FOOT=(()=>{
   g.gain.value=vol*sv*e.g*(G[s]||1)*(run?1.15:1)*(1+(Math.random()-.5)*.2);src.connect(g);g.connect(bus);src.start()}
  // llamada por fotograma con la marcha del héroe 3D: gait = {g: fase gph, run: ¿corriendo?, mv: ¿en marcha?}; suena un paso cada vez que un pie toca el suelo
  function tick3(gait,P){if(!on||!gait)return;try{const k=Math.floor(gait.g*2);if(lk===null||Math.abs(k-lk)>3){lk=k;return}   // salto grande (reaparición, teletransporte): sin paso
-  if(k!==lk){const fwd=k>lk;lk=k;if(fwd&&gait.vis)play(surface(P.x,P.y),gait.run)}}catch(e){}}
+  if(k!==lk){const fwd=k>lk;lk=k;if(fwd&&gait.vis){const sf=surface(P.x,P.y);play(sf,gait.run);if((sf==='snow'||sf==='sand'||sf==='mud')&&window.R3D&&R3D.fx&&R3D.fx.print)R3D.fx.print(P.x,P.y,P.ldx||0,P.ldy||1,k&1,sf)}}}catch(e){}}
  // efectos sueltos del pack (dash, wing, land…): `FOOT.sfx(nombre, volumen)` reproduce una grabación al azar del manifiesto (se descarga la primera vez: ese primer disparo puede no sonar)
  function sfx(name,v){const a=ctx();if(!a||!on||(typeof S!=='undefined'&&S.mute))return;load(name,a);const L=(BUF[name]||[]).filter(Boolean);if(!L.length)return;const e=L[Math.floor(Math.random()*L.length)];
   if(!bus){bus=a.createGain();bus.connect(typeof AMASTER!=='undefined'&&AMASTER?AMASTER:a.destination)}const src=a.createBufferSource(),g=a.createGain(),sv=typeof S!=='undefined'&&S.sv!=null?S.sv/100:1;src.buffer=e.d;src.playbackRate.value=.97+Math.random()*.06;g.gain.value=Math.min(1.2,vol*2*sv*e.g*(v==null?1:v));src.connect(g);g.connect(bus);src.start()}

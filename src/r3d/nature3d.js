@@ -103,13 +103,15 @@ export function deadTreeGeo(seed=1,h=1.75){const V=THREE.Vector3,G=[];G.push(bra
 export function stumpGeo(){const g=jit(new THREE.CylinderGeometry(.13,.18,.2,8).translate(0,.1,0),.02);return g}
 
 // ───────── capa de recursos 3D (árboles talables y menas) ─────────
-const CELL=24,NVAR=3,CS=256;   // CS: celda (px de mundo) del índice de recursos para update()
+const CELL=24,NVAR=3,CS=256;
+const ORECOL=['#c8742a','#e8e8f8','#c0603a','#9a9aa2','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff'];
+const GOLDTEX=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,246,200,1)');r.addColorStop(.25,'rgba(255,214,90,.7)');r.addColorStop(.6,'rgba(255,170,40,.22)');r.addColorStop(1,'rgba(255,150,20,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();   // CS: celda (px de mundo) del índice de recursos para update()
 // El Cielo (ISLA-4): todo lo que está en la columna de la zona (x ≥ BIOMES.zone.x0) usa ÁRBOLES DEL MUNDO (hojas azules) y menas en mármol claro
 const inZone=x=>{try{const z=BIOMES.zone;return !!z&&x>=z.x0}catch(e){return false}};
 export class Resources{
  constructor(scene,occScene,W3){this.scene=scene;this.occ=occScene;this.W3=W3;this.grp=new THREE.Group();this.grp.name='recursos3d';scene.add(this.grp);this.ogrp=new THREE.Group();occScene.add(this.ogrp);
   this.sig='';this.idx=new Map();this.cells=null;this.pend=new Set();this.geo={};this.wmat={};this.dmat=new THREE.MeshBasicMaterial({colorWrite:false});this.on=false;
-  this.hlMat=new THREE.MeshBasicMaterial({color:'#fff0c8',transparent:true,opacity:.28,blending:THREE.AdditiveBlending,depthWrite:false});this.hlFol={};this.hl=new THREE.Group();scene.add(this.hl);this.hlE=null}
+  this.hlMat=new THREE.MeshBasicMaterial({color:'#fff0c8',transparent:true,opacity:.28,blending:THREE.AdditiveBlending,depthWrite:false});this.hlFol={};this.hl=new THREE.Group();scene.add(this.hl);this.hlE=null;this.falls=[];this.gs=new Map();this.ck=null}
  kindOf(e,dead){if(e.t==='wc'){let sp=TREES[e.i]||'roble';if(inZone(e.x))sp='mundo';let bk=0;try{bk=inZone(e.x)?9:Math.max(0,BIOMES.at(e.x,e.y))}catch(x){}return dead?'tocon':sp+'@'+bk+'#'+(Math.floor(hash(Math.round(e.x),Math.round(e.y),5)*NVAR))}
   if(e.t==='mi')return 'mena'+e.i+(inZone(e.x)?'z':'')+(dead?'d':'');return null}
  parts(kind){if(this.geo[kind])return this.geo[kind];let P=[];
@@ -138,18 +140,53 @@ export class Resources{
    ms.forEach(m=>{m.instanceMatrix.needsUpdate=true;m.computeBoundingSphere();m.matrixAutoUpdate=false;m.matrixWorldAutoUpdate=false})});   // estáticos: sin recalcular su matriz cada fotograma (F49a: ~8 700 mallas)
   this.cells=new Map();this.pend=new Set();this.idx.forEach((r,e)=>{const k=Math.floor(e.x/CS)*100003+Math.floor(e.y/CS);let a=this.cells.get(k);if(!a)this.cells.set(k,a=[]);a.push(e,r)});
   this.on=this.idx.size>0;console.info('[R3D recursos]',{grupos:groups.size,recursos:this.idx.size})}
+ // CAÍDA / ROTURA (21 oct 2026; «que se caiga el árbol lentamente, que el mineral se rompa de a poco»): al agotarse un recurso se crea una COPIA que lo anima mientras la instancia ya muestra el tocón/escombro.
+ //  · árbol: cruje y se inclina despacio (≈ 0,6 s), cae hacia el lado contrario al leñador acelerando, rebota al tocar el suelo (hojas y polvo) y se encoge hasta desaparecer (≈ 3 s en total);
+ //  · mena: se parte en 7 trozos que saltan, giran y se encogen, con polvo y chispas del color de la veta.
+ // GRIETAS PROGRESIVAS en la mena que se pica con la rueda (21 oct 2026): grietas oscuras con un hilo de luz del color de la veta que aparecen con el progreso (hasta 15 tramos en 5 grietas), sobre la roca que se encoge.
+ updCracks(e,pg){if(!e||pg<=0){if(this.ck){this.scene.remove(this.ck.g);this.ck=null}return}const r=this.idx.get(e);if(!r||!r.base){return}
+  if(!this.ck||this.ck.e!==e){if(this.ck)this.scene.remove(this.ck.g);const g=new THREE.Group(),ms=[],ore=new THREE.Color(ORECOL[e.i]||'#ffd27a'),dm=new THREE.MeshBasicMaterial({color:'#150e0a'}),gm=new THREE.MeshBasicMaterial({color:ore,blending:THREE.AdditiveBlending,transparent:true,opacity:.85,depthWrite:false});
+   const A_=.41,B_=.21,C_=.3,CY=.17,pt=(u,v)=>new THREE.Vector3(A_*Math.cos(v)*Math.cos(u),CY+B_*Math.sin(v),C_*Math.cos(v)*Math.sin(u)).multiplyScalar(1.04);
+   for(let j=0;j<5;j++){let u=hash(e.x|0,e.y|0,40+j)*6.283,v=1.15-hash(e.x|0,e.y|0,50+j)*.4;for(let s=0;s<3;s++){const u2=u+(hash(j,s,e.x|0)-.35)*.55,v2=Math.max(.05,v-.2-hash(s,j,e.y|0)*.2),a=pt(u,v),b=pt(u2,v2),len=a.distanceTo(b),mid=a.clone().add(b).multiplyScalar(.5),dir=b.clone().sub(a).normalize(),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+     const mk=(mat,rad)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(rad,rad,len,4),mat);m.position.copy(mid);m.quaternion.copy(q);m.visible=false;g.add(m);return m};ms.push([mk(dm,.013),mk(gm,.006)]);u=u2;v=v2}}
+   this.scene.add(g);this.ck={g,e,ms}}
+  const b=r.base,c=this.ck;c.g.position.copy(b.p);c.g.quaternion.copy(b.q);c.g.scale.setScalar(b.s*(1-.3*pg));const n=Math.ceil(pg*c.ms.length);c.ms.forEach((m,i)=>{m[0].visible=i<n;m[1].visible=i<n&&pg>.35})}
+ // RECURSO DORADO (ultra raro): halo cálido que late + destellos que suben; el botín es ×4 (game.js fin)
+ gold(e,r,t){let g=this.gs.get(e);if(!g){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:GOLDTEX,color:'#ffd861',transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.9}));sp.renderOrder=7;this.scene.add(sp);g={sp,k:-1};this.gs.set(e,g)}
+  const dead=typeof alive==='function'&&!alive(e,performance.now());g.sp.visible=!dead;if(dead||!r.base)return;const tall=e.t==='wc';g.sp.position.set(r.base.p.x,r.base.p.y+(tall?2.1:.4),r.base.p.z);g.sp.scale.setScalar((tall?2.6:1.4)*(1+.12*Math.sin(t*3+e.x)));
+  const k=Math.floor(t*2.5),f=window.R3D&&R3D.fx;if(k!==g.k){g.k=k;if(f)f.spark(e.x,e.y,tall?44:14,'#ffe9a0',3,{spread:.5,up:.8,g:-.3,size:.09,life:1.2})}}
+ // copias desechables (mallas NO instanciadas) de todo lo que puede caer o romperse, para precompilar sus programas durante la carga y evitar el tirón de la primera tala (R3D.warmShaders)
+ warmObjs(){const out=[],seen=new Set();Object.values(this.geo).forEach(P=>P.forEach(pt=>{if(!seen.has(pt.mat)){seen.add(pt.mat);const m=new THREE.Mesh(pt.g,pt.mat);m.position.y=-80;m.frustumCulled=false;out.push(m)}if(pt.ink&&!seen.has(pt.inkM)){seen.add(pt.inkM);const h=new THREE.Mesh(pt.ink,pt.inkM);h.position.y=-80;h.frustumCulled=false;out.push(h)}}));{const cg=new THREE.CylinderGeometry(.01,.01,.1,4);[new THREE.MeshBasicMaterial({color:'#150e0a'}),new THREE.MeshBasicMaterial({color:'#ffd27a',blending:THREE.AdditiveBlending,transparent:true,opacity:.85,depthWrite:false})].forEach(mt=>{const m=new THREE.Mesh(cg,mt);m.position.y=-80;m.frustumCulled=false;out.push(m)});const gs=new THREE.Sprite(new THREE.SpriteMaterial({map:GOLDTEX,color:'#ffd861',transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));gs.position.y=-80;out.push(gs)}return out}
+ fell(e,fx,fy){const r=this.idx.get(e);if(!r||!r.a||!r.base)return;const P=this.parts(this.kindOf(e,false)),b=r.base;let dx=e.x-fx,dy=e.y-fy;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
+  const piv=new THREE.Group();piv.position.copy(b.p);const inner=new THREE.Group();inner.quaternion.copy(b.q);inner.scale.setScalar(b.s);piv.add(inner);
+  if(e.t==='mi'){const pcs=[];for(let i=0;i<7;i++){const pt=P[0],m=new THREE.Mesh(pt.g,pt.mat),a=hash(i,3,e.x|0)*6.283,sp=.9+hash(i,4,e.y|0)*1.5;m.scale.setScalar(b.s*(.28+hash(i,5,2)*.2));m.position.set(0,.18,0);m.rotation.set(hash(i,6,1)*6,hash(i,7,1)*6,0);piv.add(m);pcs.push({m,vx:Math.cos(a)*sp,vz:Math.sin(a)*sp,vy:2+hash(i,8,3)*2.4,wx:(hash(i,9,1)-.5)*10,wz:(hash(i,10,1)-.5)*10,s:m.scale.x,b:0})}
+   this.scene.add(piv);this.falls.push({piv,mine:1,pcs,t0:null,gy:b.p.y,e});return}
+  P.forEach(pt=>{inner.add(new THREE.Mesh(pt.g,pt.mat));if(pt.ink)inner.add(new THREE.Mesh(pt.ink,pt.inkM))});this.scene.add(piv);this.falls.push({piv,inner,dx,dy,t0:null,e,base:b,hit:0})}
+ updFalls(t,dt){const fx=window.R3D&&R3D.fx,Q=new THREE.Quaternion();
+  for(let i=this.falls.length-1;i>=0;i--){const f=this.falls[i];if(f.t0==null)f.t0=t;const u=f.hold!=null?f.hold:t-f.t0,piv=f.piv;   // f.hold = tiempo fijo (solo para capturas de prueba)
+   if(f.mine){let live=0;f.pcs.forEach(c=>{c.vy-=9*dt;c.m.position.x+=c.vx*dt;c.m.position.y+=c.vy*dt;c.m.position.z+=c.vz*dt;if(c.m.position.y<.05&&c.vy<0){c.m.position.y=.05;if(c.b<1){c.vy*=-.3;c.vx*=.5;c.vz*=.5;c.b++}else{c.vy=0;c.vx*=.7;c.vz*=.7}}c.m.rotation.x+=c.wx*dt;c.m.rotation.z+=c.wz*dt;const k=Math.max(0,Math.min(1,(1.15-u)/.35));c.m.scale.setScalar(c.s*k);live+=k>0?1:0});
+    if(u>1.2){this.scene.remove(piv);this.falls.splice(i,1)}continue}
+   // árbol: 0–.6 cruje · .6–1.8 cae (acelera) · 1.8–2.05 rebota · hasta 2.7 yace · 2.7–3.3 se encoge
+   let ang;if(u<.6){const k=u/.6;ang=.05*k*k+Math.sin(u*40)*.012*k}else if(u<1.8){const s=(u-.6)/1.2;ang=.05+(Math.PI/2-.05)*s*s*(1.55-.55*s)}else if(u<2.05){ang=Math.PI/2-.07*Math.sin((u-1.8)/.25*Math.PI)}else ang=Math.PI/2;
+   if(u>=1.8&&!f.hit){f.hit=1;if(fx){const bx=piv.position.x+f.dx*2.1,bz=piv.position.z+f.dy*2.1,wx=bx*32,wz=bz*32;fx.chips('leaf',wx,wz,8,26,'#6fb24a',{spread:2.2,size:1.2});fx.chips('wood',wx,wz,6,8,'#8a6a42',{spread:1.6});fx.smoke(wx,wz,2,'#b8a888',5,{size:.3,grow:3.4,life:1.2,up:.35,spread:.9,alpha:.4});if(typeof SHK!=='undefined')SHK=Math.max(SHK,performance.now()+140)}}
+   Q.setFromAxisAngle(new THREE.Vector3(f.dy,0,-f.dx),ang);piv.quaternion.copy(Q);
+   if(u>2.7){const k=Math.max(0,1-(u-2.7)/.6);piv.scale.setScalar(k);piv.position.y=f.base.p.y-.25*(1-k)}
+   if(u>3.3){this.scene.remove(piv);this.falls.splice(i,1)}}}
  // cada fotograma: vivo/agotado (cambia de instancia), temblor del que se está talando, resalte bajo el puntero
- update(now,t,hov,act){const s=this.sign();if(s!==this.sig){this.sig=s;this.build(now)}
+ update(now,t,hov,act,dt){const s=this.sign();if(s!==this.sig){this.sig=s;this.build(now)}if(this.falls.length)this.updFalls(t,dt||.016);
   const o3=new THREE.Object3D(),Z=new THREE.Matrix4().makeScale(0,0,0);
   // temblor SOLO al recibir el golpe (pedido del dueño): swPh() de game.js vale 0 en el impacto y crece hasta 1 en el siguiente golpe → amortiguado en el primer ~20 % del ciclo
-  const hitK=e=>{if(act!==e||e.t!=='wc'||typeof swPh!=='function')return 0;try{const f=swPh(now);return f<.22?Math.pow(1-f/.22,2):0}catch(x){return 0}};
+  const hitK=e=>{if(act!==e)return 0;try{if(typeof A!=='undefined'&&A&&A.wh){const f=(performance.now()-(A.h0+300))/340;return f>=0&&f<1?Math.pow(1-f,2):0}   // rueda de recolección: el temblor sale del golpe del jugador (impacto a los 300 ms de pulsar)
+   if(e.t!=='wc'||typeof swPh!=='function')return 0;const f=swPh(now);return f<.22?Math.pow(1-f/.22,2):0}catch(x){return 0}};
+  const prog=e=>{try{return act===e&&typeof A!=='undefined'&&A&&A.wh?Math.min(1,A.pr||0):0}catch(x){return 0}};   // progreso de la rueda: el recurso se va deshaciendo / inclinando
   // Fase 49a (rendimiento): con 9 biomas hay ~13 700 recursos; recorrerlos todos cada fotograma costaba ~+6 ms. Solo cambian de estado los que están cerca del héroe (talar/minar) o los ya agotados (`pend`, hasta que reviven).
-  const proc=(r,e)=>{const dead=typeof alive==='function'?!alive(e,now):false,hk=dead?0:hitK(e),shake=hk>0,st=(dead?'d':'a')+(shake?'s':'');if(dead)this.pend.add(e);else this.pend.delete(e);if(st===r.state&&!shake)return;r.state=st;
+  const proc=(r,e)=>{const dead=typeof alive==='function'?!alive(e,now):false,hk=dead?0:hitK(e),shake=hk>0,pg=dead?0:prog(e),st=(dead?'d':'a')+(shake?'s':'')+Math.round(pg*12);if(dead)this.pend.add(e);else this.pend.delete(e);if(st===r.state&&!shake)return;r.state=st;
    const show=dead?r.d:r.a,hide=dead?r.a:r.d;if(hide)hide.ms.forEach(m=>{m.setMatrixAt(hide.i,Z);m.instanceMatrix.needsUpdate=true});
-   if(show){o3.position.copy(r.base.p);o3.quaternion.copy(r.base.q);o3.scale.setScalar(r.base.s);if(shake){o3.rotation.z+=Math.sin(t*42)*.05*hk;o3.rotation.x+=Math.cos(t*35)*.03*hk}o3.updateMatrix();show.ms.forEach(m=>{m.setMatrixAt(show.i,o3.matrix);m.instanceMatrix.needsUpdate=true})}};
-  if(typeof P!=='undefined'&&this.cells){const ci=Math.floor(P.x/CS),cj=Math.floor(P.y/CS);for(let a=ci-3;a<=ci+3;a++)for(let b=cj-3;b<=cj+3;b++){const q=this.cells.get(a*100003+b);if(q)for(let n=0;n<q.length;n+=2)proc(q[n+1],q[n])}
+   if(show){o3.position.copy(r.base.p);o3.quaternion.copy(r.base.q);o3.scale.setScalar(r.base.s*(e.t==='mi'?1-.3*pg+.05*hk:1));if(pg>0)o3.rotation.x+=.05*pg;if(shake){const am=e.t==='mi'?.07:.05;o3.rotation.z+=Math.sin(t*42)*am*hk;o3.rotation.x+=Math.cos(t*35)*.03*hk}o3.updateMatrix();show.ms.forEach(m=>{m.setMatrixAt(show.i,o3.matrix);m.instanceMatrix.needsUpdate=true})}};
+  if(typeof P!=='undefined'&&this.cells){const ci=Math.floor(P.x/CS),cj=Math.floor(P.y/CS);for(let a=ci-3;a<=ci+3;a++)for(let b=cj-3;b<=cj+3;b++){const q=this.cells.get(a*100003+b);if(q)for(let n=0;n<q.length;n+=2){if(q[n].g)this.gold(q[n],q[n+1],t);proc(q[n+1],q[n])}}
    this.pend.forEach(e=>{const r=this.idx.get(e);if(r)proc(r,e)});if(act&&this.idx.has(act))proc(this.idx.get(act),act)}
   else this.idx.forEach((r,e)=>proc(r,e));
+  {const ae=(act&&act.t==='mi'&&this.idx.has(act)&&typeof A!=='undefined'&&A&&A.wh)?act:null;this.updCracks(ae,ae?Math.min(1,A.pr||0):0)}   // grietas de la mena activa
   // resalte: copia del modelo con luz aditiva (más clara) solo en la entidad bajo el puntero
   const he=hov&&this.idx.has(hov)?hov:null;if(he!==this.hlE){this.hlE=he;this.hl.clear();if(he){const dead=typeof alive==='function'&&!alive(he,now),P=this.parts(this.kindOf(he,dead)),r=this.idx.get(he);
     P.forEach(pt=>{const m=new THREE.Mesh(pt.g,pt.fol?(this.hlFol[pt.fol]||(this.hlFol[pt.fol]=Object.assign(this.hlMat.clone(),{map:leafTex(pt.fol),alphaTest:.5,side:THREE.DoubleSide}))):this.hlMat);m.renderOrder=3;this.hl.add(m);

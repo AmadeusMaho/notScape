@@ -124,7 +124,7 @@ Object.keys(SW).forEach(k=>WSP[k]=4);Object.keys(BOW).forEach(k=>WSP[k]=4);Objec
   else if(STF[id]){STF[v]=bump(STF,'st_',id,q,1);WSP[v]=5;WB[v]=STF[v]}else if(AR[id])AR[v]=bump(AR,'ar_',id,q,1);else if(SHL[id])SHL[v]=bump(SHL,'sh_',id,q,1);else if(LGL[id])LGL[v]=bump(LGL,'lg_',id,q,1);else if(GLL[id])GLL[v]=bump(GLL,'gl_',id,q,1);
   else if(TOOLT[id]){const T=TOOLT[id],P2={wc:['frenzy','gsage'],mi:['precise','lucky'],fi:['lucky','frenzy']}[T.k],pa=q>=2?[{id:P2[0],v:PS[P2[0]].b*(1+.1*T.t)*(q===3?1.5:1)}]:null;if(q===3)pa.push({id:P2[1],v:PS[P2[1]].b*(1+.1*T.t)*.8});TOOLT[v]={k:T.k,t:T.t,bq:FR[q],pa}}}})}
 // lote D8: calidad de lo FABRICADO bajada (antes verde hasta 25 %, azul 7 %, épico 1 %): ahora techo verde 8 %, azul 1,2 %, épico 0,15 % (con la mejora `crf` sube un poco)
-function qv(id,sk){if(LOOT[id]||!(SW[id]||BOW[id]||STF[id]||AR[id]||SHL[id]||LGL[id]||GLL[id]||TOOLT[id]))return id;const l=L(sk),g=Math.min(.08,.015+l*.001),b=l<20?0:Math.min(.012,.002+(l-20)*.0002),e=l<40?0:Math.min(.0015,.0002+(l-40)*.00002),r=Math.random()/(1+.12*S.crf),q=r<e?3:r<e+b?2:r<e+b+g?1:0;return q?id+'~'+q:id}
+function qv(id,sk){if(LOOT[id]||!(SW[id]||BOW[id]||STF[id]||AR[id]||SHL[id]||LGL[id]||GLL[id]||TOOLT[id]))return id;const l=L(sk),g=Math.min(.08,.015+l*.001),b=l<20?0:Math.min(.012,.002+(l-20)*.0002),e=l<40?0:Math.min(.0015,.0002+(l-40)*.00002),r=Math.random()/(1+.12*S.crf)/QBON,q=r<e?3:r<e+b?2:r<e+b+g?1:0;return q?id+'~'+q:id}
 function gs(k){let t=0;for(const sl of EQK){const it=LOOT[S.eq[sl]];if(it&&it.st[k])t+=it.st[k]}for(const sl of['a','s','l','g','m']){const id=S.eq[sl],c=id&&CST[String(id).split('~')[0]];if(c&&c[k])t+=c[k]} // lote C1: bonus de clase de las piezas de cuero (Precisión) y túnica (Maná, Regen.)
  return t}
 function pv(id){let t=0;for(const sl of EQK){const it=LOOT[S.eq[sl]];if(it&&it.pa)it.pa.forEach(p=>{if(p.id===id)t+=p.v})}return t}
@@ -390,13 +390,13 @@ const N=[],M=[],ST=[],PD=[],PO=[],GD=[],GA=[];   // GD = objetos en el suelo (dr
 // punto de pesca válido: agua abierta (el tile y sus vecinos), a ≤84 px de tierra pisable (se pesca desde la orilla con el alcance de la caña) y lejos de otros puntos de pesca
 const fishOk=(x,y)=>{const hw=(a,b)=>TER.heightAt(x+a,y+b)===.75;if(!hw(0,0)||!hw(14,0)||!hw(-14,0)||!hw(0,12)||!hw(0,-12))return false;
  for(const r of[36,60,84])for(let k=0;k<12;k++){const a=k*Math.PI/6;if(TER.isLand(TER.heightAt(x+Math.cos(a)*r,y+Math.sin(a)*r)))return true}return false};
-const relocate=e=>{if(e.fix){e.g=Math.random()<.04;return}   // fix = árbol fijo (decorativo convertido en recurso): reaparece donde estaba
+const relocate=e=>{if(e.fix){e.g=Math.random()<.004;return}   // fix = árbol fijo (decorativo convertido en recurso): reaparece donde estaba
  if(e.t==='fi'){let bx=null;for(let a=0;a<110&&!bx;a++){const x=e.z[0]+Math.random()*(e.z[1]-e.z[0]),y=e.z[2]+Math.random()*(e.z[3]-e.z[2]),sp=a<70?64:34;if(fishOk(x,y)&&!N.some(o=>o!==e&&o.t==='fi'&&Math.hypot(o.x-x,o.y-y)<sp))bx=[x,y]}if(bx){e.x=bx[0];e.y=bx[1]}
   // punto de orilla desde el que se pesca: el suelo pisable más cercano (la ruta del jugador va hacia él, no en línea recta por encima del agua)
   e.st=[];for(let r=24;r<=96;r+=12)for(let k=0;k<24;k++){const an=k*Math.PI/12,x=e.x+Math.cos(an)*r,y=e.y+Math.sin(an)*r;if(TER.isLand(TER.heightAt(x,y))&&!TER.cliffNear(x,y,10)&&!PROPS.solid(x,y)&&TER.isLand(TER.heightAt(x+8,y))&&TER.isLand(TER.heightAt(x-8,y))&&TER.isLand(TER.heightAt(x,y+8))&&TER.isLand(TER.heightAt(x,y-8)))e.st.push([x,y])}
-  e.g=Math.random()<.04;return}
+  e.g=Math.random()<.004;return}
  // Fase 49b: la costa del continente (src/coast.js) puede dejar parte de una zona de recurso en el MAR: el nodo solo cae en TIERRA pisable (≥ 36 intentos); si la zona entera es mar, `e.bad` (sp0 no lo crea)
- e.bad=0;let ok=0;const ox0=e.x,oy0=e.y;for(let a=0;a<(BIOMES.coast&&BIOMES.coast.on?36:10);a++){e.x=e.z[0]+Math.random()*(e.z[1]-e.z[0]);e.y=e.z[2]+Math.random()*(e.z[3]-e.z[2]);if(BIOMES.coast&&BIOMES.coast.on&&!TER.isLand(TER.heightAt(e.x,e.y)))continue;ok=1;if(!N.some(o=>o!==e&&Math.hypot(o.x-e.x,o.y-e.y)<34))break}if(!ok&&BIOMES.coast&&BIOMES.coast.on){e.bad=1;e.x=ox0;e.y=oy0}e.g=Math.random()<.04};
+ e.bad=0;let ok=0;const ox0=e.x,oy0=e.y;for(let a=0;a<(BIOMES.coast&&BIOMES.coast.on?36:10);a++){e.x=e.z[0]+Math.random()*(e.z[1]-e.z[0]);e.y=e.z[2]+Math.random()*(e.z[3]-e.z[2]);if(BIOMES.coast&&BIOMES.coast.on&&!TER.isLand(TER.heightAt(e.x,e.y)))continue;ok=1;if(!N.some(o=>o!==e&&Math.hypot(o.x-e.x,o.y-e.y)<34))break}if(!ok&&BIOMES.coast&&BIOMES.coast.on){e.bad=1;e.x=ox0;e.y=oy0}e.g=Math.random()<.004};
 const sp0=(t,i,n,x0,x1,y0,y1)=>{for(let k=0;k<n;k++){const e={t,i,x:0,y:0,rt:0,z:[x0,x1,y0,y1]};relocate(e);if(!e.bad)N.push(e)}};
 Object.keys(MD).forEach(id=>{MD[id].id=id;if(CRE.H[id])MD[id].h=Math.round(CRE.H[id]/1.5)});
 // fase B (Oración): los enemigos fuertes sueltan además huesos mejores (más XP de Oración): ≥lv25 grande · ≥50 antiguo · ≥75 rúnico; jefes y capitanes también aunque no soltaran hueso
@@ -428,7 +428,7 @@ const RUDX=100,RUDY=74;   // Ru respecto al puesto de la tienda (14 oct 2026: an
   ZS.push({k,r:[x-p.r,x+p.r,y-p.r,y+p.r],t:(p.k==='camp'?'🏕️ ':sant?'⛩️ ':'🧰 ')+p.n,poi:id})});
  if(!b.noBoss)mob('b'+k,x0+b.bossPos[0],y0+b.bossPos[1])});   // Fase 49a: los biomas esqueleto (Páramo, Desierto, Costa) aún no tienen jefe
 // árboles decorativos (cualquier prop con el sprite de un árbol de TREES) = recursos talables: misma especie, mismo tier. Fijos (fix) y con colisión de tronco.
-PROPS.trees.forEach(t=>{N.push({t:'wc',i:t.i,x:t.x,y:t.y,rt:0,z:[t.x,t.x,t.y,t.y],fix:1,g:Math.random()<.04})});
+PROPS.trees.forEach(t=>{N.push({t:'wc',i:t.i,x:t.x,y:t.y,rt:0,z:[t.x,t.x,t.y,t.y],fix:1,g:Math.random()<.004})});
 PROPS.scatter({ST,ZS,N,M});if(!/nodoors/.test(location.search))intDoorsInit();npcInit();   // Fase 6: Guardia, Herrera y Anciano (src/npcs.js), tras las puertas
 
 const FISHR=104;   // alcance de la caña (px de mundo): se pesca desde la orilla sin pisar el agua
@@ -485,13 +485,14 @@ function inc(k,n=1){S.st[k]=(S.st[k]||0)+n;chk()}
 const earn=n=>{S.coins+=n;inc('coins',n);if(n>0)COINLOG.push([Date.now(),n])};
 const add=id=>{S.inv.push(id);inc('got:'+id);disc(id)};
 function disc(id){if(!S.disc[id]&&!id.includes('~')){S.disc[id]=1;S.st.disc=Object.keys(S.disc).length;log('📖 ¡Nuevo objeto! '+I[id][0]);snd('xp');chk()}}
-function sp(x,y,c,n,vx,vy,g){for(let k=0;k<n;k++)parts.push({x,y,vx:(Math.random()-.5)*vx,vy:-Math.random()*vy,g,l:1,c})}
+/* partículas: ahora 3D y suaves (src/r3d/fx3d.js, `R3D.fx.sp` clasifica por color/gravedad); el sistema 2D de píxeles solo queda como plan B */
+function sp(x,y,c,n,vx,vy,g){if(window.R3D&&R3D.fx){R3D.fx.sp(x,y,c,n,vx,vy,g);return}for(let k=0;k<n;k++)parts.push({x,y,vx:(Math.random()-.5)*vx,vy:-Math.random()*vy,g,l:1,c})}
 function gain(sk,xp,sil){xp*=(1+.05*S.wis)*(S.buf.xp>Date.now()?1.5:1)*(sk==='cb'||sk==='mg'||sk==='ra'?1+pv('savant')/100:TOOLS[sk]?1+tpv(sk,'gsage')/100:1);const o=L(sk);S.xp[sk]+=xp;if(typeof ISLA!=='undefined'&&ISLA.lock()){S.xp[sk]=Math.min(S.xp[sk],XT[2]-1);if(!S.awk)S.awk={};if(!S.awk[sk]){S.awk[sk]=1;try{banner('Despiertas',SK[sk][1]+' '+SK[sk][0],'#e8cf94',3000);log('✨ <b>'+SK[sk][0]+'</b> despierta: nivel 1.');snd('lvl');dirty=1}catch(e){}}}   /* NIVELES DESPIERTOS (isla del Cielo): todo empieza dormido (nivel 0); el primer éxito de cada oficio lo despierta (nivel 1) y la XP se recorta justo bajo el nivel 2 hasta terminar el tutorial */
  if(!sil)snd('xp');if(TB==='sk')skLive(sk); /* actualiza solo la barra y el texto de esa skill; subir de nivel marca dirty (rebuild) más abajo */const n=L(sk);
  if(!sil){if(typeof HUDSU!=='undefined'&&HUDSU.ok)HUDSU.xp(sk,xp,n>o,n)}
  if(n>o){S.st['lvl:'+sk]=n;S.st.tot=SKL.reduce((s,k)=>s+L(k),0);banner('¡Nivel '+n+'!',SK[sk][1]+' '+SK[sk][0],'#e8cf94',3200);log('¡Nivel '+n+' en '+SK[sk][0]+'!');sp(P.x,P.y-20,'#e8cf94',24,160,120,200);snd('lvl');if(sk==='cb'||sk==='ra'||sk==='mg')P.hp=maxHp();chk();dirty=1}}
 const gOk=a=>{const g=GATE[a[2]];return !g||L(g[0])>=g[1]};   // lote C5: requisito extra de otra skill (munición: Arquería)
-function stepAct(sk,i,sil){const a=ACT[sk][i],cr=a.length===6;
+function stepAct(sk,i,sil,at){const a=ACT[sk][i],cr=a.length===6;
  if(L(sk)<rq(a)||!gOk(a))return 0;
  if(cr){if(!hasIn(a[1])){if(!sil)log('Te faltan materiales.');return 0}
   if(ownT(a)){if(!sil)log('Ya tienes esa herramienta o una mejor.');return 0}take(a[1]);
@@ -499,14 +500,121 @@ function stepAct(sk,i,sil){const a=ACT[sk][i],cr=a.length===6;
   else{if(a[2]&&a[2].startsWith('rn_')){const[rid,n]=a[2].split(':'),rk=rid.slice(3);S.runes[rk]=(S.runes[rk]||0)+ +n;disc(rid);inc('make:'+rid)}else if(a[2]){const vid=qv(a[2],sk);add(vid);for(let q=1;q<(OUTN[a[2]]||1);q++)add(vid);autoEq(vid);inc('make:'+a[2]);if(vid!==a[2]){const q=+vid.split('~')[1];log('<span style="color:'+RAR[q][1]+'">✨ ¡Calidad '+RAR[q][0].toLowerCase()+'!</span>');if(q>=2){toast('🔨 <span style="color:'+RAR[q][1]+'">¡Calidad '+RAR[q][0].toLowerCase()+'!</span><br>'+I[a[2]][0]);snd('rare')}}}else inc('fm');gain(sk,a[4],sil);if(!sil)log(!a[2]?'Quemas '+a[0].slice(7):a[2].startsWith('tl:')||a[2].startsWith('rn_')?'Fabricas: '+a[0]:'Obtienes: '+(OUTN[a[2]]?OUTN[a[2]]+'× ':'')+I[a[2]][0])}
   return 1}
  if(!room(a[1])){if(!sil)log('Inventario lleno. Vende o usa el banco.');return 0}
- add(a[1]);if(!sil&&room(a[1])&&Math.random()*100<pv('harvest')+4*S.hv){add(a[1]);log('✨ ¡Cosecha doble!')}gain(sk,a[3],sil);if(!sil)log('Obtienes: '+I[a[1]][0]);
- const r=RARE[sk];if(r&&room(r[0])&&Math.random()<(1+.25*S.luck+tpv(sk,'lucky')/100)/r[1]){add(r[0]);inc('rare');snd('rare');toast(ic(r[0])+' ¡Drop raro: <b>'+I[r[0]][0]+'</b>!',3000);log('¡Drop raro! '+I[r[0]][0])}
+ const D=at?(id=>dropGround(id,at.x,at.y,{au:1})):add;   // con la rueda el botín sale como objeto 3D que vuela a tu mano (recogida magnética)
+ D(a[1]);if(!sil&&room(a[1])&&Math.random()*100<pv('harvest')+4*S.hv){D(a[1]);log('✨ ¡Cosecha doble!')}gain(sk,a[3],sil);if(!sil)log('Obtienes: '+I[a[1]][0]);
+ const r=RARE[sk];if(r&&room(r[0])&&Math.random()<(1+.25*S.luck+tpv(sk,'lucky')/100)/r[1]){if(at)dropGround(r[0],at.x,at.y,{au:1,rare:1});else add(r[0]);inc('rare');snd('rare');toast(ic(r[0])+' ¡Drop raro: <b>'+I[r[0]][0]+'</b>!',3000);log('¡Drop raro! '+I[r[0]][0])}
  return 1}
 function stopA(m){A=null;S.cur=null;if(m)log(m);dirty=1}
+/* RUEDA DE RECOLECCIÓN Y CRAFTEO (v2, 21 oct 2026; decisión del dueño: «como New World: una rueda, satisfactorio»): Tala, Minería, Pesca y los oficios de crafteo de estación (Herrería, Artesanía, Escultor, Inscripción). La Cocina conserva su minijuego `CK`.
+   Ya NO se pica solo: un anillo con un marcador que gira y un ARCO de acierto (con núcleo «perfecto»); cada pulsación (clic izquierdo o E) es un golpe: arco = bueno, núcleo = perfecto (×1,3), fuera = flojo (×0,55). Sin racha. Acertar solo ACELERA un poco.
+   · Recolección: golpes por recurso `whHits`; el botín sale como OBJETO 3D que vuela a tu mano (`dropGround{au:1}` con recogida magnética tras 650 ms); el recurso cae/se rompe (`Resources.fell`) con grietas progresivas en la mena; recursos DORADOS (`e.g`, ultra raros, 0,4 %) = arco más estrecho y botín ×4.
+   · Crafteo: cada pieza pide `whHitsC` golpes; la precisión sube la probabilidad de CALIDAD (`QBON` en `qv`); al terminar una pieza sigue la tanda (QTY) pidiendo golpes otra vez.
+   · Feedback: sonido sintético por material (`whSnd`), partículas 3D (`whFx`), muescas de golpes en el anillo interior, y al PERFECTO un hit-stop de 45 ms + un destello dorado SUAVE en los bordes (`PLS`; sin zoom ni movimiento de cámara; se apaga en Opciones → «Pulso de impacto»).
+   Sin Math.random en la lógica (PRNG `whR`, por si hay online). Pendiente: sonidos con grabaciones, balance de XP (meas_progresion.py), cocina con rueda. */
+const WHEEL_SK={wc:1,mi:1};   // la rueda es SOLO para extraer recursos de golpe (tala, minería); pesca y crafteo tendrán minijuegos distintos (decisión del dueño, 21 oct)
+let whSeed=7;const whR=()=>(whSeed=(whSeed*16807)%2147483647)/2147483647,TAU2=Math.PI*2;
+const whAng=now=>(((now-A.wm0)/A.wrev)%1+1)%1*TAU2,whDiff=(a,b)=>{let d=Math.abs(a-b)%TAU2;return d>Math.PI?TAU2-d:d};
+/* Golpes por recurso: `2 × vida del recurso ÷ daño de la herramienta SIN el bono del tier 0`, entre 3 y 12 (herramienta del tier del recurso ≈ 6; mejor = menos; peor = más). */
+const whHits=(sk,a)=>Math.max(3,Math.min(12,Math.round(2*nodeHp(a)/(Math.pow(NODER,S.tool[sk]||0)*(1+L(sk)*.01)*(1+.18*(S.tq[sk]||0))))));
+const whHitsC=a=>Math.max(3,Math.min(8,Math.round(a[a.length-1]/650)));   // crafteo: más tiempo de receta = más golpes
+let QBON=1;   // bono de calidad por precisión (lo usa qv durante el crafteo)
+let PULSE_ON=true;try{PULSE_ON=localStorage.getItem('ns_pulse')!=='0'}catch(e){}let PLS=0;
+function tgPulse(){PULSE_ON=!PULSE_ON;try{localStorage.setItem('ns_pulse',PULSE_ON?1:0)}catch(e){}const b=document.getElementById('pulb');if(b)b.textContent='✨ Parada de impacto: '+(PULSE_ON?'SÍ':'NO')}
+setTimeout(()=>{const b=document.getElementById('pulb');if(b)b.textContent='✨ Parada de impacto: '+(PULSE_ON?'SÍ':'NO')},0);
+function whPulse(now){if(!PULSE_ON)return;if(window.R3D&&!(typeof CINE!=='undefined'&&CINE.on)){R3D.tscale=.06;clearTimeout(window.__hs);window.__hs=setTimeout(()=>{if(!(typeof CINE!=='undefined'&&CINE.on))R3D.tscale=1},45)}SHK=Math.max(SHK,now+70)}
+function whInit(now){const c=A.ty==='c',t=c?0:(S.tool[A.sk]||0),lv=L(A.sk),a=ACT[A.sk][A.i],gold=!c&&!!(A.e&&A.e.g);
+ Object.assign(A,{wh:1,wrev:c?1650:Math.max(1000,1750-t*55),whalf:Math.min(.8,.4+lv*.003+t*.008)*(gold?.7:1),wm0:now,h0:-1e9,hq:0,wc:now+300,wl:now,fl:null,hit:0,gold,perf:0,tot:0,amt:1/(c?whHitsC(a):whHits(A.sk,a))});A.wper=A.whalf*.34;A.wa=(whAng(now)+Math.PI)%TAU2;
+ if(!S.hintWh){S.hintWh=1;toast('🎯 Pulsa <b>clic</b> o <b>E</b> cuando el marcador esté en el arco dorado.',5000)}}
+function whPress(now){if(!A||!A.wh||now<A.wc)return;const th=whAng(now),d=whDiff(th,A.wa),q=d<=A.wper?2:d<=A.whalf?1:0;
+ A.hq=q+1;A.h0=now;A.wc=now+260;A.wl=now;A.fl={t:now,q};A.tot++;if(q===2)A.perf++;A.wa=(th+Math.PI*(.55+.9*whR()))%TAU2;   // el arco salta lejos del marcador tras cada golpe
+ if(q===2)tone(700,.11,'triangle',.07);else if(q===1)tone(470,.08,'triangle',.05);else tone(170,.07,'sawtooth',.03)}
+/* sonido sintético por material (no hay grabaciones de hacha/pico en los packs): madera = golpe sordo con cuerpo, piedra = chasquido seco y metálico, pesca = salpicadura, forja = yunque */
+function whSnd(k,q){const r=whR(),v=q===2?1.2:q===1?1:.7;
+ if(k==='wc'){noise(.06,.17*v,760+r*340,'bandpass');tone(130+r*40,.1,'sine',.2*v,-70);if(q===2)tone(900,.07,'triangle',.05)}
+ else if(k==='mi'){noise(.045,.15*v,3800+r*1500,'highpass');tone(1350+r*500,.08,'square',.035*v,-500);tone(95,.08,'sine',.12*v,-40)}
+ else if(k==='fi'){noise(.2,.1*v,1800,'bandpass');tone(500+r*200,.06,'sine',.05*v,300)}
+ else if(k==='sm'){tone(1900+r*400,.12,'triangle',.06*v,-300);tone(220,.1,'square',.07*v,-60);noise(.05,.08,4200,'highpass')}
+ else snd(k)}
+function whFx(k,e,q){const f=window.R3D&&R3D.fx;if(!f)return;const n=q===2?1:q===1?.6:.3;
+ if(k==='wc'){const LEAF=['#79b043','#3f8a52','#8a9a3a','#4a6a58','#e49aae','#c8542c','#7a5ab0','#c8a640','#3ab0a0','#4585e0'][curB]||'#79b043';f.chips('wood',e.x,e.y,22,Math.round(6*n)+1,'#b08a5a',{spread:1.6});f.chips('leaf',e.x,e.y,52,Math.round(9*n)+1,LEAF,{spread:1.2});f.smoke(e.x+8,e.y,4,'#b8a888',1,{size:.12,grow:2.2,life:.5,up:.12,alpha:.2,spread:.5});if(q===2)f.spark(e.x,e.y,30,'#fff0b8',7,{up:1.3,g:2.5,size:.09,life:.7})}
+ else if(k==='mi'){const ORE=['#c8742a','#e8e8f8','#c0603a','#9a9aa2','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff'][e.i]||'#ffd27a';f.chips('rock',e.x,e.y,12,Math.round(8*n)+1,'#8a8478');f.chips('rock',e.x,e.y,12,Math.round(5*n)+1,ORE,{size:.9});f.spark(e.x,e.y,12,ORE,Math.round(7*n)+2,{spread:1.5,g:6,size:.09});f.smoke(e.x+6,e.y,4,'#a89a80',q?2:1,{size:.13,grow:2.4,life:.55,up:.15,alpha:.22,spread:.5});if(q===2)f.spark(e.x,e.y,14,'#ffffff',6,{spread:1,up:1.8,g:5,size:.08})}
+ else if(k==='fi'){f.spark(e.x,e.y,4,'#cfe8ff',q?12:4,{spread:.9,up:2.2,g:7,size:.07,life:.5});try{TER.ripple(e.x,e.y);if(R3D.water)R3D.water.event('tug',e)}catch(x){}}
+ else if(k==='sm'){f.spark(e.x,e.y,22,'#ff9a2a',q===2?16:8,{spread:1.9,up:2,g:6.5,size:.09});f.smoke(e.x,e.y,26,'#8a867e',1,{size:.15,grow:2.8,life:.7,up:.5,alpha:.28})}
+ else if(k==='ins'){f.spark(e.x,e.y,22,'#ffe8a0',q?10:4,{spread:.6,up:1.4,g:-.3,size:.09,life:.9})}
+ else{f.chips('wood',e.x,e.y,18,q?6:3,'#c9b48a',{spread:1.2});f.smoke(e.x,e.y,16,'#d8c9a3',1,{size:.14,life:.6,up:.3,alpha:.32})}
+ if(q===2)SHK=Math.max(SHK,performance.now()+60)}
+function whTick(now){if(now-A.wl>15000)return stopA();
+ if(A.hq&&now>=A.h0+300){const q=A.hq-1,e=A.e,k=A.sk;A.hq=0;whSnd(k,q);whFx(k,e,q);if(q===2)whPulse(now);
+  A.pr+=A.amt*(q===2?1.3:q===1?1:.55);if(A.pr>=1){A.pr=.99;fin(now)}}}
+const whEl=(()=>{const c=document.createElement('canvas');c.id='whl';c.width=c.height=192;c.style.display='none';document.body.appendChild(c);return c})(),whX=whEl.getContext('2d');
+function whDraw(now){if(!(A&&A.wh)||INT||CK){whEl.style.display='none';return}const e=A.e,c0=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y)),r=cv.getBoundingClientRect(),k=r.width/cv.width,hh={wc:16,mi:10,fi:8}[A.sk]||14;
+ whEl.style.display='block';whEl.style.transform='translate('+(r.left+c0.x*k).toFixed(1)+'px,'+(r.top+(c0.y-hh*SPR*ISO.scale())*k).toFixed(1)+'px) translate(-50%,-50%)';
+ const g=whX,C=96,R=70,o=-Math.PI/2,th=whAng(now),GC=A.gold?'255,216,97':'232,207,148';g.clearRect(0,0,192,192);g.lineCap='butt';
+ g.lineWidth=15;g.strokeStyle='rgba(14,12,10,.72)';g.beginPath();g.arc(C,C,R,0,TAU2);g.stroke();g.lineWidth=1.2;g.strokeStyle='rgba('+GC+',.6)';[R-7.5,R+7.5].forEach(rr=>{g.beginPath();g.arc(C,C,rr,0,TAU2);g.stroke()});
+ // muescas: un segmento por golpe necesario; se iluminan con el progreso (así se ve cuánto falta sin texto)
+ const pr=Math.min(1,A.pr||0),H=Math.max(3,Math.min(12,Math.round(1/A.amt))),seg=TAU2/H,gp=.09;g.lineWidth=5;
+ for(let j=0;j<H;j++){const a0=o+j*seg+gp/2,a1=o+(j+1)*seg-gp/2,f=Math.max(0,Math.min(1,pr*H-j));g.strokeStyle='rgba(14,12,10,.65)';g.beginPath();g.arc(C,C,R-18,a0,a1);g.stroke();if(f>0){g.strokeStyle=A.gold?'#ffd861':'#9bd04f';g.beginPath();g.arc(C,C,R-18,a0,a0+(a1-a0)*f);g.stroke()}}
+ g.lineWidth=12;g.strokeStyle='rgba('+GC+',.92)';g.beginPath();g.arc(C,C,R,o+A.wa-A.whalf,o+A.wa+A.whalf);g.stroke();   // arco de acierto
+ g.save();g.shadowColor='#fff0b8';g.shadowBlur=10;g.lineWidth=12;g.strokeStyle='#fff6d8';g.beginPath();g.arc(C,C,R,o+A.wa-A.wper,o+A.wa+A.wper);g.stroke();g.restore();   // núcleo perfecto
+ for(let i=1;i<=7;i++){g.lineWidth=7;g.strokeStyle='rgba(255,255,255,'+(.3*(1-i/8))+')';g.beginPath();g.arc(C,C,R,o+th-i*.07,o+th-(i-1)*.07);g.stroke()}   // estela del marcador
+ const mx=C+Math.cos(o+th)*R,my=C+Math.sin(o+th)*R;g.save();g.shadowColor='#fff';g.shadowBlur=12;g.fillStyle='#fff';g.beginPath();g.arc(mx,my,7.5,0,TAU2);g.fill();g.restore();
+ if(A.fl){const u=(now-A.fl.t)/320;if(u>=1)A.fl=null;else{const q=A.fl.q;g.lineWidth=5*(1-u)+1;g.strokeStyle=q===2?'rgba(255,242,192,'+(1-u)+')':q===1?'rgba('+GC+','+(.9*(1-u))+')':'rgba(190,80,64,'+(.8*(1-u))+')';g.beginPath();g.arc(C,C,R+8+u*(q===2?26:14),0,TAU2);g.stroke()}}}
+/* MINIJUEGO DE PESCA v2 (21 oct 2026; el dueño: «que se vea visualmente, sin ruedas ni tan gráfico: el pez que se mueva y el jugador va en la dirección contraria con la caña, como Sea of Thieves»). TODO SE LEE EN EL MUNDO:
+   · wait  — la caña echada; tras 2,5–6 s el pez pica: el flotador se hunde, salpica y suena; sale un «!» pequeño.
+   · bite  — 1,3 s para pulsar CLIC (o E) y clavar el anzuelo; si no, se escapa (a la 3.ª se recoge la caña).
+   · fight — se ve el PEZ (3D, `R3D.water.hook`) nadando y tirando de la línea: el flotador lo sigue y deja estela. Antes de cada arrancada GIRA hacia donde va a tirar (chapoteo + cola). Para cansarlo hay que
+             IR EN LA DIRECCIÓN CONTRARIA con el personaje (teclas de movimiento: el héroe retrocede de verdad, con correa de 70 px; o, sin teclado, apuntando con el ratón al lado contrario). Bien: el pez se acerca y se cansa;
+             mal: se aleja y la línea se tensa (la caña se dobla más) hasta que SE ROMPE (se pierde el pez, sin más castigo). Entre arrancadas hay pausas.
+   · reel  — cuando se rinde queda de costado en la superficie: pulsa CLIC repetidamente y lo arrastras hasta tus pies (cada clic lo acerca); si paras, se recupera y vuelve a luchar.
+   Dificultad por tier del pez (`rq`), caña (`S.tool.fi`) y nivel de Pesca. Al terminar: `fin()` (captura 3D + XP + item); ya no se encadena otro punto de pesca. Interfaz mínima: solo el «!» de la picada. Sin Math.random (PRNG `whR`). */
+/* MODO DE PESCA (21 oct 2026, decisión del dueño: «el minijuego no funciona bien: guárdalo y lo mejoramos después; por ahora solo clic cuando pique»): `FISH_MG=false` = pesca SIMPLE (picada → clic en 1,3 s → captura). `FISH_MG=true` (o `localStorage ns_fishmg=1`, o `?fishmg` en la URL) reactiva el minijuego de lucha completo, que se CONSERVA intacto abajo (fight/reel, pez 3D, retroceso). */
+let FISH_MG=false;try{FISH_MG=localStorage.getItem('ns_fishmg')==='1'||/[?&]fishmg/.test(location.search)}catch(e){}
+const FISHC=['#d9772e','#7f9a86','#b9a46a','#c9553a','#5f8a78'];
+const fishWait=()=>1500+whR()*13500;   // la picada tarda entre 1,5 y 15 s (decisión del dueño)
+function fishInit(now){const a=ACT.fi[A.i],tier=rq(a),t=S.tool.fi||0;A.fg={st:'wait',bt:now+fishWait(),b2:0,E:100,T:0,R:0,dir:0,hd:0,pull:0,tell:0,nd:0,s:.8+tier*.012,tk:1/(1+.15*t),tol:Math.min(1.25,.85+L('fi')*.004+t*.03),miss:0,fd:0,fx:A.e.x,fy:A.e.y,fx0:0,fy0:0,fl:null,al:false,rs:0,hx:P.x,hy:P.y,col:FISHC[tier%FISHC.length],len:.5+Math.min(.12,tier*.003),dirty:0};
+ if(!S.hintFg){S.hintFg=1;toast(FISH_MG?'🎣 Cuando pique pulsa <b>clic</b>. Luego <b>muévete en dirección contraria</b> a donde tira el pez para cansarlo y, cuando se rinda, pulsa <b>clic</b> varias veces para recogerlo.':'🎣 Cuando pique (verás un <b>!</b>) pulsa <b>clic</b> para capturarlo.',7000)}}
+function fishPress(now){const g=A&&A.fg;if(!g)return;
+ if(g.st==='bite'){if(!FISH_MG){g.st='done';tone(620,.1,'triangle',.08);fin(now);return}   // pesca simple: el clic a tiempo captura
+  g.st='fight';g.nd=now+700;g.fl=now;tone(620,.1,'triangle',.08);try{R3D.water.event('tug',A.e)}catch(e){}}
+ else if(g.st==='reel'){g.R=Math.min(100,g.R+13);tone(460+g.R*3,.05,'triangle',.05);const f=window.R3D&&R3D.fx;if(f)f.spark(g.fx,g.fy,3,'#cfe8ff',4,{spread:.8,up:1.8,g:7,size:.07,life:.4})}
+ else if(g.st==='wait'){g.bt=now+fishWait()}}   // recoger un poco la línea reinicia la espera
+function fishInput(){const kd=ISO.keyDir(K.l,K.r,K.u,K.d);if(kd.x||kd.y){const l=Math.hypot(kd.x,kd.y)||1;return{x:kd.x/l,y:kd.y/l}}
+ if(CUR.on){const w=ISO.toWorld(CUR.px,CUR.py,TER.heightAt),vx=w.x-P.x,vy=w.y-P.y,l=Math.hypot(vx,vy);if(l>24)return{x:vx/l,y:vy/l}}return null}
+function fishTick(now,dt){const g=A.fg,e=A.e,f=window.R3D&&R3D.fx;dt=Math.min(dt,.1);
+ if(g.st==='wait'){if(now>=g.bt){g.st='bite';g.b2=now+1300;g.fl=now;noise(.25,.14,1600,'bandpass');tone(300,.12,'sine',.1,-120);try{R3D.water.event('tug',e);TER.ripple(e.x,e.y)}catch(x){}if(f)f.spark(e.x,e.y,4,'#cfe8ff',8,{spread:1,up:2.2,g:7,size:.07,life:.5})}return}
+ if(g.st==='bite'){if(now>g.b2){g.miss++;if(g.miss>=3)return stopA('Se escapó. Vuelve a lanzar la caña.');g.st='wait';g.bt=now+fishWait();log('El pez se soltó…')}return}
+ // correa del héroe: puede retroceder hasta 70 px del sitio donde echó la caña
+ {const dx=P.x-g.hx,dy=P.y-g.hy,d=Math.hypot(dx,dy);if(d>70){P.x=g.hx+dx*70/d;P.y=g.hy+dy*70/d}}
+ const hd0=Math.atan2(e.y-P.y,e.x-P.x);   // dirección héroe → punto de pesca
+ if(g.st==='fight'){
+  if(!g.pull&&!g.tell&&now>=g.nd){g.tell=now+450;g.dir=hd0+[-1.25,-.65,0,.65,1.25][Math.floor(whR()*5)]}   // la arrancada va hacia un lado o hacia dentro del agua, nunca hacia ti
+  if(g.tell&&now>=g.tell){g.tell=0;g.pull=now+1300+whR()*1100;try{R3D.water.event('tug',e)}catch(x){}noise(.18,.1,1400,'bandpass');if(f)f.spark(g.fx,g.fy,3,'#cfe8ff',6,{spread:1,up:1.8,g:7,size:.07,life:.45})}
+  if(g.pull&&now>=g.pull){g.pull=0;g.nd=now+500+whR()*600}
+  const pulling=!!g.pull;let al=false;if(pulling){const iv=fishInput();if(iv){const dot=iv.x*-Math.cos(g.dir)+iv.y*-Math.sin(g.dir);al=Math.acos(Math.max(-1,Math.min(1,dot)))<=g.tol}}
+  if(pulling){if(al){g.E-=26*dt/g.s;g.T=Math.max(0,g.T-30*dt);g.fd=Math.max(0,g.fd-26*dt)}else{g.T+=38*dt*g.s*g.tk;g.E=Math.min(100,g.E+5*dt);g.fd=Math.min(90,g.fd+40*dt*g.s)}}else{g.T=Math.max(0,g.T-34*dt);g.E=Math.min(100,g.E+3*dt);g.fd=Math.max(0,g.fd-12*dt)}
+  g.al=al;
+  // posición del pez: el punto de pesca + arrancada en su dirección (sin salir del agua)
+  let px=e.x+Math.cos(g.dir)*g.fd,py=e.y+Math.sin(g.dir)*g.fd;if(TER.heightAt(px,py)!==.75){g.fd=Math.max(0,g.fd-70*dt);px=e.x+Math.cos(g.dir)*g.fd;py=e.y+Math.sin(g.dir)*g.fd}g.fx=px;g.fy=py;
+  const hw=g.pull||g.tell?g.dir:hd0+Math.sin(now/700)*.9;let d=hw-g.hd;d=Math.atan2(Math.sin(d),Math.cos(d));g.hd+=d*Math.min(1,dt*(g.tell?9:5));   // el pez gira hacia donde va a tirar
+  if(g.T>=100){tone(180,.3,'sawtooth',.08,-80);return stopA('¡La línea se rompió! Inténtalo de nuevo.')}
+  if(g.E<=0){g.st='reel';g.R=20;g.rs=now+1500;g.pull=0;g.tell=0;g.fx0=g.fx;g.fy0=g.fy;g.fl=now;snd('rare')}
+  return}
+ if(g.st==='reel'){if(g.R>=100){g.st='done';fin(now);return}g.R=Math.max(0,g.R-14*dt);
+  const k=g.R/100,tx=P.x+Math.cos(hd0)*22,ty=P.y+Math.sin(hd0)*22;g.fx=g.fx0+(tx-g.fx0)*k;g.fy=g.fy0+(ty-g.fy0)*k;   // cada clic lo acerca a tus pies
+  g.hd+=((hd0+Math.PI)-g.hd)*Math.min(1,dt*4);
+  if(g.R<=0&&now>g.rs){g.st='fight';g.E=40;g.nd=now+600;g.fd=Math.hypot(g.fx-e.x,g.fy-e.y)}}}
+const fsEl=(()=>{const d=document.createElement('div');d.id='fsh';d.innerHTML='<b>!</b>';d.style.display='none';document.body.appendChild(d);return d})();   // icono de picada: DOM de la UI «Susurro» (css/hud-susurro.css, #fsh)
+function fishDraw(now,dt){const g=A&&A.fg;
+ if(!g||INT||CK){fsEl.style.display='none';try{R3D.water.hook(false)}catch(e){}return}
+ // pez 3D enganchado (solo en lucha y recogida)
+ try{if(g.st==='fight'||g.st==='reel'){const tired=g.st==='reel'?1:Math.max(0,1-g.E/60)*.6;R3D.water.hook(true,g.fx/ISO.TILE,g.fy/ISO.TILE,g.hd,tired,g.len,g.col,now/1000,dt||.016)}else R3D.water.hook(false)}catch(e){}
+ // icono de picada: cristal con trazo dorado, «!» en Cinzel y un anillo que se vacía con el tiempo para clavar el anzuelo
+ if(g.st==='bite'){const e=A.e,c0=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y)),r=cv.getBoundingClientRect(),k=r.width/cv.width,u=Math.max(0,Math.min(1,(g.b2-now)/1300));fsEl.style.display='grid';fsEl.style.transform='translate('+(r.left+c0.x*k).toFixed(1)+'px,'+(r.top+(c0.y-30*SPR*ISO.scale())*k).toFixed(1)+'px) translate(-50%,-50%)';fsEl.style.setProperty('--u',(u*360).toFixed(0)+'deg')}
+ else fsEl.style.display='none'}
 function startG(e,now){if(!alive(e,now))return;const a=ACT[e.t][e.i];
  if(L(e.t)<rq(a))return log('Necesitas nivel '+rq(a)+' en '+SK[e.t][0]+'.');
  if(!room(ACT[e.t][e.i][1]))return log('Inventario lleno. Vende o usa el banco.');
- A={ty:'g',e,sk:e.t,i:e.i,t0:now,d:dur(e.t,a),pr:0,amt:hitAmt(e.t,a),per:hitPeriod(e.t),base:hitPeriod(e.t)};S.cur={sk:e.t,i:e.i};dirty=1}
+ A={ty:'g',e,sk:e.t,i:e.i,t0:now,d:dur(e.t,a),pr:0,amt:hitAmt(e.t,a),per:hitPeriod(e.t),base:hitPeriod(e.t)};S.cur={sk:e.t,i:e.i};if(WHEEL_SK[e.t])whInit(now);if(e.t==='fi')fishInit(now);dirty=1}
 // F5-C · el siguiente golpe se TIRA al empezar cada ciclo (no al final) para que la animación sepa si será máximo (daño amarillo) y use la versión especial del arma.
 // rollAtk devuelve {m,wt,hit,d1,sp,heavy}; act() lo usa al final del ciclo si sigue valiendo (mismo objetivo y mismo tipo de arma), si no lo vuelve a tirar. `exec` se aplica al final (depende de la vida de entonces).
 function rollAtk(m){const wt=wtype(),hit=Math.random()<hitChance(m),d0=hit?R(1,mxs()):0,d1=d0&&Math.random()*100<pv('crit')?Math.round(d0*1.75):d0;let sp=null;
@@ -515,7 +623,7 @@ function rollAtk(m){const wt=wtype(),hit=Math.random()<hitChance(m),d0=hit?R(1,m
 function startF(e,now){if(!alive(e,now))return;if(aimOn()&&e.d){e.hunt=1;return}   // con el combate dirigido no hay «combate fijado»: se golpea apuntando (swing())
  dfpHint(e);if(manual()&&!S.hintAtk&&!e.lab){S.hintAtk=1;toast('⚔️ Mantén el clic sobre el enemigo (o la tecla <b>E</b>) para golpear. <b>Espacio</b> esquiva.',5200)}if(sealed(e)){const k=MB[e.d.id];toast('🔒 <b>'+e.d.n+'</b> está protegido por un sello. Derrota a <b>'+MD['k'+k].n+'</b> en la '+CAPN[k]+'.',4200);snd('miss');return}A={ty:'f',e,t0:now,ph:Math.max(now+(manual()?0:700),ATKT),sk:'cb',ms:manual()?manMs():atkMs()};A.nx=rollAtk(e);e.hunt=1;e.nt=Math.max(e.nt||0,now+1400);dirty=1}
 function startC(sk,i){const a=ACT[sk][i];if(ownT(a))return log('Ya tienes esa herramienta.');if(L(sk)<rq(a)||!gOk(a)||!hasIn(a[1]))return log('Te faltan materiales o nivel.');
- A={ty:'c',e:S.stn,sk,i,t0:performance.now(),d:dur(sk,a),pr:0,amt:hitAmt(sk,a),per:hitPeriod(sk),left:QTY||1e9};S.cur={sk,i};dirty=1}
+ A={ty:'c',e:S.stn,sk,i,t0:performance.now(),d:dur(sk,a),pr:0,amt:hitAmt(sk,a),per:hitPeriod(sk),left:QTY||1e9};S.cur={sk,i};if(WHEEL_SK[sk])whInit(performance.now());dirty=1}
 function reseek(e,now){if(e.d&&(!S.auto||(e.d.ag&&(P.hp<maxHp()*.6||M.some(o=>o!==e&&o.hunt&&alive(o,now))))))return stopA();let b=null,bd=1e9;(e.d?M:N).forEach(o=>{if(o===e||!alive(o,now)||(e.d?o.d!==e.d:(o.t!==e.t||o.i!==e.i))||(e.d&&e.d.ag&&M.some(q=>q!==o&&q!==e&&alive(q,now)&&q.d.ag&&Math.hypot(q.x-o.x,q.y-o.y)<100)))return;const d=Math.hypot(o.x-e.x,o.y-e.y);if(d<bd){bd=d;b=o}});
  if(b){A=null;P.g={e:b}}else stopA('No quedan más cerca. Espera a que reaparezcan.')}
 // ---- puntos de interés: cofres (oro + XP + a veces un drop raro; los de campamento están custodiados) y santuarios (bendición permanente de una sola vez)
@@ -624,10 +732,13 @@ function kill(m,now){if(m.sm){snd('kill');m.rt=now+1;return}const d=m.d;if(windo
  snd('kill');m.rt=now+(d.boss===1?BRESP[MB[d.id]]*1000:d.boss===2?120000:12000);const dl=Math.max(0,m.lv-d.lv);earn(Math.round(R(d.co[0],d.co[1])*(1+.05*dl)*(1+pv('prosp')/100)));MN=Math.min(mnMax(),MN+Math.round(pv('siph')));d.dr.forEach(([id,p])=>{if(Math.random()<Math.min(DRMAX,p*(1+.03*dl)))dropGround(id,m.x,m.y)});(RUD[d.id]||[]).forEach(([k,a,b,p])=>{if(Math.random()<Math.min(DRMAX,p*.6*(1+.03*dl))){const n=R(a,b);S.runes[k]=(S.runes[k]||0)+n;disc('rn_'+k);log('<span style="color:#c8a0ff">+'+n+' runa'+(n>1?'s':'')+' de '+RNN[k]+'</span>')}});
  if(d.rare&&Math.random()<(1+.25*S.luck+.02*dl)/d.rare[1]){dropGround(d.rare[0],m.x,m.y,{rare:1});inc('rare');toast(ic(d.rare[0])+' ¡Drop raro: <b>'+I[d.rare[0]][0]+'</b>!',3000)}
  inc('kill:'+d.id);log('Mataste a '+d.n+' (nv. '+m.lv+').');if(d.boss===1)bossKill(m,now);else if(d.boss===2)capKill(m,now);rollLoot(m,d.boss===1?3:d.boss===2?2:1);if(m.tmp){qMobDead(m);dirty=1;return}rollLv(m);dirty=1}
-function fin(now){const{ty,sk,i,e}=A,a=ACT[sk][i],cb=sk==='co'?count(a[2]):0;if(!stepAct(sk,i)){stopA();return}if(sk==='fi'&&window.R3D&&R3D.water)R3D.water.event('catch',e);   // R3D-AGUA-IMPL: captura = chapuzón + el pez vuela a la mano
- if(ty==='c'){A.left--;if(sk==='co'&&count(a[2])>cb&&Math.random()<BONUSP+.04*S.cfg){BL=A.left;dirty=1;save();stopA();startBonus(i);return}
+function fin(now){const{ty,sk,i,e}=A,a=ACT[sk][i],cb=sk==='co'?count(a[2]):0;if(ty==='c'&&A.wh)QBON=1+1.4*(A.tot?A.perf/A.tot:0);const okA=stepAct(sk,i,false,(A.wh&&ty==='g'&&sk!=='fi')?e:null);QBON=1;if(!okA){stopA();return}if(sk==='fi'&&window.R3D&&R3D.water)R3D.water.event('catch',e);   // R3D-AGUA-IMPL: captura = chapuzón + el pez vuela a la mano
+ if(ty==='c'){if(A.wh){A.pr=0;A.perf=0;A.tot=0;A.wl=now}A.left--;if(sk==='co'&&count(a[2])>cb&&Math.random()<BONUSP+.04*S.cfg){BL=A.left;dirty=1;save();stopA();startBonus(i);return}
   if(!hasIn(a[1])){dirty=1;save();stopA('Te quedaste sin materiales.');return}if(A.left<=0){dirty=1;save();stopA('Listo: terminaste la tanda.');return}}
- if(ty==='g'&&e.g){gain(sk,xv(ACT[sk][i])*4);earn(20+L(sk)*2);toast('✨ ¡Recurso dorado! Bonus de XP y oro');snd('rare')}if(ty==='g'){e.rt=now+{wc:9000,mi:6000,fi:5000}[sk];reseek(e,now);relocate(e)}
+ if(ty==='g'&&e.g){gain(sk,xv(ACT[sk][i])*4);earn(20+L(sk)*2);toast('✨ ¡Recurso dorado! Bonus de XP y oro');snd('rare');if(A.wh&&sk!=='fi')for(let n=0;n<3;n++)dropGround(a[1],e.x,e.y,{au:1,rare:1})}if(ty==='g'){if((sk==='wc'||sk==='mi')&&window.R3D&&R3D.res){try{R3D.res.fell(e,P.x,P.y)}catch(x){}
+   if(sk==='wc'){noise(.5,.1,320,'bandpass');tone(95,.55,'sawtooth',.05,-35);setTimeout(()=>{noise(.35,.2,140,'lowpass');tone(60,.3,'sine',.25,-20);noise(.5,.08,2500,'highpass')},1750)}
+   else{noise(.25,.2,500,'lowpass');noise(.12,.12,3200,'highpass');tone(110,.2,'sine',.2,-60);setTimeout(()=>noise(.15,.1,1800,'bandpass'),320)}}   /* el árbol cae / la mena se rompe (nature3d.js `fell`) + su sonido */
+  e.rt=now+{wc:9000,mi:6000,fi:5000}[sk];if(A&&(A.wh||A.fg))stopA();else reseek(e,now);relocate(e)}
  dirty=1;save()}
 /* EFECTOS DE ESTADO (21 oct 2026; decisión del dueño): cada efecto tiene SU COLOR (`STC`) en los números de daño y el daño por estado NO da XP (ni de Magia ni de nada: subían la magia demasiado rápido). `dotHit()` es el golpe de un efecto
    sobre un enemigo (quemadura, sangrado…); los efectos que sufre el jugador usan los mismos colores (`DOTN` en combat.js). Se reorganizará con el motor de estados alterados (Fase 23). */
@@ -721,7 +832,7 @@ function swingHud(now){const col=document.getElementById('hs-col');if(!col)retur
  const on=aimOn()&&!INT&&(now-SWG.last<3000||now-(P.cbT||-1e9)<2000||CHG.on);el.classList.toggle('on',on);try{if(CHG.on&&wKind()==='staff'&&now-CHG.t0>220)R3D.spell.charge(P.x,P.y,chgK(now));else if(!CHG.on)R3D.spell.charge(0,0,-1)}catch(e){}
  el.classList.toggle('chg',!!CHG.on);el.classList.toggle('cf',!!CHG.on&&chgK(now)>=1);if(!on)return;const u=CHG.on?chgK(now):Math.min(1,(now-SWG.t0)/Math.max(1,SWG.ms));el.firstChild.style.width=(u*100).toFixed(0)+'%';el.classList.toggle('rd',u>=1);
  const n=now-SWG.last<SWG.ms*1.9?SWG.c+1:0,ps=el.querySelectorAll('b');ps.forEach((b,i)=>b.classList.toggle('lit',i<n))}   // barra de swing: relleno = enfriamiento del golpe, 3 puntos = combo
-function atkKey(down){const now=performance.now();if(!down){if(aimOn())chargeEnd();ATKIN.held=0;return}ATKIN.t=now;ATKIN.held=1;if(aimOn()){chargeStart(now);return}if(A&&A.ty==='f')return;
+function atkKey(down){const now=performance.now();if(A&&A.wh){if(down)whPress(now);return}if(A&&A.fg){if(down)fishPress(now);return}if(!down){if(aimOn())chargeEnd();ATKIN.held=0;return}ATKIN.t=now;ATKIN.held=1;if(aimOn()){chargeStart(now);return}if(A&&A.ty==='f')return;
  let b=null,bd=150;M.forEach(m=>{if(!alive(m,now)||sealed(m))return;const d=Math.hypot(m.x-P.x,m.y-P.y);if(d<bd){bd=d;b=m}});if(b){if(A)stopA();P.g=null;P.mv=null;engage(b,now)}}
 function act(now){if(!A)return;
  if(A.ty==='f'){const m=A.e,dd=Math.hypot(P.x-m.x,P.y-m.y);if(dd>(wtype()==='m'?75:210)){if(!m.hunt)stopA();return}
@@ -733,8 +844,6 @@ function act(now){if(!A)return;
    if(!A||A.e!==m)return;A.nx=rollAtk(m)}}
  else if(A.ty==='c'&&Math.hypot(P.x-A.e.x,P.y-A.e.y)>80)stopA();
 }
-function offline(el,sk,i){const a=ACT[sk][i],n=Math.min(4000,Math.floor(Math.min(el,2.88e7)/dur(sk,a)));let k=0;const x0=S.xp[sk];while(k<n&&stepAct(sk,i,1))k++;
- if(k){const m=k+'x '+a[0]+', +'+fmt(S.xp[sk]-x0)+' XP';log('Mientras no estabas ('+Math.round(el/60000)+' min): '+m);toast('💤 Progreso offline<br>'+SK[sk][1]+' '+m,4000)}}
 const CM=10, // margen (px de mundo) antes de la pared: el jugador se detiene un poco antes de pisarla (F1-C4b)
 cliff=(x,y)=>TER.cliffNear(x,y,CM),lockedAt=(x,y)=>biomeAt(x,y)<0,   // Fase 44a: solo el vacío. Los jefes son HITO, ya no llave: ningún bioma está cerrado por un jefe vivo (el freno es el peligro: aviso de zona)
 blk=(x,y)=>INT?intBlk(x,y):x<8||x>WW-8||y<30||y>WH-28||lockedAt(x,y)||cliff(x,y)||PROPS.solid(x,y)||TER.heightAt(x,y)<1;   // agua (altura .75) o vacío (0): el agua sale de TER (BIOMES.geo), ya no hay rectángulos BLK
@@ -863,7 +972,7 @@ function banner(t,sub,c,dur){if(typeof HUDSU!=='undefined'&&HUDSU.ok){HUDSU.bann
 function weather(now,dt){BR.update(now,dt,curB);   // Fase B3: el clima sale de BIOME_RULES (src/biome-rules.js); aquí solo se copia al estado que lee el código antiguo (ambient.js, 3D)
  WX.t=BR.kind==='storm'?'storm':BR.kind==='rain'?'rain':'';WXD=BR.wet;FL=Math.max(FL,BR.flash);if(BR.thunder)snd('thunder');if(AMASTER)AMASTER.gain.value=BR.snd;
  FL=Math.max(0,FL-dt*2.2);
- ST.forEach(e=>{if(e.id==='furnace'&&Math.abs(e.x-P.x)<420&&Math.abs(e.y-P.y)<320&&Math.random()<dt*2.5)sp(e.x+(SX?11:10),e.y-(SX?52:42),'#9a9a9a',1,8,16,-8);if(SX&&e.id==='fire'&&Math.abs(e.x-P.x)<420&&Math.abs(e.y-P.y)<320&&Math.random()<dt*(A&&A.e===e?5:2))sp(e.x+R(-5,5),e.y-24,'#ffb040',1,14,34,-6)})}
+ ST.forEach(e=>{if(e.id==='furnace'&&Math.abs(e.x-P.x)<420&&Math.abs(e.y-P.y)<320&&Math.random()<dt*2.5)(window.R3D&&R3D.fx?R3D.fx.smoke(e.x+10,e.y,40,'#8a867e',1,{size:.2,grow:3.2,life:1.5,up:.6,alpha:.36}):sp(e.x+10,e.y-42,'#9a9a9a',1,8,16,-8));if(SX&&e.id==='fire'&&Math.abs(e.x-P.x)<420&&Math.abs(e.y-P.y)<320&&Math.random()<dt*(A&&A.e===e?5:2))sp(e.x+R(-5,5),e.y-24,'#ffb040',1,14,34,-6)})}
 const hsOn=()=>typeof HUDSU!=='undefined'&&HUDSU.ok;
 function hudFx(now){
  if(FL>.02){ctx.save();ctx.globalAlpha=Math.min(1,FL);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.restore()}
@@ -884,13 +993,13 @@ function zoneAnnounce(bi,now){const b=BI[bi],lvl=CBL();if(now-(DZT[bi]||-1e9)<60
 function upd(dt,now){swingTick(now,dt);if(typeof AMB!=='undefined')AMB.tick(now,dt);if(!INT){zoneCheck(now);weather(now,dt);AMBI.update(now,dt,{k:curB,sun:sunS(now/1000),wx:WX.t});if(typeof VILL!=='undefined')VILL.tick(dt);if(typeof ISLA!=='undefined')ISLA.tick(dt);if(now-BT>1000){BT=now;if(M.some(m=>m.d.boss&&!alive(m,now)))dirty=1}const bi=biomeAt(P.x,P.y);if(bi>=0&&bi!==curB){curB=bi;if(bi<BIOMES.L&&bi+1>(S.st.bio||0)){S.st.bio=bi+1;chk()}   /* Fase 49a: `bio` (logros, runas de viaje) sigue contando los 6 biomas originales; los esqueletos aún no puntúan */zoneAnnounce(bi,now)}
  if(bi>=0&&S.home!==bi&&inVilla(P.x,P.y)){S.home=bi;log('🏘️ Reaparecerás en la aldea de <b>'+BI[bi].n+'</b>.');dirty=1}}   // Fase 44a: S.home = última aldea visitada
  const kd=ISO.keyDir(K.l,K.r,K.u,K.d);let dx=kd.x,dy=kd.y;
- if(dx||dy){if(P.g||P.mv||A||CK){P.g=P.mv=null;stopA();CK=null}}
+ if(dx||dy){if(P.g||P.mv||A||CK){if(!(A&&A.fg&&(A.fg.st==='fight'||A.fg.st==='reel'))||P.g||P.mv||CK){P.g=P.mv=null;stopA();CK=null}}}   // pesca: durante la lucha el personaje PUEDE retroceder (el pez tira; ver fishTick)
  else{const tg=P.g?P.g.e:P.mv;if(tg){const ex=tg.x-P.x,ey=tg.y-P.y,d=Math.hypot(ex,ey);
   if(d>(P.g?(P.g.e.d?(wtype()!=='m'?120:24):P.g.e.t==='fi'?FISHR:24):3)){const mt=P.g&&tg.st&&tg.st.length&&d>FISHR?(q=>({x:q[0],y:q[1]}))(tg.st.reduce((b,c)=>Math.hypot(c[0]-P.x,c[1]-P.y)<Math.hypot(b[0]-P.x,b[1]-P.y)?c:b)):tg,wp=bridgeWp(mt),wx=wp?wp.x-P.x:mt.x-P.x,wy=wp?wp.y-P.y:mt.y-P.y,wd=Math.hypot(wx,wy)||1;dx=wx/wd;dy=wy/wd}else if(P.g){const e=P.g.e;P.g=null;engage(e,now)}else P.mv=null}}
  if(dashStep(dt,now)){dx=dy=0}   // ISLA-7: durante el impulso del dash no se aplica el movimiento normal
- P.mvg=0;if(dx||dy){if(!S.hintR&&typeof runHintTick==='function')runHintTick(dt);const l=Math.hypot(dx,dy);dx/=l;dy/=l;const run=RUN&&!S.exh,sv=WALK_V*(1+pv('swift')/100)*(1+.05*S.trv)*(S.buf.spd>Date.now()?1.35:1)*(run?RUN_MUL:1)*(swSlow(now)?.3:1);const ox=P.x,oy=P.y;step(dx*sv*dt,0);step(0,dy*sv*dt);P.mvg=1;if(P.g&&Math.hypot(P.x-ox,P.y-oy)<.02)STK+=dt;else STK=0;if(STK>.4&&P.g){const e=P.g.e;if(Math.hypot(e.x-P.x,e.y-P.y)<(e.t==='fi'?FISHR+20:90)){P.g=null;STK=0;engage(e,now)}}if(run){S.agd=(S.agd||0)+sv*dt;if(S.agd>=32){S.st.run=(S.st.run||0)+(S.agd/32|0);S.agd%=32;chk()}}if(Math.abs(dx-dy)>.01)P.f=dx-dy>0?1:-1;P.dir=HERO.dirOf(dx,dy);P.ldx=dx;P.ldy=dy;P.wr=sv*2*Math.PI/(RUN?STRR:STRW);P.w+=dt*P.wr;P.anm=1;P.wt=null;if(typeof FOOT!=='undefined')FOOT.tick(P,run)}   /* pasos: src/footsteps.js */
+ P.mvg=0;if(dx||dy){if(!S.hintR&&typeof runHintTick==='function')runHintTick(dt);const l=Math.hypot(dx,dy);dx/=l;dy/=l;const run=RUN&&!S.exh,sv=WALK_V*(1+pv('swift')/100)*(1+.05*S.trv)*(S.buf.spd>Date.now()?1.35:1)*(run?RUN_MUL:1)*(swSlow(now)?.3:1)*(A&&A.fg?.45:1);const ox=P.x,oy=P.y;step(dx*sv*dt,0);step(0,dy*sv*dt);P.mvg=1;if(P.g&&Math.hypot(P.x-ox,P.y-oy)<.02)STK+=dt;else STK=0;if(STK>.4&&P.g){const e=P.g.e;if(Math.hypot(e.x-P.x,e.y-P.y)<(e.t==='fi'?FISHR+20:90)){P.g=null;STK=0;engage(e,now)}}if(run){S.agd=(S.agd||0)+sv*dt;if(S.agd>=32){S.st.run=(S.st.run||0)+(S.agd/32|0);S.agd%=32;chk()}}if(Math.abs(dx-dy)>.01)P.f=dx-dy>0?1:-1;P.dir=HERO.dirOf(dx,dy);P.ldx=dx;P.ldy=dy;P.wr=sv*2*Math.PI/(RUN?STRR:STRW);P.w+=dt*P.wr;P.anm=1;P.wt=null;if(typeof FOOT!=='undefined')FOOT.tick(P,run)}   /* pasos: src/footsteps.js */
  else if(P.anm)settle(dt)
- if(P.mvg&&now-LD>(RUN?90:260)){LD=now;sp(P.x-P.f*3,P.y-1,['#c8b890','#a89870','#7a8a6a','#e8f0f8','#6a5050'][curB],RUN?3:1,14,12,20)}
+ if(P.mvg&&now-LD>(RUN?90:260)){LD=now;{if(window.R3D&&R3D.fx)R3D.fx.dust(P.x-(P.ldx||0)*6,P.y-(P.ldy||0)*6,['#b8a888','#8a7e60','#6a6a50','#dfe6ec','#5a4a46','#6a5a52','#8a7a9a','#c8b080','#a8a89a','#e8f0ff'][curB]||'#b8a888',RUN?2:1,RUN?1:0)}}
  staTick(dt);EN=Math.min(enMax(),EN+dt*ENREG);MN=Math.min(mnMax(),MN+dt*mreg());prTick(dt);if(TB==='pr'&&Math.floor(PP*2)!==PPL){PPL=Math.floor(PP*2);dirty=1}if(TB==='mg'&&Math.floor(MN)!==MNl){MNl=Math.floor(MN);dirty=1}PJ=PJ.filter(p=>{if(now>=p.t1){if(p.m)hitM(p.m,p.d,now,p.sk,p.mxv,p.wt);return false}return true});if(CK)cookUpd(dt,now);
  if(!INT)guard();act(now);dropUpd(now);hotTick(now);specTick(now);if(!INT)qTick(now);
  if(!(A&&A.ty==='f')&&now-SWG.last>4000&&now-lreg>12000){lreg=now;if(P.hp<maxHp()){P.hp++;dirty=1}}
@@ -907,7 +1016,9 @@ function upd(dt,now){swingTick(now,dt);if(typeof AMB!=='undefined')AMB.tick(now,
    if(dp>40){const sp2=(m.d.ag?58:45)*dt,nx=m.x+dx/dp*sp2,ny=m.y+dy/dp*sp2;if(!inVilla(nx,ny)){m.x=nx;m.y=ny;m.mv=now;m.f=dx-dy>=0?1:-1}}else if(!busy){m.f=dx-dy>=0?1:-1;if(now>=m.nt){if(telOn(m)&&now>=(m.tn||(m.tn=now+4000)))telStart(m,now);else if(!m.wind){const big=bigFoe(m),wd=big?Math.max(420,Math.min(720,(m.d.as||2400)*.22*(m.asx||1))):800;m.wind={t0:now,t1:now+wd,ang:Math.atan2(dy,dx),big};m.nt=now+(m.d.as||2400)*(m.asx||1)+wd}}if(!A&&!P.g&&!P.mv&&!(K.l||K.r||K.u||K.d))startF(m,now)}return}
   if(now>m.wt){m.wt=now+R(2000,5000);m.tx=m.hx+R(-16,16);m.ty=m.hy+R(-12,12)}
   const ex=m.tx-m.x,ey=m.ty-m.y,d=Math.hypot(ex,ey);if(d>2){const sp3=d>60?55:18,nx=m.x+ex/d*sp3*dt,ny=m.y+ey/d*sp3*dt;if(!inVilla(nx,ny)){m.x=nx;m.y=ny;m.mv=now;m.f=ex-ey>=0?1:-1}}});
- if(A){const ph=swPh(now),imp=A.lp!=null&&ph<A.lp-.4;A.lp=ph;if(imp&&A.ty!=='f'){const e=A.e,k=A.sk;snd(k);
+ if(A&&A.wh)whTick(now);
+ if(A&&A.fg)fishTick(now,dt);
+ if(A&&!A.wh&&!A.fg){const ph=swPh(now),imp=A.lp!=null&&ph<A.lp-.4;A.lp=ph;if(imp&&A.ty!=='f'){const e=A.e,k=A.sk;snd(k);
   if(k==='wc')sp(e.x,e.y-26,'#5ab04a',2,30,10,60);else if(k==='mi')sp(e.x,e.y-10,'#ffd27a',4,60,40,160);else if(k==='sm')sp(e.x,e.y-8,'#ff9a2a',5,70,50,200);
   else if(k==='fi'){sp(e.x,e.y,'#cfe8ff',3,30,30,100);TER.ripple(e.x,e.y);if(window.R3D&&R3D.water)R3D.water.event('tug',e)}else if(k==='co')sp(e.x,e.y-14,'#aaa',2,10,25,-10);else if(k==='cr'||k==='es')sp(e.x,e.y-10,'#d8c9a3',2,30,20,80);else if(k==='ins')sp(e.x,e.y-18,'#ffe8a0',4,60,60,-20);A.pr+=A.amt*hitMul(now);if(A.pr>=1){A.pr=Math.min(A.pr-1,.99);fin(now)}}}
  parts.forEach(p=>{p.x+=p.vx*DT;p.y+=p.vy*DT;p.vy+=p.g*DT;p.l-=DT*1.1});parts=parts.filter(p=>p.l>0)}
@@ -956,7 +1067,7 @@ function npGet(m){let e=NPS.get(m);if(e)return e;if(!npRoot){npRoot=document.cre
 function npSweep(){for(const [m,e] of NPS)if(!e.seen){e.el.remove();NPS.delete(m)}else e.seen=0}
 function dMo(m,t,now){if(!alive(m,now))return;const d=m.d,h=(window.R3D&&R3D.actors.topPx(m))||d.h;
  const dmg=m.hp<m.mh;if(!d.boss&&!d.ag&&!dmg&&Math.hypot(m.x-P.x,m.y-P.y)>300)return;   // «Lv» solo cerca (<300 px), en combate o si el enemigo es jefe/agresivo
- const c=ISO.toCanvas(m.x,m.y,TER.standZ(m.x,m.y)),r=cv.getBoundingClientRect(),k=r.width/cv.width,sy=c.y-(h-6)*SPR*ISO.scale();
+ const c=ISO.toCanvas(m.x,m.y,TER.standZ(m.x,m.y)),r=cv.getBoundingClientRect(),k=r.width/cv.width,sy=c.y-(h+4)*SPR*ISO.scale();
  const e=npGet(m);e.seen=1;const gap=m.lv-CBL(),dif=gap>10?'hard':gap>4?'mid':gap<-6?'easy':'';
  const key=d.n+'|'+m.lv+'|'+(d.boss||0)+'|'+(d.ag?1:0)+'|'+(sealed(m)?1:0)+'|'+dif;
  if(e.key!==key){e.key=key;e.el.className='np'+(d.boss?' boss b'+d.boss:'')+(sealed(m)?' seal':'')+(d.ag?' ag':'')+(dif?' '+dif:'');e.l.textContent=m.lv;e.t.textContent=(d.boss===1?'◆ ':d.boss===2?'◇ ':d.ag?'⚔ ':'')+d.n}
@@ -976,6 +1087,8 @@ function actState(now){
  if(P.eat&&now-P.eat<1000&&!CK)return{k:'eat',ph:(now-P.eat)/1000};
  if(!A){if(P.pk&&now-P.pk<420)return{k:'pk',ph:(now-P.pk)/420};return null}const ph=swPh(now);
  if(A.ty==='f'){const wt=wtype(),hv=A.nx&&A.nx.wt===wt&&A.nx.heavy?1:0,armed=!!wColor(),wk=wKind();return Object.assign({k:'f',wt,wk,wcol:wColor(),orb:ORB[tierOf(S.eq.w||'')],hv},animPh(A.ms,A.ph-now,A.lh!=null?now-A.lh:1e9,wt==='r'?(hv?1150:900):wt==='g'?(hv?900:750):hv?(wk==='great'?880:760):wk==='great'?740:wk==='dagger'?400:armed?560:440))} // hv: el golpe que viene es máximo → animación especial del arma (hero.js)
+ if(A.fg){const g=A.fg,tg=g.st==='bite'?.5+.5*Math.sin(now/55):g.st==='fight'?(g.pull?.35+.65*Math.min(1,g.T/80):.1):g.st==='reel'?.7:0;return{k:'fi',ph:Math.min(.99,(now-A.t0)/2400),tug:tg}}   // pesca: la caña tironea con el pez
+ if(A.wh&&A.ty==='g'){const sg=now-A.h0,an=sg<0||sg>=520?{ph:0,rd:1}:sg<300?{ph:sg/300}:{ph:0,rc:q4((sg-300)/220)};return Object.assign({k:A.sk,col:TCOL[TT[S.tool[A.sk]]]||'#aaa'},an)}   // rueda: preparación (ph 0→1) hasta el impacto a los 300 ms, luego recuperación, luego reposo   // rueda: el héroe solo golpea cuando pulsas (impacto a los 300 ms)
  if(A.ty==='g'){const per=A.per||900;if(A.sk==='fi'){const sg=ph*per;return{k:'fi',ph:Math.min(.99,(now-A.t0)/2400),tug:sg<320&&now-A.t0>per?q4(1-sg/320):0}} // pesca: lanza UNA vez al empezar y espera; en cada «picada» (vuelta del ciclo) la caña da un tirón
   return Object.assign({k:A.sk,col:TCOL[TT[S.tool[A.sk]]]||'#aaa'},animPh(per,per*(1-ph),per*ph,A.sk==='wc'?720:680))}
  return{k:A.sk,ph,id:A.e&&A.e.id,...(A.sk==='sm'&&A.e&&A.e.id!=='furnace'?animPh(A.per||900,(A.per||900)*(1-ph),(A.per||900)*ph,650):{})}}
@@ -1000,12 +1113,13 @@ function visDir(now){const tg=P.dir==null?2:P.dir;if(P.vd==null)P.vd=tg;if(P.vd!
 function heroState3D(now){const t=now/1000,tg=A&&A.e?A.e:(CK&&S.stn?S.stn:null);let fx=null,fy=null;
  const cbNow=!!(A&&A.ty==='f');if(cbNow)P.cbT=now;   // Lote R3D-ANIM: guardia de combate (se mantiene 2,5 s tras el último combate o golpe recibido)
  if(tg&&!P.mvg&&tg.x!=null){fx=tg.x-P.x;fy=tg.y-P.y;P.dir=HERO.dirOf(fx,fy)}
+ if(A&&A.fg&&A.fg.st!=='wait'){fx=(A.fg.fx||A.e.x)-P.x;fy=(A.fg.fy||A.e.y)-P.y;P.dir=HERO.dirOf(fx,fy)}   // pesca: el héroe siempre mira al pez, también al retroceder
  const cn=typeof CINE!=="undefined"&&CINE.on?CINE:null;if(cn&&cn.look){fx=cn.look[0];fy=cn.look[1];P.dir=HERO.dirOf(fx,fy)}   // CINE-4: el héroe mira hacia donde dice la escena
  if(aimOn()&&!(cn&&cn.look)){if(now-SWG.last<650&&!CHG.on){fx=SWG.dx;fy=SWG.dy;P.dir=HERO.dirOf(fx,fy)}else if((CHG.on||curHid()&&!P.mvg||!P.mvg&&now-(P.cbT||-1e9)<2500)&&CUR.on&&!CUR.touch){const w=ISO.toWorld(CUR.px,CUR.py,TER.heightAt);fx=w.x-P.x;fy=w.y-P.y;P.dir=HERO.dirOf(fx,fy)}}   // el héroe mira al cursor
  const dsU=now<DSH.an?(now-DSH.t0)/Math.max(1,DSH.an-DSH.t0):0;if(dsU>0&&!(cn&&cn.look)){fx=DSH.dx;fy=DSH.dy;P.dir=HERO.dirOf(fx,fy)}   // el dash: el personaje mira hacia donde se lanza
  const act=P.mvg&&!(aimOn()&&(CHG.on||now<SWG.t0+SWG.ms*.8))?null:actState(now);if(act&&P.mvg&&act.k==='f')act.mv=1;if(act&&P.anm){P.anm=0;P.wt=null}const gear=gearOpts();if(/[?&]capa=1/.test(location.search)&&!gear.cp)gear.cp='#5a2230';
  return{recv:cn?cn.recv:0,x:P.x,y:P.y,z:TER.standZ(P.x,P.y),mv:!!(P.mvg||P.anm),run:!!RUN,w:P.w||0,act,dash:dsU>0&&dsU<1?dsU:0,hurt:Math.max(0,1-(now-HURT)/320),fx,fy,cb:cbNow||now-(P.cbT||-1e9)<2500||now-HURT<2500,
-  aim:act&&act.k==='fi'&&A&&A.e?{x:A.e.x,y:A.e.y,ph:act.ph}:null,
+  aim:act&&act.k==='fi'&&A&&A.e?{x:(A.fg&&(A.fg.st==='fight'||A.fg.st==='reel'))?A.fg.fx:A.e.x,y:(A.fg&&(A.fg.st==='fight'||A.fg.st==='reel'))?A.fg.fy:A.e.y,ph:act.ph}:null,
   look:{app:S.app,ar:S.eq.a?ARC(S.eq.a):null,helm:S.eq.h?ARC(S.eq.h):null,boot:S.eq.f?ARC(S.eq.f):null,gear,hood:'down',arm:armorInfo()}}}
 const bl=document.createElement('canvas');bl.width=W>>2;bl.height=H>>2;const bx=bl.getContext('2d'),gr=document.createElement('canvas');gr.width=gr.height=96;let GP=null,SHK=0,HURT=-1e9;
 try{const g=gr.getContext('2d'),im=g.createImageData(96,96);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255}g.putImageData(im,0,0)}catch(e){}
@@ -1087,11 +1201,12 @@ function hovUpdate(){HOV=null;CUR.hov=null;if(curHid()){cv.style.cursor='none';a
 // ---- Drops en el suelo (13 oct 2026): los objetos que sueltan los enemigos caen al suelo (ya no se pierden con la mochila llena). Clic = ir a recogerlo; también se recogen al pasar por encima (si hay sitio).
 // Calidad (rr(id): 0 común … 4 legendario) = color del brillo (RAR) + luz real de noche (DEFS g1..g4 en light.js) + haz de luz desde rara. TTL: 3 min (rara o mejor: 10 min). No se guardan en la partida.
 function dropGround(id,x,y,o){if(GD.length>=80)GD.shift();const a=Math.random()*6.283,r=12+Math.random()*18;let tx=x+Math.cos(a)*r,ty=y+Math.sin(a)*r*.7;if(!TER.isLand(TER.heightAt(tx,ty))||PROPS.solid(tx,ty)||TER.cliffNear(tx,ty,6)){tx=x;ty=y}
- const now=performance.now(),q=Math.max(rr(id),o&&o.rare?2:0);GD.push({dropG:1,id:'drop',it:id,x:tx,y:ty,ox:x,oy:y,t0:now,q,ph:Math.random()*6,exp:now+(q>=2?600000:180000)})}   // o.rare = «drop raro» de criatura (MD[].rare): mínimo Raro (estela de luz + sonido)
+ const now=performance.now(),q=Math.max(rr(id),o&&o.rare?2:0);GD.push({dropG:1,id:'drop',it:id,x:tx,y:ty,ox:x,oy:y,t0:now,q,ph:Math.random()*6,au:o&&o.au?1:0,exp:now+(q>=2?600000:180000)})}   // o.rare = «drop raro» de criatura (MD[].rare): mínimo Raro (estela de luz + sonido)
 function pickG(g,now){const i=GD.indexOf(g);if(i<0)return false;if(!room(g.it)){if(now-(pickG.w||0)>2500){pickG.w=now;toast('🎒 Mochila llena: vende o usa el banco',1800)}return false}
  GD.splice(i,1);add(g.it);GA.push({it:g.it,x:g.x,y:g.y,t0:now,q:g.q,ph:g.ph});P.pk=now;snd(g.q>=2?'rare':'coin');dirty=1;return true}
 function dropUpd(now){for(let i=GD.length-1;i>=0;i--)if(now>GD[i].exp)GD.splice(i,1);for(let i=GA.length-1;i>=0;i--)if(now-GA[i].t0>420)GA.splice(i,1);
  // Lote R3D-DROPS-3D: YA NO se recogen solos al pasar por encima: hay que hacer clic (pickEnt → engage → pickG). Al caer, los raros suenan (poco común: campanilla suave; raro: «rare»; épico+: «epic»).
+ for(const g of [...GD])if(g.au&&!INT&&now>=g.t0+650&&Math.hypot(g.x-P.x,g.y-P.y)<130)pickG(g,now);   // botín de la rueda: tras el salto vuela solo a tu mano
  for(const g of GD)if(!g.sd&&now-g.t0>480){g.sd=1;if(g.q>=3)snd('epic');else if(g.q===2)snd('rare');else if(g.q===1)snd('xp')}}
 const GIC={},GCL={};
 
@@ -1119,7 +1234,7 @@ function draw(now){const t=now/1000;cx=Math.max(0,Math.min(WW-W,P.x-W/2))|0;cy=M
   ...(cin?[]:M).filter(e=>onScr(e.x,e.y)&&R3D.actors.has(e)).map(e=>[ISO.depth(e.x,e.y),()=>spr(e.x,e.y,0,()=>dMo(e,t,now))]),[ISO.depth(P.x,P.y),()=>R3D.drawHero(ctx)]];
  AMBI.draw(ctx,'ground');
  ents.sort((a,b)=>a[0]-b[0]).forEach(o=>o[1]());
- PJ.forEach(p=>{if(now>=p.t0)drawPJ(p,now)});npSweep();drawTel(now);drawWind(now);drawHFX(now);drawAim(now);swingHud(now);
+ PJ.forEach(p=>{if(now>=p.t0)drawPJ(p,now)});npSweep();whDraw(now);fishDraw(now,OCDT);drawTel(now);drawWind(now);drawHFX(now);drawAim(now);swingHud(now);
  parts.forEach(p=>p.hs?hsDraw(p):spr(p.x,p.y,12,()=>{ctx.globalAlpha=Math.min(1,p.l);if(p.sp){ctx.beginPath();ctx.arc(p.x,p.y,7,0,7);ctx.fillStyle=p.sp;ctx.fill();T(p.tx,p.x,p.y+4,'#fff')}else if(p.tx)T(p.tx,p.x,p.y,p.c);else Rc(p.c,p.x,p.y,2,2);ctx.globalAlpha=1}));
  AMBI.draw(ctx,'over');
  if(!window.R3D)PAINT.grain(ctx,cv.width,cv.height,ISO.V.dpr,.55); // grano de papel: con WGL lo pone un div con multiply (sin coste por frame); este es el plan B
@@ -1134,6 +1249,8 @@ let RPEND=null;   // clic derecho: «ir a» se decide al SOLTAR (si arrastraste,
 cv.addEventListener('pointerup',ev=>{if(ev.button!==2||!RPEND)return;const q=RPEND;RPEND=null;if(Math.abs(ev.clientX-q.cx)>6)return;/* arrastraste con el clic derecho: fue un giro de cámara (r3d.js) */if(CK||ZMP)return;const now=performance.now(),b=curHid()?null:pickEnt(q.px,q.py,now);if(A)stopA();if(b){P.g={e:b};P.mv=null}else{const w=ISO.toWorld(q.px,q.py,TER.heightAt);P.mv={x:w.x,y:w.y};P.g=null}});
 cv.addEventListener('pointerdown',ev=>{if(ev.button===1)return;if(ev.button===2&&!CK&&!ZMP){const r=cv.getBoundingClientRect();RPEND={px:(ev.clientX-r.left)*cv.width/r.width,py:(ev.clientY-r.top)*cv.height/r.height,cx:ev.clientX};return}if(CK){cookHit();return}if(ZMP)return;const r=cv.getBoundingClientRect(),px=(ev.clientX-r.left)*cv.width/r.width,py=(ev.clientY-r.top)*cv.height/r.height,now=performance.now(),sc=ISO.scale(),k=SPR*sc;
  const b=curHid()?null:pickEnt(px,py,now);   // cursor oculto: el clic nunca elige entidades (golpe / moverse)
+ if(A&&A.wh&&ev.button!==2&&(!b||b===A.e)){whPress(now);return}   // rueda de recolección: el clic es el golpe
+ if(A&&A.fg&&ev.button!==2&&(!b||b===A.e)){fishPress(now);return}   // pesca: el clic clava el anzuelo / recoge
  if(aimOn()&&ev.button!==2){CUR.touch=ev.pointerType==='touch';if(b&&b.d){chargeStart(now);return}if(!b&&!CUR.touch){chargeStart(now);return}}   // combate dirigido: clic izquierdo = swing hacia el cursor; clic derecho / táctil sobre el suelo = moverse
  if(!aimOn()&&b&&b.d&&manual()){ATKIN.t=now;ATKIN.held=1;if(A&&A.ty==='f'&&A.e===b)return}   // combate activo: el clic es el golpe (mantener = seguidos); sobre el mismo objetivo no reinicia el combate
  if(A)stopA();if(b){P.g={e:b};P.mv=null}else{const w=ISO.toWorld(px,py,TER.heightAt);P.mv={x:w.x,y:w.y};P.g=null}});
@@ -1142,7 +1259,7 @@ addEventListener('keydown',e=>{if(e.key==='Alt'){ALTK=1;e.preventDefault()}const
  if(k){K[k]=1;e.preventDefault()}if(e.key==='Shift'&&!e.repeat&&!RUN){if(S.exh)log('Estás agotado: recupera el aliento para volver a correr.');else{RUN=1;SHRUN=1;S.hintR=1;if(typeof rhHide==='function')rhHide();runBtn()}}   // MAYÚS = CORRER (mantener); R quedó LIBRE (21 oct 2026)
 if((e.key==='t'||e.key==='T')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))arTog();if(e.key==='m'||e.key==='M')MM=(MM+1)%3;if(e.key==='g'||e.key==='G')tgCur();if(e.key==='F4'){perfTog();e.preventDefault()}if((e.key==='+'||e.key==='=')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setZoom(ZMI+1);if((e.key==='-'||e.key==='_')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setZoom(ZMI-1);if((e.key==='e'||e.key==='E')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||'')&&!CK&&!INT)atkKey(true);if((e.key===' '||e.key==='Enter')&&CK){cookHit();e.preventDefault()}else if(e.key===' '&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT|BUTTON/.test((e.target||{}).tagName||'')){if(dash())e.preventDefault()}if((e.key==='f'||e.key==='F')&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')&&!CK){useNear();e.preventDefault()}if(e.key==='Escape'){if(QOPEN)qCloseBoard();else if(CK)CK=null;else if(IW)closeIW();else if(panelOpen()){setPanel(false,1);document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('on'))}}if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')){const TK={i:'inv',p:'ch',k:'sk',q:'qm',l:'q',c:'col',z:'mg',o:'pr'}[(e.key||'').toLowerCase()];if(TK&&!CK)tabClick(TK);if(e.key==='v'||e.key==='V')specTog()}});addEventListener('keyup',e=>{if(e.key==='Alt'){ALTK=0;e.preventDefault()}const k=KM[e.key]||KM[String(e.key).toLowerCase()];if(k)K[k]=0;if(e.key==='e'||e.key==='E')atkKey(false);if(e.key==='Shift'&&SHRUN){SHRUN=0;RUN=0;runBtn()}});addEventListener('blur',()=>{ALTK=0;if(SHRUN){SHRUN=0;RUN=0;runBtn()}K.l=K.r=K.u=K.d=0;ATKIN.held=0});
 addEventListener('pointerdown',()=>pd=1);addEventListener('pointerup',()=>{if(aimOn())chargeEnd();ATKIN.held=0;setTimeout(()=>pd=0,60)});
-let hid=0;document.addEventListener('visibilitychange',()=>{if(document.hidden)hid=Date.now();else if(A&&A.ty!=='f'&&Date.now()-hid>5000){offline(Date.now()-hid,A.sk,A.i);A.t0=performance.now()}});
+/* progreso offline retirado (21 oct 2026): al volver a la pestaña no se simulan acciones */
 
 // ---------- paneles ----------
 const PDS={xp:'+50% de XP durante 3 min.',dmg:'Fuerza +3 (más 10% de tu nivel) durante 3 min.',spd:'+35% de velocidad durante 3 min.'};
@@ -1314,7 +1431,7 @@ function panel(){const pn=$('#pn'),sb=$('#swb'),s1=pn.scrollTop,s2=sb.scrollTop;
 // ---------- inicio ----------
 SKL.forEach(k=>S.st['lvl:'+k]=L(k));S.st.tot=SKL.reduce((s,k)=>s+L(k),0);
 S.rest=0; // el «descanso» (+50 % XP tras estar fuera) se quitó en oct 2026: era demasiado fuerte
-if(S.cur&&ACT[S.cur.sk]&&ACT[S.cur.sk][S.cur.i]&&Date.now()-S.t>15000)offline(Date.now()-S.t,S.cur.sk,S.cur.i);S.cur=null;
+S.cur=null;   /* progreso OFFLINE retirado (21 oct 2026, decisión del dueño: ya no es un idle) */
 setInterval(save,5000);$('#mv').value=S.mv;$('#sv').value=S.sv;$('#mv').oninput=e=>{S.mv=+e.target.value;save()};$('#sv').oninput=e=>{S.sv=+e.target.value;save()};autoBtn();$('#log').innerHTML='<div>'+logs[0]+'</div>';{let pv=null,gv=null;try{pv=localStorage.getItem('ns_pn');gv=localStorage.getItem('ns_goal')}catch(e){}const open=pv===null?innerWidth>=900&&innerHeight>=500:pv==='1';tab('inv');if(!open){setPanel(false);document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('on'))}if(gv==='1'||(gv===null&&innerHeight<500))$('#goalp').classList.add('min')}
 let last=performance.now();
 // Panel de rendimiento (tecla F4 o ?perf): fps, mediana/p95/máx de frame, ms de JS del dibujo, chunks síncronos, calidad. Sirve para decir QUÉ tirones hay.
@@ -1331,7 +1448,20 @@ function loop(now){const fdt=now-last;DT=Math.min(.05,fdt/1000);last=now;if(fdt<
 // Se omite con `?noload` y, por defecto, en navegadores automatizados (navigator.webdriver: las herramientas de tools/ miden desde el primer segundo); `?load` la fuerza también ahí.
 // Seguridad: pase lo que pase (error, pestaña oculta, equipo muy lento) el juego arranca como mucho a los 20 s; nunca se queda en la pantalla de carga.
 
+/* OFICIOS ENTRELAZADOS (Fase 3·c, 21 oct 2026; regla del dueño: «a más tier, más ítems de OTROS oficios; tope 4–5 componentes distintos»): se aplica UNA vez al arrancar, sobre las recetas ya construidas.
+   Las recetas de nivel ≤ 3 (las del tutorial de la isla) NO se tocan. Reglas:
+   · Herrería: toda barra pide COMBUSTIBLE (Tala: `logs`, más cuanto mayor el nivel); las espadas piden empuñadura de MADERA del tier (Tala) + correa de CUERO (Caza) y, desde nivel 45, pomo de HUESO.
+   · Artesanía: los petos piden acolchado de LANA (Ganadería), más cuanto mayor el nivel.
+   · Cocina: los platos «f_» (fritos/guisos) piden leña (fuego lento). · Escultor: los arcos piden PLUMAS (emplumado).
+   Comprobación: `python tools/craft_balance.py` (componentes ≤ 5, ingredientes obtenibles, esfuerzo por pieza). Un oficio/receta nueva = una línea aquí. */
+let IL_DONE=false;function applyInterlock(){if(IL_DONE)return;IL_DONE=true;
+ const WDI=lv=>lv<15?'logs':lv<30?'roble':lv<45?'sauce':lv<60?'arce':'tejo',add=(a,id,n)=>{if(n>0&&!(id in a[1])&&Object.keys(a[1]).length<5)a[1][id]=n};
+ for(const a of ACT.sm||[]){if(a.length!==6||a[3]<=3)continue;const o=String(a[2]),lv=a[3];if(/^b_/.test(o))add(a,'logs',Math.ceil(lv/30));else if(/^(sw_|lw_)/.test(o)){add(a,WDI(lv),1);add(a,'cuero',1);if(lv>=45)add(a,'hueso',1)}}
+ for(const a of ACT.cr||[]){if(a.length===6&&a[3]>3&&/^ar_/.test(String(a[2])))add(a,'lana',Math.ceil(a[3]/25))}
+ for(const a of ACT.co||[]){if(a.length===6&&a[3]>3&&/^f_/.test(String(a[2])))add(a,'logs',1)}
+ for(const a of ACT.es||[]){if(a.length===6&&a[3]>3&&/^bw_/.test(String(a[2])))add(a,'pluma',1+Math.floor(a[3]/40))}}
 async function bootRun(){
+ applyInterlock();
  const el=$('#boot'),fill=$('#bt-fill'),msg=$('#bt-msg'),T0=performance.now(),late=()=>performance.now()-T0>20000;
  const pct=(p,m)=>{fill.style.width=Math.round(Math.max(0,Math.min(1,p))*100)+'%';if(m)msg.textContent=m};
  const frame=()=>new Promise(r=>{let d=0;const f=()=>{if(!d){d=1;r()}};requestAnimationFrame(f);setTimeout(f,80)});   // un fotograma real (deja pintar la barra); en pestaña oculta cae al temporizador

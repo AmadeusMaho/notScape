@@ -57,6 +57,8 @@ export class SpellFX{
  ember(x,y,hh=.5){const p=this.W3(x,y,TER.standZ(x,y));this.emit(p.x+(this.h(1,2)-.5)*.3,p.y+hh*.6,p.z+(this.h(2,3)-.5)*.3,(this.h(3,4)-.5)*.2,.5+this.h(4,5)*.5,(this.h(5,6)-.5)*.2,.5+this.h(6,7)*.4)}
  burst(x,y,z,n,sp=1){for(let j=0;j<n;j++){const a=this.h(j,1)*6.283,e=.3+this.h(j,2)*1.1,r=(.8+this.h(j,3)*1.6)*sp;this.emit(x,y,z,Math.cos(a)*r*e,.6+this.h(j,4)*1.8*sp,Math.sin(a)*r*e,.35+this.h(j,5)*.5)}}
  impact(p,k){this.burst(p.x,p.y+.5,p.z,26+Math.round(k*22),1+k*.6);const r=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:'#ff9a46',transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.9}));r.position.set(p.x,p.y+.5,p.z);this.scene.add(r);this.rings.push({r,t0:this.t,s0:.9+k*.7})}
+ // objetos desechables para PRECOMPILAR los shaders de los decals durante la carga (R3D.warmShaders): evita el tirón de la primera telegrafía/estela
+ warmObjs(){return [new THREE.Mesh(decalGeo,decalMat(TELE_F,false)),new THREE.Mesh(decalGeo,decalMat(SLASH_F,true))].map(m=>{m.position.set(0,-80,0);m.frustumCulled=false;return m})}
  // aviso en el suelo: se pide CADA fotograma mientras dura (key = objeto que lo identifica); u 0..1 = progreso; half = semiángulo (≥ π = círculo)
  tele(key,x,y,ang,R,half,u,col){this.tq.push([key,x,y,ang,R,half,u,col||'#d4261c'])}
  // estela del golpe del héroe: arranca tras `delay` ms y barre ±half rad en `ms` ms; dir ±1 alterna el sentido del combo

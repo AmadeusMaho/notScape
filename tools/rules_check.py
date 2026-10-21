@@ -51,11 +51,20 @@ for p in r3d:
             res.append(('REVISAR', 'pow() con base no acotada en ' + p.name, a[:60]))
 
 # 6. Tablas por bioma: cada bioma nuevo = una fila. Cuenta de biomas declarada vs. filas (texto)
-nb = len(re.findall(r"^\s*id:\s*'", rd('src/biome-rules.js'), re.M))
+nb = len(re.findall(r"\{id:'[a-z]+',cult:", rd('src/biome-rules.js')))
 (ok if nb >= 10 else warn)('BIOME_RULES: filas con id', str(nb))
 tp = re.search(r'TREEPAL\s*=\s*\[(.*?)\];', rd('src/r3d/nature3d.js'), re.S)
 if tp: (ok if tp.group(1).count('{') >= 10 else warn)('TREEPAL: una fila por bioma (≥10)', str(tp.group(1).count('{')))
 else: warn('TREEPAL no encontrado', '')
+
+# 6b. Cobertura por bioma de las demás tablas (biomas 6–8 son esqueletos: se avisa, no se falla)
+NB = 10
+cov = [('música DEF (music.js)', len(re.findall(r"(?:^|[ ,{])(\d+):\{aldea:", rd('src/music.js'))) + (1 if re.search(r"DEF\[9\]\s*=", rd('src/music.js')) else 0)),
+       ('cultura de aldeanos CU (villagers.js)', len(re.findall(r"\{n:'[^']+',robes", rd('src/villagers.js')))),
+       ('paleta de interiores PALS (interiors.js; 6–8 usan IKB)', len(re.findall(r"\{nm:'[^']+',style", rd('src/interiors.js')))),
+       ('ambiente CFG (ambience.js)', len(re.findall(r"/\*\d+ [^*]*\*/\s*\{", rd('src/ambience.js'))))]
+for n, c in cov:
+    (ok if c >= NB else warn)(f'cobertura por bioma: {n}', f'{c}/{NB}')
 
 # 7. Documentación: tamaño de AGENTS.md y nº de lotes (la propia regla: archivar a HISTORIAL cuando pasen de ~10)
 sz = len(ag.encode('utf8')); lotes = len(re.findall(r'^### (?:Lote|PROPUESTA)', ag, re.M))

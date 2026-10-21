@@ -31,7 +31,8 @@ import {Rooms3D,INT_TP} from './interiors3d.js';   // Lote R3D-F15b: interiores 
 import {Drops} from './drops3d.js';   // Lote R3D-DROPS-3D: objetos del suelo en 3D, recogida por clic y estela de luz en los raros
 import {SkyZone} from './skyzone3d.js';   // Lote ISLA-2: acantilado, mar de nubes, anillo de nubes y cascadas de la zona del Cielo
 import {Fragment,Debris,Embers} from './cinefx3d.js';
-import {SpellFX} from './spellfx3d.js';   // 21 oct 2026: bola de fuego (R3D.spell)   // Lote CINE-3: fragmento del tiempo, escombros, brasas
+import {SpellFX} from './spellfx3d.js';import {FX} from './fx3d.js';   // 21 oct 2026: partículas suaves (R3D.fx)
+   // 21 oct 2026: bola de fuego (R3D.spell)   // Lote CINE-3: fragmento del tiempo, escombros, brasas
 import {Gabriel} from './gabriel3d.js';   // Lote CINE-2: ángel caído de la cinemática (R3D.gabriel)
 import {Blood} from './blood3d.js';   // Lote R3D-SANGRE: salpicaduras + manchas en el suelo
 import {OUTFITS,outfitOf,outfitUnlocked,resolveLook} from './outfits3d.js';
@@ -127,7 +128,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  // hora dorada PERMANENTE en el Cielo (decisión del dueño, 21 oct 2026): dentro de la zona el reloj del día deja de mandar (mezcla día/atardecer fija, sin noche); fuera, todo igual
  const zoneTod=p=>{const w=sky&&sky.on?sky.w||0:0;if(w<.002)return p;const g=mixTod(TOD.dia,TOD.atardecer,.28);g.nt=0;g.sat=Math.min(1.35,g.sat*1.3);return mixTod(p,g,w)};
  let burn=0,burnT=0,fireSrc=null,fireRow=null,bem=null;
- const spell=new SpellFX(scene,W3);
+ const spell=new SpellFX(scene,W3),fx=new FX(scene,W3);
  // ISLA-7: ARDE EL CIELO (suelo naranja, nubes de fuego y brasas persistentes alrededor de la cámara mientras `burn` > 0); lo activa `R3D.skyBurn=1` (isla.js, paso «Escapa»)
  function burnFx(t,dt,tgt){G.uBurn.value=burn;if(sky&&sky.tint)sky.tint(burn);if(burn>.02||bem){if(!bem)bem=new Embers(scene,360);bem.level=burn>.02?Math.min(1,burn*1.1):0;bem.at(tgt.x,tgt.z,0);bem.update(t,dt)}}
  const FIRE=()=>{const a=TOD.atardecer;if(fireSrc!==a){fireSrc=a;fireRow=Object.assign({},a,{hemS:'#ff9a64',hemG:'#4a1c10',hemI:a.hemI*1.05,sun:'#ff6a2a',sunI:a.sunI*1.15,sat:Math.min(1.1,a.sat*1.05),lift:'#1c0804',vig:Math.min(.9,a.vig+.2),rim:'#ff7a3a',bloom:a.bloom*1.3,wDeep:'#3a1210',wShal:'#8a3a22',nt:.18})}return fireRow};
@@ -195,7 +196,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   const w=ISO.unproj(ISO.cam.x,ISO.cam.y,1);tgt.set(w.x/ISO.TILE,0,w.y/ISO.TILE);const k=ppu();placeCam(cam,tgt,V.cw/2/k,V.ch/2/k);
   if(sky&&sky.on){sky.update(t,dt,tgt,cam,water);WU.uClear.value=sky.w||0}
   // noche → rim y ojos de la capucha (el oscurecido lo hace lighting() en 2D)
-  const IN=rooms.on,upd=!IN,tp=IN?INT_TP:fireMix(zoneTod(todAt(t)),dt),nt=tp.nt;light(tp);burnFx(t,dt,tgt);spell.update(t,dt);if(frz>.002)G.uSat.value*=1-.75*frz;if(IN){aHemi.color.set('#ffe2b8');aHemi.groundColor.set('#9a6a3c');aHemi.intensity=1.8;aSun.color.set('#ffc27a');aSun.intensity=2.0;aBack.color.set('#ffb070')}G.uNight.value=tp.night;lights(t,tp,Math.hypot(V.cw,V.ch)/k*.78+6);rooms.update(t);
+  const IN=rooms.on,upd=!IN,tp=IN?INT_TP:fireMix(zoneTod(todAt(t)),dt),nt=tp.nt;light(tp);burnFx(t,dt,tgt);spell.update(t,dt);fx.update(t,dt,tp.night,r.getPixelRatio());if(typeof P!=='undefined'&&typeof curB!=='undefined')fx.ambient(P.x,P.y,curB,dt);if(frz>.002)G.uSat.value*=1-.75*frz;if(IN){aHemi.color.set('#ffe2b8');aHemi.groundColor.set('#9a6a3c');aHemi.intensity=1.8;aSun.color.set('#ffc27a');aSun.intensity=2.0;aBack.color.set('#ffb070')}G.uNight.value=tp.night;lights(t,tp,Math.hypot(V.cw,V.ch)/k*.78+6);rooms.update(t);
   // F3f·P6 · halo del santuario: la gema (aEmit=3) se atenúa al acercarse el héroe (si no, el haz + el bloom lo sobreexponen: mancha blanca). A ≥3,6 tiles brillo completo; a ≤1,2 tiles `shrMin`. Suavizado en el tiempo.
   {let dm=99;if(typeof PO!=='undefined'&&typeof P!=='undefined')for(const e of PO)if(e.n==='santuario'){const d=Math.hypot(e.x-P.x,e.y-P.y)/ISO.TILE;if(d<dm)dm=d}
    const u=Math.min(1,Math.max(0,(dm-1.2)/2.4)),tk=shrMin+(1-shrMin)*u*u*(3-2*u);G.uShrK.value+=(tk-G.uShrK.value)*(1-Math.exp(-dt*6))}
@@ -205,7 +206,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   if(upd)terr.update(tgt.x,tgt.z,Math.hypot(V.cw,V.ch)/k*.78+6);if(upd){const hp=typeof P!=='undefined'?W3(P.x,P.y,TER.standZ(P.x,P.y)):tgt,S=Math.min(44,Math.max(22,Math.hypot(V.cw/2/k,V.ch/k)*2.2));   // volumen que envuelve la pantalla (tiles)
    parts.update(dt,tgt.x,hp.y,tgt.z,typeof curB!=='undefined'?curB:0,tp.night,typeof WXD!=='undefined'?WXD:0,ISO.scale()*V.dpr/1.9,S,typeof QL!=='undefined'?QL:2);
    blood.update(dt,t,hp,tp.night,typeof QL!=='undefined'?QL:2);rays.update(t,dt,tgt,Math.hypot(V.cw,V.ch)/k*.78+6,1-tp.night,typeof WXD!=='undefined'?WXD:0,typeof QL!=='undefined'?QL:2)}   // Lote R3D-SANGRE: gotas (física) + manchas; hp = posición del héroe en three (linterna de noche)
-  if(upd){terr.lodR=[14,12,10,8,7][typeof QL!=='undefined'?QL:2];terr.lod(tgt.x,tgt.z);props.update();{const cr=Math.hypot(V.cw,V.ch)/k*.78+14;props.cull(tgt.x,tgt.z,cr);res.cull(tgt.x,tgt.z,cr)}sta.update(now,t,typeof HOV!=='undefined'?HOV:null,typeof A!=='undefined'&&A?A.e:null);fac.update(now,t,typeof HOV!=='undefined'?HOV:null);res.update(now,t,typeof HOV!=='undefined'?HOV:null,typeof A!=='undefined'&&A?A.e:null)}
+  if(upd){terr.lodR=[14,12,10,8,7][typeof QL!=='undefined'?QL:2];terr.lod(tgt.x,tgt.z);props.update();{const cr=Math.hypot(V.cw,V.ch)/k*.78+14;props.cull(tgt.x,tgt.z,cr);res.cull(tgt.x,tgt.z,cr)}sta.update(now,t,typeof HOV!=='undefined'?HOV:null,typeof A!=='undefined'&&A?A.e:null);fac.update(now,t,typeof HOV!=='undefined'?HOV:null);res.update(now,t,typeof HOV!=='undefined'?HOV:null,typeof A!=='undefined'&&A?A.e:null,dt)}
   // actores 3D (antes que el héroe: su copia de profundidad en aScene tiene que estar al día cuando se dibuja el héroe)
   if(upd)actors.update(now,t,dt,tgt,Math.hypot(V.cw,V.ch)/k*.78+6,typeof HOV!=='undefined'?HOV:null,typeof P!=='undefined'?P:{x:0,y:0});actors.grp.updateMatrixWorld(true);if(upd)drops.update(now,t,dt,tgt,Math.hypot(V.cw,V.ch)/k*.78+6,typeof HOV!=='undefined'?HOV:null);if(upd)cts.update(props,res,actors,typeof P!=='undefined'?P:null,tp.night,typeof QL!=='undefined'?QL:2);
   // héroe
@@ -266,11 +267,15 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  return{gpu:GPU,dbg:{terr,cts,composer,bloom,grade,sun,pool,lantern,aLantern,aSun,aBack,ar,hgrade,parts,scene,aScene},get water(){return water},outfits:{list:OUTFITS,of:outfitOf,unlocked:outfitUnlocked,resolve:resolveLook},preview:cvs=>new HeroPreview(cvs),talkHead:cvs=>new TalkHead(cvs),get shrineMin(){return shrMin},set shrineMin(v){shrMin=Math.max(0,Math.min(1,+v||0))},get contact(){return cts.k},set contact(v){cts.k=Math.max(0,Math.min(1.5,+v||0))},get clouds(){return cloudK},get tilt(){return TILT_K},set tilt(v){TILT_K=Math.max(0,Math.min(1.5,+v||0))},get wind(){return G.uWindK.value},set wind(v){G.uWindK.value=Math.max(0,Math.min(3,+v||0))},set clouds(v){cloudK=Math.max(0,Math.min(1.5,+v||0))},get oilDay(){return OIL.H},set oilDay(v){OIL.H=Math.max(0,Math.min(1,+v||0));setOil(OIL.K)},get oil(){return OIL.K},set oil(v){setOil(v);const sl=document.getElementById('ov');if(sl)sl.value=Math.round(OIL.K*100)},frame,drawHero,show,preload,get tod(){return TODc},get propsOn(){return props.on},get parts3d(){return parts.on},parts,get resOn(){return res.on},get dropsOn(){return drops.on},drops,rays,glow,lm:dl,rooms,get intOn(){return rooms.on},get stOn(){return sta.on},get facOn(){return fac.on},get poOn(){return sta.poOn},sta,props,res,actors,blood,get az(){return az},set az(v){az=azT=v},get tscale(){return tsT},set tscale(v){tsT=Math.max(0,Math.min(1,+v||0))},get frozen(){return frz},get skyBurn(){return burnT},set skyBurn(v){burnT=Math.max(0,Math.min(1,+v||0))},get skyBurnNow(){return burn},skyBurnReset(){burnT=burn=0},get vclock(){return last},tsync(){tsT=tsK=1;vlag=0;frz=0},renderer:r,scene,W3,get sky(){return sky},get gait(){const a=hero&&hero.anim;return{g:a?a.gph:0,run:!!a&&a.runK>.5,vis:frz<.5}},   // marcha del héroe para los PASOS (footsteps.js): fase de pie `gph` (un pie toca el suelo cada vez que cambia floor(2·gph)), ¿corriendo?, ¿audible? (no en el tiempo detenido)
  async warmShaders(maxMs=30000,all=true){   // Lote FREEZE-SHADERS: compila de antemano TODOS los programas del mundo (tras la pantalla de carga) para que no se compilen a mitad de partida (paradas de 8 s o más)
   const hid=[];if(all)scene.traverse(o=>{if(!o.visible){o.visible=true;hid.push(o)}});
+  // 21 oct 2026: lo que se crea bajo demanda (decals de combate, ojos de aviso, copias de árboles/menas que caen) también se precompila: si no, la PRIMERA vez que ocurre el juego se congela
+  const tmp=[...spell.warmObjs(),...res.warmObjs(),new THREE.Sprite(new THREE.SpriteMaterial({color:"#ffffff",transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}))];tmp.forEach(o=>scene.add(o));
   const t0=performance.now(),n0=r.info.programs.length;
   const cp=r.clippingPlanes;
-  try{await Promise.race([r.compileAsync(scene,cam),new Promise(ok=>setTimeout(ok,maxMs))]);
-   r.clippingPlanes=[new THREE.Plane(new THREE.Vector3(0,1,0),0)];   // 2.ª pasada: el REFLEJO del agua usa un plano de recorte global y cada material genera otro programa
-   await Promise.race([r.compileAsync(scene,cam),new Promise(ok=>setTimeout(ok,maxMs))])}catch(e){console.warn('[R3D warmShaders]',e)}
-  r.clippingPlanes=cp;
-  hid.forEach(o=>{o.visible=false});console.info('[R3D shaders]',{programas:r.info.programs.length,nuevos:r.info.programs.length-n0,ms:Math.round(performance.now()-t0)})},
- get wu(){return WU},get spell(){return spell},fragment:()=>new Fragment(scene),debris:n=>new Debris(scene,n),embers:n=>new Embers(scene,n),gabriel:(x,y,z)=>new Gabriel(scene,W3,x,y,z==null?TER.standZ(x,y):z),hero,terr,stats:()=>({calls:r.info.render.calls,tris:r.info.render.triangles,chunks:terr.ch.size})}}
+  // El programa de un material depende del DESTINO de render (pantalla o render target del composer: espacio de color/tone mapping distinto) y del plano de recorte global del reflejo del agua:
+  // se compila para cada combinación (21 oct 2026: antes solo se compilaba contra la pantalla, y la primera tala/telegrafía/estela aún congelaba el juego).
+  const rt0=r.getRenderTarget(),rts=[null];try{if(composer&&composer.renderTarget1)rts.push(composer.renderTarget1)}catch(e){}
+  try{for(const clip of [false,true]){r.clippingPlanes=clip?[new THREE.Plane(new THREE.Vector3(0,1,0),0)]:cp;   // con plano: el REFLEJO del agua genera otro programa por material
+    for(const rt of rts){r.setRenderTarget(rt);await Promise.race([r.compileAsync(scene,cam),new Promise(ok=>setTimeout(ok,maxMs))])}}}catch(e){console.warn('[R3D warmShaders]',e)}
+  r.setRenderTarget(rt0);r.clippingPlanes=cp;
+  tmp.forEach(o=>{scene.remove(o);if(o.isSprite||(o.material&&o.material.isShaderMaterial))o.material.dispose()});hid.forEach(o=>{o.visible=false});console.info('[R3D shaders]',{programas:r.info.programs.length,nuevos:r.info.programs.length-n0,ms:Math.round(performance.now()-t0)})},
+ get wu(){return WU},get spell(){return spell},get fx(){return fx},get res(){return res},fragment:()=>new Fragment(scene),debris:n=>new Debris(scene,n),embers:n=>new Embers(scene,n),gabriel:(x,y,z)=>new Gabriel(scene,W3,x,y,z==null?TER.standZ(x,y):z),hero,terr,stats:()=>({calls:r.info.render.calls,tris:r.info.render.triangles,chunks:terr.ch.size})}}

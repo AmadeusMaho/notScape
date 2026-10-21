@@ -78,7 +78,7 @@ class WaterSim{
 
 // ── material D ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 const TX=makeTextures();
-export const WU={uDeep:{value:new THREE.Color('#164a4b')},uShal:{value:new THREE.Color('#4f8c7e')},uLight:{value:new THREE.Color('#8fc4b2')},uFoam:{value:new THREE.Color('#c3cdc2')},uGlint:{value:new THREE.Color('#ffd7a8')},
+export const WU={uDeep:{value:new THREE.Color('#2a7478')},uShal:{value:new THREE.Color('#6cb5a4')},uLight:{value:new THREE.Color('#b0e0cf')},uFoam:{value:new THREE.Color('#c3cdc2')},uGlint:{value:new THREE.Color('#ffd7a8')},
  uNight:G.uNight,uTime:G.uTime,uQ:{value:2},uTex:{value:TX.tex},uNrm:{value:TX.nrm},uSim:{value:null},uSimO:{value:new THREE.Vector2(-1e9,-1e9)},uSimS:{value:SIM_W},uSimOn:{value:0},uPK:{value:1},
  uSun:{value:new V3(.55,.75,.35)},uSunCol:{value:new V3(1,.95,.82)},uSunI:{value:1},uHor:{value:new THREE.Color('#cfe8f0')},uZen:{value:new THREE.Color('#6aaee0')},uSkyA:{value:.8},uTone:{value:new V3(1,1,1)},uRef:{value:null},uRefM:{value:new THREE.Matrix4()},uRefOn:{value:0},uWS:{value:1/SC},uDK:{value:DEPTH_K},uClear:{value:0},uCA:{value:new THREE.Color('#00aee6')},uCB:{value:new THREE.Color('#5eeaff')},uCK:{value:1}};   // uClear 0..1 = AGUA CRISTALINA (zona del Cielo, ISLA-2): más transparente, turquesa claro, sin tinta en la orilla
 const WVS=`attribute float aDepth;attribute float aSwell;varying float vD;varying vec3 vW;varying vec3 vNw;varying float vH;uniform float uTime,uQ;
@@ -111,13 +111,15 @@ void main(){
  c=mix(c,uShal*vec3(.88,1.06,.84),smoothstep(.5,.8,wr)*.3*(1.-smoothstep(.2,.6,d)*.5));
  if(uQ>.5){float cg=texture2D(uTex,q*.68+(br-.5)*.5+sg*.35+vec2(t*.035,t*.022)).g;
   float ln=smoothstep(.62,.82,cg)*(.4+.6*smoothstep(.3,.7,br))*(1.-.5*smoothstep(.2,.7,d))*(1.-uNight*.7);c=mix(c,uLight,ln*.1);}
+ if(uClear>.001){vec3 cr=mix(uCA,uCB,smoothstep(.0,.4,br+.25*(1.-smoothstep(.0,.5,d))));float cs=texture2D(uTex,pw*.28+vec2(t*.03,t*.02)).g,cs2=texture2D(uTex,pw*.41-vec2(t*.025,t*.03)).g;cr+=vec3(.55,.95,.95)*(smoothstep(.6,.84,cs)+smoothstep(.62,.86,cs2))*.32;c=mix(c,cr,uClear*uCK);}   // CRISTALINO: ahora es el COLOR BASE (antes se aplicaba al FINAL y borraba la espuma/brillos de la simulación: el agua del Cielo no mostraba ondas ni chapuzones)
+
  vec3 N=normalize(vec3(vNw.x*1.8-sg.x*8.*.6,vNw.y,vNw.z*1.8-sg.y*8.*.6));
  if(uQ>1.5){vec2 n2=texture2D(uNrm,p*.44+vec2(t*.03,t*.02)).xy*2.-1.;N=normalize(N+vec3(n2.x,0.,n2.y)*(.22-.16*(1.-step(.001,vH+abs(vNw.x)+abs(vNw.z)))));}
  vec3 L=normalize(uSun);vec3 V=normalize(cameraPosition-vW);
  float hh=vH+sh;float sl=dot(N,L)-L.y;c*=clamp(1.+sl*2.4+hh*.6,.8,1.3);
  c=mix(c,uShal*1.3+uLight*.12,smoothstep(.06,.12,hh)*.22);
  vec3 H=normalize(L+V);float nh=max(dot(N,H),0.);
- c+=uGlint*uSunCol*(pow(nh,36.)*.3+pow(nh,220.)*.6)*uSunI;
+ c+=uGlint*uSunCol*(pow(nh,36.)*.1+pow(nh,220.)*.28)*uSunI;   // brillo especular suavizado (antes parecía plástico)
  float f=pow(1.-clamp(dot(N,V),0.,1.),2.5);
  c=mix(c,mix(uHor,uZen,smoothstep(0.,1.,V.y*1.3)),uSkyA*(.1+.5*f)*(.5+.5*smoothstep(.45,.7,br)));
  vec3 fc=uFoam*mix(vec3(1.),uSunCol,.6);
@@ -137,11 +139,11 @@ void main(){
  float brk=smoothstep(.06,.13,vH)*(1.-smoothstep(.05,.25,d))*smoothstep(.4,.7,br);
  c=mix(c,fc,(smoothstep(.62,.7,sm.a*ins+(br-.5)*.25)*.3*uPK+smoothstep(.2,.3,brk*stroke)*.42));
  if(uQ>1.5){vec4 s=texture2D(uTex,p*.3+vec2(t*.012,0.));float tw=smoothstep(.7,1.,s.a)*pow(.5+.5*sin(t*2.6+s.r*50.),3.);c+=uGlint*uSunCol*tw*1.2*uSunI*(1.-uNight*.5);}
- vec3 qz=floor(c*5.+.5+(br-.5)*.9)/5.;c=mix(c,qz,.5);
+ vec3 qz=floor(c*5.+.5+(br-.5)*.9)/5.;c=mix(c,qz,.28*(1.-.6*uClear));
  float lu=dot(c,vec3(.2126,.7152,.0722));c=mix(vec3(lu),c,.86);
- if(uClear>.001){vec3 cr=mix(uCA,uCB,smoothstep(.0,.4,br+.25*(1.-smoothstep(.0,.5,d))));float cs=texture2D(uTex,pw*.28+vec2(t*.03,t*.02)).g,cs2=texture2D(uTex,pw*.41-vec2(t*.025,t*.03)).g;cr+=vec3(.55,.95,.95)*(smoothstep(.6,.84,cs)+smoothstep(.62,.86,cs2))*.32;c=mix(c,cr*uTone,uClear*uCK);}   // CRISTALINO: turquesa saturado que aclara con la orilla + CÁUSTICAS que bailan (dos capas) y se ve el fondo claro (alpha bajo)   // menos saturación: encaja con la paleta óleo del terreno
+   // CRISTALINO: turquesa saturado que aclara con la orilla + CÁUSTICAS que bailan (dos capas) y se ve el fondo claro (alpha bajo)   // menos saturación: encaja con la paleta óleo del terreno
  c*=uTone;
- gl_FragColor=vec4(c,mix(mix(.46,.5,uClear),mix(.96,.82,uClear),smoothstep(0.,.5,d))*smoothstep(0.,.004,d));
+ gl_FragColor=vec4(c,mix(mix(.4,.42,uClear),mix(.84,.7,uClear),smoothstep(0.,.5,d))*smoothstep(0.,.004,d));
  #include <colorspace_fragment>
 }`;
 export function waterMat(){return new THREE.ShaderMaterial({uniforms:WU,transparent:true,depthWrite:false,vertexShader:WVS,fragmentShader:WFS})}
@@ -244,6 +246,11 @@ export class Water{
  depthAt(x,z){return WY-this.terr.field(x,z).y}
  pickSpot(minD,r){for(let k=0;k<40;k++){const a=Math.random()*TAU,rr=Math.sqrt(Math.random())*r,x=this.px+Math.cos(a)*rr,z=this.pz+Math.sin(a)*rr,tx=Math.floor(x),tz=Math.floor(z);
    if(this.terr.h(tx,tz)===.75&&this.depthAt(x,z)>minD)return[x,z]}return null}
+  // PEZ ENGANCHADO (minijuego de pesca, 21 oct 2026): un pez visible que tira de la línea. x,z en TILES, heading = rumbo (rad, x→z), tired 0..1 (cansado: de costado y despacio), len en unidades (25–45 cm ≈ .15–.26; aquí algo mayor para leerse).
+ hook(on,x,z,heading,tired,len,col,t,dt){let m=this.hk;if(!on){if(m)m.visible=false;return}
+  if(!m||this.hkc!==col||this.hkl!==len){if(m){this.root.remove(m);m.traverse(o=>{if(o.geometry)o.geometry.dispose()});m.userData.mat.dispose()}m=this.hk=fishMesh(len,col);m.userData.mat.opacity=.95;m.userData.mat.depthWrite=true;this.root.add(m);this.hkc=col;this.hkl=len}
+  m.visible=true;const k=1-.7*tired;m.position.set(x,WY+.014+tired*.02+Math.max(0,Math.sin(t*5))*.006*tired,z);m.rotation.set(tired*1.15,-heading,Math.sin(t*3)*.08*tired);m.userData.tail.rotation.y=Math.sin(t*(17*k+3))*(.62-.3*tired);
+  this.sim.dent(x,z,.0045*SC*(dt||.016)*60,.1*SC*.6)}   // estela de ondas
  addFish(){const sp=this.pickSpot(.16,10);if(!sp)return;const f={x:sp[0],z:sp[1],a:Math.random()*TAU,sp:.4,ph:Math.random()*6,rise:.4,y:WY-.1,pitch:0,len:rnd(FISH_LEN[0],FISH_LEN[1]),jt:rnd(8,20),jump:null,ctrl:null,id:this.fish.length};
   f.mesh=fishMesh(f.len,FISH_COLORS[(Math.random()*FISH_COLORS.length)|0]);this.root.add(f.mesh);this.fish.push(f)}
  removeFish(f){this.root.remove(f.mesh);f.mesh.traverse(o=>{if(o.geometry)o.geometry.dispose()});f.mesh.userData.mat.dispose();const i=this.fish.indexOf(f);if(i>=0)this.fish.splice(i,1)}

@@ -43,7 +43,7 @@
   put('anfora',13.5,-7,null,[3,3]);put('anfora',18.5,-7,null,[3,3]);
   put('columnaRota',27,-6,{v:0},[8,8]);put('columnaRota',-28,-8,{v:1},[8,8]);put('columnaRota',27.5,2,{v:2},[8,8]);put('estelaG',24,-9.5,{ruins:1},[7,4])}
  // ARBOLEDAS REPARTIDAS (Lote CIELO-ARBOLES, 21 oct 2026): árboles del Cielo por toda la isla, no solo en el olivar. [x0,x1,y0,y1,n] en tiles desde el centro, lejos de edificios, lagos y camino; su «zona» es 1×1 tile (sin aviso de zona de tala).
- const GR=[[-16,-6,8,14,8],[3,12,11,18,8],[-22,-12,-18,-11,7],[21,26,-16,-11,5],[24,29,8,13,5],[5,11,-15,-9,6]];
+ const GR=[[-16,-6,8,14,8],[3,12,11,18,8],[-20,-12,-15,-11,7],[19,23,-13,-10,5],[22,26,7,11,5],[5,11,-15,-9,6]];   // rectángulos de arboledas DENTRO de la elipse de la isla (rx 32, ry 24): las esquinas de antes (p. ej. 29,13) caían al agua/acantilado (coast_check)
  const Z={n:'El Cielo',lv:80,ic:'☁️',g:['#9ed2ee','#8fc8e6','#aadcf4'],w:'#8fd8f0',sh:'#e8f8ff',noBoss:1,base:0,zone:true,id:'cielo',pal,dec,
   village:{stations:STN,props:PRP,cobs:COBZ,plaza:[],bridge:null,safe:[ce[0],ce[1],470,470],theme:{}},routes:[],pathW:B8.pathW,lake:false,camp:false,
   res:{wc:[[[0,16]],...GR.map(g=>[[0,g[4]]])],mi:[[[0,6],[1,6]]],fi:[[[0,5]]]},mobs:{ing:[],pack:B8.mobs.pack},music:B8.music,rvc:B8.rvc,bossResp:B8.bossResp,bossRunes:B8.bossRunes,

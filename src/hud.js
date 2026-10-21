@@ -159,7 +159,7 @@ const HUDSU=(()=>{
    setBar(B.th,m.hp/m.mh,Math.round(Math.max(0,m.hp)/m.mh*100)+' %')}
   else if(tg.classList.contains('on')){if(!hideT)hideT=now+900;if(now>hideT){tg.classList.remove('on');tg._m=null;hideT=0}}
   // acción (talar, minar…): barra de progreso sobre el marco
-  const ac=A&&A.ty!=='f';act.classList.toggle('on',!!ac);if(ac){$('#hs-al').textContent=actLabel();setBar(B.ac,Math.min(1,A.pr||0),null)}
+  const ac=A&&A.ty!=='f'&&!A.wh&&!A.fg;   /* con la rueda de recolección no hay barra de acción (la rueda lleva el progreso) */act.classList.toggle('on',!!ac);if(ac){$('#hs-al').textContent=actLabel();setBar(B.ac,Math.min(1,A.pr||0),null)}
   // resistencia (E7/H7): el juego guarda S.sta (0–100) y S.exh; la rueda se ve solo si no está llena o se está corriendo
   if(typeof S.sta==='number'){const st=S.sta/100;wh.classList.toggle('show',S.sta<99.5||!!RUN);wh.classList.toggle('exh',!!S.exh);wh.classList.toggle('low',!S.exh&&st<.15);wh.classList.toggle('warn',!S.exh&&st>=.15&&st<.35);whf.setAttribute('stroke-dasharray',(st*100).toFixed(1)+' 100')}
   dlgFrame(now);dollFrame(now);if(tg.classList.contains('on'))tpFrame(now);fx(B.hp,tt,dt,low);fx(B.mp,tt,dt,0);if(tg.classList.contains('on'))fx(B.th,tt,dt,0);if(ac)fx(B.ac,tt,dt,0)}

@@ -44,7 +44,8 @@ async def main():
     if r['on']:
       st=r['stats'];tot=st['landTiles']+st['seaTiles']
       if st['shore']<1.05*st['perim']:print('FALLO: costa poco irregular (%d < 1,05×%d)'%(st['shore'],st['perim']));ok=False
-      if st['landTiles']<.85*tot:print('FALLO: la costa se come demasiada tierra');ok=False
+      if st['landTiles']<.85*.75*tot:   # ×.75: desde ISLA-1 el mundo tiene 4 columnas y la 4.ª (Cielo) es mar de nubes casi entera
+        print('FALLO: la costa se come demasiada tierra');ok=False
       if r['borde']['tierraCercaDelBorde']:print('FALLO: hay tierra a menos de MIN_D del borde');ok=False
       if r['borde']['acantiladosEnBorde']:print('FALLO: hay acantilado en el borde exterior');ok=False
       if r['marYPlaya']['marMarcadoSeaAt']<.98*r['marYPlaya']['marMuestras']:print('FALLO: seaAt no marca el mar exterior');ok=False

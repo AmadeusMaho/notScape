@@ -15,7 +15,11 @@ const BIOME_W=[
  /*2 Pantano */{ff:.8,dust:.2,leaf:0,pet:0,sn:0,em:0,as:0,leafA:'#8ac85a',leafB:'#b6dc6a'},
  /*3 Cumbres */{ff:0,dust:0,leaf:0,pet:0,sn:1,em:0,as:0,leafA:'#fff',leafB:'#fff'},
  /*4 Oriental*/{ff:.45,dust:.3,leaf:0,pet:.8,sn:0,em:0,as:0,leafA:'#ffc2d6',leafB:'#ff9ec0'},
- /*5 Volcán  */{ff:0,dust:0,leaf:0,pet:0,sn:0,em:1,as:1,leafA:'#9a8a8a',leafB:'#6a5a5a'}];
+ /*5 Volcán  */{ff:0,dust:0,leaf:0,pet:0,sn:0,em:1,as:1,leafA:'#9a8a8a',leafB:'#6a5a5a'},
+ /*6 Páramo  */{ff:.9,dust:.2,leaf:0,pet:.6,sn:0,em:.3,as:0,leafA:'#c8a0ff',leafB:'#8a6ad0'},   // motas arcanas violetas
+ /*7 Desierto*/{ff:0,dust:1,leaf:0,pet:0,sn:0,em:0,as:0,leafA:'#d8c090',leafB:'#c8a870'},   // polvo de arena (más el viento de arena de fx3d.js `ambient`)
+ /*8 Costa   */{ff:0,dust:.5,leaf:.25,pet:0,sn:0,em:0,as:0,leafA:'#cfe8e8',leafB:'#8ab8b8'},
+ /*9 Cielo   */{ff:.3,dust:.5,leaf:0,pet:.7,sn:0,em:0,as:0,leafA:'#fff3c8',leafB:'#cfe4ff'}];   // pétalos claros dorados
 const KEYS=['ff','dust','leaf','pet','sn','em','as'];
 
 const COMMON=`
