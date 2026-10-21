@@ -1,0 +1,553 @@
+{
+"bluntwood_walk": [
+"bluntwood/bluntwood_walk1.ogg",
+"bluntwood/bluntwood_walk2.ogg",
+"bluntwood/bluntwood_walk3.ogg",
+"bluntwood/bluntwood_walk4.ogg",
+"bluntwood/bluntwood_walk5.ogg",
+"bluntwood/bluntwood_walk6.ogg",
+"bluntwood/bluntwood_walk7.ogg",
+"bluntwood/bluntwood_walk8.ogg",
+"bluntwood/bluntwood_walk9.ogg",
+"bluntwood/bluntwood_walk10.ogg",
+"bluntwood/bluntwood_walk11.ogg"
+],
+"bluntwood_wander": [
+"bluntwood/bluntwood_wander1.ogg",
+"bluntwood/bluntwood_wander2.ogg",
+"bluntwood/bluntwood_wander3.ogg",
+"bluntwood/bluntwood_wander4.ogg",
+"bluntwood/bluntwood_wander5.ogg"
+],
+"brush_through": [
+"brush/brush_through1.ogg",
+"brush/brush_through2.ogg",
+"brush/brush_through3.ogg",
+"brush/brush_through4.ogg",
+"brush/brush_through5.ogg",
+"brush/brush_through6.ogg",
+"brush/brush_through7.ogg",
+"brush/brush_through8.ogg",
+"brush/brush_through9.ogg",
+"brush/brush_through10.ogg",
+"brush/brush_through11.ogg"
+],
+"chain": [
+"chain/chain_1.ogg",
+"chain/chain_2.ogg",
+"chain/chain_3.ogg",
+"chain/chain_4.ogg",
+"chain/chain_5.ogg",
+"chain/chain_6.ogg",
+"chain/chain_7.ogg",
+"chain/chain_8.ogg",
+"chain/chain_9.ogg",
+"chain/chain_10.ogg",
+"chain/chain_11.ogg",
+"chain/chain_12.ogg"
+],
+"concrete_run": [
+"concrete/concrete_run1.ogg",
+"concrete/concrete_run2.ogg",
+"concrete/concrete_run3.ogg",
+"concrete/concrete_run4.ogg",
+"concrete/concrete_run5.ogg",
+"concrete/concrete_run6.ogg",
+"concrete/concrete_run7.ogg",
+"concrete/concrete_run8.ogg",
+"concrete/concrete_run9.ogg",
+"concrete/concrete_run10.ogg",
+"concrete/concrete_run11.ogg"
+],
+"concrete_walk": [
+"concrete/concrete_walk1.ogg",
+"concrete/concrete_walk2.ogg",
+"concrete/concrete_walk3.ogg",
+"concrete/concrete_walk4.ogg",
+"concrete/concrete_walk5.ogg",
+"concrete/concrete_walk6.ogg",
+"concrete/concrete_walk7.ogg",
+"concrete/concrete_walk8.ogg",
+"concrete/concrete_walk9.ogg",
+"concrete/concrete_walk10.ogg",
+"concrete/concrete_walk11.ogg"
+],
+"concrete_wander": [
+"concrete/concrete_wander1.ogg",
+"concrete/concrete_wander2.ogg",
+"concrete/concrete_wander3.ogg",
+"concrete/concrete_wander4.ogg",
+"concrete/concrete_wander5.ogg"
+],
+"deckwood_run": [
+"deckwood/deckwood_run1.ogg",
+"deckwood/deckwood_run2.ogg",
+"deckwood/deckwood_run3.ogg",
+"deckwood/deckwood_run4.ogg",
+"deckwood/deckwood_run5.ogg",
+"deckwood/deckwood_run6.ogg",
+"deckwood/deckwood_run7.ogg",
+"deckwood/deckwood_run8.ogg",
+"deckwood/deckwood_run9.ogg",
+"deckwood/deckwood_run10.ogg",
+"deckwood/deckwood_run11.ogg"
+],
+"dirt_land": [
+"dirt/dirt_land1.ogg",
+"dirt/dirt_land2.ogg",
+"dirt/dirt_land3.ogg",
+"dirt/dirt_land4.ogg"
+],
+"dirt_run": [
+"dirt/dirt_run1.ogg",
+"dirt/dirt_run2.ogg",
+"dirt/dirt_run3.ogg",
+"dirt/dirt_run4.ogg",
+"dirt/dirt_run5.ogg",
+"dirt/dirt_run6.ogg",
+"dirt/dirt_run7.ogg",
+"dirt/dirt_run8.ogg",
+"dirt/dirt_run9.ogg",
+"dirt/dirt_run10.ogg",
+"dirt/dirt_run11.ogg"
+],
+"dirt_walk": [
+"dirt/dirt_walk1.ogg",
+"dirt/dirt_walk2.ogg",
+"dirt/dirt_walk3.ogg",
+"dirt/dirt_walk4.ogg",
+"dirt/dirt_walk5.ogg",
+"dirt/dirt_walk6.ogg",
+"dirt/dirt_walk7.ogg",
+"dirt/dirt_walk8.ogg",
+"dirt/dirt_walk9.ogg",
+"dirt/dirt_walk10.ogg",
+"dirt/dirt_walk11.ogg"
+],
+"dirt_wander": [
+"dirt/dirt_wander1.ogg",
+"dirt/dirt_wander2.ogg",
+"dirt/dirt_wander3.ogg",
+"dirt/dirt_wander4.ogg",
+"dirt/dirt_wander5.ogg"
+],
+"glass_hard": [
+"glass/glass_hard1.ogg"
+],
+"glass_hit": [
+"glass/glass_hit1.ogg",
+"glass/glass_hit2.ogg"
+],
+"grass_run": [
+"grass/grass_run1.ogg",
+"grass/grass_run2.ogg",
+"grass/grass_run3.ogg",
+"grass/grass_run4.ogg"
+],
+"grass_walk": [
+"grass/grass_walk1.ogg",
+"grass/grass_walk2.ogg",
+"grass/grass_walk3.ogg",
+"grass/grass_walk4.ogg",
+"grass/grass_walk5.ogg",
+"grass/grass_walk6.ogg",
+"grass/grass_walk7.ogg",
+"grass/grass_walk8.ogg",
+"grass/grass_walk9.ogg",
+"grass/grass_walk10.ogg"
+],
+"grass_wander": [
+"grass/grass_wander1.ogg",
+"grass/grass_wander2.ogg",
+"grass/grass_wander3.ogg",
+"grass/grass_wander4.ogg",
+"grass/grass_wander5.ogg",
+"grass/grass_wander6.ogg"
+],
+"gravel_land": [
+"gravel/gravel_land1.ogg",
+"gravel/gravel_land2.ogg"
+],
+"gravel_run": [
+"gravel/gravel_run1.ogg",
+"gravel/gravel_run2.ogg",
+"gravel/gravel_run3.ogg",
+"gravel/gravel_run4.ogg",
+"gravel/gravel_run5.ogg",
+"gravel/gravel_run6.ogg",
+"gravel/gravel_run7.ogg",
+"gravel/gravel_run8.ogg",
+"gravel/gravel_run9.ogg",
+"gravel/gravel_run10.ogg",
+"gravel/gravel_run11.ogg"
+],
+"gravel_walk": [
+"gravel/gravel_walk1.ogg",
+"gravel/gravel_walk2.ogg",
+"gravel/gravel_walk3.ogg",
+"gravel/gravel_walk4.ogg",
+"gravel/gravel_walk5.ogg",
+"gravel/gravel_walk6.ogg",
+"gravel/gravel_walk7.ogg",
+"gravel/gravel_walk8.ogg",
+"gravel/gravel_walk9.ogg",
+"gravel/gravel_walk10.ogg",
+"gravel/gravel_walk11.ogg"
+],
+"gravel_wander": [
+"gravel/gravel_wander1.ogg",
+"gravel/gravel_wander2.ogg",
+"gravel/gravel_wander3.ogg"
+],
+"leaves_through": [
+"leaves/leaves_through1.ogg",
+"leaves/leaves_through2.ogg",
+"leaves/leaves_through3.ogg",
+"leaves/leaves_through4.ogg",
+"leaves/leaves_through5.ogg",
+"leaves/leaves_through6.ogg",
+"leaves/leaves_through7.ogg"
+],
+"lino_run": [
+"lino/lino_run1.ogg",
+"lino/lino_run2.ogg",
+"lino/lino_run3.ogg",
+"lino/lino_run4.ogg",
+"lino/lino_run5.ogg",
+"lino/lino_run6.ogg"
+],
+"lino_walk": [
+"lino/lino_walk1.ogg",
+"lino/lino_walk2.ogg",
+"lino/lino_walk3.ogg",
+"lino/lino_walk4.ogg",
+"lino/lino_walk5.ogg",
+"lino/lino_walk6.ogg",
+"lino/lino_walk7.ogg",
+"lino/lino_walk8.ogg"
+],
+"marble_run": [
+"marble/marble_run1.ogg",
+"marble/marble_run2.ogg",
+"marble/marble_run3.ogg",
+"marble/marble_run4.ogg",
+"marble/marble_run5.ogg",
+"marble/marble_run6.ogg",
+"marble/marble_run7.ogg",
+"marble/marble_run8.ogg",
+"marble/marble_run9.ogg",
+"marble/marble_run10.ogg",
+"marble/marble_run11.ogg"
+],
+"marble_walk": [
+"marble/marble_walk1.ogg",
+"marble/marble_walk2.ogg",
+"marble/marble_walk3.ogg",
+"marble/marble_walk4.ogg",
+"marble/marble_walk5.ogg",
+"marble/marble_walk6.ogg",
+"marble/marble_walk7.ogg",
+"marble/marble_walk8.ogg",
+"marble/marble_walk9.ogg",
+"marble/marble_walk10.ogg",
+"marble/marble_walk11.ogg"
+],
+"marble_wander": [
+"marble/marble_wander1.ogg",
+"marble/marble_wander2.ogg",
+"marble/marble_wander3.ogg",
+"marble/marble_wander4.ogg",
+"marble/marble_wander5.ogg",
+"marble/marble_wander6.ogg",
+"marble/marble_wander7.ogg"
+],
+"metalbar_land": [
+"metalbar/metalbar_land1.ogg"
+],
+"metalbar_run": [
+"metalbar/metalbar_run1.ogg",
+"metalbar/metalbar_run2.ogg",
+"metalbar/metalbar_run3.ogg",
+"metalbar/metalbar_run4.ogg",
+"metalbar/metalbar_run5.ogg",
+"metalbar/metalbar_run6.ogg",
+"metalbar/metalbar_run7.ogg",
+"metalbar/metalbar_run8.ogg",
+"metalbar/metalbar_run9.ogg",
+"metalbar/metalbar_run10.ogg",
+"metalbar/metalbar_run11.ogg"
+],
+"metalbar_walk": [
+"metalbar/metalbar_walk1.ogg",
+"metalbar/metalbar_walk2.ogg",
+"metalbar/metalbar_walk3.ogg",
+"metalbar/metalbar_walk4.ogg",
+"metalbar/metalbar_walk5.ogg",
+"metalbar/metalbar_walk6.ogg",
+"metalbar/metalbar_walk7.ogg",
+"metalbar/metalbar_walk8.ogg",
+"metalbar/metalbar_walk9.ogg",
+"metalbar/metalbar_walk10.ogg",
+"metalbar/metalbar_walk11.ogg"
+],
+"metalbar_wander": [
+"metalbar/metalbar_wander1.ogg",
+"metalbar/metalbar_wander2.ogg",
+"metalbar/metalbar_wander3.ogg",
+"metalbar/metalbar_wander4.ogg",
+"metalbar/metalbar_wander5.ogg",
+"metalbar/metalbar_wander6.ogg"
+],
+"metalbox_run": [
+"metalbox/metalbox_run1.ogg",
+"metalbox/metalbox_run2.ogg",
+"metalbox/metalbox_run3.ogg",
+"metalbox/metalbox_run4.ogg",
+"metalbox/metalbox_run5.ogg",
+"metalbox/metalbox_run6.ogg",
+"metalbox/metalbox_run7.ogg",
+"metalbox/metalbox_run8.ogg",
+"metalbox/metalbox_run9.ogg",
+"metalbox/metalbox_run10.ogg"
+],
+"metalbox_walk": [
+"metalbox/metalbox_walk1.ogg",
+"metalbox/metalbox_walk2.ogg",
+"metalbox/metalbox_walk3.ogg",
+"metalbox/metalbox_walk4.ogg",
+"metalbox/metalbox_walk5.ogg",
+"metalbox/metalbox_walk6.ogg",
+"metalbox/metalbox_walk7.ogg",
+"metalbox/metalbox_walk8.ogg",
+"metalbox/metalbox_walk9.ogg"
+],
+"metalbox_wander": [
+"metalbox/metalbox_wander1.ogg",
+"metalbox/metalbox_wander2.ogg",
+"metalbox/metalbox_wander3.ogg",
+"metalbox/metalbox_wander4.ogg"
+],
+"mud_walk": [
+"mud/mud_walk1.ogg",
+"mud/mud_walk2.ogg",
+"mud/mud_walk3.ogg",
+"mud/mud_walk4.ogg",
+"mud/mud_walk5.ogg",
+"mud/mud_walk6.ogg"
+],
+"mud_wander": [
+"mud/mud_wander1.ogg",
+"mud/mud_wander2.ogg",
+"mud/mud_wander3.ogg",
+"mud/mud_wander4.ogg"
+],
+"muffledice_walk": [
+"muffledice/muffledice_walk1.ogg",
+"muffledice/muffledice_walk2.ogg",
+"muffledice/muffledice_walk3.ogg",
+"muffledice/muffledice_walk4.ogg",
+"muffledice/muffledice_walk5.ogg",
+"muffledice/muffledice_walk6.ogg",
+"muffledice/muffledice_walk7.ogg",
+"muffledice/muffledice_walk8.ogg",
+"muffledice/muffledice_walk9.ogg",
+"muffledice/muffledice_walk10.ogg"
+],
+"quicksand_walk": [
+"quicksand/quicksand_walk1.ogg",
+"quicksand/quicksand_walk2.ogg",
+"quicksand/quicksand_walk3.ogg",
+"quicksand/quicksand_walk4.ogg",
+"quicksand/quicksand_walk5.ogg",
+"quicksand/quicksand_walk6.ogg",
+"quicksand/quicksand_walk7.ogg",
+"quicksand/quicksand_walk8.ogg",
+"quicksand/quicksand_walk9.ogg",
+"quicksand/quicksand_walk10.ogg",
+"quicksand/quicksand_walk11.ogg"
+],
+"rug_walk": [
+"rug/rug_walk1.ogg",
+"rug/rug_walk2.ogg",
+"rug/rug_walk3.ogg",
+"rug/rug_walk4.ogg",
+"rug/rug_walk5.ogg",
+"rug/rug_walk6.ogg",
+"rug/rug_walk7.ogg",
+"rug/rug_walk8.ogg",
+"rug/rug_walk9.ogg",
+"rug/rug_walk10.ogg",
+"rug/rug_walk11.ogg"
+],
+"sand_run": [
+"sand/sand_run1.ogg",
+"sand/sand_run2.ogg",
+"sand/sand_run3.ogg",
+"sand/sand_run4.ogg",
+"sand/sand_run5.ogg",
+"sand/sand_run6.ogg",
+"sand/sand_run7.ogg",
+"sand/sand_run8.ogg",
+"sand/sand_run9.ogg",
+"sand/sand_run10.ogg",
+"sand/sand_run11.ogg"
+],
+"sand_walk": [
+"sand/sand_walk1.ogg",
+"sand/sand_walk2.ogg",
+"sand/sand_walk3.ogg",
+"sand/sand_walk4.ogg",
+"sand/sand_walk5.ogg",
+"sand/sand_walk6.ogg",
+"sand/sand_walk7.ogg",
+"sand/sand_walk8.ogg",
+"sand/sand_walk9.ogg",
+"sand/sand_walk10.ogg",
+"sand/sand_walk11.ogg"
+],
+"snow_run": [
+"snow/snow_run1.ogg",
+"snow/snow_run2.ogg",
+"snow/snow_run3.ogg",
+"snow/snow_run4.ogg",
+"snow/snow_run5.ogg",
+"snow/snow_run6.ogg",
+"snow/snow_run7.ogg",
+"snow/snow_run8.ogg",
+"snow/snow_run9.ogg",
+"snow/snow_run10.ogg",
+"snow/snow_run11.ogg"
+],
+"snow_walk": [
+"snow/snow_walk1.ogg",
+"snow/snow_walk2.ogg",
+"snow/snow_walk3.ogg",
+"snow/snow_walk4.ogg",
+"snow/snow_walk5.ogg",
+"snow/snow_walk6.ogg",
+"snow/snow_walk7.ogg",
+"snow/snow_walk8.ogg",
+"snow/snow_walk9.ogg",
+"snow/snow_walk10.ogg",
+"snow/snow_walk11.ogg"
+],
+"snow_wander": [
+"snow/snow_wander1.ogg",
+"snow/snow_wander2.ogg",
+"snow/snow_wander3.ogg",
+"snow/snow_wander4.ogg",
+"snow/snow_wander5.ogg"
+],
+"squeakywood_walk": [
+"squeakywood/squeakywood_walk1.ogg",
+"squeakywood/squeakywood_walk2.ogg",
+"squeakywood/squeakywood_walk3.ogg",
+"squeakywood/squeakywood_walk4.ogg",
+"squeakywood/squeakywood_walk5.ogg",
+"squeakywood/squeakywood_walk6.ogg",
+"squeakywood/squeakywood_walk7.ogg",
+"squeakywood/squeakywood_walk8.ogg",
+"squeakywood/squeakywood_walk9.ogg",
+"squeakywood/squeakywood_walk10.ogg",
+"squeakywood/squeakywood_walk11.ogg"
+],
+"squeakywood_wander": [
+"squeakywood/squeakywood_wander1.ogg",
+"squeakywood/squeakywood_wander2.ogg",
+"squeakywood/squeakywood_wander3.ogg",
+"squeakywood/squeakywood_wander4.ogg",
+"squeakywood/squeakywood_wander5.ogg",
+"squeakywood/squeakywood_wander6.ogg",
+"squeakywood/squeakywood_wander7.ogg"
+],
+"stone_run": [
+"stone/stone_run1.ogg",
+"stone/stone_run2.ogg",
+"stone/stone_run3.ogg",
+"stone/stone_run4.ogg",
+"stone/stone_run5.ogg",
+"stone/stone_run6.ogg",
+"stone/stone_run7.ogg",
+"stone/stone_run8.ogg",
+"stone/stone_run9.ogg",
+"stone/stone_run10.ogg",
+"stone/stone_run11.ogg"
+],
+"stone_walk": [
+"stone/stone_walk1.ogg",
+"stone/stone_walk2.ogg",
+"stone/stone_walk3.ogg",
+"stone/stone_walk4.ogg",
+"stone/stone_walk5.ogg",
+"stone/stone_walk6.ogg",
+"stone/stone_walk7.ogg",
+"stone/stone_walk8.ogg",
+"stone/stone_walk9.ogg",
+"stone/stone_walk10.ogg",
+"stone/stone_walk11.ogg"
+],
+"stone_wander": [
+"stone/stone_wander1.ogg",
+"stone/stone_wander2.ogg",
+"stone/stone_wander3.ogg",
+"stone/stone_wander4.ogg",
+"stone/stone_wander5.ogg"
+],
+"water_through": [
+"water/water_through1.ogg",
+"water/water_through2.ogg",
+"water/water_through3.ogg",
+"water/water_through4.ogg",
+"water/water_through5.ogg",
+"water/water_through6.ogg",
+"water/water_through7.ogg",
+"water/water_through8.ogg",
+"water/water_through9.ogg",
+"water/water_through10.ogg",
+"water/water_through11.ogg"
+],
+"water_wander": [
+"water/water_wander1.ogg",
+"water/water_wander2.ogg",
+"water/water_wander3.ogg",
+"water/water_wander4.ogg",
+"water/water_wander5.ogg"
+],
+"weakice_walk": [
+"weakice/weakice_walk1.ogg",
+"weakice/weakice_walk2.ogg",
+"weakice/weakice_walk3.ogg",
+"weakice/weakice_walk4.ogg",
+"weakice/weakice_walk5.ogg",
+"weakice/weakice_walk6.ogg",
+"weakice/weakice_walk7.ogg",
+"weakice/weakice_walk8.ogg",
+"weakice/weakice_walk9.ogg",
+"weakice/weakice_walk10.ogg"
+],
+"dash": [
+"wing/dash1.ogg"
+],
+"land": [
+"wing/land1.ogg"
+],
+"wing": [
+"wing/wing0.ogg",
+"wing/wing1.ogg",
+"wing/wing2.ogg",
+"wing/wing3.ogg"
+],
+"wood_walk": [
+"wood/wood_walk1.ogg",
+"wood/wood_walk2.ogg",
+"wood/wood_walk3.ogg",
+"wood/wood_walk4.ogg",
+"wood/wood_walk5.ogg",
+"wood/wood_walk6.ogg",
+"wood/wood_walk7.ogg",
+"wood/wood_walk8.ogg",
+"wood/wood_walk9.ogg",
+"wood/wood_walk10.ogg",
+"wood/wood_walk11.ogg"
+]
+}

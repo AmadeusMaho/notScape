@@ -1,0 +1,29 @@
+<!-- Comparación héroe Mini + props oscuros (?old=1 = props ORG pastel; ?hora=noche; ?wide). OJO: sin el grado óleo ni los pases del héroe del juego (r3d.js): sirve para escala y silueta, no para el color final. Lote R3D-F2C-DECISION. -->
+<!DOCTYPE html><meta charset="utf-8"><style>html,body{margin:0;background:#222}canvas{width:100vw;height:100vh;display:block}</style><canvas id="gl"></canvas>
+<script src="../../../src/style.js"></script><script src="../../../src/style-organic.js"></script>
+<script type="importmap">{"imports":{"three":"../../../vendor/three/build/three.module.js","three/addons/":"../../../vendor/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {toon,hull,inkFor,G,TOD,TODH,setInk} from '../../../src/r3d/materials3d.js';
+import {darkGeo} from '../../../src/r3d/propsdark3d.js';
+import {orgGeometry} from '../../../tools/r3d/org3d_adapter.mjs';
+import {MiniHero} from '../../../src/r3d/herom3d.js';
+const Q=new URLSearchParams(location.search),old=Q.has('old'),night=Q.get('hora')==='noche';
+const cv=document.getElementById('gl'),r=new THREE.WebGLRenderer({canvas:cv,antialias:true,stencil:true});r.setPixelRatio(1);r.setSize(innerWidth,innerHeight,false);r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;r.toneMapping=THREE.NoToneMapping;
+const scene=new THREE.Scene(),az=Math.PI/4,EL=Math.PI/6,cam=new THREE.OrthographicCamera(-1,1,1,-1,.1,200);
+const D=night?TOD.noche:(Q.has('h')?TODH.dia:TOD.dia);
+const hemi=new THREE.HemisphereLight(D.hemS,D.hemG,D.hemI*.9),sun=new THREE.DirectionalLight(D.sun,D.sunI*.9),back=new THREE.DirectionalLight('#7fa3ad',.5);sun.castShadow=true;sun.shadow.mapSize.set(4096,4096);sun.shadow.bias=-.0008;sun.shadow.normalBias=.02;scene.add(hemi,sun,sun.target,back);
+G.uSat.value=D.sat;G.uLive.value=D.live;G.uNight.value=night?1:0;G.uWinI.value=night?D.win:D.win*.25;G.uRimCol.value.set(D.rim);setInk(D.ink,D.inkK);r.setClearColor(D.sky);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(100,100).rotateX(-Math.PI/2),new THREE.MeshToonMaterial({color:night?'#26301f':'#4a5a3a'}));ground.receiveShadow=true;scene.add(ground);
+const mat=toon('#ffffff',{vc:1,moss:.7,emit:1,tex:'auto',texS:7,texB:.45}),ink=inkFor('#6a5a52');
+const FAKE=new Proxy({},{get:(t,k)=>k in t?t[k]:(/^create(Linear|Radial)Gradient$/.test(k)?()=>({addColorStop(){}}):k==='measureText'?()=>({width:10}):k==='getImageData'?()=>({data:new Uint8ClampedArray(4)}):k==='canvas'?{width:1,height:1}:()=>{}),set:(t,k,v)=>{t[k]=v;return true}});
+function geo(n,o){if(!old)return darkGeo(n,o).g;const parts=ORG.capture(()=>{ORG.theme(null);ORG.rot(false);try{ORG.U[n](FAKE,0,0,0,o||{})}finally{ORG.theme(null)}});return orgGeometry(THREE,parts,{seed:n.length})}
+const right=new THREE.Vector3(Math.cos(az),0,-Math.sin(az)),bk=new THREE.Vector3(-Math.sin(az),0,-Math.cos(az));
+function put(n,o,u,v){const g=geo(n,o),grp=new THREE.Group(),m=new THREE.Mesh(g,mat);m.castShadow=m.receiveShadow=true;grp.add(m,new THREE.Mesh(hull(g,.022).geometry,ink));grp.position.copy(right).multiplyScalar(u).addScaledVector(bk,v);scene.add(grp);return grp}
+put('casa',{roof:'#6a8fb8',wall:'#ead9b5'},-2.6,0);put('taberna',{roof:'#9a4a3a'},2.6,0);put('farola',{lamp:1},-.2,1.4);put('pozo',{},5.6,1.2);put('barril',{},.9,1.7);put('caja',{},1.5,1.8);
+const h=new MiniHero();h.setLook({app:{g:'m',hair:'cut',col:'#7a3a34',skin:'#e0b48a'},gear:{}});for(let i=0;i<30;i++)h.update({},1/60);h.obj.position.copy(right).multiplyScalar(.5).addScaledVector(bk,2.9);h.obj.traverse(o=>{if(o.isMesh){o.castShadow=true}});scene.add(h.obj);
+const asp=innerWidth/innerHeight,hw=Q.has('wide')?7:4.2,hh=hw/asp;cam.left=-hw;cam.right=hw;cam.top=hh;cam.bottom=-hh;
+cam.position.set(Math.sin(az)*Math.cos(EL)*60,Math.sin(EL)*60,Math.cos(az)*Math.cos(EL)*60);const tgt=new THREE.Vector3().copy(right).multiplyScalar(.6).addScaledVector(bk,1.4);tgt.y=1.2;cam.position.add(tgt);cam.lookAt(tgt);cam.updateProjectionMatrix();
+sun.position.set(-6,12,4).normalize().multiplyScalar(40).add(tgt);sun.target.position.copy(tgt);Object.assign(sun.shadow.camera,{left:-12,right:12,top:12,bottom:-12,near:1,far:120});sun.shadow.camera.updateProjectionMatrix();back.position.set(8,6,-8);
+G.uTime.value=1.2;r.render(scene,cam);window.__done=1;
+</script>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<meta charset="utf-8"><title>Animaciones del héroe</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#171a1c;--fg:#dcd6cc;--mut:#9a948a;--line:#2e3234;--on:#3b4a3e}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:13px/1.4 system-ui,sans-serif}
+body{display:flex;flex-direction:column}
+header{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 12px}
+h1{font:600 17px Georgia,serif;margin:0 10px 0 0}
+select,button,input{background:#202426;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 9px;font:inherit}
+button{cursor:pointer}button[aria-pressed="true"]{background:var(--on)}
+#st{flex:1;position:relative;min-height:320px}#st canvas{position:absolute;inset:0;width:100%;height:100%}
+#lb{position:absolute;inset:0;pointer-events:none;font:11px system-ui;color:#e8e2d8}
+#lb span{position:absolute;transform:translateX(-50%);text-shadow:0 1px 2px #000;white-space:nowrap}
+#lb b{position:absolute;left:6px;font:600 12px system-ui;color:#f0e6d0;text-shadow:0 1px 2px #000}
+#err{position:absolute;left:12px;bottom:12px;color:#ffb3b3;font:12px monospace;white-space:pre-wrap}
+</style>
+<header><h1>Animaciones · héroe diorama</h1>
+<select id="sc" aria-label="Escenario"></select>
+<button id="bpl" aria-pressed="true">⏯ Reproducir</button>
+<label>Velocidad <input id="vel" type="range" min="0.1" max="1.5" step="0.05" value="1" aria-label="Velocidad de reproducción"></label>
+<button id="baz">↻ Girar cámara</button>
+<button id="bsheet">🎞 Tira de fotogramas</button>
+</header>
+<div id="st"><canvas id="gl"></canvas><div id="lb"></div><div id="err"></div></div>
+<script type="importmap">{"imports":{"three":"../../../vendor/three/build/three.module.js","three/addons/":"../../../vendor/three/examples/jsm/"}}</script>
+<script type="module">
+// Visor de animaciones del héroe diorama (Lote R3D-ANIM). Usa el MISMO código que el juego (src/r3d/herom3d.js + heroanim3d.js) y los escenarios de
+// tools/r3d/anim_states.mjs (estados con el formato de game.js). Parámetros:
+//   ?sc=<id>                      escenario (p. ej. sword.ataque, great+sh.guardia, wc.sword); sin él, el primero
+//   ?sheet=<id>,<id>…&n=8         TIRA de fotogramas: una fila por escenario, n instantes repartidos en su ventana `win` (para revisar a ojo y en capturas)
+//   ?az=<grados>                  acimut de la cámara (45 = la vista del juego; 90 = de perfil; 0 = de frente)
+//   ?side=1                       en la tira, añade debajo de cada fila la misma fila vista de perfil
+//   ?still                        sin reproducción (capturas)
+import * as THREE from 'three';
+import {MiniHero} from '../../../src/r3d/herom3d.js';
+import {G,TODH,setInk} from '../../../src/r3d/materials3d.js';
+import {SC,byId,stateAt} from '../../../tools/r3d/anim_states.mjs';
+const ERR=document.getElementById('err');const fail=m=>{ERR.textContent+=m+'\n'};addEventListener('error',e=>fail(e.message));addEventListener('unhandledrejection',e=>fail(String(e.reason)));
+try{
+const Q=new URLSearchParams(location.search),cv=document.getElementById('gl'),lb=document.getElementById('lb'),DPR=Math.min(devicePixelRatio||1,2);
+const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,stencil:true});r.setPixelRatio(DPR);r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;r.toneMapping=THREE.NoToneMapping;r.autoClear=false;
+const scene=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);
+const D=TODH.dia,hemi=new THREE.HemisphereLight(D.hemS,D.hemG,D.hemI*.72),sun=new THREE.DirectionalLight(D.sun,D.sunI*.72),back=new THREE.DirectionalLight('#7fa3ad',.85);
+sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.bias=-.0008;sun.shadow.normalBias=.01;Object.assign(sun.shadow.camera,{left:-2,right:2,top:2.4,bottom:-.6,near:.1,far:40});
+scene.add(hemi,sun,sun.target,back,back.target);G.uSat.value=D.sat;G.uLive.value=D.live;G.uNight.value=0;G.uRimCol.value.set(D.rim);setInk(D.ink,D.inkK);
+const ground=new THREE.Mesh(new THREE.CircleGeometry(6,40).rotateX(-Math.PI/2),new THREE.MeshToonMaterial({color:'#4c5a3a'}));ground.receiveShadow=true;scene.add(ground);
+const grid=new THREE.GridHelper(6,24,'#5e6b4a','#56624a');grid.position.y=.002;scene.add(grid);
+let az=(Q.has('az')?+Q.get('az'):45)*Math.PI/180;const EL=Math.PI/6;
+function place(c,azi,H,asp,cy){c.left=-H*asp;c.right=H*asp;c.top=H;c.bottom=-H;c.updateProjectionMatrix();c.position.set(Math.sin(azi)*Math.cos(EL)*20,cy+Math.sin(EL)*20,Math.cos(azi)*Math.cos(EL)*20);c.lookAt(0,cy,0);
+ sun.position.set(-5,10,3).normalize().multiplyScalar(12);back.position.set(-Math.sin(azi)*6,4,-Math.cos(azi)*6)}
+// un héroe simulado de forma determinista hasta el instante tm (60 fps desde 0) — así cada fotograma de la tira es reproducible
+function heroAt(sc,tm,h){h=h||new MiniHero();h.setLook({app:{g:'m',hair:'cut',col:'#7a3a34',skin:'#e0b48a'},gear:sc.g});const dt=1/60;for(let f=0;f<=Math.round(tm*60);f++)h.update(stateAt(sc,f*dt),dt);
+ const s=stateAt(sc,tm);h.m.obj.position.set(0,0,0);return h}
+const sel=document.getElementById('sc');SC.forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.n;sel.appendChild(o)});
+const sheetIds=Q.get('sheet');if(sheetIds&&Q.has('still'))document.querySelector('header').style.display='none';let sheet=sheetIds?sheetIds.split(',').map(byId).filter(Boolean):null;const n=+(Q.get('n')||8),side=Q.get('side')==='1';
+let cur=byId(Q.get('sc')||'')||SC[0];sel.value=cur.id;let live=new MiniHero(),lt=0,last=performance.now(),play=!Q.has('still'),speed=1;scene.add(live.obj);
+sel.onchange=()=>{cur=byId(sel.value);lt=0;live.setLook({});scene.remove(live.obj);live=new MiniHero();scene.add(live.obj);if(sheet){sheet=[cur];build()}};
+document.getElementById('bpl').onclick=e=>{play=!play;e.target.setAttribute('aria-pressed',play)};document.getElementById('vel').oninput=e=>speed=+e.target.value;
+document.getElementById('baz').onclick=()=>{az+=Math.PI/4;if(sheet)build()};
+document.getElementById('bsheet').onclick=()=>{sheet=sheet?null:[cur];if(sheet)build();lb.innerHTML=''};
+let cells=[];
+function build(){cells.forEach(c=>scene.remove(c.h.obj));cells=[];const rows=[];sheet.forEach(sc=>{rows.push([sc,az]);if(side)rows.push([sc,Math.PI/2])});
+ rows.forEach(([sc,a],ri)=>{for(let i=0;i<n;i++){const tm=sc.win[0]+(sc.win[1]-sc.win[0])*i/(n-1),h=heroAt(sc,tm);h.obj.visible=false;scene.add(h.obj);cells.push({h,ri,i,a,sc,tm,u:h.anim.inStrike?(stateAt(sc,tm).act||{}).ph:null})}});
+ cells.rows=rows.length}
+if(sheet)build();
+function size(){const w=cv.clientWidth,h=cv.clientHeight;r.setSize(w,h,false);return[w,h]}
+function frame(now){const dt=Math.min(.1,(now-last)/1000);last=now;const[w,h]=size();r.setScissorTest(false);r.setClearColor('#171a1c',1);r.clear();
+ if(sheet){const R=cells.rows,cw=w/n,ch=h/R,asp=cw/ch;let html='';live.obj.visible=false;r.setScissorTest(true);
+  cells.forEach(c=>{const x=c.i*cw,y=h-(c.ri+1)*ch;r.setViewport(x,y,cw,ch);r.setScissor(x,y,cw,ch);r.setClearColor(c.ri%2?'#1c2022':'#191c1e',1);r.clear();
+   cells.forEach(o=>o.h.obj.visible=o===c);place(cam,c.a,.8,asp,.6);r.render(scene,cam);
+   html+=`<span style="left:${x+cw/2}px;top:${(c.ri+1)*ch-16}px">${c.tm.toFixed(2)} s${c.u!=null?' · ph '+c.u.toFixed(2):''}</span>`;
+   if(c.i===0)html+=`<b style="top:${c.ri*ch+4}px">${c.sc.n}${c.a===Math.PI/2?' (perfil)':''}</b>`});
+  if(lb.dataset.k!==String(cells.length)+az){lb.innerHTML=html;lb.dataset.k=String(cells.length)+az}}
+ else{cells.forEach(c=>c.h.obj.visible=false);live.obj.visible=true;if(play)lt+=dt*speed;const T=Math.max(cur.T||0,(cur.win[1]||4)+1);if(lt>T)lt=cur.win?cur.win[0]:0;
+  const s=stateAt(cur,lt);live.update(s,dt*speed||1/60);live.m.obj.position.set(0,0,0);r.setViewport(0,0,w,h);place(cam,az,1.0,w/h,.62);r.render(scene,cam);
+  lb.innerHTML=`<span style="left:50%;top:8px">${cur.n} · ${lt.toFixed(2)} s${s.act&&s.act.ph!=null?' · ph '+s.act.ph.toFixed(2):''}</span>`}
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);window.__ready=true;
+}catch(e){fail(e.stack||e.message)}
+</script>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<meta charset="utf-8"><title>Diseños de personaje</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#16131c;--fg:#e2d8c8;--mut:#a89c8a}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:13px/1.4 Georgia,serif}
+body{display:flex;flex-direction:column}
+header{padding:10px 14px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+h1{font-size:18px;margin:0}header a{color:var(--mut)}
+#st{flex:1;position:relative;min-height:320px}#st canvas{position:absolute;inset:0;width:100%;height:100%}
+#lb{position:absolute;inset:0;pointer-events:none}#lb div{position:absolute;transform:translateX(-50%);text-align:center;width:150px}
+#lb b{display:block;font-size:13px;color:#f0e2c8;text-shadow:0 1px 2px #000}#lb i{display:block;font-size:11px;color:var(--mut);font-style:normal;text-shadow:0 1px 2px #000}
+#err{position:absolute;left:10px;bottom:10px;color:#f99;font:12px monospace;white-space:pre-wrap}
+</style>
+<header><h1>Propuestas de diseño</h1><a href="?set=heroe">Héroe</a><a href="?set=pnj">PNJ</a><span style="color:var(--mut)">arrastrar = girar · ?az=grados · ?time=s</span></header>
+<div id="st"><canvas id="gl"></canvas><div id="lb"></div><div id="err"></div></div>
+<script src="../../../src/hero.js"></script>
+<script type="importmap">{"imports":{"three":"../../../vendor/three/build/three.module.js","three/addons/":"../../../vendor/three/examples/jsm/"}}</script>
+<script type="module">
+// Hoja de propuestas de diseño (Lote R3D-F3b). Cada diseño = un look (app + outfit + gear) del MISMO modelo hero3d.js; los PNJ usarán este mismo sistema.
+import * as THREE from 'three';
+import {Hero} from '../../../src/r3d/hero3d.js';
+import {OUTFITS,NPCS} from '../../../src/r3d/outfits3d.js';
+import {G,TOD,setInk,toon} from '../../../src/r3d/materials3d.js';
+const ERR=document.getElementById('err');addEventListener('error',e=>ERR.textContent+=e.message+'\n');
+const Q=new URLSearchParams(location.search),SET=Q.get('set')||'heroe';
+const D=(SET==='pnj'?NPCS:OUTFITS).map(d=>[d.name,d.sub,d.look]);   // datos en src/r3d/outfits3d.js (fuente única)
+const st=document.getElementById('st'),cv=document.getElementById('gl'),r=new THREE.WebGLRenderer({canvas:cv,antialias:true});r.setPixelRatio(Math.min(devicePixelRatio||1,2));r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1,1,-1,.1,100),p=TOD.dia;scene.background=new THREE.Color('#2a2530');
+const hemi=new THREE.HemisphereLight(p.hemS,p.hemG,p.hemI*.9),sun=new THREE.DirectionalLight(p.sun,p.sunI);sun.position.set(-4,9,6);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-6,right:6,top:6,bottom:-6});scene.add(hemi,sun);
+G.uSat.value=p.sat;G.uLive.value=p.live;setInk(p.ink,p.inkK);
+const gnd=new THREE.Mesh(new THREE.CircleGeometry(9,40).rotateX(-Math.PI/2),toon('#4a5234',{}));gnd.receiveShadow=true;scene.add(gnd);
+const n=D.length,SP=1.15,H=[],lb=document.getElementById('lb');
+D.forEach(([name,sub,look],i)=>{const h=new Hero();h.setLook(look);h.px=(i-(n-1)/2)*SP;scene.add(h.obj);H.push(h);const d=document.createElement('div');d.innerHTML='<b>'+name+'</b><i>'+sub+'</i>';lb.appendChild(d);h.lab=d});
+let az=(+(Q.get('az')??25))*Math.PI/180;const EL=Math.PI/7;
+function place(){const w=st.clientWidth,hh=st.clientHeight,a=w/hh,vh=Math.max(1.9,(n*SP+.4)/a);r.setSize(w,hh,false);cam.left=-vh*a/2;cam.right=vh*a/2;cam.top=vh*.62;cam.bottom=-vh*.38;cam.updateProjectionMatrix()}
+function step(t,dt){G.uTime.value=t;H.forEach((h,i)=>h.update({x:h.px,y:0,z:0,mv:false,run:false,w:0,act:null,hurt:0,t:t+i*.7,face:[0,1],wind:[.9,.4]},dt))}
+function render(){cam.position.set(Math.sin(az)*30,.62+Math.sin(EL)*30,Math.cos(az)*30);cam.lookAt(0,.62,0);r.render(scene,cam);
+ H.forEach(h=>{const v=new THREE.Vector3(h.px,-.02,0).project(cam);h.lab.style.left=((v.x+1)/2*100)+'%';h.lab.style.top=((1-v.y)/2*100)+'%'})}
+let drag=0,lx=0;cv.onpointerdown=e=>{drag=1;lx=e.clientX};onpointermove=e=>{if(drag){az-=(e.clientX-lx)*.01;lx=e.clientX}};onpointerup=()=>drag=0;
+place();new ResizeObserver(place).observe(st);
+if(Q.has('time')){const T=+Q.get('time');for(let t=0;t<T;t+=1/60)step(t,1/60);render();window.READY=1}
+else{const c=new THREE.Clock();(function L(){const dt=Math.min(c.getDelta(),.05);step(c.elapsedTime,dt);render();requestAnimationFrame(L)})()}
+</script>

@@ -1,0 +1,5 @@
+# NotScape
+RPG idle estilo OSRS para navegador, en español. Abre `index.html` desde un servidor estático (`python3 -m http.server`).
+- **3D (three.js) = el juego** (desde el 20 oct 2026, Fases 17-18): `index.html` lo arranca por defecto y requiere WebGL 2. El mundo 2D antiguo se retiró (queda el lienzo 2D solo para etiquetas, barras, números de daño y las mariposas). Detalle en `AGENTS.md`.
+- **Agentes/colaboradores:** lee `docs/CONTEXTO.md` y luego `AGENTS.md` (decisiones, registro y «SIGUIENTE AGENTE»). Para lo visual: 3D → `docs/GUIA_3D_PORTEO.md` (estilo objetivo «óleo oscuro», §4.9) y `docs/GUIA_PERSONAJES_3D.md`; 2D y datos del mundo → `docs/GUIA_ESTILO_ISOMETRICO.md`. Referencias visuales en `docs/style-reference/` (ver su `LEEME.md`).
+- **Ver demos 3D:** doble clic en `VER_DEMO.bat` (Windows) o `ver_demo.command` (Mac/Linux): abre un servidor local en el puerto 8000 y la demo del reparto de personajes diorama (`demo-diorama.html`).  Los HTML 3D NO funcionan abiertos con doble clic (`file://`).

@@ -1,0 +1,1 @@
+Herramientas del juego 2D retirado en la Fase 18 (20 oct 2026): usan TER.draw/CFG, PROPS.draw/mob/station, CRE.M, WGL, LIGHT... que ya no existen. Se conservan por si alguna idea de medicion sirve; NO funcionan tal cual.

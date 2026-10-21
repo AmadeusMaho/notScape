@@ -1,0 +1,190 @@
+{
+"biome.desert.day.ambiant": [
+"biome.desert.day.ambiant1.ogg",
+"biome.desert.day.ambiant10.ogg",
+"biome.desert.day.ambiant2.ogg",
+"biome.desert.day.ambiant3.ogg",
+"biome.desert.day.ambiant4.ogg",
+"biome.desert.day.ambiant5.ogg",
+"biome.desert.day.ambiant6.ogg",
+"biome.desert.day.ambiant7.ogg",
+"biome.desert.day.ambiant8.ogg",
+"biome.desert.day.ambiant9.ogg"
+],
+"biome.desert.night.coyote": [
+"biome.desert.night.coyote1.ogg",
+"biome.desert.night.coyote2.ogg"
+],
+"biome.desert.night.snake": [
+"biome.desert.night.snake.ogg"
+],
+"biome.forest.day.bird": [
+"biome.forest.day.bird1.ogg",
+"biome.forest.day.bird10.ogg",
+"biome.forest.day.bird11.ogg",
+"biome.forest.day.bird12.ogg",
+"biome.forest.day.bird13.ogg",
+"biome.forest.day.bird14.ogg",
+"biome.forest.day.bird15.ogg",
+"biome.forest.day.bird16.ogg",
+"biome.forest.day.bird2.ogg",
+"biome.forest.day.bird3.ogg",
+"biome.forest.day.bird4.ogg",
+"biome.forest.day.bird5.ogg",
+"biome.forest.day.bird6.ogg",
+"biome.forest.day.bird7.ogg",
+"biome.forest.day.bird8.ogg",
+"biome.forest.day.bird9.ogg"
+],
+"biome.forest.night.cricket": [
+"biome.forest.night.cricket1.ogg"
+],
+"biome.jungle.day.ambiant": [
+"biome.jungle.day.ambiant1.ogg",
+"biome.jungle.day.ambiant2.ogg",
+"biome.jungle.day.ambiant3.ogg",
+"biome.jungle.day.ambiant4.ogg",
+"biome.jungle.day.ambiant5.ogg",
+"biome.jungle.day.ambiant6.ogg",
+"biome.jungle.day.ambiant7.ogg",
+"biome.jungle.day.ambiant8.ogg",
+"biome.jungle.day.ambiant9.ogg"
+],
+"biome.jungle.night.ambiant": [
+"biome.jungle.night.ambiant1.ogg",
+"biome.jungle.night.ambiant2.ogg",
+"biome.jungle.night.ambiant3.ogg"
+],
+"biome.nether.ambiant": [
+"biome.nether.ambiant.ogg"
+],
+"biome.nether.moan": [
+"biome.nether.moan1.ogg",
+"biome.nether.moan2.ogg",
+"biome.nether.moan3.ogg"
+],
+"biome.plain.day.bird": [
+"biome.plain.day.bird1.ogg",
+"biome.plain.day.bird10.ogg",
+"biome.plain.day.bird11.ogg",
+"biome.plain.day.bird12.ogg",
+"biome.plain.day.bird13.ogg",
+"biome.plain.day.bird15.ogg",
+"biome.plain.day.bird16.ogg",
+"biome.plain.day.bird17.ogg",
+"biome.plain.day.bird18.ogg",
+"biome.plain.day.bird19.ogg",
+"biome.plain.day.bird2.ogg",
+"biome.plain.day.bird3.ogg",
+"biome.plain.day.bird4.ogg",
+"biome.plain.day.bird5.ogg",
+"biome.plain.day.bird6.ogg",
+"biome.plain.day.bird7.ogg",
+"biome.plain.day.bird8.ogg",
+"biome.plain.day.bird9.ogg"
+],
+"biome.plain.night.cricket": [
+"biome.plain.night.cricket1.ogg",
+"biome.plain.night.cricket2.ogg",
+"biome.plain.night.cricket3.ogg"
+],
+"biome.plain.night.owl": [
+"biome.plain.night.owl1.ogg",
+"biome.plain.night.owl2.ogg",
+"biome.plain.night.owl3.ogg"
+],
+"block.water.waterfall": [
+"block.water.waterfall1.ogg",
+"block.water.waterfall2.ogg",
+"block.water.waterfall3.ogg"
+],
+"block.water.waterstill": [
+"block.water.waterstill1.ogg",
+"block.water.waterstill2.ogg",
+"block.water.waterstill3.ogg",
+"block.water.waterstill4.ogg"
+],
+"cave.ambiant": [
+"cave.ambiant1.ogg",
+"cave.ambiant2.ogg",
+"cave.ambiant3.ogg",
+"cave.ambiant4.ogg",
+"cave.ambiant5.ogg",
+"cave.ambiant6.ogg",
+"cave.ambiant7.ogg"
+],
+"cave.darkambiant": [
+"cave.darkambiant1.ogg",
+"cave.darkambiant2.ogg",
+"cave.darkambiant3.ogg",
+"cave.darkambiant4.ogg",
+"cave.darkambiant5.ogg",
+"cave.darkambiant6.ogg",
+"cave.darkambiant7.ogg"
+],
+"player.speedwind": [
+"player.speedwind1.ogg",
+"player.speedwind2.ogg",
+"player.speedwind3.ogg",
+"player.speedwind4.ogg",
+"player.speedwind5.ogg"
+],
+"takearme": [
+"takearme.ogg"
+],
+"takebow": [
+"takebow.ogg"
+],
+"takefood": [
+"takefood.ogg"
+],
+"takegeneric": [
+"takegeneric.ogg"
+],
+"takesword": [
+"takesword.ogg"
+],
+"takeutility": [
+"takeutility.ogg"
+],
+"weather.thunder.thunder": [
+"weather.thunder.thunder1.ogg",
+"weather.thunder.thunder2.ogg",
+"weather.thunder.thunder3.ogg",
+"weather.thunder.thunder4.ogg",
+"weather.thunder.thunder5.ogg"
+],
+"weather.wind.interiorwind": [
+"weather.wind.interiorwind.ogg"
+],
+"weather.wind.ogstrongwind": [
+"weather.wind.ogstrongwind1.ogg",
+"weather.wind.ogstrongwind2.ogg",
+"weather.wind.ogstrongwind3.ogg"
+],
+"weather.wind.ogtreewind": [
+"weather.wind.ogtreewind1.ogg",
+"weather.wind.ogtreewind2.ogg",
+"weather.wind.ogtreewind3.ogg",
+"weather.wind.ogtreewind4.ogg"
+],
+"weather.wind.snowwind": [
+"weather.wind.snowwind.ogg"
+],
+"weather.wind.strongwind": [
+"weather.wind.strongwind.ogg"
+],
+"weather.wind.wind": [
+"weather.wind.wind1.ogg",
+"weather.wind.wind2.ogg",
+"weather.wind.wind3.ogg"
+],
+"wind.rain": [
+"wind.rain1.ogg",
+"wind.rain2.ogg"
+],
+"wind.tree": [
+"wind.tree1.ogg",
+"wind.tree2.ogg"
+]
+}

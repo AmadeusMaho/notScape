@@ -1,0 +1,9 @@
+"""Qué soundfont suena para cada instrumento GM (programa). Archivos en tools/soundfonts/<nombre>.sf2 (no van en el zip del juego).
+DEFAULT = el de cada instrumento si no está en PICK; ORDER = respaldo si el elegido no tiene ese preset. Se puede forzar por tema con spec['sf'] = {programa: nombre}.
+Valores iniciales = criterio previo SIN oído (MuseScore General suele ser el mejor para orquesta/vientos; GeneralUser GS para guitarras/pianos/étnicos);
+la página de comparación (tools/ost/audition.py) sirve para que el dueño corrija esta tabla."""
+DEFAULT = 'MuseScore_General'
+ORDER = ['GeneralUser-GS', 'FluidR3_GM']
+PICK_DRUMS = 'MuseScore_General'
+# Elegido A OÍDO por el dueño (13 oct 2026) con la página «Banco de Soundfonts». Lo no listado usa DEFAULT.
+PICK = {6: 'FluidR3_GM', 8: 'GeneralUser-GS', 9: 'MuseScore_General', 10: 'MuseScore_General', 11: 'FluidR3_GM', 12: 'FluidR3_GM', 13: 'MuseScore_General', 14: 'MuseScore_General', 15: 'MuseScore_General', 21: 'GeneralUser-GS', 24: 'MuseScore_General', 25: 'FluidR3_GM', 32: 'GeneralUser-GS', 33: 'MuseScore_General', 35: 'MuseScore_General', 40: 'GeneralUser-GS', 41: 'MuseScore_General', 42: 'MuseScore_General', 43: 'MuseScore_General', 45: 'GeneralUser-GS', 46: 'FluidR3_GM', 47: 'MuseScore_General', 48: 'FluidR3_GM', 49: 'GeneralUser-GS', 52: 'MuseScore_General', 53: 'MuseScore_General', 56: 'MuseScore_General', 57: 'MuseScore_General', 58: 'MuseScore_General', 60: 'FluidR3_GM', 61: 'MuseScore_General', 68: 'MuseScore_General', 70: 'MuseScore_General', 71: 'MuseScore_General', 73: 'GeneralUser-GS', 74: 'GeneralUser-GS', 75: 'MuseScore_General', 77: 'GeneralUser-GS', 78: 'GeneralUser-GS', 79: 'GeneralUser-GS', 89: 'FluidR3_GM', 94: 'MuseScore_General', 104: 'MuseScore_General', 105: 'GeneralUser-GS', 106: 'GeneralUser-GS', 107: 'MuseScore_General', 108: 'GeneralUser-GS', 109: 'GeneralUser-GS', 110: 'GeneralUser-GS', 112: 'MuseScore_General', 116: 'MuseScore_General', 117: 'MuseScore_General'}

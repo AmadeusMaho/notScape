@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>HUD · Barras y buffs FINAL (propuesta)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Spectral:wght@400;500&display=swap">
+<style>
+/* R3D-HUD-BARRAS-4 (20 oct 2026) — VERSIÓN FINAL elegida por el dueño = Biselada compacta (barras + retrato redondo con aro)
+   + buffs como FICHAS con anillo de tiempo (más pequeñas que en la v3) + TRANSPARENCIA de «Hilo + pastillas» en lo que falta de la barra y en los buffs.
+   Vida SIEMPRE verde (D4), enemigo rojo, maná azul, resistencia fina dorada. Todo en em: .v{font-size:16px}. Es la ESPECIFICACIÓN para H2/H6. */
+:root{--cap:"Cinzel",Georgia,serif;--gold:#f3d98f;--cream:#f1e7d2}
+*{box-sizing:border-box}
+body{margin:0;background:#12100e;color:var(--cream);padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(560px,1fr));gap:18px}
+.v{position:relative;height:250px;border-radius:12px;overflow:hidden;font-size:16px;background:#2c3a22 center/cover}
+.v.d{background-image:url(hud_bg/bg_dia.jpg)}.v.a{background-image:url(hud_bg/bg_atardecer.jpg)}.v.n{background-image:url(hud_bg/bg_noche.jpg)}
+.v>h2{position:absolute;left:10px;top:8px;margin:0;font:600 11px var(--cap);letter-spacing:.14em;color:var(--gold);background:rgba(10,9,8,.7);padding:4px 9px;border-radius:6px;z-index:9}
+.pl{position:absolute;left:22px;bottom:20px}.tg{position:absolute;right:22px;top:44px}
+img{display:block}
+.row{position:relative;display:flex;align-items:center}
+.nm{font:600 .72em var(--cap);letter-spacing:.12em;color:var(--gold);text-shadow:0 0 .4em #000,0 0 .15em #000;white-space:nowrap}
+.nm small{color:#c9b27a;font-size:.9em;margin-left:.5em}
+.t{font:600 .6em var(--cap);letter-spacing:.08em;color:#fff3d6;text-shadow:0 0 .3em #000,0 .05em .1em #000;white-space:nowrap}
+/* retrato redondo con aro de bronce */
+.ring{position:relative;z-index:3;width:3.5em;height:3.5em;border-radius:50%;flex:none;background:radial-gradient(circle at 50% 38%,#6c7a64,#2b2a20 80%);box-shadow:0 0 0 .16em #9a8a5e,0 0 0 .26em #2a2114,0 0 0 .34em #6b5a38,inset 0 0 .5em #000,0 .2em .6em rgba(0,0,0,.6);overflow:hidden}
+.ring img{width:100%;height:100%;object-fit:cover;transform:scale(.95) translateY(5%)}
+.lv{position:absolute;z-index:4;left:4.5em;top:4.7em;width:3em;height:3em;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#4a4234,#17130d);box-shadow:0 0 0 .1em #9a8a5e,0 0 0 .18em #000;font:700 .5em var(--cap);color:#f3d98f}
+.bars{position:relative;margin-left:-.7em;padding-left:.9em;display:flex;flex-direction:column;gap:.18em}
+/* barras biseladas con punta; el hueco (lo que falta) es TRANSPARENTE con un leve desenfoque (de «Hilo + pastillas») */
+.b{position:relative;height:.95em;width:var(--w,11em);clip-path:polygon(0 0,calc(100% - .55em) 0,100% 100%,0 100%);background:linear-gradient(180deg,#c9b57f,#8a7648) top/100% .11em no-repeat,linear-gradient(180deg,#6b5a38,#3f331d) bottom/100% .11em no-repeat}
+.b::after{content:"";position:absolute;right:0;top:0;bottom:0;width:.6em;clip-path:polygon(0 0,.14em 0,100% 100%,calc(100% - .16em) 100%);background:linear-gradient(180deg,#c9b57f,#5a4a2c)}
+.b::before{content:"";position:absolute;inset:.11em .1em .11em 0;clip-path:polygon(0 0,calc(100% - .5em) 0,100% 100%,0 100%);background:rgba(8,7,6,.16);backdrop-filter:blur(2px);box-shadow:inset 0 .1em .18em rgba(0,0,0,.3)}
+.b i{position:absolute;z-index:1;left:0;top:.11em;bottom:.11em;width:var(--p);clip-path:polygon(0 0,calc(100% - .42em) 0,100% 100%,0 100%);display:block}
+.hp i{background:linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,0) 50%,rgba(0,0,0,.3)),linear-gradient(90deg,#3a6a1d,#6fa536 70%,#9bd04f)}
+.mp{--w:10em}.mp i{background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,0) 50%,rgba(0,0,0,.34)),linear-gradient(90deg,#27379f,#3f7ee0 60%,#6fcaff)}
+.b .t{position:absolute;z-index:2;left:.9em;top:50%;translate:0 -50%}
+.hp.low{filter:drop-shadow(0 0 .35em rgba(225,70,45,.75))}
+/* buffs: FICHAS con anillo de tiempo (conic-gradient), más pequeñas (1.7em) y translúcidas */
+.fx{display:flex;gap:.45em;margin:.45em 0 0 1.25em}
+.chip{position:relative;width:1.7em;height:1.7em;border-radius:50%;background:conic-gradient(var(--c,#e8d9a8) var(--p),rgba(8,7,6,.42) 0);box-shadow:0 0 0 1px rgba(0,0,0,.65),0 .12em .35em rgba(0,0,0,.45)}
+.chip img{position:absolute;inset:.17em;width:calc(100% - .34em);height:calc(100% - .34em);border-radius:50%;object-fit:cover;background:rgba(30,27,20,.55);backdrop-filter:blur(3px)}
+.chip b{position:absolute;left:50%;bottom:-.62em;translate:-50% 0;font:700 .46em var(--cap);color:#fff3d6;text-shadow:0 0 .3em #000,0 0 .12em #000,0 .05em .1em #000;white-space:nowrap}
+.chip.bad{--c:#e0664d;box-shadow:0 0 0 1px #4a1008,0 0 .55em rgba(220,70,50,.65)}
+.chip.bad b{color:#ffc9bd}
+.chip i{position:absolute;right:-.2em;top:-.25em;font:700 .46em var(--cap);font-style:normal;color:#fff3d6;text-shadow:0 0 .3em #000,0 0 .12em #000}
+/* objetivo: espejado, una sola barra roja */
+.tg .row{flex-direction:row-reverse}
+.tg .ring{width:2.6em;height:2.6em;box-shadow:0 0 0 .14em #9a8a5e,0 0 0 .22em #2a2114,0 0 0 .3em #6b5a38,inset 0 0 .5em #000}
+.tg .bars{margin:0 -.55em 0 0;padding:0 .8em 0 0;align-items:flex-end}
+.tg .b{--w:10.5em;clip-path:polygon(.55em 0,100% 0,100% 100%,0 100%)}
+.tg .b{background:linear-gradient(180deg,#c9b57f,#8a7648) top/100% .11em no-repeat,linear-gradient(180deg,#6b5a38,#3f331d) bottom/100% .11em no-repeat}
+.tg .b::after{right:auto;left:0;clip-path:polygon(calc(100% - .14em) 0,100% 0,.16em 100%,0 100%)}
+.tg .b::before{inset:.11em 0 .11em .1em;clip-path:polygon(.5em 0,100% 0,100% 100%,0 100%)}
+.tg .b i{left:auto;right:0;clip-path:polygon(.42em 0,100% 0,100% 100%,0 100%);background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 50%,rgba(0,0,0,.32)),linear-gradient(270deg,#8a1c12,#d9593a)}
+.tg .b .t{left:auto;right:.9em}
+.tg .nm{margin:0 .9em .2em 0;text-align:right}
+</style></head><body>
+
+<!-- DÍA · estado normal -->
+<section class="v d"><h2>FINAL · día · vida 7/10</h2>
+ <div class="pl"><div class="row"><div class="ring"><img src="hud_barras_assets/heroe.png" alt=""></div><span class="lv">55</span>
+  <div class="bars"><div class="nm">Aventurero</div>
+   <div class="b hp" style="--p:70%"><i></i><span class="t">7 / 10</span></div>
+   <div class="b mp" style="--p:72%"><i></i><span class="t">36 / 50</span></div></div></div>
+  <div class="fx"><div class="chip" style="--p:80%"><img src="hud_barras_assets/buff0.png" alt=""><b>4:25</b></div><div class="chip" style="--p:55%"><img src="hud_barras_assets/buff1.png" alt=""><b>2:24</b></div><div class="chip" style="--p:30%"><img src="hud_barras_assets/buff2.png" alt=""><b>1:27</b></div></div></div>
+ <div class="tg"><div class="row"><div class="ring"><img src="hud_barras_assets/orco.png" alt=""></div>
+  <div class="bars"><div class="nm">Gruk, Jefe Orco<small>Nv. 8</small></div><div class="b hp" style="--p:62%"><i></i><span class="t">62 %</span></div></div></div></div>
+</section>
+
+<!-- ATARDECER · vida baja + debuff -->
+<section class="v a"><h2>FINAL · atardecer · vida baja + sangrado</h2>
+ <div class="pl"><div class="row"><div class="ring"><img src="hud_barras_assets/heroe.png" alt=""></div><span class="lv">55</span>
+  <div class="bars"><div class="nm">Aventurero</div>
+   <div class="b hp low" style="--p:22%"><i></i><span class="t">2 / 10</span></div>
+   <div class="b mp" style="--p:30%"><i></i><span class="t">15 / 50</span></div></div></div>
+  <div class="fx"><div class="chip" style="--p:60%"><img src="hud_barras_assets/buff1.png" alt=""><b>2:24</b></div><div class="chip bad" style="--p:12%"><img src="hud_barras_assets/buff3.png" alt=""><b>0:06</b><i>×2</i></div></div></div>
+ <div class="tg"><div class="row"><div class="ring"><img src="hud_barras_assets/orco.png" alt=""></div>
+  <div class="bars"><div class="nm">Gruk, Jefe Orco<small>Nv. 8</small></div><div class="b hp" style="--p:18%"><i></i><span class="t">18 %</span></div></div></div></div>
+</section>
+
+<!-- NOCHE · estado normal -->
+<section class="v n"><h2>FINAL · noche · vida llena + 4 buffs</h2>
+ <div class="pl"><div class="row"><div class="ring"><img src="hud_barras_assets/heroe.png" alt=""></div><span class="lv">55</span>
+  <div class="bars"><div class="nm">Aventurero</div>
+   <div class="b hp" style="--p:100%"><i></i><span class="t">10 / 10</span></div>
+   <div class="b mp" style="--p:100%"><i></i><span class="t">50 / 50</span></div></div></div>
+  <div class="fx"><div class="chip" style="--p:90%"><img src="hud_barras_assets/buff0.png" alt=""><b>4:50</b></div><div class="chip" style="--p:70%"><img src="hud_barras_assets/buff1.png" alt=""><b>3:30</b></div><div class="chip" style="--p:45%"><img src="hud_barras_assets/buff2.png" alt=""><b>2:10</b></div><div class="chip bad" style="--p:35%"><img src="hud_barras_assets/buff3.png" alt=""><b>0:18</b></div></div></div>
+</section>
+</body></html>

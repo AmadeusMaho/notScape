@@ -1,0 +1,18 @@
+<!doctype html><meta charset="utf-8"><title>NotScape · prueba de formas unificadas v3 (F2)</title>
+<style>body{margin:0;background:#fdf9e3;font:16px monospace;color:#5b3a29}h1{font-size:17px;margin:10px 14px}canvas{display:block}</style>
+<h1>Un solo lenguaje (mallas triangulares + luz por normal) · fila 1: vegetación y roca · fila 2: rígidos y criaturas · fila 3: personaje ESBELTO (aprobado) en 8 tiers</h1><canvas id=c></canvas>
+<script src="../../src/style.js"></script>
+<script src="../../src/style-organic.js"></script>
+<script>
+const SM=+new URLSearchParams(location.search).get('smooth')||0,U=ORG.U;
+const rows=[
+ [['roble'],['abedul'],['sauce'],['pino'],['arce'],['fresno'],['ebano'],['piedra'],['arbusto']],
+ [['casa'],['cofre'],['yunque'],['slime'],['vaca'],['goblin']],
+ [['personaje','esbelto','cuero'],['personaje','esbelto','cobre'],['personaje','esbelto','bronce'],['personaje','esbelto','hierro'],['personaje','esbelto','acero'],['personaje','esbelto','plata'],['personaje','esbelto','mitril'],['personaje','esbelto','adam']]];
+const Z=3,CW=130,CH=140,cols=9,c=document.getElementById('c');
+c.width=cols*CW*Z;c.height=rows.length*CH*Z;c.style.width=c.width/2+'px';c.style.height=c.height/2+'px';
+const g=c.getContext('2d');g.fillStyle='#fdf9e3';g.fillRect(0,0,c.width,c.height);
+rows.forEach((row,r)=>row.forEach((a,i)=>{g.save();g.scale(Z,Z);
+ const x0=i*CW,y0=r*CH;g.fillStyle='#a6d24c';g.globalAlpha=.55;g.beginPath();g.moveTo(x0+CW/2,y0+CH-50);g.lineTo(x0+CW-6,y0+CH-32);g.lineTo(x0+CW/2,y0+CH-14);g.lineTo(x0+6,y0+CH-32);g.fill();g.globalAlpha=1;
+ U[a[0]](g,x0+CW/2,y0+CH-32,SM,a[1],a[2]);g.fillStyle='#5b3a29';g.font='7px monospace';g.fillText(a.join(' · '),x0+6,y0+10);g.restore()}));
+</script>

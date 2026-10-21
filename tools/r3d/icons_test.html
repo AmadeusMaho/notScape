@@ -1,0 +1,19 @@
+<!doctype html><meta charset="utf-8"><title>icons3d test</title>
+<script type="importmap">{"imports":{"three":"../../vendor/three/build/three.module.js","three/addons/":"../../vendor/three/examples/jsm/"}}</script>
+<script>
+// arnés mínimo: las globales que ITEMICON.info() pide al juego (tierOf, cultOfId, rr, RAR)
+const tierOf=id=>{const p=id.split('_');let t=p[1]||'';if((t==='cu'||t==='tu')&&p[2])t=p[2];return t.split('~')[0]};
+const CULT_OF={cobre:0,estano:0,bronce:0,hierro:1,acero:1,plata:2,mitril:3,adam:4,runita:4,oricalco:5,celestita:5,madera:0,cuero:0,pino:0,abedul:0,roble:0,fresno:1,sauce:1,arce:2,tejo:3,ebano:4,caoba:4,baobab:5,mundo:5};
+const cultOfId=id=>{if(!id)return 0;const b=id.split('~')[0],m=/^l[tw]_(\d)/.exec(b);if(m)return +m[1];if(b==='lg_helm'||b==='lg_boots')return 5;return CULT_OF[tierOf(b)]??0};
+const RAR=[['Común','#ffffff'],['Poco común','#3fd04a'],['Raro','#4a90ff'],['Épico','#b04aff'],['Legendario','#ff8000']];
+const rr=id=>{const m=/^l[tw]_\d.(\d)$/.exec(id);return m?+m[1]:0};
+</script>
+<script src="../../src/item-icons.js"></script>
+<script type="module">
+ITEMICON.tier=tierOf;
+await import('../../src/r3d/icons3d.js');
+const q=new URLSearchParams(location.search),ids=(q.get('ids')||'').split(',').filter(Boolean);
+window.__run=async()=>{const cv=await ICON3D.sheet(ids,id=>ITEMICON.info(id),+q.get('cols')||6,+q.get('size')||128);document.body.appendChild(cv);window.__ready=1};
+window.__run().catch(e=>{window.__err=String(e&&e.stack||e)});
+</script>
+<body style="margin:0;background:#2a2622">

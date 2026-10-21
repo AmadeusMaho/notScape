@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<meta charset="utf-8"><title>Armaduras 3D · catálogo del jugador</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#171a1c;--fg:#dcd6cc;--line:#2e3234}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:13px/1.4 system-ui,sans-serif}
+body{display:flex;flex-direction:column}
+header{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 12px}
+h1{font:600 17px Georgia,serif;margin:0 10px 0 0}
+select,button{background:#202426;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 9px;font:inherit;cursor:pointer}
+#st{flex:1;position:relative;min-height:320px}#st canvas{position:absolute;inset:0;width:100%;height:100%}
+#lb{position:absolute;inset:0;pointer-events:none;font:11px system-ui;color:#e8e2d8}
+#lb span{position:absolute;transform:translateX(-50%);text-shadow:0 1px 2px #000;white-space:nowrap}
+#err{position:absolute;left:12px;bottom:12px;color:#ffb3b3;font:12px monospace;white-space:pre-wrap}
+</style>
+<header><h1>Armaduras 3D · catálogo</h1>
+<select id="set"><option value="metal">Peto+pantalón+guantes de METAL (11 niveles)</option><option value="cuero">CUERO tachonado (11 niveles)</option><option value="tela">TELA / túnica (11 niveles)</option><option value="cascos">Cascos (bioma × rareza)</option><option value="botas">Botas (bioma × rareza)</option><option value="capas">Capas (bioma × rareza)</option><option value="escudos">Escudos (familia × nivel)</option><option value="armas">Armas por cultura (10 tipos × 6 culturas)</option><option value="culturas">Culturas (6 biomas × metal/cuero/tela)</option><option value="conjuntos">Conjuntos completos</option></select>
+<button id="baz">↻ Girar cámara</button></header>
+<div id="st"><canvas id="gl"></canvas><div id="lb"></div><div id="err"></div></div>
+<script type="importmap">{"imports":{"three":"../../../vendor/three/build/three.module.js","three/addons/":"../../../vendor/three/examples/jsm/"}}</script>
+<script type="module">
+// Visor de las armaduras del jugador (Lote R3D-ARMADURAS). MISMO código que el juego: MiniHero (herom3d.js) + armor3d.js. Parámetros:
+//   ?set=metal|cuero|tela|cascos|botas|capas|escudos|conjuntos   ?az=<grados> (45 = la del juego; 225 = de espaldas)   ?still   ?cols=<n>   ?ids=0,3,6 (solo esos índices del set)   ?draw (escudo/arma en la mano, no envainados)
+import * as THREE from 'three';
+import {MiniHero} from '../../../src/r3d/herom3d.js';
+import {TIER_IDS} from '../../../src/r3d/armor3d.js';
+import {G,TODH,setInk} from '../../../src/r3d/materials3d.js';
+const ERR=document.getElementById('err');const fail=m=>{ERR.textContent+=m+'\n';window.__err=(window.__err||'')+m+'\n'};addEventListener('error',e=>fail(e.message));addEventListener('unhandledrejection',e=>fail(String(e.reason)));
+try{
+const Q=new URLSearchParams(location.search),cv=document.getElementById('gl'),lb=document.getElementById('lb'),DPR=Math.min(devicePixelRatio||1,2),still=Q.has('still');
+const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,stencil:true});r.setPixelRatio(DPR);r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;r.toneMapping=THREE.NoToneMapping;
+const scene=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);
+const D=TODH.dia,hemi=new THREE.HemisphereLight(D.hemS,D.hemG,D.hemI*.8),sun=new THREE.DirectionalLight(D.sun,D.sunI*.8),back=new THREE.DirectionalLight('#7fa3ad',.6);
+sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.0008;sun.shadow.normalBias=.02;scene.add(hemi,sun,sun.target,back,back.target);
+G.uSat.value=D.sat;G.uLive.value=D.live;G.uNight.value=0;G.uRimCol.value.set(D.rim);setInk(D.ink,D.inkK);r.setClearColor('#3a4332');
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(80,80).rotateX(-Math.PI/2),new THREE.MeshToonMaterial({color:'#5a6a44'}));ground.receiveShadow=true;scene.add(ground);
+const BASE={app:{g:'m',hair:'cut',hc:'#5a3a22',skin:'#d9a878',col:'#6a5a4a',eye:'#2a1a14'},outfit:{scarf:false},gear:{wp:null}};
+const BIO=['Pradera','Bosque','Pantano','Nieve','Japón','Volcán'];
+const mk=(arm,label,extra)=>({look:Object.assign({},BASE,{arm},extra||{}),label});
+const SETS={
+ metal:()=>TIER_IDS.map(t=>mk({a:{f:'m',t},l:{f:'m',t},g:{f:'m',t}},'metal · '+t)),
+ cuero:()=>TIER_IDS.map(t=>mk({a:{f:'cu',t},l:{f:'cu',t},g:{f:'cu',t}},'cuero · '+t)),
+ tela:()=>TIER_IDS.map(t=>mk({a:{f:'tu',t},l:{f:'tu',t},g:{f:'tu',t}},'tela · '+t)),
+ cascos:()=>[...[0,1,2,3,4,5].flatMap(k=>[1,2,3].map(q=>mk({h:{k,q}},BIO[k]+' q'+q))),mk({h:{k:5,q:4,leg:1}},'legendario')],
+ botas:()=>[...[0,1,2,3,4,5].flatMap(k=>[1,2,3].map(q=>mk({f:{k,q}},BIO[k]+' q'+q))),mk({f:{k:0,q:4,leg:1}},'legendario')],
+ capas:()=>[...[0,1,2,3,4,5].flatMap(k=>[1,2,3].map(q=>mk({c:{k,q}},BIO[k]+' q'+q))),mk({c:{k:5,q:4,leg:1}},'legendario')],
+ escudos:()=>['m','cu','tu'].flatMap(f=>TIER_IDS.map(t=>mk({s:{f,t}},f+' · '+t,{gear:{wp:null,sh:'#888'}}))),
+ armas:()=>['sword','dagger','great','staff','scepter','bow','xbow','mace','hatchet','greataxe'].flatMap(k=>[['bronce','#c8742a'],['acero','#cfd8e0'],['plata','#e8e8f0'],['mitril','#6a90ff'],['adam','#3adf6a'],['oricalco','#e89a3a']].map(([t,c],cu)=>mk(null,k+' · '+BIO[cu],{gear:{wp:{t:k==='bow'?'bow':k==='staff'||k==='scepter'?'staff':'sword',wk:k,col:k==='staff'||k==='scepter'?'#9cf':c,cu},sh:null}}))),
+ culturas:()=>['m','cu','tu'].flatMap(f=>[['cobre',0],['hierro',1],['plata',2],['mitril',3],['adam',4],['oricalco',5]].map(([t,k])=>mk({a:{f,t},l:{f,t},g:{f,t},h:{k,q:3},f:{k,q:2},c:{k,q:2}},f+' '+t+' · '+BIO[k]))),
+ conjuntos:()=>[['cobre',0,'m'],['bronce',0,'cu'],['hierro',1,'m'],['acero',1,'cu'],['plata',2,'m'],['mitril',3,'m'],['adam',4,'m'],['runita',4,'tu'],['oricalco',5,'cu'],['celestita',5,'m']].map(([t,k,f])=>mk({a:{f,t},l:{f,t},g:{f,t},s:{f,t},h:{k,q:3},f:{k,q:2},c:{k,q:2}},f+' '+t+' · '+BIO[k],{gear:{wp:null,sh:'#888'}}))};
+const setName=Q.get('set')||'metal';let list=(SETS[setName]||SETS.metal)();if(Q.get('ids')){const ix=Q.get('ids').split(',').map(Number);list=ix.map(i=>list[i]).filter(Boolean)}
+let az=(Q.has('az')?+Q.get('az'):45)*Math.PI/180;const EL=Math.PI/6,cols=+(Q.get('cols')||Math.min(11,Math.ceil(Math.sqrt(list.length*1.6)))),SP=+(Q.get('sp')||1.7),acts=[];
+list.forEach((it,i)=>{const H=new MiniHero();H.setLook(it.look);const c=i%cols,rw=Math.floor(i/cols);H.home=new THREE.Vector3((c-(cols-1)/2)*SP,0,(rw-(Math.ceil(list.length/cols)-1)/2)*SP*1.15);scene.add(H.obj);acts.push(H);
+ if(setName==='armas'){   // exposición del arma SOLA (en la mano se ve de punta): copia del objeto, en vertical y de cara a la cámara
+  const m=H.anim&&H.anim.it.main;H.obj.visible=false;if(m){if(m.arrow)m.arrow.visible=false;if(m.str)m.str.forEach(x=>x.visible=false);const c=m.g.clone(true);c.visible=true;c.parent&&c.parent.remove(c);const k=it.label.split(' ')[0],sc=k==='staff'?1.05:k==='bow'?1.6:1.9;
+   c.scale.setScalar(sc);c.position.set(H.home.x,(k==='staff'?.0:k==='bow'?.75:k==='xbow'?.7:.35),H.home.z);c.rotation.y=az+(k==='bow'?Math.PI/2:0);if(k==='xbow')c.rotation.x=-1.1;if(k==='great'||k==='greataxe')c.position.y=.25;scene.add(c)}}
+ const s=document.createElement('span');s.textContent=it.label;lb.appendChild(s);H.lab=s});
+function layout(){const W=cv.clientWidth,Ht=cv.clientHeight;r.setSize(W,Ht,false);const asp=W/Ht;
+ cam.position.set(Math.sin(az)*Math.cos(EL)*40,Math.sin(EL)*40+.8,Math.cos(az)*Math.cos(EL)*40);cam.lookAt(0,.7,0);cam.updateMatrixWorld();
+ const inv=cam.matrixWorldInverse.copy(cam.matrixWorld).invert();let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;acts.forEach(A=>{[0,1.35].forEach(h=>{const v=new THREE.Vector3(A.home.x,h,A.home.z).applyMatrix4(inv);x0=Math.min(x0,v.x-.8);x1=Math.max(x1,v.x+.8);y0=Math.min(y0,v.y-.5);y1=Math.max(y1,v.y+.35)})});
+ const cx=(x0+x1)/2,cy=(y0+y1)/2;let hw=(x1-x0)/2,hh=(y1-y0)/2;if(hw/hh<asp)hw=hh*asp;else hh=hw/asp;
+ cam.left=cx-hw;cam.right=cx+hw;cam.top=cy+hh;cam.bottom=cy-hh;cam.updateProjectionMatrix();
+ sun.position.set(-6,12,4).normalize().multiplyScalar(30);sun.target.position.set(0,0,0);const e=Math.max(hw,hh)*1.4;Object.assign(sun.shadow.camera,{left:-e,right:e,top:e,bottom:-e,near:1,far:80});sun.shadow.camera.updateProjectionMatrix();back.position.set(-Math.sin(az)*6,4,-Math.cos(az)*6);
+ const v=new THREE.Vector3();acts.forEach(A=>{v.set(A.home.x,-.05,A.home.z).project(cam);A.lab.style.left=((v.x+1)/2*W)+'px';A.lab.style.top=((1-v.y)/2*Ht+2)+'px'})}
+document.getElementById('set').value=setName;document.getElementById('set').onchange=e=>{const u=new URL(location);u.searchParams.set('set',e.target.value);u.searchParams.delete('ids');location=u};
+document.getElementById('baz').onclick=()=>{az+=Math.PI/4;layout()};
+const FA=(Q.has('face')?+Q.get('face'):45)*Math.PI/180;   // hacia dónde MIRAN los héroes (la cámara se gira con az; con az=225 y face=45 se ven de espaldas: capas)
+let T=+(Q.get('t')||1.2),last=performance.now();
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!still)T+=dt;const f=[Math.sin(FA),Math.cos(FA)];
+ acts.forEach(H=>H.update({x:H.home.x,y:0,z:H.home.z,mv:false,run:false,w:0,act:null,hurt:0,cb:Q.has('draw')?1:0,t:T,face:f,night:0,wind:[.9,.4]},still?1/60:dt));layout();r.render(scene,cam);if(!still)requestAnimationFrame(frame)}
+layout();addEventListener('resize',layout);frame(performance.now());if(still){for(let i=0;i<(Q.has('draw')?90:20);i++)frame(performance.now()+i*20)}else requestAnimationFrame(frame);
+window.__ready=1;
+}catch(e){fail(e.stack||String(e))}
+</script>

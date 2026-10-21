@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<meta charset="utf-8"><title>Pradera oscura · hoja de contacto (Fase 5)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#171a1c;--fg:#dcd6cc;--mut:#9a948a;--line:#2e3234;--on:#3b4a3e}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:13px/1.4 system-ui,sans-serif}
+body{display:flex;flex-direction:column}
+header{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 12px}
+h1{font:600 17px Georgia,serif;margin:0 10px 0 0}
+select,button{background:#202426;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 9px;font:inherit}
+button{cursor:pointer}button[aria-pressed="true"]{background:var(--on)}
+#st{flex:1;position:relative;min-height:320px}#st canvas{position:absolute;inset:0;width:100%;height:100%}
+#lb{position:absolute;inset:0;pointer-events:none;font:11px system-ui;color:#e8e2d8}
+#lb span{position:absolute;transform:translateX(-50%);text-shadow:0 1px 2px #000;white-space:nowrap}
+#lb span.row{transform:none;font:600 12px Georgia,serif;color:#ffd98a}
+#err{position:absolute;left:12px;bottom:12px;color:#ffb3b3;font:12px monospace;white-space:pre-wrap}
+</style>
+<header><h1>Pradera oscura · Fase 5</h1>
+<select id="hr" aria-label="Hora"><option value="dia">Día</option><option value="atardecer">Atardecer</option><option value="noche">Noche</option></select>
+<button id="bold" aria-pressed="true">Fila «antes» (ORG pastel)</button><button id="baz">↻ Girar cámara</button><button id="bwr" aria-pressed="false">Ver huellas FOOT</button>
+</header>
+<div id="st"><canvas id="gl"></canvas><div id="lb"></div><div id="err"></div></div>
+<!-- ORG (el catálogo 2D) solo se carga para la fila «antes»; el juego NO lo necesita con los props oscuros -->
+<script src="../../../src/style.js"></script><script src="../../../src/style-organic.js"></script>
+<script type="importmap">{"imports":{"three":"../../../vendor/three/build/three.module.js","three/addons/":"../../../vendor/three/examples/jsm/"}}</script>
+<script type="module">
+// Hoja de contacto de los props rediseñados en el lenguaje oscuro (Lote R3D-F2C-Q02). Usa el MISMO código y los MISMOS materiales que el juego
+// (src/r3d/propsdark3d.js + toon/hull/inkFor de materials3d.js). Fila de arriba = malla actual (ORG), fila de abajo = malla nueva.
+// Parámetros: ?hora=dia|atardecer|noche  ?az=<grados> (45 = la del juego)  ?old=0 (sin fila «antes»)  ?rot=1 (todos con o.rot, el espejo x↔z)  ?foot=1 (cajas de FOOT)
+//             ?only=casa,pozo,…  ?cols=8  ?still (congela)
+import * as THREE from 'three';
+import {toon,hull,inkFor,G,TOD,setInk} from '../../../src/r3d/materials3d.js';
+import {praderaGeo as prGeo,PR_FOOT as FOOT} from '../../../src/r3d/propsdark_pradera3d.js';
+import {darkGeo as dkGeo} from '../../../src/r3d/propsdark3d.js';
+import {ofGeo,OF_FOOT} from '../../../src/r3d/propsdark_estaciones3d.js';   // Fase 5b: estaciones y props sueltos
+import {bosqueGeo,initBosque,BO_FOOT} from '../../../src/r3d/propsdark_bosque3d.js';   // Fase 7: Bosque (troncos, casaArbol, lenera, taberna bk 1)
+import {cardGeo,folMat} from '../../../src/r3d/nature3d.js';initBosque({cardGeo});
+const darkGeo=(n,o)=>bosqueGeo(n,o)||prGeo(n,o)||ofGeo(n,o)||dkGeo(n,o,null);   // también los edificios de Q03 (casa, taberna, granero, cabana…) para revisar tejados
+import {orgGeometry} from '../../../tools/r3d/org3d_adapter.mjs';
+const ERR=document.getElementById('err');const fail=m=>{ERR.textContent+=m+'\n';window.__err=(window.__err||'')+m+'\n'};addEventListener('error',e=>fail(e.message));addEventListener('unhandledrejection',e=>fail(String(e.reason)));
+try{
+const Q=new URLSearchParams(location.search),cv=document.getElementById('gl'),lb=document.getElementById('lb'),DPR=Math.min(devicePixelRatio||1,2),still=Q.has('still');
+const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,stencil:true});r.setPixelRatio(DPR);r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;r.toneMapping=THREE.NoToneMapping;
+const scene=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1,1,-1,.1,200);
+const hemi=new THREE.HemisphereLight('#fff','#222',1),sun=new THREE.DirectionalLight('#fff',1),back=new THREE.DirectionalLight('#7fa3ad',.5),winL=new THREE.PointLight('#ffb84a',0,6,2);
+sun.castShadow=true;sun.shadow.mapSize.set(4096,4096);sun.shadow.bias=-.0008;sun.shadow.normalBias=.02;scene.add(hemi,sun,sun.target,back,back.target);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200).rotateX(-Math.PI/2),new THREE.MeshToonMaterial({color:'#4a5a3a'}));ground.receiveShadow=true;scene.add(ground);
+function setHour(h){const D=TOD[h]||TOD.dia,night=h==='noche'?1:h==='atardecer'?.35:0;hemi.color.set(D.hemS);hemi.groundColor.set(D.hemG);hemi.intensity=D.hemI*.9;sun.color.set(D.sun);sun.intensity=D.sunI*.9;
+ G.uSat.value=D.sat;G.uLive.value=D.live;G.uNight.value=night;G.uWinI.value=D.win*(night?1:.25);G.uFireI.value=1;G.uRimCol.value.set(D.rim);setInk(D.ink,D.inkK);r.setClearColor(D.sky);ground.material.color.set(night?'#26301f':'#4a5a3a')}
+// materiales EXACTOS de props3d.js (Props.constructor)
+const mat=toon('#ffffff',{vc:1,moss:.7,emit:1,tex:'auto',texS:7,texB:.45}),ink=inkFor('#6a5a52');
+const HOUSE_ROOFS=['#d0674a','#6a8fb8','#c98a3a'],WALLS=['#e6d2a6','#ead9b5','#dcc79a'];
+const ALL=window.__ALL||[['molino',{}],['iglesia',{style:'piedra'}],['iglesia',{style:'troncos'}],['iglesia',{style:'palafito'}],['iglesia',{style:'stave'}]];
+if(Q.get('list'))ALL.splice(0,ALL.length,...JSON.parse(Q.get('list')));   // ?list=[["puesto",{"bk":1}],…] sustituye la lista
+if(Q.has('bk')){const bks=Q.get('bk').split(',').map(Number),base=ALL.slice();ALL.length=0;base.forEach(([n,o])=>bks.forEach(k=>ALL.push([n,{...o,bk:k}])))}   // ?bk=0,1,2 repite cada modelo por bioma
+const only=Q.get('only')?Q.get('only').split(','):null,forceRot=Q.has('rot');
+const LIST=ALL.filter(([n])=>!only||only.includes(n)).map(([n,o])=>[n,forceRot?{...o,rot:1}:o]);
+let hour=Q.get('hora')||'dia',az=(Q.has('az')?+Q.get('az'):45)*Math.PI/180,showOld=Q.get('old')!=='0'&&typeof ORG!=='undefined',showFoot=Q.has('foot');
+const cols=+(Q.get('cols')||Math.min(8,LIST.length)),SPX=+(Q.get('sp')||3.7),SPZ=+(Q.get('spz')||7.4),items=[];
+const FAKE=new Proxy({},{get:(t,k)=>k in t?t[k]:(/^create(Linear|Radial)Gradient$/.test(k)?()=>({addColorStop(){}}):k==='measureText'?()=>({width:10}):k==='getImageData'?()=>({data:new Uint8ClampedArray(4)}):k==='canvas'?{width:1,height:1}:()=>{}),set:(t,k,v)=>{t[k]=v;return true}});
+function oldGeo(n,o){try{const parts=ORG.capture(()=>{ORG.theme(null);ORG.rot(!!(o&&o.rot));try{ORG.U[n](FAKE,0,0,0,o||{})}finally{ORG.theme(null);ORG.rot(false)}});if(!parts.length)return null;const g=orgGeometry(THREE,parts,{seed:n.length});g.computeBoundingBox();return g}catch(e){fail('ORG '+n+': '+e.message);return null}}
+function mesh(g,cards){const m=new THREE.Mesh(g,mat);m.castShadow=m.receiveShadow=true;const h=new THREE.Mesh(hull(g,.016).geometry,ink);const grp=new THREE.Group();grp.add(m,h);if(cards){const f=new THREE.Mesh(cards.g,folMat(cards.tex));f.castShadow=true;grp.add(f)}return grp}
+const rowsN=Math.ceil(LIST.length/cols),block=showOld?2:1;
+LIST.forEach(([n,o],i)=>{const c=i%cols,gr=Math.floor(i/cols);
+ const mk=(isOld)=>{const D=isOld?null:darkGeo(n,o),g=isOld?oldGeo(n,o):(D||{}).g;if(!g){fail('sin malla '+(isOld?'ORG ':'dark ')+n);return}
+  const grp=mesh(g,D&&D.cards),u=(c-(cols-1)/2)*SPX,v=((Math.ceil(LIST.length/cols)-1-gr)*block+(isOld?1:0))*SPZ;grp.userData={u,v,n,isOld,o};scene.add(grp);items.push(grp);
+  const s=document.createElement('span');s.textContent=(showOld?(isOld?'ANTES · ':'NUEVO · '):'')+n+(o.rot?' (rot)':'')+(o.bk!=null?' bk'+o.bk:'')+(o.style?' '+o.style:'')+(n==='valla'?' len '+o.len:'');lb.appendChild(s);grp.userData.lab=s;
+  if(!isOld&&(FOOT[n]||OF_FOOT[n]||BO_FOOT[n])){const f=BO_FOOT[n]||FOOT[n]||OF_FOOT[n],b=new THREE.Mesh(new THREE.BoxGeometry(o.rot?f[2]:f[0],f[1],o.rot?f[0]:f[2]),new THREE.MeshBasicMaterial({color:'#7ad0ff',wireframe:true}));b.position.y=f[1]/2;b.visible=false;grp.add(b);grp.userData.foot=b}};
+ if(showOld)mk(true);mk(false)});
+function place(){const right=new THREE.Vector3(Math.cos(az),0,-Math.sin(az)),bk=new THREE.Vector3(-Math.sin(az),0,-Math.cos(az));items.forEach(g=>{g.position.copy(right).multiplyScalar(g.userData.u).addScaledVector(bk,g.userData.v)})}
+const EL=Math.PI/6;
+function layout(){const W=cv.clientWidth,H=cv.clientHeight;r.setSize(W,H,false);const asp=W/H;place();
+ cam.position.set(Math.sin(az)*Math.cos(EL)*60,Math.sin(EL)*60,Math.cos(az)*Math.cos(EL)*60);cam.lookAt(0,0,0);cam.updateMatrixWorld();
+ const inv=cam.matrixWorldInverse.copy(cam.matrixWorld).invert();let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;items.forEach(g=>{[0,3.9].forEach(h=>{const v=new THREE.Vector3(g.position.x,h,g.position.z).applyMatrix4(inv);x0=Math.min(x0,v.x-1.9);x1=Math.max(x1,v.x+1.9);y0=Math.min(y0,v.y-.8);y1=Math.max(y1,v.y+.5)})});
+ const cx=(x0+x1)/2,cy=(y0+y1)/2;let hw=(x1-x0)/2,hh=(y1-y0)/2;if(hw/hh<asp)hw=hh*asp;else hh=hw/asp;cam.left=cx-hw;cam.right=cx+hw;cam.top=cy+hh;cam.bottom=cy-hh;cam.updateProjectionMatrix();
+ sun.position.set(-6,12,4).normalize().multiplyScalar(40);sun.target.position.set(0,0,0);const e=Math.max(hw,hh)*1.5;Object.assign(sun.shadow.camera,{left:-e,right:e,top:e,bottom:-e,near:1,far:120});sun.shadow.camera.updateProjectionMatrix();back.position.set(8,6,-8);window.__layout={cx,cy,hw,hh}}
+const bold=document.getElementById('bold'),hr=document.getElementById('hr');hr.value=hour;hr.onchange=()=>{const u=new URL(location);u.searchParams.set('hora',hr.value);location=u};
+bold.onclick=()=>{const u=new URL(location);u.searchParams.set('old',showOld?'0':'1');location=u};bold.setAttribute('aria-pressed',showOld);
+document.getElementById('baz').onclick=()=>{az+=Math.PI/4;layout()};const bwr=document.getElementById('bwr');bwr.setAttribute('aria-pressed',showFoot);bwr.onclick=()=>{showFoot=!showFoot;bwr.setAttribute('aria-pressed',showFoot)};
+setHour(hour);
+function frame(now){G.uTime.value=still?1.2:now/1000;items.forEach(g=>{if(g.userData.foot)g.userData.foot.visible=showFoot});scene.updateMatrixWorld(true);
+ const W=cv.clientWidth,H=cv.clientHeight;items.forEach(g=>{const v=new THREE.Vector3(g.position.x,-.12,g.position.z).project(cam);const s=g.userData.lab;s.style.left=((v.x+1)/2*W)+'px';s.style.top=((1-v.y)/2*H)+'px'});
+ r.render(scene,cam);window.__done=(window.__done||0)+1;if(!still)requestAnimationFrame(frame)}
+layout();addEventListener('resize',layout);requestAnimationFrame(frame);if(still)setTimeout(()=>requestAnimationFrame(frame),300);
+window.__sheet={n:items.length,tris:items.filter(g=>!g.userData.isOld).reduce((a,g)=>a+g.children[0].geometry.attributes.position.count/3,0)};
+}catch(e){document.getElementById('err').textContent=String(e&&e.stack||e);window.__err=String(e)}
+</script>
