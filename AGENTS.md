@@ -298,6 +298,9 @@ Orden por **FASES 1→16**: **1** cerrar lo abierto · **2** combate base (estam
 
 > **⚠ EL 3D ES EL JUEGO (Fase 17–18, 20 oct 2026):** sin parámetros carga el 3D; el 2D del mundo está RETIRADO (no existe `?2d=1` ni plan B: sin WebGL 2 el juego muestra un aviso). `?r3d=1` sigue siendo inofensivo. Donde un lote antiguo diga «solo con `?r3d=1`», léase «siempre».
 
+### Nota 22 oct 2026 — imán de proyectiles (arco, bola de fuego, hechizos del báculo)
+- `rayHit` (game.js) ensancha el rayo de apuntado con la distancia (`AIMASSIST`: +0,12 px por px recorrido, hasta +26 px) y los proyectiles vuelan hacia el CENTRO del enemigo si lo alcanzan (antes pasaban de largo rozando la hitbox). Verificado: un goblin a 22 px del eje a 200 px de distancia ahora recibe el tiro (antes no); a 44 px sigue fallando; ajustable en `AIMASSIST` si se siente poco/mucho. NO probado a mano.
+
 ### Nota 22 oct 2026 — tiempos entre golpes más cortos (decisión del dueño)
 - `SWSEC` (game.js) ahora: **daga 0,7 · espada/cetro 1,0 · puños 1,1 · arco/bastón 1,4 · mandoble/ballesta 2,0** s (antes 1,2/1,5/2/2,4/3); **bola de fuego 1,5 → 1,2 s** (`ms=fb?1200`). `SWDMG` conserva los valores ANTIGUOS y solo escala el daño por golpe (`spdK`), así el **DPS no cambia** (golpes más rápidos y más pequeños), salvo la bola de fuego (+25 % de DPS, su daño no depende del tiempo). La descripción de los objetos muestra el tiempo nuevo. Verificado (`atkMs`/`spdK` por arma). **Sin probar a mano:** con poco nivel el daño por golpe es pequeño y el redondeo (`mxs`, mín. 1) puede distorsionar el DPS (mirar el tutorial y los 30 de vida de Gabriel); no se tocaron hit-stop/temblor ni el coste de los cargados. Descartado por ahora (decisión del dueño): ventanas de cancelación del bloqueo/combo.
 
