@@ -298,6 +298,18 @@ Orden por **FASES 1→16**: **1** cerrar lo abierto · **2** combate base (estam
 
 > **⚠ EL 3D ES EL JUEGO (Fase 17–18, 20 oct 2026):** sin parámetros carga el 3D; el 2D del mundo está RETIRADO (no existe `?2d=1` ni plan B: sin WebGL 2 el juego muestra un aviso). `?r3d=1` sigue siendo inofensivo. Donde un lote antiguo diga «solo con `?r3d=1`», léase «siempre».
 
+### Nota 22 oct 2026 — plan de oficios ampliado
+- `docs/PLAN_OFICIOS_Y_BIOMAS.md` §6: entran **Joyería, Ingeniería (estilo WoW: artilugios con enfriamiento, explosivos, trampas, mecanismos, mascotas mecánicas, dispositivos de viaje), Domar y Agricultura/Apicultura (las últimas)**; el barco de la Costa no es una skill. Abierto: dónde se planta (recomendado: parcelas por aldea). Nada implementado.
+- **2.ª tanda (22 oct):** mascota + montura a la vez (2 ranuras dedicadas; objetos que ocupan hueco al guardarse); **Domar y monturas se implementan con el Bosque (Fase 4)** para acortar los viajes; Agricultura/Apicultura puede descartarse (decidir al final).
+
+### Nota 22 oct 2026 — FIX pose de dormido durante el fundido a la playa
+- Bug del dueño: al terminar el escape el héroe salía corriendo con la pose de acostado antes de llegar a la playa. Causa: `PLAYA.start()` (playa.js) ponía `sl=1` (tumbado) AL EMPEZAR el fundido de 3 s, mientras el héroe aún corría por la isla. Ahora `sl=1` se activa dentro del `setTimeout` con la pantalla en negro, justo al teletransportarlo, y ahí se sueltan las teclas y `P.mvg/anm/mv/g`. Verificado en el arnés (`sl` 0 → 0 a 1,5 s → 1 a ~3,7 s). NO visto a ojo la secuencia completa.
+
+### Lote FIX-FANTASMA-INVISIBLE + PLAN-OFICIOS (22 oct 2026)
+- **Bug del dueño: «no se ve el item cuando se agarra».** Causa (reproducida con ratón REAL): el hover 3D de los iconos (`icons3d.js hoverStart`) pone `img.style.opacity='0'` en la `<img>` de la casilla mientras muestra el modelo vivo; el fantasma clonaba esa `<img>` con `opacity:0` (solo se veía el contador). **Arreglo (`dragdrop.js begin`):** apaga el hover (`mouseout/mouseleave` sobre el origen), limpia `opacity` del clon y `draggable=false`; CSS `.dg>img{opacity:1!important}` y `-webkit-user-drag:none`. Verificado con ratón real: el tronco aparece grande, con brillo rojo al estar sobre el mundo. **Regla: los eventos sintéticos NO reproducen el hover; probar interacciones de UI con ratón real.**
+- **Herramienta nueva:** `python tools/fast/ns.py mouse '[{"t":"move","x":..,"y":..},{"t":"down"},{"t":"move","x":..,"y":..,"steps":10},{"t":"wait","ms":800},{"t":"up"}]'` mueve el ratón REAL de Playwright (README de `tools/fast/`).
+- **PLAN de oficios y rework de biomas:** `docs/PLAN_OFICIOS_Y_BIOMAS.md` (BORRADOR a decidir con el dueño): Herbolaria → Alquimia (+Botica, antídotos de estados) → Sastrería (+mochilas) → Encantamiento; checklist por skill nueva, hierbas por bioma (nombres a aprobar) y plantilla de rework de bioma (recolectables, casas, PNJ, enemigos, música, verificación). Nada implementado. **DECIDIDO (22 oct):** orden Herbolaria → Alquimia → Sastrería → Encantamiento; Pradera completa primero; 1 hierba exclusiva por bioma + comunes; mochilas por Sastrería (+ PNJ que vende una básica). Siguiente: L1 Herbolaria.
+
 ### Nota 22 oct 2026 — LMB/RMB en vez de «clic»
 - Todo texto visible y comentario de `src/`, `css/` e `index.html` dice **LMB** / **RMB** en lugar de «clic» (regla nueva al final de `docs/REGLAS_CREACION.md`). Los documentos (`docs/`, este archivo) conservan «clic» en lo histórico. Algunas frases quedan algo toscas en comentarios («hacer LMB»); no afectan al juego. Verificado: `node --check` de todos los `src/*.js`, juego carga sin errores.
 

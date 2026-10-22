@@ -850,7 +850,7 @@ body.dragging,body.dragging *{cursor:grabbing!important}body.dragging #tip{displ
 .dg{position:fixed;left:0;top:0;z-index:60;pointer-events:none;display:grid;place-items:center;box-sizing:border-box;background:none;border:0;box-shadow:none;scale:1;opacity:1;transition:scale .22s cubic-bezier(.2,1.6,.4,1),opacity .28s ease,top .3s ease}
 .dg.pick{scale:1.6}   /* en la mano del cursor el OBJETO crece (sin el cuadrado de la casilla) */
 .dg>*{max-width:88%;max-height:88%;object-fit:contain;filter:drop-shadow(0 .5em .45em rgba(0,0,0,.6)) drop-shadow(0 0 .7em color-mix(in srgb,var(--rc,#e8cf94) 55%,transparent))}
-.dg .cnt{position:absolute;right:.45em;bottom:.3em;font:700 .6em Cinzel,Georgia,serif;color:#fff1cf;text-shadow:0 0 .3em #000,0 0 .15em #000}
+.dg .cnt{position:absolute;right:.95em;bottom:.75em;font:700 .6em Cinzel,Georgia,serif;color:#fff1cf;text-shadow:0 0 .3em #000,0 0 .15em #000}
 .dg.dg-world>*{filter:drop-shadow(0 .5em .45em rgba(0,0,0,.6)) drop-shadow(0 0 .8em rgba(216,106,90,.9))}
 .dg.dg-bad{opacity:.5}
 .dg.dg-in{scale:.25;opacity:0;transition:scale .22s ease-in,opacity .22s ease-in}
@@ -897,3 +897,6 @@ body.dragging,body.dragging *{cursor:grabbing!important}body.dragging #tip{displ
 #bw[hidden]{display:none}
 #bw .inv{grid-template-columns:repeat(7,1fr);gap:5px}
 #bw.dz-hot{box-shadow:inset 0 0 0 1.5px rgba(232,207,148,.85),0 0 1.6em rgba(232,207,148,.3)}
+
+.slot[data-dg] img{-webkit-user-drag:none;user-select:none}
+.dg>img{opacity:1!important}   /* el icono clonado nunca hereda el opacity:0 del hover 3D (icons3d.js) */

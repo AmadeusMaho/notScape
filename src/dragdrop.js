@@ -30,7 +30,8 @@ const DRAG=(()=>{
  // casilla del banco donde queda un objeto: su pila si ya existe, si no la primera vacía (se ve DÓNDE va al soltar en cualquier parte del banco)
  const bankSlot=id=>document.querySelector('#sw .slot[data-dg="bank"][data-i="'+id+'"]')||document.querySelector('#sw .bkg .slot:not([data-dg])');
  function begin(){const r=st.src.getBoundingClientRect(),g=document.createElement('div');g.className='dg';
-  g.style.cssText='width:'+r.width+'px;height:'+r.height+'px;margin:-'+r.height/2+'px 0 0 -'+r.width/2+'px;--rc:'+((getComputedStyle(st.src).getPropertyValue('--rc')||'').trim()||'#e8cf94');g.innerHTML=st.src.innerHTML;   // solo el OBJETO (icono + contador), sin el cuadrado de la casilla
+  g.style.cssText='width:'+r.width+'px;height:'+r.height+'px;margin:-'+r.height/2+'px 0 0 -'+r.width/2+'px;--rc:'+((getComputedStyle(st.src).getPropertyValue('--rc')||'').trim()||'#e8cf94');try{['mouseout','mouseleave'].forEach(t=>st.src.dispatchEvent(new MouseEvent(t,{bubbles:true,relatedTarget:document.body})))}catch(e){}   // apaga el icono 3D vivo del hover (deja la <img> del origen con opacity 0)
+  g.innerHTML=st.src.innerHTML;g.querySelectorAll('img').forEach(i=>{i.style.opacity='';i.draggable=false});   // solo el OBJETO (icono + contador), sin el cuadrado de la casilla
   document.body.appendChild(g);gh=g;
   pos.x=r.left+r.width/2;pos.y=r.top+r.height/2;pos.tx=st.cx;pos.ty=st.cy;pos.vx=pos.vy=pos.r=0;tp=performance.now();st.started=1;st.sr={x:pos.x,y:pos.y};
   st.src.classList.add('dg-src');document.body.classList.add('dragging');requestAnimationFrame(()=>g.classList.add('pick'));if(!raf)raf=requestAnimationFrame(loop);try{tip.style.display='none'}catch(e){}}

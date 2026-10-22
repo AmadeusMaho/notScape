@@ -7,6 +7,7 @@ El juego tarda minutos en cargar con SwiftShader; aquí se carga UNA vez y luego
   python3 tools/fast/ns.py reload ['?r3d=1&test=1']           # recarga (tras editar JS/CSS; vuelve a tardar la carga)
   python3 tools/fast/ns.py css                                # recarga SOLO las hojas CSS sin recargar el juego (instantáneo)
   python3 tools/fast/ns.py logs                               # errores/avisos de consola desde el último `logs`
+  python3 tools/fast/ns.py mouse '[{"t":"move","x":100,"y":100},{"t":"down"},{"t":"move","x":300,"y":200,"steps":8},{"t":"up"}]'   # ratón real
   python3 tools/fast/ns.py status | stop
 Sin dependencias fuera de playwright (ya instalado). Puerto de control 8899, servidor del juego 8811."""
 import asyncio,json,sys,os,subprocess,time,urllib.request,argparse
@@ -57,6 +58,14 @@ async def daemon(a):
       if c=='logs':
         r=logs[:];logs.clear();return {'ok':True,'r':r}
       if c=='status':return {'ok':True,'r':{'url':state['url'],'info':await pg.evaluate('window.NSTEST?NSTEST.info():null')}}
+      if c=='mouse':   # ratón REAL de Playwright: pasos [{t:'move',x,y,steps?},{t:'down'},{t:'up'},{t:'wait',ms}] (22 oct 2026)
+        for st in json.loads(d['steps']):
+          t=st['t']
+          if t=='move':await pg.mouse.move(st['x'],st['y'],steps=st.get('steps',1))
+          elif t=='down':await pg.mouse.down()
+          elif t=='up':await pg.mouse.up()
+          elif t=='wait':await pg.wait_for_timeout(st['ms'])
+        return {'ok':True,'r':'ok'}
       if c=='stop':asyncio.get_event_loop().call_later(.3,lambda:os._exit(0));return {'ok':True}
       return {'ok':False,'err':'comando desconocido'}
     lock=asyncio.Lock()
@@ -93,6 +102,7 @@ def main():
     print('timeout; mira /tmp/ns_daemon.log');return
   if c=='eval':r=call('eval',js=a.arg)
   elif c=='shot':r=call('shot',path=os.path.abspath(a.arg or 'shot.png'),sel=a.sel,wait=a.wait,pad=a.pad)
+  elif c=='mouse':r=call('mouse',steps=a.arg)
   elif c=='reload':r=call('reload',url=a.arg)
   else:r=call(c)
   print(json.dumps(r.get('r',r),ensure_ascii=False,indent=1) if r.get('ok') else 'FALLO: '+str(r.get('err')))
