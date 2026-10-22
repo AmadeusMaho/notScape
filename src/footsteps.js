@@ -37,7 +37,7 @@ const FOOT=(()=>{
   let b=typeof curB==='number'?curB:0;try{const q=BIOMES.at(x,y);if(q>=0)b=q}catch(e){}
   if(tx>=0&&ty>=0&&tx<NX&&ty<NY){if(F.DK[ty*NX+tx])return 'wood';if(F.PC[j*FW+i]>=.5)return b===9?'marble':'stone';if(F.PF[j*FW+i]>=.5)return 'dirt';if(TER.rk(tx,ty))return 'stone';if(TER.sandAt(tx,ty)>.5)return 'sand';
    try{if(BIOMES.ranges.length&&BIOMES.rangeAt(x,y)[0]>1)return 'gravel'}catch(e){}}
-  return ['grass','leaves','mud','snow','grass','gravel','gravel','sand','gravel','grass'][b]||'grass'}catch(e){return 'grass'}}
+  return ['grass','grass','mud','snow','grass','gravel','gravel','sand','gravel','grass'][b]||'grass'}catch(e){return 'grass'}}
  const ST={n:0,last:'',run:0,by:{}};   // contador de pasos (pruebas): total, última superficie, corriendo, por superficie
  function play(s,run){ST.n++;ST.last=s;ST.run=run?1:0;ST.by[s]=(ST.by[s]||0)+1;const a=ctx();if(!a||(typeof S!=='undefined'&&S.mute))return;const P=SETS[s]||SETS.grass,nm=P[run?1:0];load(nm,a);const L=(BUF[nm]||[]).map((b,i)=>b?i:-1).filter(i=>i>=0);if(!L.length)return;
   let k=L[Math.floor(Math.random()*L.length)];if(L.length>1&&k===last[nm])k=L[(L.indexOf(k)+1)%L.length];last[nm]=k;

@@ -37,7 +37,8 @@ const TER=(()=>{
  // ¿hay un tile de acantilado a menos de m px de (x,y)? Es la colisión de pared: sale del MISMO tileH que se dibuja, así que lo que se ve como pared bloquea
  // (y m deja un margen antes de ella). F1-C4b: sustituye a la banda de 26–28 px de cliff() que no coincidía con los tiles.
  const cliffNear=(x,y,m)=>{const tx0=Math.floor((x-m)/T),tx1=Math.floor((x+m)/T),ty0=Math.floor((y-m)/T),ty1=Math.floor((y+m)/T);for(let tx=tx0;tx<=tx1;tx++)for(let ty=ty0;ty<=ty1;ty++)if(th(tx,ty)===HCLIFF)return true;return false};
- const standZ=(x,y)=>{const h=heightAt(x,y);if(h===HCLIFF)return typeof blk==='function'&&!blk(x,y)?HGROUND:h;if(!GRID||h<HGROUND)return h;
+ let elevHook=null;const standZ=(x,y)=>standZ0(x,y)+(elevHook?elevHook(x,y):0);   // + elevación de los props (props.js ELEV): el suelo de un zócalo/templo es caminable
+ const standZ0=(x,y)=>{const h=heightAt(x,y);if(h===HCLIFF)return typeof blk==='function'&&!blk(x,y)?HGROUND:h;if(!GRID||h<HGROUND)return h;
   // suelo: interpolación bilineal entre los centros de los 4 tiles vecinos pisables → quien camina sube los montículos en rampa, sin saltos (los tiles se PINTAN escalonados)
   const u=x/T-.5,v=y/T-.5,i=Math.floor(u),j=Math.floor(v),a=u-i,b=v-j,g=(p,q)=>{const e=th(p,q);return isLand(e)?e:h};
   return(g(i,j)*(1-a)+g(i+1,j)*a)*(1-b)+(g(i,j+1)*(1-a)+g(i+1,j+1)*a)*b};
@@ -88,6 +89,6 @@ const TER=(()=>{
  // estado de la caché (para herramientas de prueba y medir memoria en F8)
   const stats=()=>({});   // ya no hay cache de chunks pintados (Fase 18: terreno 2D retirado)
  const mtnAt=(x,y)=>{const q=BIOMES.rangeAt(x,y);return q[0]>=HCLIFF?q[1]:0},mtnIdx=(x,y)=>{const q=BIOMES.rangeAt(x,y);return q[0]>=HCLIFF?q[2]:-1};   // altura 3D de cumbre en (x,y) px de mundo (0 fuera del núcleo) e índice de cordillera: los lee la malla 3D
- return{mtnAt,mtnIdx,PAL,PAPER,heightAt,standZ,cliffNear,tileH,sandAt,seaAt,isLand,rk,NX,NY,reset,stats,ripple,env,sandL,coastD:CO?CO.D:null,coastSand:CO?CO.sandAt:null,fields:()=>{grid();return{PF,PC,PM,DK,MTN,SG:4}},biomeOf,ownerOf}   // fields/biomeOf: R3D (terrain3d.js) lee caminos y adoquines de aquí
+ return{setElev:f=>{elevHook=f},baseZ:standZ0,mtnAt,mtnIdx,PAL,PAPER,heightAt,standZ,cliffNear,tileH,sandAt,seaAt,isLand,rk,NX,NY,reset,stats,ripple,env,sandL,coastD:CO?CO.D:null,coastSand:CO?CO.sandAt:null,fields:()=>{grid();return{PF,PC,PM,DK,MTN,SG:4}},biomeOf,ownerOf}   // fields/biomeOf: R3D (terrain3d.js) lee caminos y adoquines de aquí
 })();
 if(typeof module!=='undefined')module.exports=TER;

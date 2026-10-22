@@ -745,3 +745,10 @@ body.cine #qms{opacity:0}
 #qpn .qp-i li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #qpn .qp-i li img.ic{width:1.5em;height:1.5em}
 #qpn{max-height:78vh}
+
+/* Barra de casteo (21 oct 2026; game.js castStart): cristal oscuro + trazo dorado, centrada sobre el marco del jugador */
+#cast{position:fixed;left:50%;bottom:calc(var(--hu,16px)*13.5);z-index:6;width:min(18em,70vw);padding:.5em .8em .6em;font-size:calc(var(--hu,16px)*.9);color:#e8dcc0;text-align:center;pointer-events:none;opacity:0;transform:translate(-50%,.5em);transition:opacity .25s,transform .25s;background:linear-gradient(180deg,rgba(26,22,16,.92),rgba(12,10,8,.92));border:1px solid rgba(232,207,148,.45);border-radius:.6em;box-shadow:0 .4em 1.4em rgba(0,0,0,.55)}
+#cast.on{opacity:1;transform:translate(-50%,0)}
+#cast .cs-t{font:600 .85em Cinzel,Georgia,serif;letter-spacing:.14em;text-transform:uppercase;color:#e8cf94;margin-bottom:.35em}
+#cast .cs-b{height:.6em;border-radius:.3em;background:rgba(232,207,148,.12);border:1px solid rgba(232,207,148,.25);overflow:hidden}
+#cast .cs-b i{display:block;height:100%;width:0;background:linear-gradient(90deg,#a07a2a,#f0d98c)}

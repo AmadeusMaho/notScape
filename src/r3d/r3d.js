@@ -81,7 +81,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  const cts=new Contact(scene,W3);   // F3f·P3A: sombras de contacto (1 draw call)   // F2-B: árboles talables (follaje por especie) y menas
  // RAYOS X (legibilidad tipo Diablo/PoE): lo que el héroe tiene detrás de una casa 3D se dibuja como silueta clara. El stencil marca los píxeles donde el
  // héroe SÍ se ve, para que su propio brazo de detrás no se pinte como silueta sobre su torso.
- const XRAY=new THREE.MeshBasicMaterial({color:'#ffe6b8',transparent:true,opacity:.42,depthWrite:false,depthFunc:THREE.GreaterDepth,stencilWrite:true,stencilRef:1,stencilFunc:THREE.NotEqualStencilFunc,stencilZPass:THREE.KeepStencilOp,stencilFail:THREE.KeepStencilOp,stencilZFail:THREE.KeepStencilOp});
+ const XRAY=new THREE.MeshBasicMaterial({color:'#ffe6b8',transparent:true,opacity:.42,depthWrite:false,depthFunc:THREE.GreaterDepth,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4,stencilWrite:true,stencilRef:1,stencilFunc:THREE.NotEqualStencilFunc,stencilZPass:THREE.KeepStencilOp,stencilFail:THREE.KeepStencilOp,stencilZFail:THREE.KeepStencilOp});
  let stKey='';const markStencil=()=>{if(stKey===hero.lookKey+hero.cloth.length)return;stKey=hero.lookKey+hero.cloth.length;hero.obj.traverse(o=>{if(!o.material)return;[].concat(o.material).forEach(m=>{m.stencilWrite=true;m.stencilRef=1;m.stencilFunc=THREE.AlwaysStencilFunc;m.stencilZPass=THREE.ReplaceStencilOp})})};
  const blob=new THREE.Mesh(new THREE.CircleGeometry(.3,20).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.28,depthWrite:false}));blob.renderOrder=1;scene.add(blob);
  function syncProxy(){if(!proxy||proxy.userData.key!==hero.lookKey+'|'+hero.cloth.length){if(proxy)scene.remove(proxy);proxy=hero.obj.clone(true);proxy.userData.key=hero.lookKey+'|'+hero.cloth.length;
@@ -118,8 +118,8 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  // Índices = BIOMES.list: 0 Pradera · 1 Bosque · 2 Pantano · 3 Cumbres · 4 Oriental · 5 Volcán · 6 Páramo · 7 Desierto · 8 Costa. [r,g,b multiplicador] y [r,g,b sombras]; se aplica ×BT_K.
  let TILT_K=(()=>{try{const v=new URLSearchParams(location.search).get('tilt');return v==null?.6:Math.max(0,Math.min(1.5,+v||0))}catch(e){return .6}})();   // R3D-ESTETICA-2 (P6): inclinación-desenfoque, `?tilt=0..1.5` (defecto .6)
  const CLOUD_K=(()=>{try{const v=new URLSearchParams(location.search).get('cloud');return v==null?1.35:Math.max(0,Math.min(2.5,+v||0))}catch(e){return 1.35}})();   // sombras de nubes de día, `?cloud=0..2.5` (1 = como antes, defecto 1,35)
- const BT=[[[1,1,.98],[0,0,0]],[[.95,.97,.94],[.002,.005,.002]],[[.94,1.03,.88],[0,.006,0]],[[.92,.99,1.09],[0,.002,.008]],[[1.01,.94,1.07],[.003,0,.006]],[[1.12,.93,.82],[.008,0,0]],[[.97,.93,1.09],[.004,0,.008]],[[1.09,1,.86],[.004,.002,0]],[[.95,1.02,1.05],[0,.003,.004]]];
- const BT_K=(()=>{try{const v=new URLSearchParams(location.search).get('btint');return v==null?.6:Math.max(0,Math.min(1.5,+v||0))}catch(e){return .6}})();
+ const BT=[[[1,1,.98],[0,0,0]],[[.95,.97,.94],[.002,.005,.002]],[[.94,1.03,.88],[0,.006,0]],[[.92,.99,1.09],[0,.002,.008]],[[1.01,.94,1.07],[.003,0,.006]],[[1.12,.93,.82],[.008,0,0]],[[.97,.93,1.09],[.004,0,.008]],[[1.09,1,.86],[.004,.002,0]],[[.95,1.02,1.05],[0,.003,.004]],[[1,1,1],[0,0,0]]];
+ const BT_K=(()=>{try{const v=new URLSearchParams(location.search).get('btint');return v==null?1:Math.max(0,Math.min(1.5,+v||0))}catch(e){return 1}})();   // 21 oct 2026: .6→1 (el tinte de grado por bioma era casi imperceptible)
  const btC=new THREE.Vector3(1,1,1),btL=new THREE.Vector3(0,0,0),btT=new THREE.Vector3(),btTL=new THREE.Vector3();let btInit=false;const FT=new THREE.Vector3();
  function todAt(t){const s=typeof sunS==='function'?sunS(t):1,d=Math.max(typeof WXD!=='undefined'?WXD:0,Math.max(0,Math.min(1,(.15-s)/.55))),w=Math.max(0,1-Math.abs(s)*4);
   let p=mixTod(TOD.dia,TOD.noche,d);p=mixTod(p,TOD.atardecer,Math.min(.85,w*(1-d*.4)));p.nt=d;return p}
@@ -133,7 +133,12 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  function burnFx(t,dt,tgt){G.uBurn.value=burn;if(sky&&sky.tint)sky.tint(burn);if(burn>.02||bem){if(!bem)bem=new Embers(scene,360);bem.level=burn>.02?Math.min(1,burn*1.1):0;bem.at(tgt.x,tgt.z,0);bem.update(t,dt)}}
  const FIRE=()=>{const a=TOD.atardecer;if(fireSrc!==a){fireSrc=a;fireRow=Object.assign({},a,{hemS:'#ff9a64',hemG:'#4a1c10',hemI:a.hemI*1.05,sun:'#ff6a2a',sunI:a.sunI*1.15,sat:Math.min(1.1,a.sat*1.05),lift:'#1c0804',vig:Math.min(.9,a.vig+.2),rim:'#ff7a3a',bloom:a.bloom*1.3,wDeep:'#3a1210',wShal:'#8a3a22',nt:.18})}return fireRow};
  const fireMix=(p,dt)=>{burn+=(burnT-burn)*(1-Math.exp(-dt/2.2));if(Math.abs(burnT-burn)<.002)burn=burnT;return burn>.002?mixTod(p,FIRE(),burn):p};
- function light(p){hemi.color.set(p.hemS);hemi.groundColor.set(p.hemG);hemi.intensity=p.hemI;sun.color.set(p.sun);sun.intensity=p.sunI;
+ // TINTE DE ILUMINACIÓN POR BIOMA (21 oct 2026; pedido del dueño: «un tinte único por bioma, que se diferencie un poco la iluminación global»): multiplica el color del SOL y de la luz HEMISFÉRICA (y un poco su intensidad) según el bioma bajo el héroe,
+ // con fundido suave (~1,5 s) al cruzar fronteras. Índices = BIOMES.list. [sol r,g,b · hemi r,g,b · intensidad]; `?btint=` (BT_K) escala también este tinte. De noche se aplica igual (la fila TOD ya es oscura).
+ const BL=[[1.03,1,.93, 1,1,.97, 1.02],[.9,1.03,.84, .84,1.02,.88, .93],[.9,.99,.78, .84,.96,.82, .9],[.88,.97,1.14, .88,.98,1.16, 1.02],[1.07,.93,.98, 1.05,.92,1.02, 1],[1.18,.84,.64, 1.12,.8,.72, 1.04],[.94,.88,1.16, .92,.86,1.18, .96],[1.14,1,.78, 1.1,.99,.8, 1.06],[.94,1.03,1.1, .92,1.02,1.1, 1],[1,1,1, 1,1,1, 1]];
+ const blC=new Float32Array([1,1,1,1,1,1,1]),blT=new Float32Array(7);let blInit=false;
+ function bioLight(dt){let kb=0;try{if(typeof P!=='undefined'&&typeof BIOMES!=='undefined')kb=Math.max(0,BIOMES.at(P.x,P.y))}catch(e){}const row=BL[kb]||BL[0],a=blInit?1-Math.exp(-dt*1.4):1;blInit=true;for(let i=0;i<7;i++){blT[i]=1+(row[i]-1)*BT_K;blC[i]+=(blT[i]-blC[i])*a}}
+ function light(p){hemi.color.set(p.hemS);hemi.color.r*=blC[3];hemi.color.g*=blC[4];hemi.color.b*=blC[5];hemi.groundColor.set(p.hemG);hemi.intensity=p.hemI*blC[6];sun.color.set(p.sun);sun.color.r*=blC[0];sun.color.g*=blC[1];sun.color.b*=blC[2];sun.intensity=p.sunI*blC[6];
   const D=TODH.dia;aHemi.color.set(D.hemS);aHemi.groundColor.set(D.hemG);aHemi.intensity=D.hemI;aSun.color.set(D.sun);aSun.intensity=D.sunI;
   G.uSat.value=p.sat;G.uLive.value=p.live;setInk(p.ink,p.inkK);G.uRimCol.value.set(p.rim);G.uWinI.value=p.win;WU.uDeep.value.set(p.wDeep);WU.uShal.value.set(p.wShal);
   r.setClearColor(p.sky);TODc=p}
@@ -196,7 +201,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   const w=ISO.unproj(ISO.cam.x,ISO.cam.y,1);tgt.set(w.x/ISO.TILE,0,w.y/ISO.TILE);const k=ppu();placeCam(cam,tgt,V.cw/2/k,V.ch/2/k);
   if(sky&&sky.on){sky.update(t,dt,tgt,cam,water);WU.uClear.value=sky.w||0}
   // noche → rim y ojos de la capucha (el oscurecido lo hace lighting() en 2D)
-  const IN=rooms.on,upd=!IN,tp=IN?INT_TP:fireMix(zoneTod(todAt(t)),dt),nt=tp.nt;light(tp);burnFx(t,dt,tgt);spell.update(t,dt);fx.update(t,dt,tp.night,r.getPixelRatio());if(typeof P!=='undefined'&&typeof curB!=='undefined')fx.ambient(P.x,P.y,curB,dt);if(frz>.002)G.uSat.value*=1-.75*frz;if(IN){aHemi.color.set('#ffe2b8');aHemi.groundColor.set('#9a6a3c');aHemi.intensity=1.8;aSun.color.set('#ffc27a');aSun.intensity=2.0;aBack.color.set('#ffb070')}G.uNight.value=tp.night;lights(t,tp,Math.hypot(V.cw,V.ch)/k*.78+6);rooms.update(t);
+  const IN=rooms.on,upd=!IN,tp=IN?INT_TP:fireMix(zoneTod(todAt(t)),dt),nt=tp.nt;bioLight(dt);light(tp);burnFx(t,dt,tgt);spell.update(t,dt);fx.update(t,dt,tp.night,r.getPixelRatio());if(typeof P!=='undefined'&&typeof curB!=='undefined')fx.ambient(P.x,P.y,curB,dt);if(frz>.002)G.uSat.value*=1-.75*frz;if(IN){aHemi.color.set('#ffe2b8');aHemi.groundColor.set('#9a6a3c');aHemi.intensity=1.8;aSun.color.set('#ffc27a');aSun.intensity=2.0;aBack.color.set('#ffb070')}G.uNight.value=tp.night;lights(t,tp,Math.hypot(V.cw,V.ch)/k*.78+6);rooms.update(t);
   // F3f·P6 · halo del santuario: la gema (aEmit=3) se atenúa al acercarse el héroe (si no, el haz + el bloom lo sobreexponen: mancha blanca). A ≥3,6 tiles brillo completo; a ≤1,2 tiles `shrMin`. Suavizado en el tiempo.
   {let dm=99;if(typeof PO!=='undefined'&&typeof P!=='undefined')for(const e of PO)if(e.n==='santuario'){const d=Math.hypot(e.x-P.x,e.y-P.y)/ISO.TILE;if(d<dm)dm=d}
    const u=Math.min(1,Math.max(0,(dm-1.2)/2.4)),tk=shrMin+(1-shrMin)*u*u*(3-2*u);G.uShrK.value+=(tk-G.uShrK.value)*(1-Math.exp(-dt*6))}
@@ -212,7 +217,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   // héroe
   const st=typeof heroState3D==='function'?heroState3D(now):null;
   if(st){hero.setLook(resolveLook(st.look));const p=W3(st.x,st.y,st.z);
-   hero.update({x:p.x,y:p.y,z:p.z,mv:st.mv,run:st.run,w:st.w,act:st.act,hurt:st.hurt,cb:st.cb,recv:st.recv||0,dash:st.dash||0,jmp:st.jmp||0,t,face:st.fx!=null?[st.fx,st.fy]:null,night:nt,wind:[.9,.4]},dt);
+   hero.update({x:p.x,y:p.y,z:p.z,mv:st.mv,run:st.run,w:st.w,act:st.act,hurt:st.hurt,cb:st.cb,recv:st.recv||0,dash:st.dash||0,jmp:st.jmp||0,back:st.back||0,t,face:st.fx!=null?[st.fx,st.fy]:null,night:nt,wind:[.9,.4]},dt);
    blob.position.set(p.x,p.y+.012,p.z);lantern.position.set(p.x+.15,p.y+.75,p.z+.1);lantern.intensity=1.8*nt*(1+Math.sin(t*9)*.05);heroL={x:p.x+.15,y:p.y+.75,z:p.z+.2,i:nt};aLantern.position.set(p.x+.15,p.y+.7,p.z+.25);aLantern.intensity=1.4*nt;   // linterna del héroe: se enciende sola de noche (guía §1.3)
    // rastro en el pasto (4 puntos, se recupera en ~1,6 s)
    if(!trail.length||Math.hypot(p.x-trail[0].x,p.z-trail[0].z)>.14)trail.unshift({x:p.x,z:p.z,t});if(trail.length>4)trail.length=4;

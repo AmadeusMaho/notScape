@@ -391,7 +391,8 @@ export class Actors{
  // PRECARGA (21 oct 2026): hornea TODAS las plantillas durante la carga (antes se horneaba la 1.ª vez que aparecía cada criatura = tirón)
  bake(){try{ACTOR_IDS.concat(['ru'],Object.keys(NPC_DEF)).forEach(k=>tplFor(k))}catch(e){console.warn('[R3D actors bake]',e)}}
  // objetos desechables para precompilar el programa de la silueta (R3D.warmShaders): un PNJ con su malla de rayos X
- warmObjs(){try{const A=makeActor('ru');if(!A)return[];A.addXray();return[A.grp]}catch(e){return[]}}
+ warmObjs(){try{const A=makeActor('ru');if(!A)return[];A.addXray();if(!this.lockM)this.lockM=new THREE.MeshBasicMaterial({color:'#ffd98a',transparent:true,opacity:.7,depthWrite:false,blending:THREE.AdditiveBlending});A.grp.add(new THREE.Mesh(this.ringG,this.lockM));return[A.grp]}catch(e){return[]}}
+ lock(e){this.lockE=e||null}   // objetivo fijado (Tab): anillo dorado bajo sus pies
  has(e){const a=this.map.get(e);return !!(a&&a.vis&&a.state!=='gone')}
  // Altura de la cabeza en «px de mundo» del sprite (1 unidad 3D = 34,3 px de pantalla a escala 1 = 22,9 px de mundo con SPR=1,5): game.js cuelga de ahí la barra de vida y la etiqueta
  topPx(e){const A=this.map.get(e);if(!A)return 0;return A.tpl.h*(ISO.HW*2/Math.SQRT2)*Math.cos(Math.PI/6)/(typeof SPR!=='undefined'?SPR:1.5)+4}
@@ -436,6 +437,7 @@ export class Actors{
   // copia de profundidad: solo si el héroe está cerca (no se dibuja el resto)
   if(A.proxy){const near=Math.hypot(P_.x-e.x,P_.y-e.y)<ISO.TILE*3.5&&A.vis;A.proxy.visible=near;if(near){A.proxy.position.copy(A.grp.position);A.proxy.quaternion.copy(A.grp.quaternion);A.proxy.scale.copy(A.grp.scale)}}
   // aro de jefe
+  if(A.state==='live'&&this.lockE===e){if(!A.lring){if(!this.lockM)this.lockM=new THREE.MeshBasicMaterial({color:'#ffd98a',transparent:true,opacity:.7,depthWrite:false,blending:THREE.AdditiveBlending});A.lring=new THREE.Mesh(this.ringG,this.lockM);A.lring.renderOrder=3;A.grp.add(A.lring);A.lring.scale.setScalar((.55+.5*A.sc)/(.625*A.sc));A.lring.position.y=.05/A.sc}A.lring.visible=true;A.lring.rotation.y=t*.8;this.lockM.opacity=.55+.25*Math.sin(t*4)}else if(A.lring)A.lring.visible=false;
   if(d&&d.boss&&A.state==='live'){if(!A.ring){A.ring=new THREE.Mesh(this.ringG,this.ringM[d.boss]||this.ringM[1]);A.ring.renderOrder=2;A.grp.add(A.ring);A.ring.scale.setScalar((.45+.5*A.sc)/(.625*A.sc));A.ring.position.y=.03/A.sc}A.ring.material.opacity=.22+.14*Math.sin(t*3)}
  }
  clear(){for(const [e,A] of this.map)A.dispose();this.map.clear()}

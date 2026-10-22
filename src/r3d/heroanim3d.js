@@ -303,6 +303,7 @@ export const LOOPS={
  fu:t=>P(DEF,Object.assign({},CROUCH,{rp:[-.1,.6,.26+.04*Math.sin(t*2.2)],rd:nrm([0,-.15,1]),re:[1,0,0],cx:.28+.03*Math.sin(t*2.2)})),
  cr:(t,ph)=>{const s=Math.sin(ph*Math.PI*6);return P(DEF,{py:-.07,cx:.3,yaw:-.1,hx:.25,fl:[.12,.1,0,0,.25],fr:[-.12,-.08,0,0,-.3],rp:[-.12,.6,.27+.05*s],rd:nrm([.05,-.35,.94]),re:[0,-1,0],
   lp:[.1,.58,.29],ld:[0,0,1],cy:.05*s,pz:.01*s})},
+ se:t=>P(DEF,Object.assign({},CROUCH,{py:-.22,cx:.55,hx:.32,fl:[.14,.12,0,0,.35],fr:[-.13,-.08,0,.3,-.4],rp:[-.14+.05*Math.cos(t*4),.42,.34+.05*Math.sin(t*4)],rd:nrm([.1,-.9,.4]),re:[1,0,0],lp:[.16+.05*Math.sin(t*3.3),.4,.32+.04*Math.cos(t*3.3)],ld:nrm([-.1,-.9,.4]),le:[-1,0,0],cy:.07*Math.sin(t*4)})),   // BUSCAR (21 oct 2026): agachado rebuscando con las dos manos (castear en el suelo)
  ins:t=>P(DEF,{hx:.35,cx:.08,lp:[.06,.7,.24],ld:nrm([0,.35,.94]),le:[-1,0,0],rp:[-.02+.015*Math.cos(t*7),.73,.25+.012*Math.sin(t*9)],rd:nrm([.1,.7,-.5]),re:[1,0,0],pl:[.7,-.6,.1]})};
 
 // golpes de trabajo: clave → constructor (se cachean)
@@ -458,6 +459,7 @@ export class HeroAnim{
   // locomoción: velocidad medida (o virtual en el visor) → zancada y cadencia propias
   const sp=st.speed!=null?st.speed:(st.dist!=null?st.dist/dt:0);this.spd+=(sp-this.spd)*(1-Math.exp(-dt*8));
   const k=this.m.k||1,vm=this.spd/k,cad=cl(1.3+.25*vm,1.5,2.6);
+  this.back=st.back||0;
   if(st.mv&&vm>.15)this.gph+=dt*vm/(vm/cad);   // = dt·cadencia (la zancada = v/cadencia)
   else if(st.mv){const f=((this.gph%.5)+.5)%.5;if(f>.01&&f<.49)this.gph+=Math.min(.5-f,dt*2)}   // asentado: termina el paso hasta el doble apoyo
   this.runK+=((st.run?1:0)-this.runK)*(1-Math.exp(-dt*7));
@@ -534,7 +536,7 @@ export class HeroAnim{
  breath(v,t,amp){const b=Math.sin(t*2.2);v[C.py]+=b*.005*amp;v[C.cx]+=Math.sin(t*2.2+.7)*.012*amp;v[C.rp+1]+=b*.006*amp;v[C.lp+1]+=b*.006*amp}
  // ── ANDAR / CORRER: pies por fase de distancia (apoyo con pie plantado, despegue de talón, vuelo al correr), pelvis que sube y baja, cadera y hombros en
  //    contrafase, brazos pendulares (codo suelto al andar; a ~90° y bombeando al correr). En combate el torso conserva la guardia con el arma.
- movePose(cls,sh,combat,t,v){const rk=this.runK,u=this.gph,W=this.m.W||1,vm=this.spd/(this.m.k||1);
+ movePose(cls,sh,combat,t,v){const rk=this.runK,u=this.back?-this.gph:this.gph,W=this.m.W||1,vm=this.spd/(this.m.k||1);
   const usesAim=cls==='bow'||cls==='xbow';const base=combat&&!usesAim?this.stanceOf(cls,sh):this.relaxOf(cls,sh);v.set(base);
   const g=cl((vm-2)/1.6,0,1),S=lerp(lerp(.58,.46,g),.28,rk),A=lerp(lerp(.16,.18,g),.165,rk),H=lerp(lerp(.05,.075,g),.12,rk),fx=.085*W;
   const foot=(ph,side,o)=>{ph=((ph%1)+1)%1;let z,l,p;

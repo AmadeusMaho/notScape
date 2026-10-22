@@ -12,18 +12,18 @@ const ISLA=(()=>{
  const OFR=[['logs',12.8,-5.2],['estano',19.2,-5.2],['sw_cobre',12.8,-1.8],['c_camaron',19.2,-1.8]];
  // MISIONES TIPO WOW (21 oct 2026): cada maestro da UNA misión con 3 fases = 3 tipos de paso: `ph:'a'` (ACEPTAR: el maestro tiene un «!»; se acepta en su diálogo), los pasos de OBJETIVO (el maestro muestra un «?» gris) y `ph:'t'` (ENTREGAR: «?» dorado; hay que volver y entregar lo que pide `deliver`, y recibir `reward`). Los textos y datos de cada misión están en QUESTS.
  const QUESTS=[
-  {npc:'v:9:raguel',name:'Despertar',hi:'Bienvenido, viajero.',desc:'Camina por el camino de lajas hasta la columna, corre un poco manteniendo Mayús y abre la Mochila. Después vuelve conmigo.',rem:'Camina hasta la columna, corre y abre la Mochila.',turn:'¿Has recorrido el camino?',done:'Bien. Ahora ve al olivar, al oeste, y habla con Sariel: ella te enseña a talar y minar.',coins:5},
+  {npc:'v:9:raguel',name:'Despertar',hi:'Bienvenido, viajero.',desc:'Cuando llegaste traías algo contigo. Recoge tus pertenencias en la caja de la punta oeste, junto a un árbol (te marcaré el camino), mira qué encuentras y tráemelo.',rem:'Busca en la caja de la punta oeste y abre la Mochila.',turn:'¿Encontraste algo?',deliver:{pendiente:1},done:'Es tuyo: lo llevabas al caer. Quédate con lo que recuerdes. Ahora ve al olivar, al oeste, y habla con Sariel: ella te enseña a talar y minar.',coins:5},
   {npc:'v:9:sariel',name:'Manos de tierra',hi:'Hay trabajo que hacer.',desc:'Necesito 3 troncos de olivo y, de la cantera del norte, 2 de cobre y 2 de estaño. Tráemelos.',rem:'Tala olivos y mina cobre y estaño en la cantera del norte.',turn:'¿Traes los materiales?',deliver:{logs:3,cobre:2,estano:2},reward:{cobre:2,estano:1,logs:1},coins:15,done:'Gracias. Quédate con lo que te sirva. Ve al Ágora y habla con Uriel.'},
   {npc:'v:9:uriel',name:'Fuego',hi:'El fuego no espera.',desc:'Funde 2 barras de cobre en el horno y forja una espada de cobre en el yunque. Luego tráemela.',rem:'Funde las barras en el horno y forja la espada en el yunque.',turn:'¿Está lista la espada?',deliver:{sw_cobre:1},reward:{sw_cobre:1},coins:25,done:'Buen filo. Llévatela. Ve a la fuente y habla con Rafael.'},
   {npc:'v:9:rafael',name:'Agua y cocina',hi:'Ven, siéntate un momento.',desc:'Pesca 3 camarones en la fuente y cocina 2 en la fogata del Ágora. Tráeme los cocinados.',rem:'Pesca en la fuente y cocina en la fogata del Ágora.',turn:'¿Los camarones?',deliver:{c_camaron:2},reward:{c_camaron:1},coins:25,done:'Excelente. Guarda uno. Ve a la Palestra y habla con Miguel.'},
   {npc:'v:9:miguel',name:'La Palestra',hi:'Firme. Mirada al frente.',desc:'Las gallinas de la Palestra son tu práctica: golpea con puntería, carga un golpe, esquiva con Espacio y derrota a 3. Vuelve cuando acabes.',rem:'Practica con las gallinas de la Palestra.',turn:'¿Has terminado?',done:'Bien. Deposita todo en el banco, saca las 4 ofrendas (troncos, estaño, espada de cobre y camarón cocinado) y sube a la Acrópolis.',coins:40}];
  const QS=(q,ph,o)=>Object.assign({q,ph,npc:QUESTS[q].npc,g:{t:'talk',k:QUESTS[q].npc}},o);
+ const BOXP=[-27,-7.5];   // caja de las pertenencias (tiles desde el centro de la isla): en la PUNTA OESTE, junto a un olivo, a ≈ 20 tiles de la llegada (hay que caminar)
  const STEPS=[
   QS(0,'a',{cap:0,txt:'Habla con Raguel'}),
-  {cap:0,txt:'Camina hasta la columna',at:[-13.7,-2.7],g:{t:'reach',at:[-13.7,-2.7],r:2.6}},
-  {cap:0,txt:'Corre (mantén Mayús) a lo largo del camino',at:[-4.1,-2.9],g:{t:'run',k:'run',n:12},hint:'Mayús'},
+  {cap:0,txt:'Recoge tus pertenencias en la caja de la punta oeste',at:BOXP,g:{t:'item',k:'pendiente'}},
   {cap:0,txt:'Abre la Mochila',g:{t:'panel'},hint:'inv'},
-  QS(0,'t',{cap:0,txt:'Vuelve con Raguel'}),
+  QS(0,'t',{cap:0,txt:'Entrégale el pendiente a Raguel'}),
   QS(1,'a',{cap:1,txt:'Habla con Sariel, en el olivar'}),
   {cap:1,txt:'Tala 3 troncos de olivo',at:[-20,-6.5],g:{t:'got',k:'logs',n:3}},
   {cap:1,txt:'Mina 2 de cobre en la cantera',at:[-5.5,-14.8],g:{t:'got',k:'cobre',n:2}},
@@ -41,7 +41,6 @@ const ISLA=(()=>{
   {cap:4,txt:'Apunta con el ratón y haz clic: golpea a una gallina (3 golpes)',at:[14,10],g:{t:'cnt',k:'swing',n:3}},
   {cap:4,txt:'Mantén el clic para cargar un golpe y suéltalo',at:[14,10],g:{t:'cnt',k:'charged',n:1}},
   {cap:4,txt:'Esquiva con ESPACIO (2 veces)',g:{t:'dash',k:'dash',n:2},hint:'Espacio'},
-  {cap:4,txt:'Evita un golpe: sal del cono rojo o esquiva',at:[14,10],g:{t:'cnt',k:'dodge',n:1}},
   {cap:4,txt:'Derrota 3 gallinas',at:[14,10],g:{t:'kill',k:'gallina',n:3}},
   QS(4,'t',{cap:4,txt:'Vuelve con Miguel'}),
   {cap:5,txt:'Deposita todo en el banco',at:[21,-3],g:{t:'dep',k:'dep',n:1}},
@@ -69,15 +68,25 @@ const ISLA=(()=>{
    case'reach':{const q=wp(g.at[0],g.at[1]);return Math.hypot(q.x-P.x,q.y-P.y)<g.r*T}
    case'panel':return typeof TB!=='undefined'&&TB==='inv'&&typeof panelOpen==='function'&&panelOpen();
    case'have':return g.k.every(k=>have(k)>=1);
+   case'item':return have(g.k)>=1;
    case'offer':return i.off.every(v=>v);
    default:return(S.st[key(g)]||0)-i.bs>=g.n}};
- let sp=0,cs=0;
+ let sp=0,cs=0,chT=0,now_=0,chI=0,box=null;
+ // CAJA DE PERTENENCIAS (misión de Raguel): un cofre pequeño (PO con pk 'cajaIsla') junto al borde; F o clic → `search`: barra de casteo de 5 s con el héroe agachado buscando → recibes el PENDIENTE que llevabas al caer.
+ function boxInit(){if(box&&PO.includes(box))return;if(typeof PO==='undefined')return;const q=wp(BOXP[0],BOXP[1]),got=st().step>1||st().done;box=PO.find(p=>p.pk==='cajaIsla')||null;if(!box){box={po:1,id:'isla_caja',pk:'cajaIsla',n:got?'cofreAbierto':'cofre',nm:'Caja de pertenencias',x:q.x,y:q.y,k:9,_oa:1};PO.push(box)}}
+ function search(e){const n=cur();if(!on()||n.g.t!=='item'||have('pendiente')>=1){toast('Una caja vieja. Ya no queda nada dentro.',1800);return}
+  if(typeof castStart==='function')castStart('Buscando entre tus cosas…',5000,()=>{add('pendiente');if(e)e.n='cofreAbierto';try{toast('Encuentras: <b>Pendiente de plata</b>',2800);snd('rare')}catch(x){}dirty=1},{e})}
+ const CHK=[[12.5,9.5],[15.2,11],[16.5,8.6],[13,12],[14.2,8.2],[11.6,11.2]];
+ // asegura `n` gallinas vivas en la Palestra: crea las que falten en los puntos de CHK (en orden, determinista)
+ function chickens(n){if(typeof mob!=='function'||!zone())return;const nw=performance.now();let live=M.filter(m=>m.d.id==='gallina'&&m.hx>=zone().x0&&alive(m,nw)).length;for(let k=0;k<CHK.length&&live<n;k++){const [x,y]=CHK[(chI+k)%CHK.length],q=wp(x,y);if(M.some(m=>m.d.id==='gallina'&&alive(m,nw)&&Math.hypot(m.x-q.x,m.y-q.y)<40))continue;mob('gallina',q.x,q.y);live++}chI=(chI+1)%CHK.length}
  function tick(dt){if(!zone())return;
   if(!S.islaInit){S.islaInit=1;if((S.goal||0)===0&&!(S.st&&S.st.talk)&&!/[?&](at=|zone=0)/.test(location.search)){st().lock=1;go(0);save()}}
   if(on()&&st().lock&&!S.islaTip&&!tipEl)setTimeout(tipShow,1800)   // PARTIDA NUEVA: se empieza en la isla (varadero); las partidas con progreso en la Pradera no se tocan
   const i=st();if(!on())return;
   if(qpNpc){const e=ST.find(x=>x.id===qpNpc);if(!e||Math.hypot(e.x-P.x,e.y-P.y)>230)qpHide()}
-  if(!sp){sp=1;base();[[12.5,9.5],[15.2,11],[16.5,8.6],[13,12]].forEach(([x,y])=>{const q=wp(x,y);if(typeof mob==='function'&&!M.some(m=>m.d.id==='gallina'&&m.hx>=zone().x0))mob('gallina',q.x,q.y)})}   // 4 gallinas en la Palestra (los cangrejos de nube del plan llegarán con su modelo)
+  if(!sp){sp=1;base();chickens(6)}
+  boxInit()   // 6 gallinas en la Palestra (los cangrejos de nube del plan llegarán con su modelo)
+  if(cur().cap===4&&(now_=performance.now())>chT){chT=now_+1500;chickens(4)}   // durante la misión de la Palestra siempre hay ≥ 4 gallinas VIVAS: no hay que esperar al reaparecer para seguir la cadena
   if(cur().esc&&!es)startEscape();
   i.t[cur().cap]=(i.t[cur().cap]||0)+dt;
   if(cur().g.t==='offer'){OFR.forEach(([it,x,y],k)=>{if(i.off[k])return;const q=wp(x,y);if(Math.hypot(q.x-P.x,q.y-P.y)<2.4*T&&have(it)>=1){take({[it]:1});i.off[k]=1;dirty=1;try{snd('rare')}catch(e){}toast('El brasero acepta la ofrenda ('+i.off.reduce((a,b)=>a+b,0)+'/4)',1600)}})}
@@ -149,7 +158,7 @@ const ISLA=(()=>{
  // tarjeta de bienvenida (UI Susurro: cristal + trazo dorado): cómo moverse, correr, esquivar y golpear; se cierra con el botón o con cualquier tecla de acción
  let tipEl=null;
  function tipShow(){if(tipEl||S.islaTip)return;const R=(k,t)=>`<div class="rw"><div class="ks">${k}</div><span>${t}</span></div>`;tipEl=document.createElement('div');tipEl.id='isla-tip';
-  tipEl.innerHTML='<h3>DESPIERTAS</h3><div class="sb">Así se mueve este cuerpo</div>'+R('<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>','Moverte (o clic derecho: ir a ese punto)')+R('<kbd>Mayús</kbd>','Correr (mantén; gasta resistencia)')+R('<kbd>Espacio</kbd>','Esquivar: un paso rápido que te protege un instante')+R('<kbd>Clic</kbd>','Golpear hacia donde apunta el ratón')+R('<kbd>Mantén clic</kbd>','Cargar el golpe y soltarlo: pega mucho más')+R('<kbd>F</kbd>','Hablar, entrar y usar lo que tengas delante')+'<button>ENTENDIDO</button>';
+  tipEl.innerHTML='<h3>DESPIERTAS</h3><div class="sb">Así se mueve este cuerpo</div>'+R('<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>','Moverte (o clic derecho: ir a ese punto)')+R('<kbd>Mayús</kbd>','Correr (mantén; gasta resistencia)')+R('<kbd>Espacio</kbd>','Esquivar: un paso rápido que te protege un instante')+R('<kbd>Clic</kbd>','Golpear hacia donde apunta el ratón')+R('<kbd>Mantén clic</kbd>','Cargar el golpe y soltarlo: pega mucho más')+R('<kbd>Tab</kbd>','Fijar y cambiar de enemigo')+R('<kbd>F</kbd>','Hablar, entrar y usar lo que tengas delante')+'<button>ENTENDIDO</button>';
   document.body.appendChild(tipEl);tipEl.querySelector('button').onclick=()=>{S.islaTip=1;tipHide();save()}}
  function tipHide(){if(tipEl){tipEl.remove();tipEl=null}}
  function lock(){return !!(S.isla&&S.isla.lock&&!S.isla.done)}
@@ -160,6 +169,6 @@ const ISLA=(()=>{
   if(n.npc){const e=ST.find(s=>s.id===n.npc);if(e)return e}if(n.at)return wp(n.at[0],n.at[1]);return null}
  function go(n){const i=st();if(n!=null){i.step=Math.max(0,Math.min(STEPS.length-1,n|0));i.off=[0,0,0,0];i.done=0;base();dirty=1}
   const q=wp(-26,12.4);if(typeof CHEAT!=='undefined'&&CHEAT.tp)CHEAT.tp(q.x,q.y);return i.step}
- function reset(){endEscape();tipHide();if(gm&&M.includes(gm))M.splice(M.indexOf(gm),1);gm=null;gph=0;cs=0;S.isla={step:0,bs:0,off:[0,0,0,0],t:{},done:0,lock:1};S.awk={};S.islaTip=0;sp=0;if(S.cine)delete S.cine.gabriel;dirty=1;return go(0)}
+ function reset(){const bi=PO.findIndex(p=>p.pk==='cajaIsla');if(bi>=0)PO.splice(bi,1);box=null;endEscape();tipHide();if(gm&&M.includes(gm))M.splice(M.indexOf(gm),1);gm=null;gph=0;cs=0;S.isla={step:0,bs:0,off:[0,0,0,0],t:{},done:0,lock:1};S.awk={};S.islaTip=0;sp=0;if(S.cine)delete S.cine.gabriel;dirty=1;return go(0)}
  if(/[?&]isla=1\b/.test(typeof location!=='undefined'?location.search:''))setTimeout(()=>{try{go()}catch(e){}},4000);
- return{STEPS,QUESTS,CAPS,OFR,lock,on,tick,talk,mark,dlg,altar,html,target,go,reset,prog,adv,altar2:fight,fight,noDie,get boss(){return gm},get step(){return st().step},get state(){return st()}}})();
+ return{STEPS,QUESTS,CAPS,OFR,lock,on,tick,talk,mark,dlg,search,altar,html,target,go,reset,prog,adv,altar2:fight,fight,noDie,get boss(){return gm},get step(){return st().step},get state(){return st()}}})();

@@ -57,6 +57,18 @@ const PROPS=(()=>{
  const sprite=(e,s)=>{s=s||ISO.scale();let f=null;try{const L=window.R3D&&R3D.props&&R3D.props.fp;if(L){if(FPN!==L.length){FPN=L.length;FPM=new Map();for(const q of L)FPM.set(Math.round(q.x)+'|'+Math.round(q.y),q)}f=FPM.get(Math.round(e.x)+'|'+Math.round(e.y))||null}}catch(x){}
   const sx=f?f.sx/1.35:Math.max(.3,(e.fp?e.fp[0]:24)/32),sz=f?f.sz/1.35:Math.max(.3,(e.fp?e.fp[1]:24)/32),h=f?f.h:1.6,fw=(sx+sz)*56,fh=(sx+sz)*28,W=Math.max(30,fw),Ht=fh+h*34;
   return{c:{width:Math.ceil(W*s),height:Math.ceil(Ht*s)},ax:W*s/2,ay:(Ht-fh/2)*s,bb:null}}
- return{sprite,build,solid,get trees(){return trees},addSolid:(x,y,hx,hy)=>{const r=[x-hx,x+hx,y-hy,y+hy];sol.push(r);extra.push(r);SG=null},resol,addEnt,delEnt,scatter,appOpts,ST,get list(){return list}}
+ /* SISTEMA DE ELEVACIÓN (21 oct 2026; el dueño: «traspaso el suelo con el personaje, necesito que se quede encima»): los props con zócalo/gradas/suelo propio declaran aquí sus PLATAFORMAS caminables y `TER.standZ` suma su altura
+    (el héroe, los PNJ, el sonido, la cámara y las etiquetas usan standZ, así que todos se quedan encima). Por modelo: `sc` = escala del modelo (CI_SCALE) y `r` = lista de capas [{hx,hy,h}] (rectángulo de medio ancho hx/medio fondo hy,
+    o {r} = disco) en UNIDADES DE MODELO con ejes de MUNDO (ya espejados x↔z), `h` = altura de la superficie sobre la base. Cada capa se rampa en su borde (`m` = margen, unidades de modelo) para que se suba sin saltos.
+    PARA UN PROP NUEVO CON SUELO ELEVADO: añade su fila aquí (medidas = las del módulo propsdark*; comprobar en el juego que los pies quedan sobre el suelo). Altura en niveles = h·sc·PROP_K / 0,6415. */
+ const ELEV={propileos:{sc:2.2,m:.22,r:[{hx:1.75,hy:1.25,h:.12}]},
+  temploG:{sc:1,m:.2,r:[{hx:1.825,hy:3.1,h:.07},{hx:1.705,hy:2.98,h:.14},{hx:1.585,hy:2.86,h:.21}]},
+  agora:{sc:1,m:.25,r:[{r:2.6,h:.04},{r:2.48,h:.075},{r:2.3,h:.1}]}};
+ let ELV=[],ELn=-1;const LVY=.6415,EPS=.07;   // EPS (niveles ≈ 4 cm) = los pies quedan un pelo POR ENCIMA de la losa: con la suela exactamente a ras el pase de profundidad del héroe (rayos X) la daba por tapada y dibujaba la silueta en las piernas
+ function elevBuild(){ELn=list.length;ELV=[];for(const e of list){const d=ELEV[e.n];if(!d)continue;const q=32*d.sc*PROP_K,hz=d.sc*PROP_K/LVY;let R=0;for(const c of d.r)R=Math.max(R,(c.r||Math.max(c.hx,c.hy))+d.m);ELV.push({x:e.x,y:e.y,R:R*q,m:d.m*q,L:d.r.map(c=>({hx:(c.hx||c.r)*q,hy:(c.hy||c.r)*q,disc:!!c.r,h:c.h*hz}))})}}
+ // altura extra (en niveles) bajo el punto (x,y): máximo de las capas que lo contienen, con rampa de margen `m` hacia fuera
+ function elevAt(x,y){if(ELn!==list.length)elevBuild();if(!ELV.length)return 0;let best=0;for(const e of ELV){const dx=Math.abs(x-e.x),dy=Math.abs(y-e.y);if(dx>e.R||dy>e.R)continue;
+   for(const c of e.L){let d;if(c.disc)d=Math.hypot(dx,dy)-c.hx;else d=Math.max(dx-c.hx,dy-c.hy);if(d>=e.m)continue;const f=d<=0?1:1-d/e.m,z=c.h*(f*f*(3-2*f))+EPS*f;if(z>best)best=z}}return best}
+ return{sprite,build,solid,get trees(){return trees},addSolid:(x,y,hx,hy)=>{const r=[x-hx,x+hx,y-hy,y+hy];sol.push(r);extra.push(r);SG=null},resol,addEnt,delEnt,scatter,appOpts,ST,elevAt,ELEV,get list(){return list}}
 })();
 if(typeof module!=='undefined')module.exports=PROPS;

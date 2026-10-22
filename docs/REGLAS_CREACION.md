@@ -43,6 +43,8 @@ Se comprueba y se cuenta en la entrega: (1) **ESCALA** vs. héroe (≈1 unidad �
 - **Nombres:** antes de nombrar un prop nuevo `grep -w nombre src/*.js src/r3d/*.js` (`templo`, `estela`, `columna` ya existían y rompieron el horno/yunque).
 - **Árboles y vegetación:** siempre `FOL.<especie>` + `treeGeo/folMat` (nunca geometrías sueltas); color del bioma por `TREEPAL`; sauces colgantes del Cielo = `FOL.colgante`.
 
+- **Suelo elevado (21 oct 2026):** todo prop con zócalo, gradas o suelo caminable declara su plataforma en `ELEV` (`src/props.js`; ver lote ELEVACION-PROPS de AGENTS.md) para que `TER.standZ` suba a quien lo pisa; si no, el personaje atraviesa el suelo.
+
 ## 4 · Personajes, actores y ropa
 - Todo por código, sin assets externos de modelos; diorama con cel shading; solo el Bandido lleva capucha; todos con pantalones; enemigos sin mejillas rosadas; armas agarradas con la mano; `HERO_SCALE=.8`, zoom ×1,25. Bufanda por defecto, capa = objeto raro.
 - **Sin vigas:** correas, bandoleras y cintas = `sash()`/`bandolier()`/`ribbon()` (cintas CURVAS que abrazan el torso); prohibido `BoxGeometry` larga en diagonal pegada al cuerpo. → `node tools/r3d/body_lint.js` = `RESULTADO: OK`.
