@@ -57,6 +57,9 @@ const MATS=[toon('#ffffff',Object.assign({rim:1.4},VC)),toon('#ffffff',Object.as
 // SILUETA DE PNJ TAPADOS (21 oct 2026): el PNJ del tutorial de talar quedaba oculto tras los olivos. La malla `xr` (misma piel y esqueleto, material XRAYM) se pinta solo donde el PNJ queda DETRÁS de algo (depthFunc Greater) con el adelanto XR_D. SIN stencil: el stencil en el render target MSAA del composer costaba ≈ 12 ms a 1080p en Máxima (46→20 fps).
 const XRAYM=new THREE.MeshBasicMaterial({color:'#ffe6b8',transparent:true,opacity:.5,depthWrite:false,depthFunc:THREE.GreaterDepth});
 // la silueta solo sale si lo que tapa está AL MENOS `XR_D` unidades (de vista) por delante: el vértice se adelanta hacia la cámara (la cámara es ortográfica → no mueve nada en pantalla). Evita que parezca «translúcido» un PNJ que no está detrás de nada (partes propias solapadas, relieve del suelo, adoquines).
+// HOVER (21 oct 2026; el dueño: «el outline al pasar el ratón es un residuo del 2D y está bugueado»): en vez del casco de contorno claro (huecos y grosor desigual) se superpone una malla con borde luminoso FRESNEL dorado (UI «Susurro» #e8cf94), aditiva y fina, solo cuando hay puntero encima.
+const HOVERM=new THREE.MeshStandardMaterial({color:'#000000',emissive:'#e8cf94',transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-2});
+HOVERM.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\nfloat rimF=pow(1.-abs(dot(normalize(normal),normalize(vViewPosition))),2.4);totalEmissiveRadiance*=.18+2.2*rimF;')};HOVERM.customProgramCacheKey=()=>'hoverRim';
 const XR_D=.45;XRAYM.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\nmvPosition.z+='+XR_D.toFixed(3)+';gl_Position=projectionMatrix*mvPosition;')};XRAYM.customProgramCacheKey=()=>'xray'+XR_D;
 const FLASHM=new THREE.MeshBasicMaterial({color:'#fff2e0'}),FLASH=[FLASHM,FLASHM,FLASHM],DEPTHM=new THREE.MeshBasicMaterial({colorWrite:false}),HOVER=new THREE.MeshBasicMaterial({color:'#ffe7a0',side:THREE.BackSide});
 
@@ -320,7 +323,7 @@ export class Actor{
   if(!this.eg){const g=this.eg=new THREE.Group(),r=T.eye[3];[-1,1].forEach(q=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:EYETEX,color:T.eyeCol,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));s.position.set(T.eye[0]*q,T.eye[1],T.eye[2]+r*1.2);g.add(s)});g.userData.r=r;this.b.head.add(g)}
   const g=this.eg,r=g.userData.r,f=i>.85;g.visible=true;g.children.forEach(s=>{s.scale.setScalar(r*(3+i*3.5+(f?2.5:0)));s.material.color.set(f?'#fff4d0':T.eyeCol);s.material.opacity=Math.min(1,.35+i*.75)})}
  addXray(){if(this.xr)return;this.xr=new THREE.SkinnedMesh(this.tpl.geo,XRAYM);this.xr.bind(this.mesh.skeleton,new M4());this.xr.frustumCulled=false;this.xr.renderOrder=6;this.grp.add(this.xr)}
- setHover(on){if(on===this.hov)return;this.hov=on;this.hull.material=on?HOVER:INK}
+ setHover(on){if(on===this.hov)return;this.hov=on;if(on&&!this.hv){this.hv=new THREE.SkinnedMesh(this.tpl.geo,HOVERM);this.hv.bind(this.mesh.skeleton,new M4());this.hv.frustumCulled=false;this.hv.renderOrder=5;this.grp.add(this.hv)}if(this.hv)this.hv.visible=on}
  setFlash(on){if(on===this.fl)return;this.fl=on;this.mesh.material=on?FLASH:MATS}
  dispose(){this.grp.removeFromParent();if(this.proxy)this.proxy.removeFromParent();this.mesh.skeleton&&this.mesh.skeleton.dispose()}
  // helpers de pose: rotación = reposo · euler(x,y,z)
@@ -391,7 +394,7 @@ export class Actors{
  // PRECARGA (21 oct 2026): hornea TODAS las plantillas durante la carga (antes se horneaba la 1.ª vez que aparecía cada criatura = tirón)
  bake(){try{ACTOR_IDS.concat(['ru'],Object.keys(NPC_DEF)).forEach(k=>tplFor(k))}catch(e){console.warn('[R3D actors bake]',e)}}
  // objetos desechables para precompilar el programa de la silueta (R3D.warmShaders): un PNJ con su malla de rayos X
- warmObjs(){try{const A=makeActor('ru');if(!A)return[];A.addXray();if(!this.lockM)this.lockM=new THREE.MeshBasicMaterial({color:'#ffd98a',transparent:true,opacity:.7,depthWrite:false,blending:THREE.AdditiveBlending});A.grp.add(new THREE.Mesh(this.ringG,this.lockM));return[A.grp]}catch(e){return[]}}
+ warmObjs(){try{const A=makeActor('ru');if(!A)return[];A.addXray();A.setHover(true);if(!this.lockM)this.lockM=new THREE.MeshBasicMaterial({color:'#ffd98a',transparent:true,opacity:.7,depthWrite:false,blending:THREE.AdditiveBlending});A.grp.add(new THREE.Mesh(this.ringG,this.lockM));return[A.grp]}catch(e){return[]}}
  lock(e){this.lockE=e||null}   // objetivo fijado (Tab): anillo dorado bajo sus pies
  has(e){const a=this.map.get(e);return !!(a&&a.vis&&a.state!=='gone')}
  // Altura de la cabeza en «px de mundo» del sprite (1 unidad 3D = 34,3 px de pantalla a escala 1 = 22,9 px de mundo con SPR=1,5): game.js cuelga de ahí la barra de vida y la etiqueta

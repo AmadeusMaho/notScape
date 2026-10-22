@@ -581,6 +581,12 @@ function whDraw(now){if(!(A&&A.wh)||INT||CK){whEl.style.display='none';return}co
 const MG_HINTS=5,MG_ZOOM=.42,MG_PULL=.4;let mgK=0;
 const mgEl=(()=>{const d=document.createElement('div');d.id='mgh';document.body.appendChild(d);return d})();let mgTx='';
 const mgKey=()=>A?(A.fm?'fm':A.wh?'wh':A.fg?'fg':null):null;
+/* AYUDAS CONTEXTUALES (21 oct 2026; el dueño: «no pongas todos los controles en la cara al jugador, muéstralos a medida que avanza»): `ctxHint(id, filas, ms)` muestra UNA vez por partida (`S.ctxh[id]`, se guarda) un aviso suave con teclas (`<kbd>`) sobre el marco del jugador;
+   si ya hay uno visible, espera en cola. Filas = [[teclas],'texto']. Las dispara el motor del tutorial (isla.js `hintsTick`) en el momento en que cada control importa; úsalo también para enseñar cualquier mecánica nueva. `?hints=0` los apaga. */
+const ctxEl=(()=>{const d=document.createElement('div');d.id='ctxh';document.body.appendChild(d);return d})(),ctxQ=[];let ctxT=0,ctxBusy=0;
+function ctxHint(id,rows,ms){S.ctxh=S.ctxh||{};if(S.ctxh[id]||/[?&]hints=0/.test(location.search))return false;S.ctxh[id]=1;ctxQ.push({rows,ms:ms||8000});return true}
+function ctxTick(now){if(ctxBusy){if(now>ctxT){ctxBusy=0;ctxEl.classList.remove('on');ctxT=now+900}return}
+ if(ctxQ.length&&now>ctxT&&!INT&&!(typeof CINE!=='undefined'&&CINE.on)){const h=ctxQ.shift();ctxEl.innerHTML=h.rows.map(r=>'<div>'+r[0].map(k=>'<kbd>'+k+'</kbd>').join('')+'<span>'+r[1]+'</span></div>').join('');ctxEl.classList.add('on');ctxBusy=1;ctxT=now+h.ms;save()}}
 /* BARRA DE CASTEO (21 oct 2026; la usa «buscar» de la misión de Raguel; reutilízala para cualquier acción con tiempo): `castStart(etiqueta, ms, fn, {e:entidad que se mira})` agacha al héroe buscando (pose `se`) y muestra una barra (DOM `#cast`, UI «Susurro»); al acabar llama `fn`. Se interrumpe si te mueves, te hieren o entras en un interior. */
 let CAST=null;const castEl=(()=>{const d=document.createElement('div');d.id='cast';d.innerHTML='<div class="cs-t"></div><div class="cs-b"><i></i></div>';document.body.appendChild(d);return d})();
 function castStart(label,ms,fn,o){if(CAST||INT||P.hp<=0)return false;CAST={t0:performance.now(),ms,label,fn,e:o&&o.e,px:P.x,py:P.y};P.g=P.mv=null;stopA();castEl.firstChild.textContent=label;castEl.classList.add('on');return true}
@@ -959,7 +965,7 @@ const dashInv=()=>performance.now()<DSH.inv;
 const JMP={t0:-1e9,ms:480,h:.55,cd:0};
 const jmpU=now=>{const u=(now-JMP.t0)/JMP.ms;return u>0&&u<1?u:0},jmpH=u=>{const w=Math.max(0,Math.min(1,(u-.12)/.76));return JMP.h*4*w*(1-w)};
 function jump(){const now=performance.now();if(INT||CK||P.hp<=0||now<JMP.t0+JMP.ms+60||(typeof CINE!=='undefined'&&CINE.on))return false;JMP.t0=now;try{tone(260,.09,'sine',.04,180)}catch(e){}return true}
-const jmpEl=(()=>{const b=document.createElement('button');b.id='jmpb';b.type='button';b.title='Saltar (V)';b.setAttribute('aria-label','Saltar');b.innerHTML='<svg viewBox="0 0 24 24" width="100%" height="100%"><path d="M5 14l7-7 7 7M5 20l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();jump()});b.addEventListener('keydown',e=>e.preventDefault());document.body.appendChild(b);return b})();
+/* (el botón físico `#jmpb` se QUITÓ el 21 oct 2026: habrá una UI única en modo móvil; el salto queda en la tecla V y en `jump()`) */
 function dash(){const now=performance.now();if(INT||CK||P.hp<=0||now<DSH.cd||(typeof CINE!=='undefined'&&CINE.on))return false;if(S.sta==null)S.sta=100;
  if(S.sta<DSH.cost){if(now-DSH.warn>1500){DSH.warn=now;log('Sin aliento para esquivar.')}return false}
  const kd=ISO.keyDir(K.l,K.r,K.u,K.d);let dx=kd.x,dy=kd.y;if(!dx&&!dy){dx=P.ldx||0;dy=P.ldy||0}if(!dx&&!dy){dx=0;dy=1}const l=Math.hypot(dx,dy);dx/=l;dy/=l;
@@ -1290,12 +1296,12 @@ function pickEnt(px,py,now){const sc=ISO.scale(),k=SPR*sc;let b=null,bd=34;[...N
 let HOV=null;
 // Tooltip pequeño de recurso (nivel + herramienta recomendada): DOM, sigue al puntero. Rojo = te falta nivel o herramienta.
 let RTD=null,RTK='';
-function resTip(){const e=HOV;if(!RTD){RTD=document.createElement('div');RTD.style.cssText='position:fixed;z-index:30;pointer-events:none;display:none;padding:4px 10px;background:var(--paper);border:2.5px solid var(--ink);border-radius:9px 8px 10px 7px;font:600 12px/1.4 '+UI.FONT+';color:var(--tx);box-shadow:2px 3px 0 var(--sh);white-space:nowrap';document.body.appendChild(RTD)}
- if(e&&e.dropG&&I[e.it]){const k='d'+e.it,rc=RAR[e.q][1];if(k!==RTK){RTK=k;RTD.innerHTML='<span style="font-weight:700;color:'+rc+'">'+I[e.it][0]+'</span>'+(e.q>=1?'<br><span style="color:'+rc+'">'+RAR[e.q][0]+'</span>':'')}
+function resTip(){const e=HOV;if(!RTD){RTD=document.createElement('div');RTD.className='rtip';document.body.appendChild(RTD)}   // estilo UI «Susurro» (css/hud-susurro.css `.rtip`; 21 oct 2026: antes un recuadro 2D de papel con borde grueso de tinta)
+ if(e&&e.dropG&&I[e.it]){const k='d'+e.it,rc=RAR[e.q][1];if(k!==RTK){RTK=k;RTD.innerHTML='<b class="rt-n" style="color:'+rc+'">'+I[e.it][0]+'</b>'+(e.q>=1?'<span class="rt-s" style="color:'+rc+'">'+RAR[e.q][0]+'</span>':'')}
   const r=cv.getBoundingClientRect();RTD.style.left=Math.round(r.left+CUR.px*r.width/cv.width+16)+'px';RTD.style.top=Math.round(r.top+CUR.py*r.height/cv.height+14)+'px';RTD.style.display='block';return}
  if(!e||!e.t||!ACT[e.t]||!ACT[e.t][e.i]){RTD.style.display='none';return}
- const a=ACT[e.t][e.i],lv=rq(a),tl=TLV(lv),tk=TOOLS[e.t],badL=L(e.t)<lv,badT=tk&&(S.tool[e.t]||0)<tl-1,R='var(--rd)',k=e.t+e.i+'|'+badL+badT+'|'+S.tool[e.t]+'|'+L(e.t);
- if(k!==RTK){RTK=k;RTD.innerHTML='<span style="font-weight:700;color:var(--or)">'+a[0]+'</span><br><span style="'+(badL?'color:'+R:'')+'">Nivel '+lv+'</span>'+(tk?' · <span style="'+(badT?'color:'+R:'')+'">'+tk[1]+' '+tk[0]+' '+tn(e.t,tl)+'</span>':'')}
+ const a=ACT[e.t][e.i],lv=rq(a),tl=TLV(lv),tk=TOOLS[e.t],badL=L(e.t)<lv,badT=tk&&(S.tool[e.t]||0)<tl-1,R='#d86a5a',k=e.t+e.i+'|'+badL+badT+'|'+S.tool[e.t]+'|'+L(e.t);
+ if(k!==RTK){RTK=k;RTD.innerHTML='<b class="rt-n">'+a[0]+'</b><span class="rt-s"><i style="'+(badL?'color:'+R:'')+'">Nivel '+lv+'</i>'+(tk?' <u>·</u> <i style="'+(badT?'color:'+R:'')+'">'+tk[0]+' '+tn(e.t,tl)+'</i>':'')+'</span>'}
  const r=cv.getBoundingClientRect();RTD.style.left=Math.round(r.left+CUR.px*r.width/cv.width+16)+'px';RTD.style.top=Math.round(r.top+CUR.py*r.height/cv.height+14)+'px';RTD.style.display='block'}
 const AIMR=(()=>{const e=document.createElement('div');e.id='aimr';e.innerHTML='<i></i>';document.body.appendChild(e);return e})();let aimShow=0,aimEn=0;
 function aimReticle(on){   // MIRA del modo de cursor oculto (reemplaza al cursor): anillo dorado fino con punto; se pone rojizo sobre un enemigo y se achica al cargar el golpe
@@ -1348,7 +1354,7 @@ function draw(now){const t=now/1000;cx=Math.max(0,Math.min(WW-W,P.x-W/2))|0;cy=M
   ...(cin?[]:M).filter(e=>onScr(e.x,e.y)&&R3D.actors.has(e)).map(e=>[ISO.depth(e.x,e.y),()=>spr(e.x,e.y,0,()=>dMo(e,t,now))]),[ISO.depth(P.x,P.y),()=>R3D.drawHero(ctx)]];
  AMBI.draw(ctx,'ground');
  ents.sort((a,b)=>a[0]-b[0]).forEach(o=>o[1]());
- PJ.forEach(p=>{if(now>=p.t0)drawPJ(p,now)});npSweep();whDraw(now);fmDraw(now);fishDraw(now,OCDT);mgUi(now);qmUi(now);castDraw(now);drawTel(now);drawWind(now);drawHFX(now);drawAim(now);swingHud(now);
+ PJ.forEach(p=>{if(now>=p.t0)drawPJ(p,now)});npSweep();whDraw(now);fmDraw(now);fishDraw(now,OCDT);mgUi(now);qmUi(now);castDraw(now);ctxTick(now);drawTel(now);drawWind(now);drawHFX(now);drawAim(now);swingHud(now);
  parts.forEach(p=>p.hs?hsDraw(p):spr(p.x,p.y,12,()=>{ctx.globalAlpha=Math.min(1,p.l);if(p.sp){ctx.beginPath();ctx.arc(p.x,p.y,7,0,7);ctx.fillStyle=p.sp;ctx.fill();T(p.tx,p.x,p.y+4,'#fff')}else if(p.tx)T(p.tx,p.x,p.y,p.c);else Rc(p.c,p.x,p.y,2,2);ctx.globalAlpha=1}));
  AMBI.draw(ctx,'over');
  if(!window.R3D)PAINT.grain(ctx,cv.width,cv.height,ISO.V.dpr,.55); // grano de papel: con WGL lo pone un div con multiply (sin coste por frame); este es el plan B
@@ -1542,7 +1548,7 @@ function stHTML(win){const s=S.stn;if(!s||!near(s))return far('Acércate a una e
  if(LK.length&&!IWC||(q&&LK.length)){h+=`<div class="ir lkh" onclick="iwLk()">Próximos desbloqueos (${LK.length}) <span class="hint" style="margin:0 0 0 auto">${IWLK||q?'▾':'▸'}</span></div>`+(IWLK||q?LK.map(row).join(''):'')}
  return h}
 const qtyMini=()=>'<span style="display:flex;gap:3px;align-items:center"><span class="hint" style="margin:0">Cant.</span>'+[[1,'1'],[5,'5'],[10,'10'],[25,'25'],[0,'∞']].map(([n,l])=>`<button class="bt qm${QTY===n?' on':''}" onclick="setQty(${n})">${l}</button>`).join('')+(A&&A.ty==='c'&&A.left<1e8?`<span class="hint" style="margin:0">(quedan ${A.left})</span>`:'')+'</span>';
-function paintDoll(){}   // Fase 18: el muñeco 2D de la pestaña Personaje se retiró; lo pinta HUDSU.doll() (3D)
+function paintDoll(){try{if(typeof HUDSU!=='undefined'&&HUDSU.doll)HUDSU.doll()}catch(e){console.warn('[doll]',e)}}   // el muñeco 3D de la pestaña Personaje (hud.js `doll`): re-inserta el canvas persistente que dibuja `dollFrame` (21 oct 2026: la función estaba vacía y la pestaña salía sin personaje)
 function panel(){const pn=$('#pn'),sb=$('#swb'),s1=pn.scrollTop,s2=sb.scrollTop;$('#pw').classList.toggle('wide',TB==='inv'||TB==='ch');$('#pw').classList.toggle('xwide',TB==='ch');pn.innerHTML=panelHTML(TB);if(TB==='ch')paintDoll();if(IW){sb.innerHTML=panelHTML(IW.tab,1);sb.scrollTop=s2;if(IWSCR){IWSCR=0;const d=sb.querySelector('.idet');if(d){const r=d.getBoundingClientRect(),b=sb.getBoundingClientRect();if(r.bottom>b.bottom)sb.scrollTop+=r.bottom-b.bottom+12;const s=sb.querySelector('.ir.sel').getBoundingClientRect();if(s.top<b.top)sb.scrollTop-=b.top-s.top+2}}}pn.scrollTop=s1;$('#goals').innerHTML=goalsHTML();$('#hd').innerHTML=`${S.app&&S.app.name?'<b>'+S.app.name+'</b> · ':''}Oro <b>${fmt(S.coins)}</b> · Nivel total <b>${SKL.reduce((s,k)=>s+L(k),0)}</b> <button class="bt" onclick="mut()">${S.mute?'🔇':'🔊'}</button>`;{const m=$('#mutb');if(m)m.textContent=(S.mute?'🔇':'🔊')+' Sonido: '+(S.mute?'NO':'SÍ')}}
 
 // ---------- inicio ----------

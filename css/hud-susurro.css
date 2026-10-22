@@ -685,10 +685,7 @@ body.hs-on #fp .tap{filter:drop-shadow(0 0 2px rgba(232,207,148,.6))}
 /* el anillo de la forja se lee mejor algo mayor (la cámara también se acerca en el minijuego) */
 #fgl{width:calc(var(--hu,16px)*7.5);height:calc(var(--hu,16px)*7.5)}
 
-/* Botón de salto (21 oct 2026; game.js `jump`, tecla V): cristal oscuro con trazo dorado, junto al menú lateral */
-#jmpb{position:fixed;right:calc(var(--hu,16px)*4.6);bottom:calc(var(--hu,16px)*1.6);z-index:4;width:calc(var(--hu,16px)*3);height:calc(var(--hu,16px)*3);min-width:44px;min-height:44px;padding:.7em;border-radius:50%;cursor:pointer;color:#e8cf94;background:radial-gradient(circle at 38% 30%,rgba(60,50,36,.9),rgba(14,12,10,.88));border:1px solid rgba(232,207,148,.6);box-shadow:0 .15em .6em rgba(0,0,0,.55);transition:transform .15s,border-color .2s,color .2s;-webkit-tap-highlight-color:transparent}
-#jmpb:hover{border-color:#fff6d8;color:#fff6d8}#jmpb:active{transform:scale(.9)}
-body.cine #jmpb{opacity:0;pointer-events:none}
+
 
 /* Opciones del diálogo (misiones tipo WoW, 21 oct 2026): botones numerados de cristal con trazo dorado fino dentro del mismo cuadro de diálogo (hud.js `dl-opts`) */
 body.hs-on #dlg .dl-opts{display:none;flex-direction:column;gap:.3em;margin-top:.2em}
@@ -752,3 +749,17 @@ body.cine #qms{opacity:0}
 #cast .cs-t{font:600 .85em Cinzel,Georgia,serif;letter-spacing:.14em;text-transform:uppercase;color:#e8cf94;margin-bottom:.35em}
 #cast .cs-b{height:.6em;border-radius:.3em;background:rgba(232,207,148,.12);border:1px solid rgba(232,207,148,.25);overflow:hidden}
 #cast .cs-b i{display:block;height:100%;width:0;background:linear-gradient(90deg,#a07a2a,#f0d98c)}
+
+/* Ayudas contextuales de controles (21 oct 2026; game.js ctxHint): cristal oscuro suave con teclas, sobre el marco del jugador; entran y salen con fundido */
+#ctxh{position:fixed;left:50%;bottom:calc(var(--hu,16px)*15.5);z-index:6;display:flex;flex-direction:column;gap:.35em;align-items:flex-start;padding:.7em 1.1em;font-size:calc(var(--hu,16px)*.95);color:#f3e8cc;pointer-events:none;opacity:0;transform:translate(-50%,.5em);transition:opacity .5s ease,transform .5s ease;background:linear-gradient(180deg,rgba(24,20,15,.82),rgba(12,10,8,.82));border:1px solid rgba(232,207,148,.3);border-radius:.6em;box-shadow:0 .4em 1.4em rgba(0,0,0,.5)}
+#ctxh.on{opacity:1;transform:translate(-50%,0)}
+#ctxh div{display:flex;align-items:center;gap:.45em;font-family:Spectral,Georgia,serif;font-weight:600}
+#ctxh kbd{font:700 .85em Cinzel,Georgia,serif;min-width:1.6em;padding:.15em .5em;text-align:center;color:#e8cf94;background:rgba(16,13,10,.8);border:1px solid rgba(232,207,148,.6);border-radius:.35em}
+#ctxh b{color:#e8cf94}
+
+/* Tooltip de recursos y objetos del suelo (21 oct 2026; game.js resTip): cristal oscuro con trazo dorado fino, nombre en Cinzel y datos en Spectral (antes: recuadro 2D de papel con borde grueso de tinta) */
+.rtip{position:fixed;z-index:30;pointer-events:none;display:none;padding:.5em .85em .55em;white-space:nowrap;font-family:Spectral,Georgia,serif;font-size:calc(var(--hu,16px)*.85);line-height:1.35;color:#e8dcc0;background:linear-gradient(180deg,rgba(26,22,16,.93),rgba(12,10,8,.93));border:1px solid rgba(232,207,148,.4);border-radius:.5em;box-shadow:0 .3em 1em rgba(0,0,0,.55)}
+.rtip::before{content:"";position:absolute;left:.8em;right:.8em;top:-1px;height:1px;background:linear-gradient(90deg,transparent,#e8cf94,transparent)}
+.rtip .rt-n{display:block;font:700 .95em Cinzel,Georgia,serif;letter-spacing:.1em;color:#e8cf94;text-shadow:0 0 .4em rgba(0,0,0,.6)}
+.rtip .rt-s{display:block;font-size:.92em;color:#cdbf9f}
+.rtip .rt-s i{font-style:normal}.rtip .rt-s u{text-decoration:none;opacity:.5}

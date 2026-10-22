@@ -81,7 +81,8 @@ const ISLA=(()=>{
  function chickens(n){if(typeof mob!=='function'||!zone())return;const nw=performance.now();let live=M.filter(m=>m.d.id==='gallina'&&m.hx>=zone().x0&&alive(m,nw)).length;for(let k=0;k<CHK.length&&live<n;k++){const [x,y]=CHK[(chI+k)%CHK.length],q=wp(x,y);if(M.some(m=>m.d.id==='gallina'&&alive(m,nw)&&Math.hypot(m.x-q.x,m.y-q.y)<40))continue;mob('gallina',q.x,q.y);live++}chI=(chI+1)%CHK.length}
  function tick(dt){if(!zone())return;
   if(!S.islaInit){S.islaInit=1;if((S.goal||0)===0&&!(S.st&&S.st.talk)&&!/[?&](at=|zone=0)/.test(location.search)){st().lock=1;go(0);save()}}
-  if(on()&&st().lock&&!S.islaTip&&!tipEl)setTimeout(tipShow,1800)   // PARTIDA NUEVA: se empieza en la isla (varadero); las partidas con progreso en la Pradera no se tocan
+  if(on()&&st().lock&&!S.islaTip){S.islaTip=1}   // 21 oct 2026: la tarjeta gigante de controles del principio se QUITÓ; los controles se enseñan poco a poco (hintsTick)
+  //   // PARTIDA NUEVA: se empieza en la isla (varadero); las partidas con progreso en la Pradera no se tocan
   const i=st();if(!on())return;
   if(qpNpc){const e=ST.find(x=>x.id===qpNpc);if(!e||Math.hypot(e.x-P.x,e.y-P.y)>230)qpHide()}
   if(!sp){sp=1;base();chickens(6)}
@@ -90,12 +91,24 @@ const ISLA=(()=>{
   if(cur().esc&&!es)startEscape();
   i.t[cur().cap]=(i.t[cur().cap]||0)+dt;
   if(cur().g.t==='offer'){OFR.forEach(([it,x,y],k)=>{if(i.off[k])return;const q=wp(x,y);if(Math.hypot(q.x-P.x,q.y-P.y)<2.4*T&&have(it)>=1){take({[it]:1});i.off[k]=1;dirty=1;try{snd('rare')}catch(e){}toast('El brasero acepta la ofrenda ('+i.off.reduce((a,b)=>a+b,0)+'/4)',1600)}})}
+  hintsTick(performance.now());
   gTick(performance.now());if(gAlive()){fightAt=performance.now();bossAt=fightAt}   // música de jefe (src/music.js: DEF[9].jefe = gabriel.mp3) mientras dure el combate
 
   if(cur().g.t==='cine'&&!cs){cs=1;if(gm){gm.rt=1e15}const end=()=>adv();if(typeof CINE==='undefined'||!CINE.start('caida',{done:end}))end()}
   if(done())adv();dirty=dirty||0}
  // una conversación con un maestro: si es el que pide el paso actual, lo cumple (se llama desde npcTalk)
  function talk(id){}   // (antes avanzaba el paso al hablar; ahora lo hacen las MISIONES: dlg()/accept/turnIn)
+ // ── CONTROLES PROGRESIVOS (21 oct 2026): cada ayuda sale UNA vez, cuando el jugador la necesita (ctxHint, game.js). Orden pensado: moverse/cámara al aceptar la 1.ª misión · interactuar al llegar a la caja · Mochila · saltar tras la entrega · combate al llegar a la Palestra (+ Tab con 2+ enemigos cerca) ──
+ let hAt=0;
+ function hintsTick(now){if(typeof ctxHint!=='function'||!on())return;const s=st().step,n=cur(),T0=now;
+  if(s>=1&&!hAt)hAt=now;   // instante en que se aceptó la 1.ª misión
+  if(s===1&&now-hAt>1200)ctxHint('move',[[['W','A','S','D'],'moverte (o clic derecho: ir a ese punto)'],[['Mantén clic der.'],'arrastra para girar la cámara'],[['Rueda'],'acercar y alejar']],10000);
+  if(s===1&&box&&box.n==='cofre'&&Math.hypot(box.x-P.x,box.y-P.y)<150)ctxHint('interact',[[['F'],'interactuar con lo que tengas delante']],7000);
+  if(s===1&&now-hAt>14000)ctxHint('run',[[['Mayús'],'mantén para correr (gasta resistencia)']],7000);
+  if(n.g.t==='panel')ctxHint('bag',[[[],'abre la <b>Mochila</b>: primer icono del menú de la derecha']],8000);
+  if(s>=3&&s<8&&now-hAt>8000)ctxHint('jump',[[['V'],'saltar (sin gastar resistencia)']],6000);
+  if(n.cap===4&&n.g.t==='cnt')ctxHint('attack',[[['Clic'],'golpear hacia donde apunta el ratón'],[['Mantén clic'],'cargar un golpe más fuerte'],[['Espacio'],'esquivar']],10000);
+  if(n.cap===4&&M.filter(m=>m.d.id==='gallina'&&alive(m,performance.now())&&Math.hypot(m.x-P.x,m.y-P.y)<260).length>=2&&S.ctxh&&S.ctxh.attack)ctxHint('tab',[[['Tab'],'fijar y cambiar de enemigo']],8000)}
  // ── MISIONES TIPO WOW: marcador del PNJ y diálogo con opciones ──
  const qIdx=(q,ph)=>STEPS.findIndex(x=>x.q===q&&x.ph===ph),qOf=id=>QUESTS.findIndex(x=>x.npc===id);
  const needOk=q=>{const d=QUESTS[q].deliver;return !d||Object.entries(d).every(([k,n])=>have(k)>=n)};
