@@ -6,6 +6,12 @@
 > **REGLA DEL DUEÑO (22 oct 2026): CADA ENTREGA ACTUALIZA ESTE ARCHIVO** (sección «Registro de avance» de abajo + la fila de la fase que toques) **y además su lote en `AGENTS.md`**, para que cualquier agente sepa en segundos qué se hizo y qué falta. Una entrega que no actualiza la hoja de ruta no está terminada.
 
 ## REGISTRO DE AVANCE (lo último hecho primero; una línea por entrega, con el lote de AGENTS.md)
+- **22 oct 2026 · Campamentos:** guardias y capitán reaparecen a los 4 min (y nunca delante de ti); abrir el cofre = casteo de 5 s. Nota en AGENTS.md.
+- **22 oct 2026 · Música de escena + rayos + fuego del cielo:** `wakeup` en la playa con Ru, `all_i_had_to_do` (desde 0:25) durante el cielo en llamas; rayos del cielo con ramas y parpadeo; anillo de llamaradas alrededor de la isla. Lote MUSICA-DE-ESCENA. Sin oír/probar a mano.
+- **22 oct 2026 · Orden corregido:** el «Cien años.» va tras HUIR (fundido a negro → texto → playa), no al matar a Gabriel. Nota en AGENTS.md.
+- **22 oct 2026 · La playa: despertar tras Gabriel (Fase 1.2):** cinemática dormido/Ru, ropa interior, cabaña+baúl, cadena nueva «Cien años» (6 pasos) que sustituye al arranque de troncos/menas; traspaso provisional a `GOALS[4]`. **El dueño rehará TODAS las misiones de progresión** (pendiente de Fase 3). Lote PLAYA-DESPERTAR.
+- **22 oct 2026 · Números de daño más satisfactorios:** pop con rebote, arco, tamaño según daño; críticos con temblor, bamboleo y destellos. Nota en AGENTS.md.
+- **22 oct 2026 · Editor de diálogos de PNJ** (`tools/dialogos/`, guarda en `data/dialogos.json`; ~90 PNJ + 5 misiones del tutorial). Lote EDITOR-DE-DIALOGOS.
 - **22 oct 2026 · Arcos y bastones a dos manos:** no admiten escudo (equiparlos lo guarda; el escudo se rechaza con ellos). Incluye mandobles y ballestas. Nota en AGENTS.md.
 - **22 oct 2026 · Localización planeada para el final (Fase 17):** ver abajo; los textos siguen en español.
 - **22 oct 2026 · “Fallo / Esquiva / Absorbido” en vez de 0** (estilo WoW, con nuestra UI). Nota en AGENTS.md.

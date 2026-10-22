@@ -48,7 +48,7 @@ function bandolier(w=.05,off=0,lift=0){const N=48,P=[],I=[],V=THREE.Vector3;for(
 export function lookToSpec(look){look=look||{};const a=Object.assign({g:'m',hair:'cut',hc:'#5a3a22',skin:'#e0b48a',col:'#8a3a34',eye:'#2a1a14',face:0},look.app||{}),O=look.outfit||{},GR=look.gear||{},fem=a.g==='f';
  const robe=tame(a.col,TAME.robe[0],TAME.robe[1]),trim=shade(robe,.62),skin=a.skin,AH=armorHooks(look.arm,{robe}),helm=look.helm||(AH&&AH.hasHelm?'#':null),arm=!AH&&(look.ar||GR.pl)?(look.ar||'#9a9aa8'):null,wide=O.build==='robusto'?1.14:O.build==='anciano'?.95:1;
  const longRobe=O.skirt==='larga'&&O.cross!==false&&!AH&&!arm&&O.build!=='anciano';   // PENITENTE: túnica larga de tela fina hasta los pies (el Anciano PNJ usa otro camino)
- const scarfC=O.scarf===false?null:tame(typeof a.scarf==='string'?a.scarf:'#b8862e',TAME.scarf[0],TAME.scarf[1]);
+ const scarfC=(O.scarf===false||a.under)?null:tame(typeof a.scarf==='string'?a.scarf:'#b8862e',TAME.scarf[0],TAME.scarf[1]);
  const sp={id:'heroe',k:HERO_SCALE,facet:true,inkK:.8,pants:O.pantsC||mixc('#4a4338',robe,.18),robe,trim,belt:O.rope||shade(robe,.5),skin,w:wide*(fem?.94:1),irisC:mixc(a.eye,'#000000',.15),browT:[.12,.1,-.04,.26][a.face|0]??.12,freckles:a.face===1,boot:look.boot||'#3a2a20',blush:fem&&a.face===2,
   top(F,head,part){hairFn(a.hair,a.hc,helm)(F,head,part);if(!helm)maskWear(O,part,head);
    if(helm&&!AH){const c=helm;part(new THREE.SphereGeometry(.215,16,10,0,6.2832,0,1.6).scale(1,1.05,1),c,0,.04,0,{p:head,ink:.018});part(new THREE.CylinderGeometry(.235,.235,.03,18),c,0,.045,0,{p:head,ink:.014});part(new THREE.BoxGeometry(.03,.14,.03),shade(c,.85),0,0,.22,{p:head,ink:.01})}
@@ -70,6 +70,11 @@ export function lookToSpec(look){look=look||{};const a=Object.assign({g:'m',hair
    /* armas y escudo: los crea HeroAnim (heroanim3d.js) en las manos / vaina */}};
  if(longRobe){const rb=mix2(robe,O.skirtC||'#5a5450',.88);Object.assign(sp,{id:'heroe-mago',dress:true,hem:.04,flare:.84,robe:rb,sleeve:rb,trim:mix2(rb,'#e6dcc6',.42)})}   // `heroe-mago` está en Mini.DRESS_OK
  if(AH){Object.assign(sp,AH.spec);const t0=sp.top,a0=sp.acc;sp.top=(F,h,p)=>{t0(F,h,p);AH.top(F,h,p)};sp.acc=(F,g,p)=>{a0(F,g,p);AH.acc(F,g,p)}}   // Lote R3D-ARMADURAS: equipo estructurado look.arm → armor3d.js
+
+ /* ROPA INTERIOR (22 oct 2026; despertar en la playa): `app.under` = el personaje solo lleva ropa interior (calzón corto de lino, y una banda en el pecho si es femenino); sin camisa, bufanda ni botas (todo del color de la piel). Se quita al vestirse (`S.app.under=0`). */
+ if(a.under){const lin='#d9cdb0',sk=a.skin;Object.assign(sp,{robe:sk,trim:sk,belt:sk,sleeve:sk,pants:sk,boot:sk});const a1=sp.acc;sp.acc=(F,g,part)=>{a1&&a1(F,g,part);
+  part(new THREE.CylinderGeometry(.178,.19,.17,14),lin,0,.47,0,{p:g,ink:.014});part(new THREE.TorusGeometry(.18,.016,6,18).rotateX(Math.PI/2),shade(lin,.8),0,.55,0,{p:g,ink:.01});
+  if(fem)part(new THREE.CylinderGeometry(.152,.152,.09,14),lin,0,.86,0,{p:g,ink:.012})}}
  return sp}
 
 export class MiniHero{
@@ -82,5 +87,6 @@ export class MiniHero{
   if(st.face)this.faceT=Math.atan2(st.face[0],st.face[1]);this.last=pos.clone();
   const df=((this.faceT-this.face+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;this.face+=df*(1-Math.exp(-dt*(st.mv?11:8)));
   m.obj.position.copy(pos);m.obj.rotation.y=this.face;G.uChrB.value.set(pos.y,HEIGHT);
+  {const sl=st.sleep||0;m.obj.rotation.order='YXZ';m.obj.rotation.x=-Math.PI/2*sl;m.obj.position.y+=.17*sl}   // DORMIDO (22 oct 2026): tumbado boca arriba sobre la arena (`st.sleep` 0..1)
   st.dist=dist;this.anim.update(st,dt,this.t);this.rodTip=this.anim.rodTip}
 }

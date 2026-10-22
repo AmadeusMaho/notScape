@@ -17,3 +17,5 @@ Las composiciones son originales del proyecto. Comprobar la licencia exacta de c
 
 ## Pisadas (21 oct 2026)
 `assets/sfx/steps/` = pack `sounds.zip` aportado por el dueño (carpetas por material: grass, stone, marble, wood, sand, snow, gravel, dirt…). **Autor y licencia por confirmar con el dueño antes de publicar el juego** (no se conserva el origen del pack).
+
+- **assets/music/wakeup.mp3** y **assets/music/all_i_had_to_do.mp3** (22 oct 2026): aportadas por el dueño para la secuencia de la playa y el cielo en llamas. **Origen y licencia SIN aclarar**: confirmar antes de publicar.

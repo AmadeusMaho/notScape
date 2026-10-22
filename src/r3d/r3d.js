@@ -31,6 +31,7 @@ import {Rooms3D,INT_TP} from './interiors3d.js';   // Lote R3D-F15b: interiores 
 import {Drops} from './drops3d.js';   // Lote R3D-DROPS-3D: objetos del suelo en 3D, recogida por clic y estela de luz en los raros
 import {SkyZone} from './skyzone3d.js';   // Lote ISLA-2: acantilado, mar de nubes, anillo de nubes y cascadas de la zona del Cielo
 import {Fragment,Debris,Embers} from './cinefx3d.js';
+import {SkyFire} from './skyfire3d.js';   // 22 oct 2026: llamaradas alrededor de la isla mientras arde el cielo
 import {SpellFX} from './spellfx3d.js';import {FX} from './fx3d.js';   // 21 oct 2026: partículas suaves (R3D.fx)
    // 21 oct 2026: bola de fuego (R3D.spell)   // Lote CINE-3: fragmento del tiempo, escombros, brasas
 import {Gabriel} from './gabriel3d.js';   // Lote CINE-2: ángel caído de la cinemática (R3D.gabriel)
@@ -127,10 +128,11 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  let sky=null;try{sky=new SkyZone(scene,W3)}catch(e){console.warn('[R3D] SkyZone',e)}   // ISLA-2: solo existe si hay zona del Cielo (`?zone=0` la quita)
  // hora dorada PERMANENTE en el Cielo (decisión del dueño, 21 oct 2026): dentro de la zona el reloj del día deja de mandar (mezcla día/atardecer fija, sin noche); fuera, todo igual
  const zoneTod=p=>{const w=sky&&sky.on?sky.w||0:0;if(w<.002)return p;const g=mixTod(TOD.dia,TOD.atardecer,.28);g.nt=0;g.sat=Math.min(1.35,g.sat*1.3);return mixTod(p,g,w)};
- let burn=0,burnT=0,fireSrc=null,fireRow=null,bem=null;
+ let burn=0,burnT=0,fireSrc=null,fireRow=null,bem=null,skyFire=null;
  const spell=new SpellFX(scene,W3),fx=new FX(scene,W3);
  // ISLA-7: ARDE EL CIELO (suelo naranja, nubes de fuego y brasas persistentes alrededor de la cámara mientras `burn` > 0); lo activa `R3D.skyBurn=1` (isla.js, paso «Escapa»)
- function burnFx(t,dt,tgt){G.uBurn.value=burn;if(sky&&sky.tint)sky.tint(burn);if(burn>.02||bem){if(!bem)bem=new Embers(scene,360);bem.level=burn>.02?Math.min(1,burn*1.1):0;bem.at(tgt.x,tgt.z,0);bem.update(t,dt)}}
+ function burnFx(t,dt,tgt){G.uBurn.value=burn;if(burn>.02||skyFire){if(!skyFire)try{skyFire=new SkyFire(scene,W3)}catch(e){skyFire=false}if(skyFire)skyFire.update(t,dt,burn)}   // llamaradas alrededor de la isla
+ if(sky&&sky.tint)sky.tint(burn);if(burn>.02||bem){if(!bem)bem=new Embers(scene,360);bem.level=burn>.02?Math.min(1,burn*1.1):0;bem.at(tgt.x,tgt.z,0);bem.update(t,dt)}}
  const FIRE=()=>{const a=TOD.atardecer;if(fireSrc!==a){fireSrc=a;fireRow=Object.assign({},a,{hemS:'#ff9a64',hemG:'#4a1c10',hemI:a.hemI*1.05,sun:'#ff6a2a',sunI:a.sunI*1.15,sat:Math.min(1.1,a.sat*1.05),lift:'#1c0804',vig:Math.min(.9,a.vig+.2),rim:'#ff7a3a',bloom:a.bloom*1.3,wDeep:'#3a1210',wShal:'#8a3a22',nt:.18})}return fireRow};
  const fireMix=(p,dt)=>{burn+=(burnT-burn)*(1-Math.exp(-dt/2.2));if(Math.abs(burnT-burn)<.002)burn=burnT;return burn>.002?mixTod(p,FIRE(),burn):p};
  // TINTE DE ILUMINACIÓN POR BIOMA (21 oct 2026; pedido del dueño: «un tinte único por bioma, que se diferencie un poco la iluminación global»): multiplica el color del SOL y de la luz HEMISFÉRICA (y un poco su intensidad) según el bioma bajo el héroe,
@@ -217,7 +219,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   // héroe
   const st=typeof heroState3D==='function'?heroState3D(now):null;
   if(st){hero.setLook(resolveLook(st.look));const p=W3(st.x,st.y,st.z);
-   hero.update({x:p.x,y:p.y,z:p.z,mv:st.mv,run:st.run,w:st.w,act:st.act,hurt:st.hurt,cb:st.cb,recv:st.recv||0,dash:st.dash||0,blk:st.blk||0,bhit:st.bhit||0,jmp:st.jmp||0,back:st.back||0,t,face:st.fx!=null?[st.fx,st.fy]:null,night:nt,wind:[.9,.4]},dt);
+   hero.update({x:p.x,y:p.y,z:p.z,mv:st.mv,run:st.run,w:st.w,act:st.act,hurt:st.hurt,cb:st.cb,recv:st.recv||0,dash:st.dash||0,sleep:st.sleep||0,blk:st.blk||0,bhit:st.bhit||0,jmp:st.jmp||0,back:st.back||0,t,face:st.fx!=null?[st.fx,st.fy]:null,night:nt,wind:[.9,.4]},dt);
    blob.position.set(p.x,p.y+.012,p.z);lantern.position.set(p.x+.15,p.y+.75,p.z+.1);lantern.intensity=1.8*nt*(1+Math.sin(t*9)*.05);heroL={x:p.x+.15,y:p.y+.75,z:p.z+.2,i:nt};aLantern.position.set(p.x+.15,p.y+.7,p.z+.25);aLantern.intensity=1.4*nt;   // linterna del héroe: se enciende sola de noche (guía §1.3)
    // rastro en el pasto (4 puntos, se recupera en ~1,6 s)
    if(!trail.length||Math.hypot(p.x-trail[0].x,p.z-trail[0].z)>.14)trail.unshift({x:p.x,z:p.z,t});if(trail.length>4)trail.length=4;

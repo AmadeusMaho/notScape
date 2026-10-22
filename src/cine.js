@@ -9,7 +9,15 @@ const CINE=(()=>{
  const SCENES={},HOLD=1;                                  // HOLD = segundos de pulsación para saltar
  let recv=0,look=null,skyEl=null,live=[],drone=null,fz=false,on=false,sc=null,T=0,last=0,skipT=0,holding=0,saved=null,anc=[0,0],el=null,sub=null,fade=null,skip=null,hintOff=0,fin=null;
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease={lin:u=>u,io:u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2,out:u=>1-(1-u)*(1-u)};
- const dom=()=>{if(el)return;el=document.createElement('div');el.id='cine';el.innerHTML='<i class="cn-t"></i><i class="cn-b"></i><div class="cn-sub"></div><div class="cn-skip">Mantén Esc para saltar</div><i class="cn-fade"></i>';el.insertAdjacentHTML('afterbegin','<div class="cn-sky"><svg viewBox="0 0 100 60" preserveAspectRatio="none"><path class="ck" pathLength="1" d="M70 0 L66 7 L69 12 L61 22 L64 27 L55 38 L58 42 L49 54 L51 60"/><path class="ck" pathLength="1" d="M82 0 L79 9 L84 14 L78 24 L82 30 L74 41"/><path class="ck" pathLength="1" d="M58 0 L60 6 L55 13 L57 19 L50 29"/></svg></div>');document.body.appendChild(el);sub=el.querySelector('.cn-sub');skyEl=el.querySelector('.cn-sky');fade=el.querySelector('.cn-fade');skip=el.querySelector('.cn-skip')};
+ // RAYOS DEL CIELO (22 oct 2026; el dueño: «mejora un poco los rayos que aparecen al final de matar el boss»): 10 relámpagos largos y quebrados con RAMAS (generados con hash determinista), cada uno con un halo ancho naranja (`.cw`) y un núcleo blanco-dorado (`.ck`),
+ // que se dibujan escalonados (variable CSS `--d` = retraso) mientras sube `--ck`, y parpadean sin parar (`ckF`). Ver el CSS «CINE-3 · cielo ardiendo» de css/hud-susurro.css.
+ const BOLTS=(()=>{const hh=(a,b)=>{const q=Math.sin(a*127.1+b*311.7)*43758.5453;return q-Math.floor(q)},xs=[8,19,31,44,58,70,82,93,26,66];let g='';
+  xs.forEach((x0,i)=>{const d=(i*.075).toFixed(2),len=30+hh(i,1)*26,sg=9+Math.floor(hh(i,2)*4),dy=len/sg;let x=x0,y=0,p='M'+x.toFixed(1)+' 0';const pts=[[x,0]];
+   for(let k=1;k<=sg;k++){x+=(hh(i,k+10)-.45)*7.5;y+=dy*(.75+hh(i,k+20)*.5);p+=' L'+x.toFixed(1)+' '+y.toFixed(1);pts.push([x,y])}
+   g+='<path class="cw" pathLength="1" style="--d:'+d+'" d="'+p+'"/><path class="ck" pathLength="1" style="--d:'+d+'" d="'+p+'"/>';
+   for(let k=2;k<sg-1;k+=3){if(hh(i,k+30)<.78){let bx=pts[k][0],by=pts[k][1],q='M'+bx.toFixed(1)+' '+by.toFixed(1);const dir=hh(i,k+40)<.5?-1:1,bs=3+Math.floor(hh(i,k+50)*3);for(let m=1;m<=bs;m++){bx+=dir*(2+hh(i,m+60)*4);by+=2+hh(i,m+70)*4;q+=' L'+bx.toFixed(1)+' '+by.toFixed(1)}
+     const dd=(+d+.1+k*.02).toFixed(2);g+='<path class="cw b" pathLength="1" style="--d:'+dd+'" d="'+q+'"/><path class="ck b" pathLength="1" style="--d:'+dd+'" d="'+q+'"/>'}}});return g})();
+ const dom=()=>{if(el)return;el=document.createElement('div');el.id='cine';el.innerHTML='<i class="cn-t"></i><i class="cn-b"></i><div class="cn-sub"></div><div class="cn-skip">Mantén Esc para saltar</div><i class="cn-fade"></i>';el.insertAdjacentHTML('afterbegin','<div class="cn-sky"><svg viewBox="0 0 100 60" preserveAspectRatio="none">'+BOLTS+'</svg></div>');document.body.appendChild(el);sub=el.querySelector('.cn-sub');skyEl=el.querySelector('.cn-sky');fade=el.querySelector('.cn-fade');skip=el.querySelector('.cn-skip')};
  const lerp=(a,b,u)=>a+(b-a)*u,pick=(o,k,d)=>o&&o[k]!=null?o[k]:d;
  // ───────── TIEMPO DETENIDO (plano con `freeze:true`) ─────────
  // R3D.tscale→0 congela animación, partículas, nubes, agua, luz del día y rayos (reloj virtual de r3d.js); sube la viñeta oro oscuro y baja la saturación;
@@ -95,7 +103,7 @@ const CINE=(()=>{
    {t:8.5,d:7.5,from:{x:GO[0],y:GO[1],zoom:2.4,z:.6},to:{zoom:2.7},sub:'Ahora también estarás maldito. Ve a liberar el mundo.'},{t:16,d:8,from:{x:GO[0],y:GO[1],zoom:2.2,z:.6},to:{zoom:1.6}}]};
  // «caida»: BORRADOR COMPLETO de «La caída de Gabriel» (CINE-3; el montaje fino con el dueño es CINE-4): Gabriel muere → el FRAGMENTO DEL TIEMPO sube de su pecho y flota hasta la mano del jugador →
  // TIEMPO DETENIDO (hueco para la visión de Nul'ru) → el fragmento se hunde en la palma → el CIELO ARDE (grado, grietas, brasas, escombros, temblor, coro y metales) → «Cien años.»
- SCENES.caida={dur:46,
+ SCENES.caida={dur:42,
   setup:({anchor,P})=>{const g=R3D.gabriel(anchor[0]+GO[0],anchor[1]+GO[1]);g.faceTo(P.x/ISO.TILE,P.y/ISO.TILE);g.to({kneel:1,head:.4,chest:.18},2.2);g.update(0,.5);
    const hp=R3D.W3(P.x,P.y,TER.standZ(P.x,P.y)),em=R3D.embers(420);em.at(hp.x,hp.z,hp.y);look=[GO[0],GO[1]];return{g,fr:R3D.fragment(),db:R3D.debris(90),em,hp,tmp:hp.clone(),vt:0,done:{}}},
   update:(T,dt,st)=>{if(!st)return;st.vt+=dt;const{g,fr,db,em,hp,tmp,vt}=st,once=(k,t,f)=>{if(T>=t&&!st.done[k]){st.done[k]=1;f()}},ez=u=>u<0?0:u>1?1:u*u*(3-2*u),S_=sfx;
@@ -113,7 +121,7 @@ const CINE=(()=>{
    else{const u=ez((T-26.5)/1.7);fr.set(tmp.set(hand[0]+(hp.x-hand[0])*u,hand[1]+.25-u*.3,hand[2]+(hp.z-hand[2])*u),1-u*.9)}   // se hunde en el pecho del héroe (queda tapado por su silueta)
    fr.beat=T<26.5||T>26.5;fr.update(vt,dt);
    // cielo: grado de fuego (R3D.skyBurn), resplandor y grietas (capa DOM), brasas y escombros
-   once('burn',28,()=>{R3D.skyBurn=1});sky(clamp((T-28.6)/4,0,1)*(T<40?1:clamp(1-(T-40)/2.5,0,1)));
+   once('burn',28,()=>{R3D.skyBurn=1;try{MUSIC.scene('all_i_had_to_do',true)}catch(e){}});sky(clamp((T-28.6)/4,0,1)*(T<40?1:clamp(1-(T-40)/2.5,0,1)));
    em.level=clamp((T-28.5)/3,0,1)*(T<41?1:clamp(1-(T-41)/3,0,1));em.update(vt,dt);
    [[31,.5,-.3],[34,-1.1,.6],[36.5,.2,1.2],[38.5,-.6,-1]].forEach(([t,ox,oz],i)=>once('d'+i,t,()=>{db.burst(hp.x+ox*2,hp.z+oz*2,hp.y,i?18:26,3.2,5.5+i*.4);S_.boom(.14+i*.02)}));db.update(vt,dt);
    // audio (todo sintetizado; el volumen maestro baja solo en el tiempo detenido)
@@ -124,8 +132,7 @@ const CINE=(()=>{
   shots:[{t:0,d:4,from:{x:GO[0],y:GO[1],zoom:1.5,z:.4},to:{zoom:1.85}},{t:4,d:4,from:{x:GO[0],y:GO[1],zoom:3.2,z:.9},to:{zoom:3.6},ease:'out'},
    {t:8,d:7,from:{x:GO[0],y:GO[1],zoom:2.4,z:.6},to:{zoom:2.7},sub:'Ahora también estarás maldito. Ve a liberar el mundo.'},{t:15,d:4.2,from:{x:GO[0],y:GO[1],zoom:2.2,z:.9},to:{x:GO[0]*.85,y:GO[1]*.85,zoom:2.3}},
    {t:19.2,d:3.8,from:{x:GO[0]*.5,y:GO[1]*.5,zoom:1.9,z:.9},to:{x:GO[0]*.1+10,y:GO[1]*.1-6,zoom:2.5,z:.7},ease:'lin'},{t:23,d:3.5,from:{x:6,y:-4,zoom:3,z:.6},freeze:true},
-   {t:26.5,d:3.5,from:{x:4,y:-2,zoom:3.1,z:.55},to:{x:0,y:0,zoom:2.5}},{t:30,d:10,from:{x:0,y:0,zoom:2.2,z:.7},to:{zoom:1.2,z:1.2},shake:.7,ease:'lin'},
-   {t:40,d:2,from:{x:0,y:0,zoom:1.2,z:1.2},fade:[0,.92]},{t:42,d:4,from:{x:0,y:0,zoom:1.2,z:1.2},fade:[.92,1],sub:'Cien años.',card:true}]};
+   {t:26.5,d:3.5,from:{x:4,y:-2,zoom:3.1,z:.55},to:{x:0,y:0,zoom:2.5}},{t:30,d:12,from:{x:0,y:0,zoom:2.2,z:.7},to:{zoom:1.2,z:1.2},shake:.7,ease:'lin'}]};   // 22 oct 2026: se QUITÓ el fundido a negro y el «Cien años.» del final de la caída: ahora aparecen DESPUÉS de huir (cinemática `playa`)
  // «gabrielIntro» (21 oct 2026, pedido del dueño: intro corta de jefe al estilo Dark Souls): la ARENA en calma con brasas → una columna de luz cae del cielo → Gabriel desciende y ATERRIZA (temblor, polvo, estruendo) arrodillado → se incorpora, el halo se enciende →
  // el título del jefe aparece en letras doradas espaciadas, con campana. Anclada en el centro de la arena (`SCENES.gabrielIntro.anchor` la pone isla.js antes de lanzarla); al acabar (o saltar) isla.js crea al Gabriel combatiente en ese mismo sitio.
  let GBT=null;
@@ -152,4 +159,16 @@ const CINE=(()=>{
    {t:5.3,d:1.4,from:{x:6,y:44,zoom:2.5,z:.5},to:{x:0,y:40,zoom:2.8,z:.55},shake:1.1,ease:'out'},
    {t:6.7,d:3.2,from:{x:0,y:16,zoom:3.1,z:.85},to:{x:0,y:12,zoom:3.4,z:1.0},ease:'lin'},
    {t:9.9,d:3.3,from:{x:0,y:12,zoom:2.7,z:.95},to:{x:0,y:8,zoom:2.35,z:1.0},ease:'lin'}]};   // al salir el NOMBRE la cámara queda CENTRADA en Gabriel
+ // «playa» (22 oct 2026): DESPERTAR tras escapar de Gabriel. Negro + «Cien años.» → el héroe DORMIDO en la arena de la playa de la Pradera (cielo con la cicatriz roja: `R3D.skyBurn` hasta que acaba) con Ru a su lado → Ru habla bajito → el héroe despierta y se incorpora.
+ // Anclada en el héroe (isla `PLAYA.start`); `PLAYA.sl` (0..1) = grado de sueño que lee el héroe 3D (tumbado boca arriba). Textos en PLAYA.TXT.wake.
+ SCENES.playa={dur:18.4,
+  setup:()=>{try{R3D.skyBurn=1}catch(e){}PLAYA.sl=1;return{done:{}}},
+  update:(T,dt,st)=>{if(!st)return;PLAYA.sl=T<12.6?1:1-clamp((T-12.6)/2.8,0,1);const once=(k,t,f)=>{if(T>=t&&!st.done[k]){st.done[k]=1;f()}};
+   once('w',.2,()=>{sfx.wind(16,.05);sfx.choir(98,13,.035,0,[1,1.5,2])});once('s',12.4,()=>sfx.shimmer(3.5,.04))},
+  cleanup:()=>{PLAYA.sl=0},
+  shots:[{t:0,d:3.8,from:{x:10,y:150,zoom:1.25,z:.9},fade:[1,1],sub:'Cien años.',card:true},   // NEGRO con el texto (la playa aún no se ve)
+   {t:3.8,d:1.8,from:{x:10,y:150,zoom:1.25,z:.9},to:{x:10,y:135,zoom:1.3,z:.9},fade:[1,0]},      // fundido DESDE el negro hacia la playa
+   {t:5.6,d:3.4,from:{x:10,y:135,zoom:1.3,z:.9},to:{x:10,y:105,zoom:1.5,z:.8},sub:'Ru: «Respira… sigue respirando.»'},
+   {t:9,d:3.6,from:{x:34,y:14,zoom:3.1,z:.3},to:{x:30,y:12,zoom:3.4,z:.3},sub:'Ru: «El mar te dejó aquí entero. No sé cómo.»'},
+   {t:12.6,d:5.8,from:{x:10,y:6,zoom:3.6,z:.25},to:{x:12,y:10,zoom:2.5,z:.5},sub:'Ru: «Despacio. No te levantes de golpe.»'}]};
  return{get on(){return on},get T(){return T},get recv(){return recv},set recv(v){recv=clamp(+v||0,0,1)},get look(){return look},set look(v){look=v},seen,mark,seek:t=>{if(on)T=t},start,end,tick,cam,sky,sfx,SCENES,list:()=>Object.keys(SCENES)}})();

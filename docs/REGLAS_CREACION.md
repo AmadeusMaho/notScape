@@ -104,6 +104,8 @@ Se comprueba y se cuenta en la entrega: (1) **ESCALA** vs. héroe (≈1 unidad �
 - Módulo nuevo → una línea en «Estructura del repo»; herramienta nueva → una línea en §10; un `<script>` nuevo en `index.html` o `boot.mjs`.
 - Código muerto: no se borra a ciegas (no hay git de respaldo antes de oct 2026): `tools/f18_refs.py --cut` y `grep -n "\bNOMBRE\b"` antes; verificar en el juego.
 
+- **Diálogos de PNJ:** los edita el dueño con `tools/dialogos/` (guarda en `data/dialogos.json`, superpuesto a los del código por `src/dialogos.js`). Un PNJ o misión NUEVO aparece solo en el editor si está en `VNPC`, `VILL.LIST` o `ISLA.QUESTS`; no cambies diálogos existentes en el código para un retoque de texto.
+
 ## 10 · Herramientas de verificación (qué ejecutar según el área)
 | Área | Comando (Windows: `PYTHONUTF8=1 python …`, sin `-I`) | Pasa si |
 |---|---|---|
@@ -148,5 +150,7 @@ Se comprueba y se cuenta en la entrega: (1) **ESCALA** vs. héroe (≈1 unidad �
 - **Magia**: `MAGIC_ON=false` sigue (rediseño); lo único activo es la **bola de fuego CELESTIAL** del bastón, aprendida en el tutorial, que se SELECCIONA en la barra de habilidades (bajo la vida, hasta 6 casillas) y se lanza con el clic. Sin seleccionar, el bastón golpea cuerpo a cuerpo.
 - **Tutorial del Cielo**: solo la espada se craftea; Miguel presta arco, bastón y escudo para que el jugador elija arma contra Gabriel; los enemigos del Cielo son **corderos de nube neutrales** separados entre sí (no gallinas).
 - **Gabriel**: espada celestial (hoja de luz, guardas de plumas), casco completo intimidante, 30 de vida (es el tutorial), ataques básicos con brazo alzado ~1 s y combo cada 3.º.
+
+- **Campamentos (decisión del dueño, 22 oct 2026):** sus guardias y capitán (`m.poi`) tardan 4 min en reaparecer y nunca reaparecen delante del jugador (`POI_RESP`, `campTick`); el cofre se abre con un casteo de 5 s. Todo campamento nuevo debe definirse con `poi` en sus mobs para heredar esto; no pidas «matar a todos» con respawn corto.
 
 **Pendientes conocidos de esta sesión (para el siguiente agente)**: probar a mano TODO el combate (bloqueo/perfect dodge/arco/bastón/Gabriel); poses de bloqueo de daga, mandoble y doble empuñe sin revisar; aspecto 3D del cordero y de la bola celeste sin ver; teclas 2–6 y más habilidades; magias de área (`s.area`); coste extra del mandoble; bloqueo y habilidades en táctil; precompilar el haz de la intro; la cámara se inclina hacia el enemigo también con rango (`foK`); árboles verdes semitransparentes sobre el borde de la plataforma (sin identificar).

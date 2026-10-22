@@ -72,7 +72,7 @@ const ISLA=(()=>{
   const n=cur();toast('✔ '+(n.cap!==c?'<b>'+CAPS[n.cap]+'</b>':'Hecho'),1800);save()}
  function finish(){const i=st();i.done=1;i.lock=0;endEscape();
   // «Despiertas…»: se pierde TODO lo de la isla (mochila, banco de nubes, equipo y monedas); se conservan la apariencia, los descubrimientos y los niveles despertados (nivel 1)
-  S.inv.length=0;S.bank={};for(const k in S.eq)S.eq[k]=null;S.coins=0;try{S.amn=0}catch(e){}tipHide();dirty=1;try{snd('quest')}catch(e){}toast('<b>Despiertas…</b>',4000);const b=BIOMES.list[0];if(typeof CHEAT!=='undefined'&&CHEAT.tp)CHEAT.tp(b.ox+b.spawn[0],b.oy+b.spawn[1]);save()}
+  S.inv.length=0;S.bank={};for(const k in S.eq)S.eq[k]=null;S.coins=0;try{S.amn=0}catch(e){}tipHide();dirty=1;try{snd('quest')}catch(e){}toast('<b>Despiertas…</b>',4000);const b=BIOMES.list[0];if(typeof PLAYA!=='undefined')PLAYA.start();else if(typeof CHEAT!=='undefined'&&CHEAT.tp)CHEAT.tp(b.ox+b.spawn[0],b.oy+b.spawn[1]);save()}
  const done=()=>{const g=cur().g,i=st();
   switch(g.t){case'talk':case'altar':case'cine':return false;   // los resuelven talk()/altar()/el final de la cinemática
    case'reach':{const q=wp(g.at[0],g.at[1]);return Math.hypot(q.x-P.x,q.y-P.y)<g.r*T}
@@ -191,10 +191,10 @@ const ISLA=(()=>{
   const g=wp(AR[0],AR[1]);gm.x=gm.hx=gm.tx=g.x;gm.y=gm.hy=gm.ty=g.y;gm.hp=gm.mh;gm.hunt=0;gm.tel=null;gm.sgM=null;gm.stun=0;gm.sgIm=0;gm.rip=0;gm.asx=1;gm.en=0;gm.dm=2;gph=0;BM.gabriel=[];try{snd('die')}catch(e){}toast('☠️ Gabriel te derriba. Despiertas al borde de la arena.',2800);return true}
  // «ESCAPA»: la isla arde. Desaparecen TODOS los PNJ (y los corderos), el cielo se vuelve rojo (`R3D.skyBurn`), el pasto naranja (`uBurn`), las nubes de fuego y caen brasas (r3d.js `burnFx`). Se invoca al entrar en el paso `esc`.
  let es=0;const gone=[];
- function startEscape(){if(es)return;es=1;for(let k=ST.length-1;k>=0;k--){const e=ST[k];if(e.k===9&&e.npc){gone.push(e);ST.splice(k,1)}}
+ function startEscape(){if(es)return;es=1;try{MUSIC.scene('all_i_had_to_do',true)}catch(e){}for(let k=ST.length-1;k>=0;k--){const e=ST[k];if(e.k===9&&e.npc){gone.push(e);ST.splice(k,1)}}
   for(let k=M.length-1;k>=0;k--){const m=M[k];if(zone()&&m.hx>=zone().x0&&m.d.id==='cordero'){gone.push({mob:m});M.splice(k,1)}}
   try{R3D.skyBurn=1}catch(e){}try{banner('¡Escapa!','El cielo arde','#ff6a3a',3600)}catch(e){}try{log('🔥 El cielo arde. Todo lo que conocías desaparece… ¡corre!')}catch(e){}}
- function endEscape(){es=0;try{R3D.skyBurnReset()}catch(e){}gone.splice(0).forEach(e=>{if(e.mob)M.push(e.mob);else ST.push(e)})}
+ function endEscape(){es=0;try{MUSIC.scene('all_i_had_to_do',false)}catch(e){}try{R3D.skyBurnReset()}catch(e){}gone.splice(0).forEach(e=>{if(e.mob)M.push(e.mob);else ST.push(e)})}
  // tarjeta de bienvenida (UI Susurro: cristal + trazo dorado): cómo moverse, correr, esquivar y golpear; se cierra con el botón o con cualquier tecla de acción
  let tipEl=null;
  function tipShow(){if(tipEl||S.islaTip)return;const R=(k,t)=>`<div class="rw"><div class="ks">${k}</div><span>${t}</span></div>`;tipEl=document.createElement('div');tipEl.id='isla-tip';
@@ -209,6 +209,6 @@ const ISLA=(()=>{
   if(n.npc){const e=ST.find(s=>s.id===n.npc);if(e)return e}if(n.at)return wp(n.at[0],n.at[1]);return null}
  function go(n){const i=st();if(n!=null){i.step=Math.max(0,Math.min(STEPS.length-1,n|0));i.off=[0,0,0,0];i.done=0;base();dirty=1}
   const q=wp(-26,12.4);if(typeof CHEAT!=='undefined'&&CHEAT.tp)CHEAT.tp(q.x,q.y);return i.step}
- function reset(){const bi=PO.findIndex(p=>p.pk==='cajaIsla');if(bi>=0)PO.splice(bi,1);box=null;endEscape();tipHide();if(gm&&M.includes(gm))M.splice(M.indexOf(gm),1);gm=null;gph=0;cs=0;intro=0;fAt=0;S.isla={step:0,bs:0,off:[0,0,0,0],t:{},done:0,lock:1};S.awk={};S.islaTip=0;sp=0;if(S.cine)delete S.cine.gabriel;dirty=1;return go(0)}
+ function reset(){try{if(typeof PLAYA!=='undefined')PLAYA.reset()}catch(e){}const bi=PO.findIndex(p=>p.pk==='cajaIsla');if(bi>=0)PO.splice(bi,1);box=null;endEscape();tipHide();if(gm&&M.includes(gm))M.splice(M.indexOf(gm),1);gm=null;gph=0;cs=0;intro=0;fAt=0;S.isla={step:0,bs:0,off:[0,0,0,0],t:{},done:0,lock:1};S.awk={};S.islaTip=0;sp=0;if(S.cine)delete S.cine.gabriel;dirty=1;return go(0)}
  if(/[?&]isla=1\b/.test(typeof location!=='undefined'?location.search:''))setTimeout(()=>{try{go()}catch(e){}},4000);
  return{fightOn:()=>!!(gAlive()||intro),bossOn:()=>!!(gAlive()&&!intro),STEPS,QUESTS,CAPS,OFR,lock,on,tick,talk,mark,dlg,search,altar,html,target,go,reset,prog,adv,altar2:fight,fight,noDie,get boss(){return gm},get step(){return st().step},get state(){return st()}}})();
