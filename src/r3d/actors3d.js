@@ -284,9 +284,29 @@ for(let k=0;k<6;k++){const rb=ROBE[k];
 const mix2=c=>c;
 // ── GABRIEL (Lote CINE-2, 21 oct 2026): ángel caído, jefe del tutorial y protagonista de la cinemática «La caída de Gabriel» (docs/GUION_TUTORIAL.md, docs/PROMPT_INVIDEO_CINEMATICA_GABRIEL.md).
 //    ≈1,2× el héroe (H=64). Túnica blanca-gris rasgada (con pantalones: regla de PNJ), faja y hombrera dorada gastadas, pelo largo blanco-dorado, ALAS ROTAS horneadas (`angelWings`, wings3d.js: ala derecha alzada y la izquierda caída, con plumas que faltan y puntas quemadas). El HALO agrietado NO se hornea: es una malla emisiva aparte colgada del hueso de la cabeza (`gabriel3d.js`) para poder apagarlo.
+// ESPADA CELESTIAL de Gabriel (21 oct 2026; «que den ganas de tenerla»): ≈ 1,15 de largo. Hoja ancha de luz con filo blanco-dorado y NÚCLEO emisivo, canal central con runas doradas brillantes, punta de lanza, guardas en ABANICO DE PLUMAS de oro (3 por lado, como las alas del dueño),
+// gema celeste en la cruz, empuñadura envuelta en cuero blanco con anillos de oro y pomo con una perla de luz. Todo con `glow()` en lo que brilla (bloom). Se empuña con F.hold(0,-1.05,celestial).
+const celestial=(F,h,p)=>{const GD='#d9b45a',GL='#f1dc9a',WH='#f6f1e0';
+ p(cyl(.021,.023,.27,8),'#e9e2cf',0,-.04,0,{p:h,ink:.01});[-.1,-.03,.04].forEach(y=>p(cyl(.026,.026,.016,8),GD,0,y,0,{p:h,ink:.006}));   // puño y anillos
+ p(sph(.044,1,1,1,10),GD,0,-.2,0,{p:h,ink:.01});p(sph(.024,1,1,1,8),'#fff3c8',0,-.2,.03,{p:h,ink:0,mat:glow('#fff3c8',2.4)});          // pomo con perla de luz
+ p(box(.11,.045,.05),GD,0,.115,0,{p:h,ink:.01});p(sph(.026,1,1,.8,8),'#9fe0ff',0,.115,.03,{p:h,ink:0,mat:glow('#9fe0ff',2.6)});         // cruz y gema celeste
+ [-1,1].forEach(q=>{for(let i=0;i<3;i++){const L=.17-.035*i;const f=p(cone(.022-.003*i,L,4),i%2?GL:GD,q*(.08+i*.046),.115+i*.026,0,{p:h,ink:.006});f.rotation.z=-q*(1.15+i*.2);f.scale.z=.5}});   // abanico de plumas
+ const BL='#a9cdf5';p(box(.105,.88,.016),BL,0,.59,0,{p:h,ink:.012});p(cone(.052,.2,4),BL,0,1.13,0,{p:h,ink:.012}).scale.z=.34;   // hoja ancha azul-celeste y punta
+ p(box(.03,.8,.026),'#fff2b0',0,.59,.001,{p:h,ink:0,mat:glow('#fff2b0',3.4)});p(cone(.022,.12,4),'#fff2b0',0,1.09,.001,{p:h,ink:0,mat:glow('#fff2b0',3.4)});                                // núcleo de luz (canal central)
+ for(let i=0;i<5;i++)p(box(.05,.03,.03),'#ffd27a',0,.3+i*.135,.003,{p:h,ink:0,mat:glow('#ffd27a',3.6)});         // runas doradas
+ [-1,1].forEach(q=>p(box(.012,.86,.02),'#ffd27a',q*.052,.59,0,{p:h,ink:0,mat:glow('#ffd27a',2.6)}))};          // filos luminosos
+// CASCO COMPLETO de Gabriel (21 oct 2026; «que intimide»): yelmo cerrado de plata ennegrecida con cresta de plumas doradas, DOS CUERNOS barridos hacia atrás, mejillas aladas y una rendija de visor oscura con DOS OJOS DE LUZ dorados; sin pelo ni barba (regla: yelmo cerrado ⇒ sin pelo).
+const gabHelm=(F,head,part)=>{const M='#bdb8a8',MD='#8f8a7c',G='#b79f66',GL='#e2c880',DK='#15110d',o={p:head,ink:.014};
+ part(sph(.245,1,1.06,1.04,14),M,0,.02,-.005,o);part(sph(.25,1,.62,1.04,12),MD,0,-.115,.0,o);                                  // calavera y mentonera
+ part(box(.3,.07,.07),G,0,.075,.19,{p:head,ink:.01});part(box(.034,.3,.05),G,0,.0,.228,{p:head,ink:.01});                          // ceja y cresta nasal dorada
+ part(box(.25,.062,.05),DK,0,.012,.222,{p:head,ink:0});[-1,1].forEach(q=>part(box(.058,.022,.02),'#ffd27a',q*.065,.012,.25,{p:head,ink:0,mat:glow('#ffd27a',3.6)}));   // visor y ojos de luz
+ [-1,1].forEach(q=>{const w=part(box(.022,.2,.16),M,q*.245,-.02,-.02,{p:head,ink:.01});w.rotation.z=q*.18;[0,1,2].forEach(i=>{const f=part(cone(.022-.003*i,.15-.025*i,4),i%2?GL:G,q*(.255+i*.012),.07-.07*i,-.05-.05*i,{p:head,ink:.006});f.rotation.z=-q*(1.0+.2*i);f.scale.z=.5})});   // mejillas aladas
+ [-1,1].forEach(q=>{const h=part(cone(.04,.34,5),'#d8d2c0',q*.14,.19,-.06,{p:head,ink:.012});h.rotation.set(-.85,0,q*.55)});         // cuernos barridos atrás
+ for(let i=0;i<4;i++){const f=part(cone(.032-.004*i,.34-.04*i,4),i%2?GL:G,0,.25+.012*i,-.02-i*.07,{p:head,ink:.008});f.rotation.x=-.45-i*.2;f.scale.x=.55}};   // cresta de plumas
 NPC_DEF.gabriel={id:'gabriel',H:64,wave:false,spec:{ph:2.2,browT:-.4,robe:'#b6b1a2',trim:'#a58d55',belt:'#7a6840',skin:'#dcc3a4',sleeve:'#aaa595',pants:'#7c776a',boot:'#51483c',w:1.04,chestW:1.08,lean:.08,brow:'#d9d6cc',
- top:mix(hairFn('mane','#d6cfb2'),elderBeard('#d6cfb2',.2,.1)),
+ top:gabHelm,
  acc:mix(angelWings({q:1,span:1.1,hole:.12,burnt:.2,seed:3}),angelWings({q:-1,span:1.05,droop:.82,hole:.22,burnt:.3,seed:7}),
+  (F)=>F.hold(0,-1.05,celestial),
   (F,g,part)=>{part(box(.2,.5,.02).translate(0,-.25,0),'#b3ae9e',0,.5,.2,{p:g,ink:.01}).rotation.x=.08;part(box(.2,.62,.02).translate(0,-.31,0),'#a49f90',.04,.5,-.2,{p:g,ink:.01}).rotation.x=-.08;   // jirones de túnica delante y detrás
    part(box(.4,.07,.22),'#b79f66',0,.84,0,{p:g,ink:.012});part(sph(.1,1.2,.6,.9,10),'#b79f66',-.2,.83,0,{p:g,ink:0})}) }};   // hombreras doradas gastadas
 HUM.gabriel=unit('gabriel',NPC_DEF.gabriel.spec,64);   // ISLA-6: Gabriel como ENEMIGO (jefe del tutorial); el modelo es el mismo del PNJ/cinemática

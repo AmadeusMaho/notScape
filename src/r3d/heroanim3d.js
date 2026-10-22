@@ -494,6 +494,8 @@ export class HeroAnim{
   if(LB){for(let i=0;i<3;i++)v[i]=LB[i];for(let i=12;i<22;i++)v[i]=LB[i];key='mvf';feetStep=0;fd=.1}
   this.mode=a?(a.k==='sm'&&a.id==='furnace'?'fu':a.k):null;
   // resolver (marco del suelo → torso, mano en la cuerda) y fundir con la pose anterior si cambió el estado
+  // BLOQUEO (21 oct 2026): `st.blk` 0..1 (la rampa la lleva el juego). Mezcla la pose de combate hacia la pose de bloqueo del arma/escudo (brazos, mano y arma; las piernas siguen con la marcha) y agacha un poco el cuerpo.
+  const bk=st.blk||0;if(bk>.001){const bp=this.blockPose(cls,sh),e=bk*bk*(3-2*bk);for(let i=C.rp;i<N;i++)v[i]+=(bp[i]-v[i])*e;v[C.cx]+=.12*e;v[C.hx]-=.05*e;v[C.py]-=.035*e;v[C.pz]+=.03*e;v[C.two]=bp[C.two]*e+v[C.two]*(1-e)}
   this.resolve(v);if(this.xd)this.holsterOver(v,this.xd>0?this.xp:1-this.xp);v[C.spin]=Math.atan2(Math.sin(v[C.spin]),Math.cos(v[C.spin]));
   const ds=st.dash||0;if(ds>.001&&ds<.999){
    // QUICKSTEP estilo BLOODBORNE (21 oct 2026; el dueño descartó la voltereta): paso rápido y bajo, SIN giros. El cuerpo se agacha y se inclina hacia donde va (`env`: sube rápido, se mantiene y se suelta suave),
@@ -508,6 +510,7 @@ export class HeroAnim{
   if(key!==this.key||this.forceFade){this.snap.set(this.v);this.fade=0;this.fadeDur=this.forceFade||(this.key==='idle'||this.key==='st'?fd:Math.max(fd,.12));this.forceFade=0;this.prevKey=this.key;this.key=key}
   const out=this.v;if(this.fade<1){this.fade=Math.min(1,this.fade+dt/this.fadeDur);const e=EASE.io(this.fade);for(let i=0;i<N;i++)out[i]=this.snap[i]+(v[i]-this.snap[i])*e}else out.set(v);
   // daño: retroceso aditivo
+  const bh=st.bhit||0;if(bh>.01){const e=bh*bh*(3-2*bh);out[C.cx]-=.16*e;out[C.hx]-=.1*e;out[C.pz]-=.05*e;out[C.py]-=.02*e;out[C.rp+2]-=.05*e;out[C.lp+2]-=.06*e;out[C.rp+1]+=.03*e;out[C.lp+1]+=.03*e}   // el golpe bloqueado SACUDE el arma/escudo y echa el cuerpo atrás
   const h=st.hurt||0;if(h>.01){const e=h*h*(3-2*h);out[C.cx]-=.24*e;out[C.hx]-=.18*e;out[C.pz]-=.04*e;out[C.py]-=.035*e;out[C.cy]+=.1*e;out[C.rp+1]+=.04*e;out[C.lp+1]+=.05*e;out[C.rp+2]-=.01*e;out[C.lp+2]-=.01*e}
   // CINE-4 · pose de RECIBIR (st.recv 0..1, la fija CINE): la mano derecha sube al frente con la palma abierta (hacia arriba), el torso se inclina un poco y la cabeza sigue al objeto
   // DASH (ISLA-7/COMBATE): st.dash 0..1 = fase de la esquiva; el cuerpo se LANZA hacia delante (cabeceo 0 → .85 rad → 0, sin dar la vuelta: con la vuelta completa el pelo y la cabeza se volteaban), la cabeza compensa para seguir mirando adelante y baja un poco
@@ -525,6 +528,13 @@ export class HeroAnim{
   else if(k==='sp'){if(vr==='r'||cls==='bow'||cls==='xbow')c=cls==='xbow'?spXbow(S):spBow(S);else if(vr==='g'||cls==='staff'||cls==='scepter')c=spStaff(S,sh&&cls!=='staff'?sh:false,cls==='scepter');else c=spMelee(S,cls,sh)}
   else if(WORK[k])c=WORK[k]();else if(k==='fi')c=fishC();else if(k==='eat')c=eatC(vr);else if(k==='pk')c=pickC(vr);
   return this.cache[id]=c}
+ // pose de BLOQUEO por arma (cacheada): con ESCUDO lo alza al frente y la espada se arma detrás; arma de una mano = la cruza horizontal ante el pecho; dos manos/bastón = a dos manos en horizontal; puños = antebrazos cruzados.
+ blockPose(cls,sh){const id='blk|'+cls+'|'+(sh?1:0);if(this.cache[id])return this.cache[id];const S=this.stanceOf(cls,sh);let o;
+  if(sh)o={lp:[.0,.8,.37],ld:nrm([0,.95,.12]),le:[1,0,0],pl:[.9,-.25,.1],rp:[-.2,.68,.14],rd:nrm([.25,.55,.8]),re:[0,0,1],pr:[-.9,-.2,-.2],two:0};
+  else if(cls==='fist')o={rp:[-.09,.9,.24],rd:nrm([.1,.2,1]),lp:[.09,.9,.24],ld:nrm([-.1,.2,1]),pr:[-.5,-.9,-.2],pl:[.5,-.9,-.2],two:0};
+  else if(cls==='great'||cls==='staff'||cls==='scepter')o={rp:[-.1,.82,.3],rd:nrm([.95,.38,.05]),re:[0,0,1],two:1,lh:.22,pr:[-.7,-.5,-.3],pl:[.7,-.5,-.3]};
+  else o={rp:[-.07,.84,.31],rd:nrm([.96,.28,.1]),re:[0,0,1],lp:[.2,.66,.2],ld:[0,0,1],pr:[-.8,-.15,-.4],pl:[.7,-.6,-.2],two:0};
+  return this.cache[id]=P(S,o)}
  stanceOf(cls,sh){if(cls==='dual')return STANCE['dual'+this.dualK];if(sh)return cls==='sword'?STANCE.swordSh:STANCE[cls+'Sh']||STANCE[cls];return STANCE[cls]}
  stancePose(k,sh,t,v){if(WORK[k])v.set(this.clip(k).tracks[0].keys[0].v);else v.set(this.stanceOf(k,sh));this.breath(v,t,1);
   // el arma «vive» en guardia: la punta oscila un poco (más lento y amplio en el mandoble = pesa)

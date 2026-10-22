@@ -103,7 +103,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  ISO.depth=(wx,wy,w=0,h=0)=>isStraight()?O.depth(wx,wy,w,h):((wx+w)*Math.sin(az)+(wy+h)*Math.cos(az))*Math.SQRT2;
  ISO.keyDir=(l,rr,u,d)=>{if(isStraight())return O.keyDir(l,rr,u,d);const hh=(rr|0)-(l|0),v=(d|0)-(u|0),x=hh*Math.cos(az)+v*Math.sin(az),y=-hh*Math.sin(az)+v*Math.cos(az),n=Math.hypot(x,y);return n?{x:x/n,y:y/n}:{x:0,y:0}};
  // ── giro: rueda pulsada + arrastrar · teclas , y . · Inicio = 45° ──
- c2d.addEventListener('pointerdown',e=>{if(e.button===1||e.button===2){drag={x:e.clientX,a:azT,btn:e.button,moved:e.button===1};if(e.button===1)e.preventDefault();try{c2d.setPointerCapture(e.pointerId)}catch(x){}}},true);   // rueda: gira siempre; CLIC DERECHO: gira si arrastras más de 6 px (si no, es «ir a ese punto», lo resuelve game.js al soltar)
+ c2d.addEventListener('pointerdown',e=>{if(e.button===1){drag={x:e.clientX,a:azT,btn:e.button,moved:true};e.preventDefault();try{c2d.setPointerCapture(e.pointerId)}catch(x){}}},true);   // rueda: gira siempre; CLIC DERECHO: gira si arrastras más de 6 px (si no, es «ir a ese punto», lo resuelve game.js al soltar)
  c2d.addEventListener('pointermove',e=>{if(drag){if(!drag.moved&&Math.abs(e.clientX-drag.x)>6){drag.moved=1;drag.x=e.clientX}if(drag.moved)azT=drag.a-(e.clientX-drag.x)*.008}});
  const endDrag=()=>{if(!drag)return;window.CAMD={btn:drag.btn,moved:drag.moved};drag=null;if(window.CAMD.moved)snap()};c2d.addEventListener('pointerup',endDrag);c2d.addEventListener('pointercancel',endDrag);
  c2d.addEventListener('auxclick',e=>{if(e.button===1)e.preventDefault()});
@@ -217,7 +217,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   // héroe
   const st=typeof heroState3D==='function'?heroState3D(now):null;
   if(st){hero.setLook(resolveLook(st.look));const p=W3(st.x,st.y,st.z);
-   hero.update({x:p.x,y:p.y,z:p.z,mv:st.mv,run:st.run,w:st.w,act:st.act,hurt:st.hurt,cb:st.cb,recv:st.recv||0,dash:st.dash||0,jmp:st.jmp||0,back:st.back||0,t,face:st.fx!=null?[st.fx,st.fy]:null,night:nt,wind:[.9,.4]},dt);
+   hero.update({x:p.x,y:p.y,z:p.z,mv:st.mv,run:st.run,w:st.w,act:st.act,hurt:st.hurt,cb:st.cb,recv:st.recv||0,dash:st.dash||0,blk:st.blk||0,bhit:st.bhit||0,jmp:st.jmp||0,back:st.back||0,t,face:st.fx!=null?[st.fx,st.fy]:null,night:nt,wind:[.9,.4]},dt);
    blob.position.set(p.x,p.y+.012,p.z);lantern.position.set(p.x+.15,p.y+.75,p.z+.1);lantern.intensity=1.8*nt*(1+Math.sin(t*9)*.05);heroL={x:p.x+.15,y:p.y+.75,z:p.z+.2,i:nt};aLantern.position.set(p.x+.15,p.y+.7,p.z+.25);aLantern.intensity=1.4*nt;   // linterna del héroe: se enciende sola de noche (guía §1.3)
    // rastro en el pasto (4 puntos, se recupera en ~1,6 s)
    if(!trail.length||Math.hypot(p.x-trail[0].x,p.z-trail[0].z)>.14)trail.unshift({x:p.x,z:p.z,t});if(trail.length>4)trail.length=4;
@@ -251,7 +251,12 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
    const tw=tW.begin('mundo');composer.render(dt);tW.end(tw)}else{const tw=tW.begin('mundo');r.render(scene,cam);tW.end(tw)}
   tW.poll(GPU);tH.poll(GPU)}
  // el héroe en su hueco de profundidad del 2D (lo llama draw() de game.js en lugar de dP)
- function drawHero(ctx){if(!heroScreen)return;ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(acv,heroScreen.x,heroScreen.y,heroScreen.w,heroScreen.h);
+ // IMÁGENES FANTASMA del PERFECT DODGE (21 oct 2026): `R3D.ghost([[x,y,z],…],color)` toma una silueta tintada del héroe (copia del lienzo propio, al dibujarse el héroe) y la deja en esas posiciones del mundo, que se desvanece y sube un poco (≈ 0,75 s).
+ let pendG=null;const ghosts=[];
+ function ghostDraw(ctx,now){if(pendG&&heroScreen){const gc=document.createElement('canvas');gc.width=acv.width;gc.height=acv.height;const g=gc.getContext('2d');g.drawImage(acv,0,0);g.globalCompositeOperation='source-in';g.fillStyle=pendG.c||'#bfe6ff';g.fillRect(0,0,gc.width,gc.height);
+  pendG.a.forEach((q,i)=>ghosts.push({c:gc,a:W3(q[0],q[1],q[2]).add(new THREE.Vector3(0,.55,0)),t0:now+i*70,k:1-i*.18}));pendG=null;if(ghosts.length>12)ghosts.splice(0,ghosts.length-12)}
+  for(let i=ghosts.length-1;i>=0;i--){const g=ghosts[i],u=(now-g.t0)/750;if(u>=1){ghosts.splice(i,1);continue}if(u<0||!heroScreen)continue;const sp=proj(g.a),w=heroScreen.w*(1+.07*u),h=heroScreen.h*(1+.07*u);ctx.globalAlpha=.6*g.k*Math.pow(1-u,1.6);ctx.globalCompositeOperation='lighter';ctx.drawImage(g.c,sp.x-w/2,sp.y-h/2-u*16,w,h)}ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}
+ function drawHero(ctx){if(!heroScreen)return;ctx.save();ctx.setTransform(1,0,0,1,0,0);ghostDraw(ctx,performance.now());ctx.globalAlpha=1;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(acv,heroScreen.x,heroScreen.y,heroScreen.w,heroScreen.h);
   const h=heroScreen;if(h.rod&&h.aim&&water){const bs=water.bobberScreen();if(bs){const bx=bs.x,by=bs.y,u=Math.min(1,(h.aim.ph||0)/.26);   // el flotador es 3D (water3d.js); aquí solo el sedal 2D hasta su posición proyectada
    ctx.lineWidth=Math.max(1,ISO.scale()*.6);ctx.strokeStyle='rgba(255,255,255,.8)';ctx.beginPath();ctx.moveTo(h.rod.x,h.rod.y);ctx.quadraticCurveTo((h.rod.x+bx)/2,Math.max(h.rod.y,by)+(u<1?2:6)*ISO.scale()/2,bx,by);ctx.stroke()}}ctx.restore()}
  function show(on){cv.style.display=on?'block':'none'}
@@ -283,4 +288,4 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
     for(const rt of rts){r.setRenderTarget(rt);await Promise.race([r.compileAsync(scene,cam),new Promise(ok=>setTimeout(ok,maxMs))])}}}catch(e){console.warn('[R3D warmShaders]',e)}
   r.setRenderTarget(rt0);r.clippingPlanes=cp;
   tmp.forEach(o=>{scene.remove(o);if(o.isSprite||(o.material&&o.material.isShaderMaterial))o.material.dispose()});hid.forEach(o=>{o.visible=false});console.info('[R3D shaders]',{programas:r.info.programs.length,nuevos:r.info.programs.length-n0,ms:Math.round(performance.now()-t0)})},
- get wu(){return WU},get spell(){return spell},get fx(){return fx},get res(){return res},fragment:()=>new Fragment(scene),debris:n=>new Debris(scene,n),embers:n=>new Embers(scene,n),gabriel:(x,y,z)=>new Gabriel(scene,W3,x,y,z==null?TER.standZ(x,y):z),hero,terr,stats:()=>({calls:r.info.render.calls,tris:r.info.render.triangles,chunks:terr.ch.size})}}
+ ghost:(a,c)=>{pendG={a,c}},get wu(){return WU},get spell(){return spell},get fx(){return fx},get res(){return res},fragment:()=>new Fragment(scene),debris:n=>new Debris(scene,n),embers:n=>new Embers(scene,n),gabriel:(x,y,z)=>new Gabriel(scene,W3,x,y,z==null?TER.standZ(x,y):z),hero,terr,stats:()=>({calls:r.info.render.calls,tris:r.info.render.triangles,chunks:terr.ch.size})}}

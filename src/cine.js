@@ -17,6 +17,9 @@ const CINE=(()=>{
  const gain=(v,tc)=>{try{if(typeof AMASTER!=='undefined'&&AMASTER&&AC)AMASTER.gain.setTargetAtTime(v,AC.currentTime,tc)}catch(e){}};
  function droneOn(){try{const a=ac();if(!a||S.mute||drone)return;const g=a.createGain(),o1=a.createOscillator(),o2=a.createOscillator();o1.type='sine';o2.type='sine';o1.frequency.value=1480;o2.frequency.value=2218;g.gain.setValueAtTime(0,a.currentTime);g.gain.linearRampToValueAtTime(.045,a.currentTime+.5);o1.connect(g);o2.connect(g);g.connect(a.destination);o1.start();o2.start();drone={a,g,o1,o2}}catch(e){drone=null}}
  function droneOff(){if(!drone)return;const{a,g,o1,o2}=drone;drone=null;try{g.gain.cancelScheduledValues(a.currentTime);g.gain.setValueAtTime(g.gain.value,a.currentTime);g.gain.linearRampToValueAtTime(0,a.currentTime+.12);o1.stop(a.currentTime+.2);o2.stop(a.currentTime+.2)}catch(e){}}
+ // TIC-TAC de reloj (21 oct 2026): mientras dura el TIEMPO DETENIDO suena un reloj (tic agudo, tac más grave, cada 0,5 s). Sale directo por AC.destination como el zumbido (el volumen maestro está casi mudo en el freeze).
+ let tkAcc=0,tkOdd=0;
+ function clockTick(){try{const a=ac();if(!a||S.mute)return;const t0=a.currentTime,o=a.createOscillator(),n=a.createBufferSource(),g=a.createGain(),f=a.createBiquadFilter(),b=a.createBuffer(1,a.sampleRate*.04|0,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);n.buffer=b;f.type='bandpass';f.frequency.value=tkOdd?1500:2300;f.Q.value=3;o.type='square';o.frequency.value=tkOdd?520:760;g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.2*(S.sv||100)/100,t0+.003);g.gain.exponentialRampToValueAtTime(.0001,t0+.07);o.connect(g);n.connect(f);f.connect(g);g.connect(a.destination);o.start(t0);o.stop(t0+.08);n.start(t0);tkOdd^=1}catch(e){}}
  function setFreeze(on_,quiet){if(on_===fz)return;fz=on_;
   if(on_){R3D.tscale=0;gain(.03,.12);droneOn()}
   else{R3D.tscale=1;droneOff();gain(typeof BR!=='undefined'?BR.snd:1,.05);if(!quiet)try{tone(58,.7,'sine',.55,30)}catch(e){}}}
@@ -57,7 +60,7 @@ const CINE=(()=>{
   if(holding){skipT+=dt;if(skipT>=HOLD)return end(true)}else skipT=Math.max(0,skipT-dt*2);
   T+=dt;if(T>=sc.dur)return end(false);
   try{if(sc.update)sc.update(T,dt*(1-R3D.frozen),sc.st)}catch(e){console.warn('[CINE] update',e);sc.update=null}   // dt ya descontado el «tiempo detenido»
-  const s=shotAt(T);setFreeze(!!s.freeze);const FI=.7,FO=.7;let a=0;if(s.fade){const u=clamp((T-s.t)/Math.max(.001,s.d),0,1);a=lerp(s.fade[0],s.fade[1],u)}
+  const s=shotAt(T);setFreeze(!!s.freeze);if(fz){if(tkAcc<=0){clockTick();tkAcc=.5}tkAcc-=dt}else tkAcc=0;const FI=.7,FO=.7;let a=0;if(s.fade){const u=clamp((T-s.t)/Math.max(.001,s.d),0,1);a=lerp(s.fade[0],s.fade[1],u)}
   a=Math.max(a,1-clamp(T/FI,0,1),1-clamp((sc.dur-T)/FO,0,1));   // entrada y salida suaves a negro
   a=Math.max(a,skipT/HOLD*.85);fade.style.opacity=a.toFixed(3);
   const tx=s.sub||'';if(sub.textContent!==tx)sub.textContent=tx;sub.classList.toggle('card',!!s.card);sub.style.opacity=tx?clamp(Math.min((T-s.t)/.5,(s.t+s.d-T)/.5),0,1):0;
@@ -147,6 +150,6 @@ const CINE=(()=>{
   shots:[{t:0,d:3.2,from:{x:0,y:150,zoom:1.15,z:.5},to:{x:0,y:110,zoom:1.35,z:.6},ease:'out'},
    {t:3.2,d:2.1,from:{x:0,y:50,zoom:1.55,z:2.2},to:{x:0,y:20,zoom:1.9,z:.5},shake:.55,ease:'in'},
    {t:5.3,d:1.4,from:{x:6,y:44,zoom:2.5,z:.5},to:{x:0,y:40,zoom:2.8,z:.55},shake:1.1,ease:'out'},
-   {t:6.7,d:3.2,from:{x:0,y:36,zoom:3.3,z:.85},to:{x:0,y:30,zoom:3.7,z:1.05},ease:'lin'},
-   {t:9.9,d:3.3,from:{x:0,y:96,zoom:2.1,z:.85},to:{x:0,y:130,zoom:1.75,z:.9},ease:'lin'}]};
+   {t:6.7,d:3.2,from:{x:0,y:16,zoom:3.1,z:.85},to:{x:0,y:12,zoom:3.4,z:1.0},ease:'lin'},
+   {t:9.9,d:3.3,from:{x:0,y:12,zoom:2.7,z:.95},to:{x:0,y:8,zoom:2.35,z:1.0},ease:'lin'}]};   // al salir el NOMBRE la cámara queda CENTRADA en Gabriel
  return{get on(){return on},get T(){return T},get recv(){return recv},set recv(v){recv=clamp(+v||0,0,1)},get look(){return look},set look(v){look=v},seen,mark,seek:t=>{if(on)T=t},start,end,tick,cam,sky,sfx,SCENES,list:()=>Object.keys(SCENES)}})();

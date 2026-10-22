@@ -75,7 +75,8 @@ const ISLA=(()=>{
    case'have':return g.k.every(k=>own(k)>=1);
    case'item':return have(g.k)>=1;
    case'offer':return i.off.every(v=>v);
-   default:return(S.st[key(g)]||0)-i.bs>=g.n}};
+   default:if(g.t==='kill'&&g.k==='gabriel')return !!(gm&&gk>=0&&(S.st['kill:gabriel']||0)>gk);   // solo cuenta si ESTA sesión peleó y venció a Gabriel (una partida cargada nunca lo da por muerto)
+    return(S.st[key(g)]||0)-i.bs>=g.n}};
  let sp=0,cs=0,chT=0,now_=0,chI=0,box=null;
  // CAJA DE PERTENENCIAS (misión de Raguel): un cofre pequeño (PO con pk 'cajaIsla') junto al borde; F o clic → `search`: barra de casteo de 5 s con el héroe agachado buscando → recibes el PENDIENTE que llevabas al caer.
  function boxInit(){if(box&&PO.includes(box))return;if(typeof PO==='undefined')return;const q=wp(BOXP[0],BOXP[1]),got=st().step>1||st().done;box=PO.find(p=>p.pk==='cajaIsla')||null;if(!box){box={po:1,id:'isla_caja',pk:'cajaIsla',n:got?'cofreAbierto':'cofre',nm:'Caja de pertenencias',x:q.x,y:q.y,k:9,_oa:1};PO.push(box)}}
@@ -90,13 +91,14 @@ const ISLA=(()=>{
   //   // PARTIDA NUEVA: se empieza en la isla (varadero); las partidas con progreso en la Pradera no se tocan
   const i=st();if(!on())return;
   if(qpNpc){const e=ST.find(x=>x.id===qpNpc);if(!e||Math.hypot(e.x-P.x,e.y-P.y)>230)qpHide()}
-  if(!sp){sp=1;base();chickens(6)}
+  if(!sp){sp=1;base();chickens(6);   // PUNTO DE GUARDADO (22 oct 2026): si se carga la partida con el combate de Gabriel pendiente, el jugador aparece en el camino de rocas ANTES de la arena (nunca dentro del combate) y la intro empieza al entrar en ella
+  {const g0=cur().g;if(g0.t==='kill'&&g0.k==='gabriel'&&!gm){const q=wp(AR[0],AR[1]-11);P.x=q.x;P.y=q.y;P.g=P.mv=null;try{toast('Retomas el camino hacia la Arena del Vigía.',2600)}catch(e){}}}}
   boxInit()   // 6 gallinas en la Palestra (los cangrejos de nube del plan llegarán con su modelo)
   if(cur().cap===4&&(now_=performance.now())>chT){chT=now_+1500;chickens(4)}   // durante la misión de la Palestra siempre hay ≥ 4 gallinas VIVAS: no hay que esperar al reaparecer para seguir la cadena
   if(cur().esc&&!es)startEscape();
   i.t[cur().cap]=(i.t[cur().cap]||0)+dt;
   grantOfr();
-  {const g0=cur().g;if(g0.t==='kill'&&g0.k==='gabriel'&&!gm&&!intro){if(!fAt)fAt=performance.now()+1400;else if(performance.now()>=fAt){fAt=0;fight()}}}   // última ofrenda → pausa de 1,4 s y arranca la intro del jefe
+  {const g0=cur().g;if(g0.t==='kill'&&g0.k==='gabriel'&&!gm&&!intro&&Math.hypot(wp(AR[0],AR[1]).x-P.x,wp(AR[0],AR[1]).y-P.y)<7.5*T){if(!fAt)fAt=performance.now()+1400;else if(performance.now()>=fAt){fAt=0;fight()}}}   // última ofrenda → pausa de 1,4 s y arranca la intro del jefe
   if(cur().g.t==='offer'){OFR.forEach(([it,x,y],k)=>{if(i.off[k])return;const q=wp(x,y);if(Math.hypot(q.x-P.x,q.y-P.y)<2.4*T&&own(it)>=1){give(it);i.off[k]=1;dirty=1;try{snd('rare')}catch(e){}toast('El brasero acepta la ofrenda ('+i.off.reduce((a,b)=>a+b,0)+'/4)',1600)}})}
   hintsTick(performance.now());
   gTick(performance.now());if(gAlive()){fightAt=performance.now();bossAt=fightAt}   // música de jefe (src/music.js: DEF[9].jefe = gabriel.mp3) mientras dure el combate
@@ -109,11 +111,12 @@ const ISLA=(()=>{
  let hAt=0;
  function hintsTick(now){if(typeof ctxHint!=='function'||!on())return;const s=st().step,n=cur(),T0=now;
   if(s>=1&&!hAt)hAt=now;   // instante en que se aceptó la 1.ª misión
-  if(s===1&&now-hAt>1200)ctxHint('move',[[['W','A','S','D'],'moverte (o clic derecho: ir a ese punto)'],[['Mantén clic der.'],'arrastra para girar la cámara'],[['Rueda'],'acercar y alejar']],10000);
+  if(s===1&&now-hAt>1200)ctxHint('move',[[['W','A','S','D'],'moverte'],[['Botón medio'],'mantén y arrastra para girar la cámara'],[['Rueda'],'acercar y alejar']],10000);
   if(s===1&&box&&box.n==='cofre'&&Math.hypot(box.x-P.x,box.y-P.y)<150)ctxHint('interact',[[['F'],'interactuar con lo que tengas delante']],7000);
   if(s===1&&now-hAt>14000)ctxHint('run',[[['Mayús'],'mantén para correr (gasta resistencia)']],7000);
   if(n.g.t==='panel')ctxHint('bag',[[[],'abre la <b>Mochila</b>: primer icono del menú de la derecha']],8000);
   if(s>=3&&s<8&&now-hAt>8000)ctxHint('jump',[[['V'],'saltar (sin gastar resistencia)']],6000);
+  if(gAlive()&&!intro)ctxHint('block',[[['Clic der.','o Q'],'mantén para bloquear (gasta resistencia; el escudo aguanta más)'],[['Clic der.','justo al golpe'],'parada perfecta: sin daño ni gasto'],[['Espacio','justo al golpe'],'esquiva perfecta: casi gratis']],11000);
   if(n.cap===4&&n.g.t==='cnt')ctxHint('attack',[[['Clic'],'golpear hacia donde apunta el ratón'],[['Mantén clic'],'cargar un golpe más fuerte'],[['Espacio'],'esquivar']],10000);
   if(n.cap===4&&M.filter(m=>m.d.id==='gallina'&&alive(m,performance.now())&&Math.hypot(m.x-P.x,m.y-P.y)<260).length>=2&&S.ctxh&&S.ctxh.attack)ctxHint('tab',[[['Tab'],'fijar y cambiar de enemigo']],8000)}
  // ── MISIONES TIPO WOW: marcador del PNJ y diálogo con opciones ──
@@ -159,11 +162,11 @@ const ISLA=(()=>{
  // ── COMBATE DE GABRIEL (ISLA-6): jefe «elite» del tutorial. Fase 1 (100–66 % de vida): golpe pesado básico · Fase 2 (<66 %): además marca el suelo bajo tus pies (`met`) · Fase 3 (<33 %): onda expansiva (`nov`), furia y más rápido.
  // Las mecánicas son las de combat.js (`BM.gabriel` se reescribe por fase). El héroe NO puede morir aquí (`noDie`): el golpe «se detiene». Al caer, la cinemática `caida`.
  let gm=null,gph=0;
- const gAlive=()=>gm&&gm.hp>0;
- // INTRO + COMBATE: la cinemática `gabrielIntro` (cine.js) baja a Gabriel del cielo sobre la arena; al acabar (o saltarla) aparece el combatiente en ese mismo sitio. 90 de vida, 3 fases, golpes con anticipación de brazo (game.js `wind.slow`).
- let intro=0,fAt=0;
- function spawnBoss(){const q=wp(AR[0],AR[1]);if(!gm||!M.includes(gm)){mob('gabriel',q.x,q.y);gm=M[M.length-1];gm.elite=1}
-  gm.x=gm.hx=gm.tx=q.x;gm.y=gm.hy=gm.ty=q.y;gm.mh=gm.hp=90;gm.dm=3;gm.hunt=1;gm.rt=0;gm.asx=1;gm.gc=0;gm.tel=null;gm.wind=null;gm.nt=performance.now()+1500;gph=0;BM.gabriel=[];
+ const gAlive=()=>!!(gm&&gm.hp>0&&(!gm.rt||gm.rt<=performance.now()));
+ // INTRO + COMBATE: la cinemática `gabrielIntro` (cine.js) baja a Gabriel del cielo sobre la arena; al acabar (o saltarla) aparece el combatiente en ese mismo sitio. 60 de vida, 3 fases, golpes con anticipación de brazo (game.js `wind.slow`).
+ let intro=0,fAt=0,gk=-1;   // gk = contador de muertes de Gabriel al EMPEZAR el combate de esta sesión
+ function spawnBoss(){gk=S.st['kill:gabriel']||0;const q=wp(AR[0],AR[1]);if(!gm||!M.includes(gm)){mob('gabriel',q.x,q.y);gm=M[M.length-1];gm.elite=1}
+  gm.x=gm.hx=gm.tx=q.x;gm.y=gm.hy=gm.ty=q.y;gm.mh=gm.hp=60;gm.dm=3;gm.hunt=1;gm.rt=0;gm.asx=1;gm.gc=0;gm.tel=null;gm.wind=null;gm.nt=performance.now()+1500;gph=0;BM.gabriel=[];
   try{banner('Gabriel','El vigía del Cielo','#e8cf94',3000)}catch(e){}try{log('✦ <b>Gabriel</b> te mira. Vigila su brazo: cuando lo alza, esquiva.')}catch(e){}}
  function fight(){if(typeof mob!=='function'||intro)return;const q=wp(AR[0],AR[1]);
   if(typeof CINE!=='undefined'&&CINE.SCENES&&CINE.SCENES.gabrielIntro){intro=1;CINE.SCENES.gabrielIntro.anchor=[q.x,q.y];
@@ -185,7 +188,7 @@ const ISLA=(()=>{
  // tarjeta de bienvenida (UI Susurro: cristal + trazo dorado): cómo moverse, correr, esquivar y golpear; se cierra con el botón o con cualquier tecla de acción
  let tipEl=null;
  function tipShow(){if(tipEl||S.islaTip)return;const R=(k,t)=>`<div class="rw"><div class="ks">${k}</div><span>${t}</span></div>`;tipEl=document.createElement('div');tipEl.id='isla-tip';
-  tipEl.innerHTML='<h3>DESPIERTAS</h3><div class="sb">Así se mueve este cuerpo</div>'+R('<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>','Moverte (o clic derecho: ir a ese punto)')+R('<kbd>Mayús</kbd>','Correr (mantén; gasta resistencia)')+R('<kbd>Espacio</kbd>','Esquivar: un paso rápido que te protege un instante')+R('<kbd>Clic</kbd>','Golpear hacia donde apunta el ratón')+R('<kbd>Mantén clic</kbd>','Cargar el golpe y soltarlo: pega mucho más')+R('<kbd>Tab</kbd>','Fijar y cambiar de enemigo')+R('<kbd>F</kbd>','Hablar, entrar y usar lo que tengas delante')+'<button>ENTENDIDO</button>';
+  tipEl.innerHTML='<h3>DESPIERTAS</h3><div class="sb">Así se mueve este cuerpo</div>'+R('<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>','Moverte')+R('<kbd>Mayús</kbd>','Correr (mantén; gasta resistencia)')+R('<kbd>Espacio</kbd>','Esquivar: un paso rápido que te protege un instante')+R('<kbd>Clic</kbd>','Golpear hacia donde apunta el ratón')+R('<kbd>Mantén clic</kbd>','Cargar el golpe y soltarlo: pega mucho más')+R('<kbd>Tab</kbd>','Fijar y cambiar de enemigo')+R('<kbd>F</kbd>','Hablar, entrar y usar lo que tengas delante')+'<button>ENTENDIDO</button>';
   document.body.appendChild(tipEl);tipEl.querySelector('button').onclick=()=>{S.islaTip=1;tipHide();save()}}
  function tipHide(){if(tipEl){tipEl.remove();tipEl=null}}
  function lock(){return !!(S.isla&&S.isla.lock&&!S.isla.done)}

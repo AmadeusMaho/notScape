@@ -47,8 +47,8 @@ function telStart(m,now){const sw=MSW[m.d.id];if(sw){const j=((sw.indexOf(mst(m)
  m.tn=now+(m.d.boss===1?7000:m.d.boss===2?8500:9500)*(m.asx||1);m.nt=now+1600}
 function telUpd(m,now){if(!m.tel)return false;m.f=P.x-m.x-(P.y-m.y)>=0?1:-1;if(now<m.tel.t1)return true;
  const T=m.tel,cx=T.cx==null?m.x:T.cx,cy=T.cy==null?m.y:T.cy,dp=Math.hypot(P.x-cx,P.y-cy),r=T.r;m.tel=null;m.nt=now+1200*(m.asx||1);snd('thunder');SHK=now+180;sp(cx,cy-4,'#ff6a3a',14,r*1.4,40,100);
- if(dp<=r&&P.hp>0&&!dashInv()){const q=prMod(m,Math.max(1,Math.round((m.dm||1)*(T.f||2.2))),1),d=q.d;if(q.blocked&&!d){splat(P.x,P.y,0,'#6ab0ff',26);log('🙏 Tu oración absorbió el golpe pesado de '+m.d.n+'.');return true}P.hp-=d;splat(P.x,P.y,d,q.blocked?'#6ab0ff':'#d4261c',26);snd('hurt');HURT=now;P.pjM=m;P.pj=now+4800;bossHit(m,d,now);if(P.hp<=0)die()}
- else if(P.hp>0){log('Esquivaste el golpe pesado de '+m.d.n+'.');if(dp<=r)splat(P.x,P.y,0,'#e8cf94',26)}return true}
+ if(dp<=r&&P.hp>0&&!dashInv()){const g0=guardHit(m,Math.max(1,Math.round((m.dm||1)*(T.f||2.2))),now,1);if(g0.kind&&g0.d<=0)return true;const q=prMod(m,g0.d,1),d=q.d;if(q.blocked&&!d){splat(P.x,P.y,0,'#6ab0ff',26);log('🙏 Tu oración absorbió el golpe pesado de '+m.d.n+'.');return true}P.hp-=d;splat(P.x,P.y,d,q.blocked?'#6ab0ff':'#d4261c',26);snd('hurt');HURT=now;P.pjM=m;P.pj=now+4800;bossHit(m,d,now);if(P.hp<=0)die()}
+ else if(P.hp>0){if(dashInv()&&dp<=r*1.15)pdCheck(m,now);log('Esquivaste el golpe pesado de '+m.d.n+'.');if(dp<=r)splat(P.x,P.y,0,'#e8cf94',26)}return true}
 function drawTel(now){const s=ISO.scale();for(const m of M){if(!m.tel)continue;const u=Math.min(1,(now-m.tel.t0)/1200),r=m.tel.r,cx=m.tel.cx==null?m.x:m.tel.cx,cy=m.tel.cy==null?m.y:m.tel.cy;
   try{R3D.spell.tele(m.tel,cx,cy,0,r,7,u,SCOL[mst(m)])}catch(e){}   // círculo en el suelo = decal 3D de bordes suaves (spellfx3d.js); solo el rótulo sigue en 2D
   ctx.save();ctx.setTransform(1,0,0,1,0,0);
