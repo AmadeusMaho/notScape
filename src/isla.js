@@ -46,7 +46,7 @@ const ISLA=(()=>{
   {cap:4,txt:'Equipa el arco de Miguel (Mochila)',g:{t:'eq',slot:'w',k:'bw_pino'}},
   {cap:4,txt:'Dispara 3 flechas a los corderos (clic hacia ellos)',at:[14,10],g:{t:'cnt',k:'shot',n:3}},
   {cap:4,txt:'Equipa el bastón de Miguel (Mochila)',g:{t:'eq',slot:'w',k:'st_pino'}},
-  {cap:4,txt:'Lanza 3 bolas de fuego celestiales (clic o tecla 1; gastan maná)',at:[14,10],g:{t:'cnt',k:'cast',n:3},learn:'cel'},
+  {cap:4,txt:'Pulsa 1 para seleccionar la bola de fuego y lánzala con clic (3 veces; gasta maná)',at:[14,10],g:{t:'cnt',k:'cast',n:3},learn:'cel'},
   {cap:4,txt:'Derrota 3 corderos de nube con el arma que prefieras',at:[14,10],g:{t:'kill',k:'cordero',n:3}},
   QS(4,'t',{cap:4,txt:'Vuelve con Miguel'}),
   {cap:5,txt:'Deposita todo en el banco',at:[21,-3],g:{t:'dep',k:'dep',n:1}},
@@ -124,7 +124,7 @@ const ISLA=(()=>{
   if(n.g.t==='panel')ctxHint('bag',[[[],'abre la <b>Mochila</b>: primer icono del menú de la derecha']],8000);
   if(s>=3&&s<8&&now-hAt>8000)ctxHint('jump',[[['V'],'saltar (sin gastar resistencia)']],6000);
   if(n.g.t==='eq')ctxHint('equip',[[[],'abre la <b>Mochila</b> y haz clic en el objeto para equiparlo']],7000);
-  if(n.g.t==='cnt'&&n.g.k==='cast')ctxHint('fire',[[['1'],'lanza la bola de fuego celestial (barra bajo la vida)'],[['Mantén clic'],'cárgala: más grande y arde']],7500);
+  if(n.g.t==='cnt'&&n.g.k==='cast')ctxHint('fire',[[['1'],'selecciona la bola de fuego (barra bajo la vida; se ve resaltada)'],[['Clic'],'lánzala hacia el cursor (necesita bastón y maná)'],[['Mantén clic'],'cárgala: más grande y arde']],7500);
   if(n.cap===4&&n.g.t==='cnt'&&n.g.k==='bstart')ctxHint('blockT',[[['Clic der.'],'mantén para bloquear'],[['Clic der.','justo al golpe'],'parada perfecta: sin daño ni gasto']],6500);   // el bloqueo se enseña AQUÍ (Palestra), no durante el combate de Gabriel
   if(n.cap===4&&n.g.t==='cnt')ctxHint('attack',[[['Clic'],'golpear hacia donde apunta el ratón'],[['Mantén clic'],'cargar un golpe más fuerte'],[['Espacio'],'esquivar'],[['Clic der.'],'mantén para bloquear']],10000);
   if(n.cap===4&&M.filter(m=>m.d.id==='cordero'&&alive(m,performance.now())&&Math.hypot(m.x-P.x,m.y-P.y)<260).length>=2&&S.ctxh&&S.ctxh.attack)ctxHint('tab',[[['Tab'],'fijar y cambiar de enemigo']],8000)}

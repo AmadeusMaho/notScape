@@ -98,8 +98,8 @@ const HUDSU=(()=>{
  const skEl=$('#hs-sk');let skSig='';
  const SKSVG='<svg viewBox="0 0 24 24"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-4 3-7 1 1 2 2 2 4 1-3 1-6 1-9z" fill="currentColor"/><path d="M12 11c.5 2 3 3 3 6a3 3 0 0 1-6 0c0-2 2-3 3-6z" fill="#e8fbff"/></svg>';
  function skFrame(){if(!skEl||typeof ABIL==='undefined')return;const L=ABIL.filter(d=>skl()[d.id]),sig=L.map(d=>d.id).join();
-  if(sig!==skSig){skSig=sig;skEl.style.display=L.length?'flex':'none';skEl.innerHTML=L.map((d,i)=>'<div class="s" data-i="'+ABIL.indexOf(d)+'" style="--c:'+d.col+'" title="'+d.n+' ('+d.key+'): '+d.d+'"><span class="ic">'+SKSVG+'</span><b>'+d.key+'</b><i class="cd"></i></div>').join('');skEl.querySelectorAll('.s').forEach(e=>e.onclick=()=>castSkill(+e.dataset.i))}
-  if(!L.length)return;const now=performance.now();skEl.querySelectorAll('.s').forEach(e=>{const d=ABIL[+e.dataset.i],cd=Math.max(0,Math.min(1,(d.t-now)/d.cd));e.style.setProperty('--cd',cd.toFixed(3));e.classList.toggle('off',wKind()!=='staff'||MN<fbCost(0))})}
+  if(sig!==skSig){skSig=sig;skEl.style.display=L.length?'flex':'none';skEl.innerHTML=L.map((d,i)=>'<div class="s" data-sk="'+ABIL.indexOf(d)+'" style="--c:'+d.col+'" data-x="<b>'+d.n+'</b> <small>(tecla '+d.key+')</small><br>'+d.d+'<br><small>Coste: '+d.cost+' de maná · necesita un bastón equipado</small>"><span class="ic">'+SKSVG+'</span><b>'+d.key+'</b><i class="cd"></i></div>').join('');skEl.querySelectorAll('.s').forEach(e=>e.onclick=()=>selSkill(+e.dataset.sk))}
+  if(!L.length)return;const now=performance.now();skEl.querySelectorAll('.s').forEach(e=>{const d=ABIL[+e.dataset.sk],cd=Math.max(0,Math.min(1,(d.t-now)/d.cd));e.style.setProperty('--cd',cd.toFixed(3));e.classList.toggle('off',wKind()!=='staff'||MN<fbCost(0));e.classList.toggle('sel',skl().sel===d.id)})}
  const xpH=$('#hs-xp'),xpL={};$('#hs-col').appendChild(xpH);
  function xp(sk,amt,up,lvl){try{
   const l=L(sk),fr=l>=99?1:(S.xp[sk]-XT[l])/(XT[l+1]-XT[l]),nm=SK[sk][0],em=SK[sk][1];let c=xpL[sk];

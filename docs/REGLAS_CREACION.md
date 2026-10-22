@@ -116,3 +116,31 @@ Se comprueba y se cuenta en la entrega: (1) **ESCALA** vs. héroe (≈1 unidad �
 | HUD | `tools/r3d/hud_game_check.py`, `icons_sheet.py` | OK |
 | Matemática iso | `node tools/iso_test.js` | OK (falla ~1/3 veces por 2 puntos aleatorios conocidos) |
 | Rápido | `tools/fast/ns.py start --no3d` + `ns.py eval/logs` | sin errores |
+
+## 11 · Lecciones aprendidas y decisiones de diseño (sesión 21–22 oct 2026: Gabriel, bloqueo, tutorial de armas)
+**Errores que ya costaron tiempo — NO repetir**
+1. **Atributo `data-i` = id de OBJETO.** El tooltip global (`mouseover` en game.js) trata `[data-i],[data-x]`: `data-i` busca el objeto y `data-x` muestra HTML propio. Un elemento nuevo con `data-i="0"` provocó un cuadrado naranja y un tooltip nativo roto en la barra de habilidades. **Usa `data-sk`/`data-<tuyo>` para índices y `data-x="<b>Nombre</b><br>texto"` para el tooltip con nuestra UI; nunca `title=`.**
+2. **Scripts clásicos comparten el ámbito global (`const`).** Un `const SKL` nuevo chocó con el `SKL` de skills y el juego no cargaba. Antes de añadir un global: `grep -n "^const NOMBRE\|^let NOMBRE\|^function NOMBRE" src/*.js`.
+3. **Zona segura de aldea (`inVilla`)**: dentro de ella los enemigos sueltan al jugador (`hunt=0`). Un combate nuevo en una zona segura NO ataca; `ISLA.fightOn()` la anula durante Gabriel. Toda arena nueva: comprobar que no cae en `village.safe`.
+4. **`kill()` reinicia al mob** (`rollLv` rehace su vida y pone `rt`): no detectes su muerte con `hp<=0`. Usa el contador `S.st['kill:<id>']` comparado con el de AL EMPEZAR el combate (`gk` en isla.js) y `alive()` para «sigue vivo».
+5. **Una partida cargada no puede saltarse ni reiniciar un jefe**: guarda el estado mínimo, aparece en un punto previo (isla.js `AR[1]-11`) y arranca el encuentro al entrar en la arena.
+6. **Reloj real vs virtual** (r3d.js): todo lo que compara con campos escritos con `performance.now()` usa el real (ya documentado en AGENTS.md: lote FIX-RELOJ-VIRTUAL-CRITICO).
+7. **El terreno es por TILES**: su borde contra el vacío salía como escalera. `terrain3d.js bnd` lo redondea con el campo continuo `coastD`; todo terreno nuevo se define con ese campo (`coast.js ZI`) y se mira en captura a zoom mínimo. `?edgesm=0` lo apaga.
+8. **Materiales creados bajo demanda** (haz de luz de la intro, ghosts) necesitan `warmObjs` o dan un tirón la primera vez; el haz de la intro de Gabriel aún NO está precompilado.
+9. **Cambiar los pasos del tutorial desplaza los índices** de `S.isla.step`: avisa de `ISLA.reset()` y no dejes lógica que dependa de un índice fijo.
+10. **Tutoriales = pistas CORTAS** (`ctxHint`, una vez, abajo) y pasos con objetivo; NUNCA toasts/tarjetas grandes en mitad de una pelea (se quitó el toast «Apunta con el ratón…» y la pista de bloqueo del combate).
+11. **Ids de objeto con calidad** (`sw_cobre~2`): compara con `String(id).split('~')[0]`.
+12. **Pruebas en el arnés (`tools/fast/ns.py`)**: la 3D va a ~2 fps, así que prueba la lógica con `eval` y llamando a las funciones (`swingResolve`, `guardHit`, `pdCheck`, `heroState3D`, `ISLA.tick`) y usa `CINE.seek(t)` + `NSTEST.frames(n)` para capturas de cinemáticas; el panel de la Mochila puede abrirse solo (`setPanel(false,0)`); el día/noche avanza rápido durante las capturas.
+
+**Decisiones de diseño vigentes (del dueño; no se revierten sin hablarlo)**
+- **Jefes (`boss:1`)**: formato Dark Souls = cinemática de intro corta + título + barra de jefe abajo-centro + música de jefe desde que empieza a aparecer (`bossMusic`) + ataques con anticipación visible del cuerpo (no solo conos). **Mini-jefes (`boss:2`)**: sin cinemática pero barra/nameplate distinto (`.np.b2`). Ver §8.
+- **Arena de Gabriel** FUERA de la isla (camino de rocas + plataforma redonda, se ven las nubes); las 4 ofrendas son objetos exclusivos del tutorial que aparecen en el banco (anti-brickeo, `grantOfr`).
+- **Controles**: WASD mueve; clic izquierdo = golpear/interactuar/lanzar; **clic derecho MANTENIDO (o Q) = bloquear**; **botón del medio = girar cámara** (no mueve al personaje); Espacio = esquivar; V = saltar; Tab = fijar; **1 = SELECCIONAR habilidad (no lanza)**. Ya no existe «clic derecho = ir a ese punto».
+- **Bloqueo**: solo cuerpo a cuerpo y puños (arco y magia no). Escudo 80 % / arma 50 % / puños 30 %, gasta resistencia por daño, guardia rota si no alcanza; **parada perfecta** (200 ms, 260 con escudo) sin daño ni gasto y con CD 2,5 s; **esquiva perfecta** (golpe en los primeros 170 ms) devuelve el 80 % de la resistencia + imagen fantasma. Constantes en `BLK`/`DSH`.
+- **Ataque**: una mano/daga/puños = OBJETIVO ÚNICO (el fijado con Tab o el más alineado con el cursor) y solo ese hace aggro; **solo armas a dos manos CARGADAS (y futuras magias de área con `s.area`) golpean en área (hasta 3, 60 % a los secundarios)**; **todo ataque cargado (>55 %) gasta resistencia** (12+18·carga, mandoble ×1,5; sin resistencia sale sin carga).
+- **Rango = APUNTADO LIBRE**: con arco o hechizo seleccionado el héroe mira SIEMPRE al cursor en combate (no se encara solo al enemigo); el encarar automático es solo para cuerpo a cuerpo.
+- **Magia**: `MAGIC_ON=false` sigue (rediseño); lo único activo es la **bola de fuego CELESTIAL** del bastón, aprendida en el tutorial, que se SELECCIONA en la barra de habilidades (bajo la vida, hasta 6 casillas) y se lanza con el clic. Sin seleccionar, el bastón golpea cuerpo a cuerpo.
+- **Tutorial del Cielo**: solo la espada se craftea; Miguel presta arco, bastón y escudo para que el jugador elija arma contra Gabriel; los enemigos del Cielo son **corderos de nube neutrales** separados entre sí (no gallinas).
+- **Gabriel**: espada celestial (hoja de luz, guardas de plumas), casco completo intimidante, 30 de vida (es el tutorial), ataques básicos con brazo alzado ~1 s y combo cada 3.º.
+
+**Pendientes conocidos de esta sesión (para el siguiente agente)**: probar a mano TODO el combate (bloqueo/perfect dodge/arco/bastón/Gabriel); poses de bloqueo de daga, mandoble y doble empuñe sin revisar; aspecto 3D del cordero y de la bola celeste sin ver; teclas 2–6 y más habilidades; magias de área (`s.area`); coste extra del mandoble; bloqueo y habilidades en táctil; precompilar el haz de la intro; la cámara se inclina hacia el enemigo también con rango (`foK`); árboles verdes semitransparentes sobre el borde de la plataforma (sin identificar).
