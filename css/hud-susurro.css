@@ -814,3 +814,17 @@ body.cine #qms{opacity:0}
 @keyframes whRf{0%{transform:scale(1)}25%{transform:scale(1.35)}100%{transform:scale(1)}}
 .hs-wh .wf{position:absolute;left:50%;top:-.2em;transform:translate(-50%,-100%);font:700 .8em Cinzel,serif;color:#9fe0ff;text-shadow:0 0 5px #000;animation:wfUp .9s ease-out forwards;white-space:nowrap}
 @keyframes wfUp{to{opacity:0;transform:translate(-50%,-220%)}}
+
+/* ═══ RUEDITA DE ENFRIAMIENTO EN LA MIRA (22 oct 2026): anillo dorado fino que se llena alrededor de la retícula ═══ */
+#aimr .rg{position:absolute;left:-1.6em;top:-1.6em;width:3.2em;height:3.2em;border-radius:50%;opacity:0;transition:opacity .25s;pointer-events:none;--rc:#e8cf94;
+ background:conic-gradient(from 0deg,var(--rc) calc(var(--u,0)*360deg),rgba(14,12,10,.5) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - .24em),#000 calc(100% - .21em));mask:radial-gradient(farthest-side,transparent calc(100% - .24em),#000 calc(100% - .21em));filter:drop-shadow(0 0 .25em rgba(0,0,0,.8))}
+#aimr.cdon .rg{opacity:.95}#aimr.cdon.full:not(.chg):not(.rdy) .rg{opacity:.38}
+#aimr.chg .rg{--rc:#ffb060}#aimr.chg.cf .rg{--rc:#ffe2a8;filter:drop-shadow(0 0 .45em rgba(255,170,70,.95))}
+#aimr.rdy .rg{animation:rgRdy .34s ease-out}
+@keyframes rgRdy{0%{transform:scale(1);filter:drop-shadow(0 0 0 transparent) brightness(1)}35%{transform:scale(1.28);filter:drop-shadow(0 0 .6em rgba(255,233,168,.95)) brightness(1.6)}100%{transform:scale(1);filter:drop-shadow(0 0 .25em rgba(0,0,0,.8)) brightness(1)}}
+#aimr b{position:absolute;width:.34em;height:.34em;margin:-.17em;border-radius:50%;background:rgba(14,12,10,.8);border:1px solid rgba(232,207,148,.5);opacity:0;transition:opacity .25s,background .1s,box-shadow .1s}
+#aimr.cdon b{opacity:1}
+#aimr b:nth-of-type(1){left:-.62em;top:2.02em}#aimr b:nth-of-type(2){left:0;top:2.12em}#aimr b:nth-of-type(3){left:.62em;top:2.02em}
+#aimr b.lit{background:#e8cf94;box-shadow:0 0 5px rgba(232,207,148,.85)}
+
+#aimr[data-d]::after{left:1.95em;top:-.45em}   /* la distancia (rango) queda fuera de la ruedita de enfriamiento */

@@ -860,6 +860,22 @@ function magnetAng(a,now){if(wtype()!=='m'||(wKind()==='staff'&&skl().sel))retur
  if(RIP&&RIP.rip>now&&alive(RIP,now)&&Math.hypot(RIP.x-P.x,RIP.y-P.y)<160)return Math.atan2(RIP.y-P.y,RIP.x-P.x);
  let best=null,bd=.3;for(const m of M){if(!alive(m,now)||sealed(m))continue;const vx=m.x-P.x,vy=m.y-P.y,d=Math.hypot(vx,vy);if(d>reach+(m.d.w||16)*.3)continue;let df=Math.abs(Math.atan2(vy,vx)-a);df=df>Math.PI?2*Math.PI-df:df;if(m===LOCK)df*=.5;if(df<bd){bd=df;best=m}}
  return best?Math.atan2(best.y-P.y,best.x-P.x):a}
+/* ═══ SENSACIÓN DE GOLPE (22 oct 2026; referencia Valheim: «los hits se sienten pesados») ═══ `hitFeel` se llama en cada golpe del jugador: deja `m.hit` (el actor 3D se empuja/inclina: actors3d.js), suena por CAPAS según material y fuerza, lanza partículas por MATERIAL
+   (hueso, piedra, hielo, baba, fuego; la carne ya sangra por `R3D.blood`), da un pequeño «puñetazo» de cámara hacia el golpe (`CPUNCH`) y retroceso visual del héroe (`P.rc`). La fuerza `k` (0..1) sube con el daño relativo, el golpe pesado, el crítico y el aturdimiento. NO estela de arma (el dueño la descartó). */
+const HITMAT={esqueleto:'bone',golem:'stone',k5:'stone',b3:'ice',k3:'ice',yak:'ice',slime:'goo',b5:'fire',demonio:'fire'},CPUNCH={t:-1e9,x:0,y:0,k:0};
+function hitFeel(m,d,now,mx,heavy,sk,wt){
+ const dx=m.x-P.x,dy=m.y-P.y,l=Math.hypot(dx,dy)||1,ux=dx/l,uy=dy/l,k=Math.min(1,(d>0?.28:.1)+(heavy?.35:0)+(mx?.4:0)+Math.min(.3,d/Math.max(4,m.mh)*1.2)+(m.stun>now?.15:0));
+ m.hit={t:now,ux,uy,k};if(d<=0)return;const mat=HITMAT[m.d.id]||'flesh',melee=sk!=='mg'&&wt!=='r',hy=m.d.h*.5;
+ try{ // sonido por capas: golpe seco + timbre del material + capa grave en pesados/críticos
+  const v=.05+.06*k;tone(150-40*k,.09+.05*k,'sine',v*1.6,60);
+  if(mat==='flesh')tone(300,.05,'triangle',v*.5,160);else if(mat==='bone'){tone(540,.06,'square',v*.7,300);tone(190,.08,'sine',v)}else if(mat==='stone'){tone(1150,.04,'square',v*.6,600);tone(130,.1,'sine',v*1.2,60)}
+  else if(mat==='ice'){tone(1600,.12,'triangle',v*.7,900)}else if(mat==='goo'){tone(120,.14,'sine',v*1.1,55);tone(280,.05,'triangle',v*.5,120)}else if(mat==='fire')tone(210,.1,'sawtooth',v*.6,90);
+  if(heavy||mx)tone(58,.24,'sine',.13,28)}catch(e){}
+ try{const F=R3D.fx;if(F){const n=Math.round(4+k*8);
+  if(mat==='bone'){F.chips('wood',m.x,m.y,hy,n,'#efe6cc')}else if(mat==='stone'){F.chips('rock',m.x,m.y,hy,n,'#b8b4ac');F.spark(m.x,m.y,hy,'#ffd27a',Math.round(3+k*6))}
+  else if(mat==='ice'){F.chips('rock',m.x,m.y,hy,n,'#cfe8ff');F.spark(m.x,m.y,hy,'#e8fbff',Math.round(2+k*4))}else if(mat==='goo'){F.spark(m.x,m.y,hy,'#6ad04a',Math.round(4+k*8),{g:3})}
+  else if(mat==='fire'){F.spark(m.x,m.y,hy,'#ff9a2a',Math.round(4+k*8))}}}catch(e){}
+ if(melee){CPUNCH.t=now;CPUNCH.x=ux;CPUNCH.y=uy;CPUNCH.k=k;P.rc={t:now,x:-ux,y:-uy,k}}}
 function hitM(m,d,now,sk,mxv,wt){if(!alive(m,now))return;fightAt=now;
  if(d>0&&mxv!==99){const mul=m.stun>now?SG.mulStun:(m.rip>now?SG.mulRip:1);if(mul>1){d=Math.max(d+1,Math.round(d*mul));if(m.rip>now&&!(m.stun>now)){m.rip=0;fText('¡CONTRAATAQUE!','#ffe08a',m.x,m.y,m.d.h+14)}}}   // aturdido ×1,5 · contraataque ×2
  m.lx=m.x;m.ly=m.y;m.hp-=d;if(d>0&&mxv!==99)stagger(m,d*((SWG.hv&&sk!=='mg'&&now-SWG.t0<500)?1.7:1),now);m.fl=now+120;snd(d?'hit':'miss');
@@ -874,6 +890,7 @@ function hitM(m,d,now,sk,mxv,wt){if(!alive(m,now))return;fightAt=now;
  if(d>0&&heavy)sp(m.x,m.y-m.d.h/2,'#ff9a3a',11,110,70,150);
  if(d>0&&sk!=='mg'&&window.R3D&&R3D.spell){try{R3D.spell.hit(m.x,m.y,Math.atan2(m.y-P.y,m.x-P.x),mx?1:heavy?.6:0)}catch(e){}}   // impacto 3D: destello + chispas en la dirección del golpe
  if(d>0&&sk!=='mg'&&mxv!==99&&window.R3D&&R3D.blood){try{R3D.blood.hit(m,d,now,{wt:wt==='r'?'r':'m',mx})}catch(e){}}   // Lote R3D-SANGRE (solo ?r3d=1): golpes físicos directos sangran; hechizos (sk='mg'), espinas y sangrado por turnos (mxv=99) no. wt='r' = flecha/virote
+ if(mxv!==99)hitFeel(m,d,now,mx,heavy,sk,wt);
  splat(m.x,m.y,d,mx?'#c9a24a':null,m.d.h+6,mx);if(mx){sp(m.x,m.y-m.d.h/2,'#e8cf94',16,120,80,170);sp(m.x,m.y-m.d.h/2,'#fff1c8',8,70,60,190);SHK=now+160;HFX.push({k:'star',tx:m.x,ty:m.y,th:m.d.h/2,t0:now,d:380})}if(d)gain(sk||WSK(),d*xpMul(m));if(m.hp<=0){kill(m,now);if(A&&A.e===m)reseek(m,now)}}
 const inVilla=(x,y)=>{const k=ownAt(x,y);if(k<0)return false;if(typeof ISLA!=='undefined'&&ISLA.fightOn())return false;   // la Arena del Vigía queda dentro de la zona segura del Agora: durante el combate de Gabriel NO hay zona segura
  const b=BI[k],v=b.village.safe||[210,770,245,225];return Math.abs(x-(b.ox+v[0]))<v[2]&&Math.abs(y-(b.oy+v[1]))<v[3]}; // zona segura de la aldea (BIOMES.list[k].village.safe = [cx,cy,semiancho,semialto])
@@ -964,8 +981,13 @@ function swingTick(now,dt){blkTick(dt||.016,now);sgTick(dt||.016,now);burnTick(n
 const aimTarget=now=>SWG.tg&&SWG.tg.hp>0&&now-SWG.last<5000?SWG.tg:null;
 function drawAim(now){}   // (21 oct 2026: se quitaron el arco guía y el destello circular a petición del dueño; solo queda la barra de swing del HUD)
 function swingHud(now){const col=document.getElementById('hs-col');if(!col)return;let el=document.getElementById('hs-sw');if(!el){el=document.createElement('div');el.id='hs-sw';el.innerHTML='<i></i><b></b><b></b><b></b>';const a=document.getElementById('hs-act');if(a&&a.nextSibling)col.insertBefore(el,a.nextSibling);else col.appendChild(el)}
- const on=aimOn()&&!INT&&(now-SWG.last<3000||now-(P.cbT||-1e9)<2000||CHG.on);el.classList.toggle('on',on);try{if(CHG.on&&wKind()==='staff'&&now-CHG.t0>220)R3D.spell.charge(P.x,P.y,chgK(now));else if(!CHG.on)R3D.spell.charge(0,0,-1)}catch(e){}
- el.classList.toggle('chg',!!CHG.on);el.classList.toggle('cf',!!CHG.on&&chgK(now)>=1);if(!on)return;const u=CHG.on?chgK(now):Math.min(1,(now-SWG.t0)/Math.max(1,SWG.ms));el.firstChild.style.width=(u*100).toFixed(0)+'%';el.classList.toggle('rd',u>=1);
+ const on=aimOn()&&!INT&&(now-SWG.last<3000||now-(P.cbT||-1e9)<2000||CHG.on);el.classList.toggle('on',on&&!aimShow);try{if(CHG.on&&wKind()==='staff'&&now-CHG.t0>220)R3D.spell.charge(P.x,P.y,chgK(now));else if(!CHG.on)R3D.spell.charge(0,0,-1)}catch(e){}
+ el.classList.toggle('chg',!!CHG.on);el.classList.toggle('cf',!!CHG.on&&chgK(now)>=1);
+ /* RUEDITA DE ENFRIAMIENTO EN LA MIRA (22 oct 2026; pedido del dueño): el recuperar el golpe se muestra como un anillo que se llena alrededor de la retícula (`#aimr .rg`, `--u` 0..1), para TODAS las armas; al cargar se llena de naranja; al estar listo destella (`rdy`); 3 puntos = combo. La barra fina del marco queda como respaldo cuando no hay mira. */
+ {const rk=1-Math.max(0,Math.min(1,(Math.max(SWG.cd,ATKT)-now)/Math.max(1,SWG.ms))),uu=CHG.on?chgK(now):rk;AIMR.style.setProperty('--u',uu.toFixed(3));AIMR.classList.toggle('cdon',on&&aimShow);
+  const rdy=!CHG.on&&rk>=1;if(rdy&&AIMR._rk<1){AIMR.classList.remove('rdy');void AIMR.offsetWidth;AIMR.classList.add('rdy')}AIMR._rk=CHG.on?0:rk;AIMR.classList.toggle('full',rdy);
+  const nn=now-SWG.last<SWG.ms*1.9?SWG.c+1:0;AIMR.querySelectorAll('b').forEach((b,i)=>b.classList.toggle('lit',i<nn))}
+ if(!on)return;const u=CHG.on?chgK(now):Math.min(1,(now-SWG.t0)/Math.max(1,SWG.ms));el.firstChild.style.width=(u*100).toFixed(0)+'%';el.classList.toggle('rd',u>=1);
  const n=now-SWG.last<SWG.ms*1.9?SWG.c+1:0,ps=el.querySelectorAll('b');ps.forEach((b,i)=>b.classList.toggle('lit',i<n))}   // barra de swing: relleno = enfriamiento del golpe, 3 puntos = combo
 function atkKey(down){const now=performance.now();if(BLK.on&&down)return;if(A&&A.fm){if(down)fmPress(now);return}if(A&&A.wh){if(down)whPress(now);return}if(A&&A.fg){if(down)fishPress(now);return}if(!down){if(aimOn())chargeEnd();ATKIN.held=0;return}ATKIN.t=now;ATKIN.held=1;if(aimOn()){chargeStart(now);return}if(A&&A.ty==='f')return;
  let b=null,bd=150;M.forEach(m=>{if(!alive(m,now)||sealed(m))return;const d=Math.hypot(m.x-P.x,m.y-P.y);if(d<bd){bd=d;b=m}});if(b){if(A)stopA();P.g=null;P.mv=null;engage(b,now)}}
@@ -1346,7 +1368,8 @@ function heroState3D(now){now=performance.now();   /* CLAVE (21 oct 2026): r3d.j
  if(freeAim()&&!(cn&&cn.look)&&dsU<=0&&!(RUN&&P.mvg)&&!(A&&A.fg)&&CUR.on&&!CUR.touch&&(CHG.on||ATKIN.held||now-SWG.last<2500||now-(P.cbT||-1e9)<2500)){const w=ISO.toWorld(CUR.px,CUR.py,TER.heightAt);fx=w.x-P.x;fy=w.y-P.y;P.dir=HERO.dirOf(fx,fy);   // apuntado libre: el cuerpo mira al cursor aunque te muevas (marcha de lado/de espaldas)
   if(P.mvg){const mx=P.ldx||0,my=P.ldy||0,fl=Math.hypot(fx,fy)||1,ml=Math.hypot(mx,my)||1;back=(fx*mx+fy*my)/(fl*ml)<-.35?1:0}}
  const act=P.mvg&&!(aimOn()&&(CHG.on||now<SWG.t0+SWG.ms*.8))?null:actState(now);if(act&&P.mvg&&act.k==='f')act.mv=1;if(act&&P.anm){P.anm=0;P.wt=null}const gear=gearOpts();if(/[?&]capa=1/.test(location.search)&&!gear.cp)gear.cp='#5a2230';
- return{recv:cn?cn.recv:0,x:P.x,y:P.y,z:TER.standZ(P.x,P.y)+jmpH(jmpU(now)),jmp:jmpU(now),mv:!!(P.mvg||P.anm),run:!!RUN,w:P.w||0,act,dash:dsU>0&&dsU<1?dsU:0,blk:BLK.k,bhit:Math.max(0,1-(now-BLK.hit)/240),hurt:Math.max(0,1-(now-HURT)/320),fx,fy,cb:cbNow||now-(P.cbT||-1e9)<2500||now-HURT<2500||!!foe,back,
+ const rcu=P.rc?Math.max(0,1-(now-P.rc.t)/170):0,rcx=rcu?P.rc.x*3.5*P.rc.k*rcu*rcu:0,rcy=rcu?P.rc.y*3.5*P.rc.k*rcu*rcu:0;   // retroceso VISUAL del héroe al conectar un golpe (la posición lógica no cambia)
+ return{recv:cn?cn.recv:0,x:P.x+rcx,y:P.y+rcy,z:TER.standZ(P.x,P.y)+jmpH(jmpU(now)),jmp:jmpU(now),mv:!!(P.mvg||P.anm),run:!!RUN,w:P.w||0,act,dash:dsU>0&&dsU<1?dsU:0,blk:BLK.k,bhit:Math.max(0,1-(now-BLK.hit)/240),hurt:Math.max(0,1-(now-HURT)/320),fx,fy,cb:cbNow||now-(P.cbT||-1e9)<2500||now-HURT<2500||!!foe,back,
   aim:act&&act.k==='fi'&&A&&A.e?{x:(A.fg&&(A.fg.st==='fight'||A.fg.st==='reel'))?A.fg.fx:A.e.x,y:(A.fg&&(A.fg.st==='fight'||A.fg.st==='reel'))?A.fg.fy:A.e.y,ph:act.ph}:null,
   look:{app:S.app,ar:S.eq.a?ARC(S.eq.a):null,helm:S.eq.h?ARC(S.eq.h):null,boot:S.eq.f?ARC(S.eq.f):null,gear,hood:'down',arm:armorInfo()}}}
 const bl=document.createElement('canvas');bl.width=W>>2;bl.height=H>>2;const bx=bl.getContext('2d'),gr=document.createElement('canvas');gr.width=gr.height=96;let GP=null,SHK=0,HURT=-1e9;
@@ -1417,7 +1440,7 @@ function resTip(){const e=HOV;if(!RTD){RTD=document.createElement('div');RTD.cla
  const a=ACT[e.t][e.i],lv=rq(a),tl=TLV(lv),tk=TOOLS[e.t],badL=L(e.t)<lv,badT=tk&&(S.tool[e.t]||0)<tl-1,R='#d86a5a',k=e.t+e.i+'|'+badL+badT+'|'+S.tool[e.t]+'|'+L(e.t);
  if(k!==RTK){RTK=k;RTD.innerHTML='<b class="rt-n">'+a[0]+'</b><span class="rt-s"><i style="'+(badL?'color:'+R:'')+'">Nivel '+lv+'</i>'+(tk?' <u>·</u> <i style="'+(badT?'color:'+R:'')+'">'+tk[0]+' '+tn(e.t,tl)+'</i>':'')+'</span>'}
  const r=cv.getBoundingClientRect();RTD.style.left=Math.round(r.left+CUR.px*r.width/cv.width+16)+'px';RTD.style.top=Math.round(r.top+CUR.py*r.height/cv.height+14)+'px';RTD.style.display='block'}
-const AIMR=(()=>{const e=document.createElement('div');e.id='aimr';e.innerHTML='<i></i>';document.body.appendChild(e);return e})();let aimShow=0,aimEn=0;
+const AIMR=(()=>{const e=document.createElement('div');e.id='aimr';e.innerHTML='<i></i><s class="rg"></s><b></b><b></b><b></b>';document.body.appendChild(e);return e})();let aimShow=0,aimEn=0;
 // RETÍCULA DE DISTANCIA (arco y hechizo seleccionado, 22 oct 2026): línea desde el héroe hasta donde LLEGA el tiro (alcance máx. 330 px), marca de fin de alcance y la distancia en metros junto a la mira; roja y tenue si el cursor queda fuera de alcance.
 let AIML=null,AIME=null;
 function aimRange(w){if(!AIML){AIML=document.createElement('div');AIML.id='aiml';AIME=document.createElement('div');AIME.id='aime';document.body.append(AIML,AIME)}
@@ -1463,7 +1486,8 @@ function draw(now){const t=now/1000;cx=Math.max(0,Math.min(WW-W,P.x-W/2))|0;cy=M
  const dt=LFT?Math.min(.1,(now-LFT)/1000):1/60,sk=now<SHK?(SHK-now)/200*3:0;if(typeof CINE!=="undefined"&&CINE.on)CINE.cam();else{
   // CÁMARA: sigue al héroe y se inclina un poco hacia el enemigo encarado (`foK` suave 0..1, `FO_PULL` 28 % de la distancia, máx. 120 px); en minijuegos además acerca el zoom hacia la estación
   const fe=window.R3D_ON?combatFoe(now):null;foK+=((fe&&!mgKey()?1:0)-foK)*Math.min(1,dt*2.2);if(fe)foE={x:fe.x,y:fe.y};
-  let fx=P.x,fy=P.y;if(foK>.003&&foE){const dx=foE.x-P.x,dy=foE.y-P.y,l=Math.hypot(dx,dy)||1,k=Math.min(.28,120/l)*foK;fx+=dx*k;fy+=dy*k}
+  let fx=P.x,fy=P.y;{const u=(now-CPUNCH.t)/150;if(u>=0&&u<1){const e2=(1-u)*(1-u)*(u<.15?u/.15:1);fx+=CPUNCH.x*CPUNCH.k*8*e2;fy+=CPUNCH.y*CPUNCH.k*8*e2}}   // «puñetazo» de cámara hacia el golpe
+ if(foK>.003&&foE){const dx=foE.x-P.x,dy=foE.y-P.y,l=Math.hypot(dx,dy)||1,k=Math.min(.28,120/l)*foK;fx+=dx*k;fy+=dy*k}
   if(window.R3D_ON&&(mgK>0||mgKey())){const me=mgKey()&&A.e&&!INT?A.e:null;ISO.V.zoom=Math.min(8,zoom3(ZMI)*(1+MG_ZOOM*mgK));   // enfoque de minijuego: acerca la cámara y la inclina hacia la estación
    if(me){fx=P.x+(me.x-P.x)*MG_PULL*mgK;fy=P.y+(me.y-P.y)*MG_PULL*mgK}}
   if(LFT)ISO.follow(fx,fy,TER.standZ(P.x,P.y),dt);else ISO.snap(fx,fy,TER.standZ(P.x,P.y))}LFT=now;OCDT=dt;

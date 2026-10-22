@@ -451,6 +451,13 @@ export class Actors{
   const wave=isNpc&&!A.tpl.nowave&&dp<110&&Math.sin(t*.35)>.3?1:0;if(isNpc){look=cl(Math.atan2(px,py)-A.face,-1,1)}
   A.b.root.position.z-=A.pz||0;A.pz=0;   // deshace el retroceso del fotograma anterior (antes se ACUMULABA: el modelo se iba lejos del enemigo lógico)
   ANIM[A.tpl.kind](A,{t,dt,mv:A.mv,at:atk,wave:(isNpc&&e.job)?0:wave,look,job:isNpc?e.job:null});
+  // REACCIÓN CORPORAL AL GOLPE (22 oct 2026; «los hits deben sentirse pesados»): el juego deja en `e.hit` = {t, ux, uy, k} (dirección del golpe y fuerza 0..1). El modelo se EMPUJA visualmente en esa dirección (≈ .08–.28 u) y se INCLINA (pitch/roll del `root`, .12–.5 rad) con una curva rápida que decae en ≈ .26–.48 s; solo visual (la posición lógica no se toca: el empuje lógico `knock` desincronizaba el modelo). ATURDIDO (`e.stun`): bamboleo mareado en bucle. La muerte conserva el empuje (`hdx/hdz`).
+  if(!isNpc&&A.state==='live'){const h=e.hit;let rx=0,rz=0;
+   if(h){const u=(rn-h.t)/(260+220*h.k);if(u>=0&&u<1){const q=this.W3(e.x+h.ux*10,e.y+h.uy*10,z).sub(p),ql=Math.hypot(q.x,q.z)||1;A.hdx=q.x/ql;A.hdz=q.z/ql;
+     const env=(u<.12?u/.12:1)*(1-u)*(1-u),push=(.08+.2*h.k)*env,lean=(.12+.38*h.k)*env,cf=Math.cos(A.face),sf=Math.sin(A.face),lx=cf*A.hdx-sf*A.hdz,lz=sf*A.hdx+cf*A.hdz;
+     A.grp.position.x+=A.hdx*push*A.sc;A.grp.position.z+=A.hdz*push*A.sc;rx=lean*lz;rz=-lean*lx*.8}}
+   if(e.stun>rn){rx+=.12+.05*Math.sin(rn/190);rz+=.15*Math.sin(rn/250)}
+   A.b.root.rotation.set(rx,0,rz)}
   // daño: destello 120 ms (m.fl = hasta cuándo) y retroceso breve; hover
   const fl=!isNpc&&rn<e.fl;A.setFlash(fl);A.setHover(e===hov);
   // aviso de golpe: los ojos se encienden (rampa con parpadeo) y en el último tramo estallan en un fogonazo; tras el tajo se apagan en ~160 ms
@@ -458,7 +465,8 @@ export class Actors{
   A.eyeFx(Math.max(0,Math.min(1,ei)));
   if(!isNpc&&fl){const u=Math.min(1,(e.fl-rn)/120);A.pz=-.05*u;A.b.root.position.z+=A.pz}
   // muerte: cae hacia atrás y se hunde/encoge ~0,9 s
-  if(A.state==='dying'){const u=(now-A.td)/900;if(u>=1){A.state='gone';A.vis=false;A.grp.visible=false;if(A.proxy)A.proxy.visible=false;return}const f=ss(0,.45,u),h=ss(.45,1,u);A.b.root.rotation.x=-1.45*f;A.b.root.position.y=A.restP.root.y-.1*f*A.sc;A.grp.scale.setScalar(A.sc*(1-h*.85));A.grp.position.y-=.25*h*A.sc}
+  if(A.state==='dying'){const u=(now-A.td)/900;if(A.hdx!=null&&e.hit){const ff=ss(0,.45,u);A.grp.position.x+=A.hdx*.45*ff*e.hit.k*A.sc;A.grp.position.z+=A.hdz*.45*ff*e.hit.k*A.sc}   /* la muerte conserva el impulso del último golpe */
+   if(u>=1){A.state='gone';A.vis=false;A.grp.visible=false;if(A.proxy)A.proxy.visible=false;return}const f=ss(0,.45,u),h=ss(.45,1,u);A.b.root.rotation.x=-1.45*f;A.b.root.position.y=A.restP.root.y-.1*f*A.sc;A.grp.scale.setScalar(A.sc*(1-h*.85));A.grp.position.y-=.25*h*A.sc}
   // copia de profundidad: solo si el héroe está cerca (no se dibuja el resto)
   if(A.proxy){const near=Math.hypot(P_.x-e.x,P_.y-e.y)<ISO.TILE*3.5&&A.vis;A.proxy.visible=near;if(near){A.proxy.position.copy(A.grp.position);A.proxy.quaternion.copy(A.grp.quaternion);A.proxy.scale.copy(A.grp.scale)}}
   // aro de jefe
