@@ -6,6 +6,10 @@
 > **REGLA DEL DUEÑO (22 oct 2026): CADA ENTREGA ACTUALIZA ESTE ARCHIVO** (sección «Registro de avance» de abajo + la fila de la fase que toques) **y además su lote en `AGENTS.md`**, para que cualquier agente sepa en segundos qué se hizo y qué falta. Una entrega que no actualiza la hoja de ruta no está terminada.
 
 ## REGISTRO DE AVANCE (lo último hecho primero; una línea por entrega, con el lote de AGENTS.md)
+- **22 oct 2026 · Arcos y bastones a dos manos:** no admiten escudo (equiparlos lo guarda; el escudo se rechaza con ellos). Incluye mandobles y ballestas. Nota en AGENTS.md.
+- **22 oct 2026 · Localización planeada para el final (Fase 17):** ver abajo; los textos siguen en español.
+- **22 oct 2026 · “Fallo / Esquiva / Absorbido” en vez de 0** (estilo WoW, con nuestra UI). Nota en AGENTS.md.
+- **22 oct 2026 · Ruedita de CD en el cursor real** (sin mirilla; distancia de rango también con el cursor normal). Nota en AGENTS.md.
 - **22 oct 2026 · Sensación de golpe (Fase 2·a):** el enemigo se empuja/inclina al recibir golpes (más fuerte en pesados/críticos) y se tambalea aturdido; partículas por material; sonido por capas; puñetazo de cámara y retroceso del héroe. Sin estela. Lote SENSACION-DE-GOLPE.
 - **22 oct 2026 · Ruedita de enfriamiento en la mira** (todas las armas; destello al estar lista; naranja al cargar). Nota en AGENTS.md.
 - **22 oct 2026 · Puntería de rango:** el tiro de arco/bola va al enemigo que hay bajo el cursor (selección en pantalla); si no, hacia el cursor con imán. Nota en AGENTS.md.
@@ -41,6 +45,7 @@
 | **14** | Subclases | Magia: escuelas y árbol (21b) · S1–S12 una por prompt | cada subclase pasa su hoja de verificación |
 | **15** | Rebalanceo y precios ★ | rebalanceo global (36) · precios S13 | `meas_progresion.py` y `econ_model.py` en rango |
 | **16** | **Online** | **16a prueba de 2–4 jugadores (presencia)** · 16b co-op con anfitrión autoritativo · 16c mercado online (S14 local → S15 servidor) | proyecto aparte; 16a se puede adelantar tras la Fase 3 (ver nota) |
+| **17** | **Localización (i18n) — al FINAL, tras todo el contenido** (decisión del dueño, 22 oct 2026) | extraer los textos del juego a tablas por idioma (hoy van sueltos en español dentro del código) · inglés primero: palabras de combate estilo WoW **Miss / Dodge / Parry / Absorb** en vez de Fallo / Esquiva / Parada / Absorbido · luego más idiomas | todos los textos salen de tablas y se puede cambiar de idioma sin tocar código |
 
 > Los **sistemas de fondo (Bloque D)** se estrenan en el bioma indicado (propuesta ★; por defecto «a demanda», como decidió el dueño). Si el dueño cambia el primer bioma, se intercambian las fases 4–5 con sus sistemas.
 
@@ -133,6 +138,12 @@ El juego es hoy **100 % cliente**: un héroe global (`P`), estado en `S` (localS
 **Cuándo:** 16a es barata y **se puede adelantar justo después de la Fase 3** (antes de los biomas) para tener algo que enseñar y para ir descubriendo qué estado hay que hacer serializable; 16b conviene DESPUÉS de la Fase 2 (combate estable) y de que el mundo sea reproducible por semilla. Regla de arquitectura desde ya (para no hacerlo dos veces): **nada de `Math.random` en lógica nueva (usar un PRNG con semilla), y el estado de un jugador en un objeto (no en globales sueltas)**.
 
 **En espera (sin fila, el dueño no lo ha decidido):** glifos de habilidad, «ligado al equiparse», «Elixir del olvido» en vez de «Tomo». **Reglas del dueño que valen para todo** (NO survival, Pradera casi virgen, lo ambiental nunca castiga, guardados sin migrar, oficios entrecruzados con tope 4–5): `docs/REGLAS_CREACION.md` §1. **Texto anterior de esta hoja** (tamaños S/M/L/XL y notas por fase): `docs/HISTORIAL.md`, «HOJA DE RUTA ANTERIOR».
+
+## FASE 17 · LOCALIZACIÓN (PLANEADA, se hace al final; decisión del dueño 22 oct 2026)
+- **Hoy** todo el texto del juego está en español, suelto en el código (`game.js`, `isla.js`, `villagers.js`, `hud.js`, `quests.js`, `combat.js`, datos de objetos `I`, diálogos…). **No traducir ni crear tablas todavía**: se hace cuando el contenido esté cerrado.
+- **Plan:** (1) inventario con `grep` de literales visibles (`toast(`, `log(`, `fText(`, `banner(`, `txt:`, `lines:`, `desc:`, nombres en `I`/`MD`/`QUESTS`); (2) tabla `LANG.<idioma>.<clave>` + función `t('clave',{vars})`; (3) migrar por módulos, empezando por el combate; (4) inglés primero; (5) fuentes con soporte de caracteres (Cinzel/Spectral); (6) comprobar que las palabras de combate caben (hoy `fText` y los hitsplats).
+- **Combate (22 oct 2026):** el dueño quiere en inglés las palabras estilo WoW **Miss / Dodge / Parry**; hoy son «Fallo / Esquiva / Absorbido» y «¡PARADA PERFECTA!» / «MITIGADO −N» (literales en game.js `hitM`/`monHit`/`windHit`/`guardHit`/`pdCheck`, combat.js `telUpd`).
+- **Mientras tanto (regla):** escribe los textos nuevos en español como siempre, en frases cortas y sin concatenar a trozos (así se migran fácil); no repartas el mismo texto en varios sitios.
 
 ## SKILLS PLANEADAS (solo PLANIFICADAS, NO implementadas; recordatorio del dueño, 21 oct 2026)
 Hoy `SK` tiene: Tala, Minería, Pesca, Cocina, Herrería, Artesanía, Escultor, Inscripción, Magia, Combate, Arquería, Oración. **Faltan dos skills ya diseñadas** (detalle completo en `docs/PLAN_POSTPORTEO.md` §1 «Agilidad → Alquimia y Herbolaria» y Fase 22/Q20; Agilidad ya se retiró):
