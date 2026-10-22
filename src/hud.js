@@ -17,7 +17,7 @@ const HUDSU=(()=>{
  root.innerHTML=
   `<div class="hs-col" id="hs-col"><div class="hs-act" id="hs-act"><div class="nm" id="hs-al"></div>${bar('ac')}</div>`+
   `<div class="hs-pl" id="hs-pl"><div class="row"><div class="ring"><img id="hs-pp" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="></div><span class="lv" id="hs-lv">1</span>`+
-  `<div class="bars"><div class="nm" id="hs-nm">Aventurero</div>${bar('hp')}${bar('mp')}</div></div><div class="hs-fx" id="hs-fx"></div></div></div>`+
+  `<div class="bars"><div class="nm" id="hs-nm">Aventurero</div>${bar('hp')}${bar('mp')}<div class="sk" id="hs-sk"></div></div></div><div class="hs-fx" id="hs-fx"></div></div></div>`+
   `<div class="hs-tg" id="hs-tg"><div class="row"><div class="ring"><canvas class="live" id="hs-tc" style="display:none"></canvas><img id="hs-tp" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="></div>`+
   `<div class="bars"><div class="nm" id="hs-tn"></div>${bar('hp th')}</div></div></div>`+
   `<div class="hs-xp" id="hs-xp" aria-live="polite"></div>`+
@@ -94,6 +94,12 @@ const HUDSU=(()=>{
    const q=Math.round(o.p*100);if(q!==e.p){e.d.style.setProperty('--p',q+'%');e.p=q}if(o.tx!==e.tx){e.b.textContent=o.tx;e.tx=o.tx}e.d.title=o.tip});
   for(const id in chips)if(!seen[id]){chips[id].d.remove();delete chips[id]}}
  // ── avisos de XP (E3) y banner (E4) ──
+ // BARRA DE HABILIDADES (22 oct 2026): casillas pequeñas bajo la barra de maná; una por habilidad aprendida (`ABIL`/`skl()` de game.js). Número de tecla, brillo del color del hechizo, barrido de enfriamiento y atenuada si falta el arma o el maná.
+ const skEl=$('#hs-sk');let skSig='';
+ const SKSVG='<svg viewBox="0 0 24 24"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-4 3-7 1 1 2 2 2 4 1-3 1-6 1-9z" fill="currentColor"/><path d="M12 11c.5 2 3 3 3 6a3 3 0 0 1-6 0c0-2 2-3 3-6z" fill="#e8fbff"/></svg>';
+ function skFrame(){if(!skEl||typeof ABIL==='undefined')return;const L=ABIL.filter(d=>skl()[d.id]),sig=L.map(d=>d.id).join();
+  if(sig!==skSig){skSig=sig;skEl.style.display=L.length?'flex':'none';skEl.innerHTML=L.map((d,i)=>'<div class="s" data-i="'+ABIL.indexOf(d)+'" style="--c:'+d.col+'" title="'+d.n+' ('+d.key+'): '+d.d+'"><span class="ic">'+SKSVG+'</span><b>'+d.key+'</b><i class="cd"></i></div>').join('');skEl.querySelectorAll('.s').forEach(e=>e.onclick=()=>castSkill(+e.dataset.i))}
+  if(!L.length)return;const now=performance.now();skEl.querySelectorAll('.s').forEach(e=>{const d=ABIL[+e.dataset.i],cd=Math.max(0,Math.min(1,(d.t-now)/d.cd));e.style.setProperty('--cd',cd.toFixed(3));e.classList.toggle('off',wKind()!=='staff'||MN<fbCost(0))})}
  const xpH=$('#hs-xp'),xpL={};$('#hs-col').appendChild(xpH);
  function xp(sk,amt,up,lvl){try{
   const l=L(sk),fr=l>=99?1:(S.xp[sk]-XT[l])/(XT[l+1]-XT[l]),nm=SK[sk][0],em=SK[sk][1];let c=xpL[sk];
@@ -154,7 +160,7 @@ const HUDSU=(()=>{
  let last=0,lvT=-1,nmT='',tgM=null,tgOff=0,hideT=0;
  function frame(now){if(document.hidden)return;const dt=Math.min(.05,last?(now-last)/1000:.016),tt=now/1000;last=now;
   const mh=maxHp(),hpv=Math.max(0,P.hp),low=hpv/mh<.3&&hpv>0;
-  setBar(B.hp,hpv/mh,Math.ceil(hpv)+' / '+mh);const mm=mnMax();setBar(B.mp,MN/Math.max(1,mm),Math.floor(MN)+' / '+mm);B.hp.el.classList.toggle('low',low);{const st=P.dot&&P.dot.k||'';if(B.hp.el.dataset.st!==st){if(st)B.hp.el.dataset.st=st;else delete B.hp.el.dataset.st}}   /* estado alterado del jugador (P.dot.k: veneno/quemadura/sangrado) tiñe la barra de vida; ver css «Vida con estado» */
+  setBar(B.hp,hpv/mh,Math.ceil(hpv)+' / '+mh);const mm=mnMax();setBar(B.mp,MN/Math.max(1,mm),Math.floor(MN)+' / '+mm);B.hp.el.classList.toggle('low',low);skFrame();{const st=P.dot&&P.dot.k||'';if(B.hp.el.dataset.st!==st){if(st)B.hp.el.dataset.st=st;else delete B.hp.el.dataset.st}}   /* estado alterado del jugador (P.dot.k: veneno/quemadura/sangrado) tiñe la barra de vida; ver css «Vida con estado» */
   const lv=SKL.reduce((s,k)=>s+L(k),0);if(lv!==lvT){lvT=lv;$('#hs-lv').textContent=lv}
   const nm=(S.app&&S.app.name)||'Aventurero';if(nm!==nmT){nmT=nm;$('#hs-nm').textContent=nm}
   heroPortrait(now);buffs(now);

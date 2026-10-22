@@ -79,6 +79,8 @@ function bakeProto(P,skin){return bake(P.obj,P.list,skin?new THREE.Color(skin).g
 const QUADS={
  vaca:{col:'#f4efe4',belly:'#ece2d0',bx:19,by:9,len:10,lwid:4.2,leg:'#f4efe4',hoof:'#4a3c36',hx:19.5,hy:2.2,hr:[7.6,6.6],sn:{x:5.8,y:2.4,rx:4,ry:3.4,col:'#f0a8a4'},ear:'side',earC:'#3a2e2a',head:'#f4efe4',horn:'#efe4c4',spots:'#3a2e2a',spotL:[[.45,.1,1,.5,'f'],[-.4,.05,-1,.55,'f'],[-.05,.9,0,.5,'t'],[.7,.2,-1,.35,'f'],[-.75,.15,1,.4,'f']],udder:'#f0a8a4',tail:'tuft'},
  oveja:{col:'#f1ede2',belly:'#e4ddcc',bx:17,by:10,len:6.4,lwid:3.8,leg:'#4a403c',hoof:'#2e2622',hx:18,hy:0,hr:[5.6,5.2],sn:{x:4.2,y:1.8,rx:3,ry:2.6,col:'#5a4e48'},ear:'floppy',head:'#5a4e48',wool:'#f1ede2',tail:'puff'},
+ // CORDERO DE NUBE (22 oct 2026, tutorial del Cielo): cordero de lana de nube azul-blanca con pezuñas y morro dorados; neutral y pequeño.
+ cordero:{col:'#e6f1fb',belly:'#d3e4f5',bx:15,by:9,len:5.6,lwid:3.4,leg:'#c8d6e6',hoof:'#c9a95e',hx:16,hy:0,hr:[5,4.8],sn:{x:3.8,y:1.6,rx:2.8,ry:2.4,col:'#e8cf94'},ear:'floppy',head:'#e8cf94',wool:'#eef6ff',tail:'puff'},
  jabali:{col:'#7a5440',belly:'#a07a5c',bx:15,by:9.4,len:6,lwid:4.4,hoof:'#3a2a22',hx:16,hy:2,hr:[7,6.4],sn:{x:6,y:2.4,rx:4.6,ry:3.4,col:'#9a6e58'},ear:'point',crest:'#4a3226',tusk:1,tail:'curl',eye:'#ffb040'},
  lobo:{col:'#8f93a4',belly:'#cdd0da',bx:16.6,by:7.6,len:9.4,lwid:3.8,hoof:'#4a4654',hx:17.6,hy:-2.6,hr:[6.8,5.6],sn:{x:6.8,y:1.8,rx:5.4,ry:2.8,col:'#a2a6b6'},ear:'point',tail:'bush',tailC:'#8f93a4',eye:'#ffcf50',fangs:1},
  yak:{col:'#55402e',belly:'#3a2a20',hump:'#4c3828',bx:20,by:11,len:7.5,lwid:5.6,leg:'#3e2e22',hoof:'#2a2018',hx:20.6,hy:2.6,hr:[8.2,7.4],sn:{x:6.4,y:2.8,rx:4.4,ry:3.6,col:'#6a5240'},ear:'round',horn:'#e6dcc0',hornBig:1,skirt:'#3e2e22',tail:'tuft'},

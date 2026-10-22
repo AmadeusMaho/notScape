@@ -8,7 +8,8 @@ import {ppx} from './cinefx3d.js';
 
 const glowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,238,200,1)');r.addColorStop(.22,'rgba(255,170,70,.8)');r.addColorStop(.55,'rgba(205,70,22,.32)');r.addColorStop(1,'rgba(90,18,4,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
 const dotTex=(()=>{const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d'),r=g.createRadialGradient(16,16,0,16,16,16);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.5,'rgba(255,255,255,.45)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,32,32);return new THREE.CanvasTexture(c)})();
-const HOT=new THREE.Color('#ffd89a'),MID=new THREE.Color('#ff8a2a'),COOL=new THREE.Color('#b8321a'),ASH=new THREE.Color('#3a1208');
+// 22 oct 2026: BOLA DE FUEGO CELESTIAL — el fuego de la bola, las brasas y el impacto son CELESTES (la magia que aprende el jugador en el tutorial del Cielo)
+const HOT=new THREE.Color('#e8fbff'),MID=new THREE.Color('#5ac8ff'),COOL=new THREE.Color('#2a6fd0'),ASH=new THREE.Color('#0c1c3a');
 const NP=520,TL=.034;   // partículas máximas · px de mundo → unidades (1/32)
 
 /* COMBATE · AVISOS Y GOLPES EN 3D (21 oct 2026): sustituyen a los conos/anillos de polígonos del lienzo 2D. Un solo shader de «decal» sobre un plano horizontal:
@@ -44,9 +45,9 @@ export class SpellFX{
   this.pts=new THREE.Points(g,new THREE.PointsMaterial({size:6,sizeAttenuation:false,map:dotTex,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));this.pts.frustumCulled=false;this.pts.renderOrder=6;scene.add(this.pts);
   // orbe de carga (en la mano del héroe)
   this.orb=this.makeBall(.6);this.orb.group.visible=false;scene.add(this.orb.group);this.orbOn=0}
- makeBall(s){const group=new THREE.Group(),core=new THREE.Mesh(new THREE.IcosahedronGeometry(.1,1),new THREE.MeshBasicMaterial({color:'#ffe2a8',toneMapped:false})),
-   mid=new THREE.Mesh(new THREE.IcosahedronGeometry(.17,1),new THREE.MeshBasicMaterial({color:'#ff8426',transparent:true,opacity:.78,depthWrite:false,toneMapped:false})),
-   halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:'#ffb060',transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.9}));halo.scale.setScalar(1.1);
+ makeBall(s){const group=new THREE.Group(),core=new THREE.Mesh(new THREE.IcosahedronGeometry(.1,1),new THREE.MeshBasicMaterial({color:'#e6fbff',toneMapped:false})),
+   mid=new THREE.Mesh(new THREE.IcosahedronGeometry(.17,1),new THREE.MeshBasicMaterial({color:'#3aa8ff',transparent:true,opacity:.78,depthWrite:false,toneMapped:false})),
+   halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:'#7fd0ff',transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.9}));halo.scale.setScalar(1.1);
   group.add(core,mid,halo);group.scale.setScalar(s);return{group,core,mid,halo,s}}
  emit(x,y,z,vx,vy,vz,life){const i=this.n++%NP;this.p[i*3]=x;this.p[i*3+1]=y;this.p[i*3+2]=z;this.v[i*3]=vx;this.v[i*3+1]=vy;this.v[i*3+2]=vz;this.l[i]=this.l0[i]=life}
  h(a,b){return hash(this.k++,a,b)}
@@ -56,7 +57,7 @@ export class SpellFX{
  charge(x,y,k){if(k<0){this.orbOn=0;return}this.orbOn=1;this.ox=x;this.oy=y;this.ok=k}
  ember(x,y,hh=.5){const p=this.W3(x,y,TER.standZ(x,y));this.emit(p.x+(this.h(1,2)-.5)*.3,p.y+hh*.6,p.z+(this.h(2,3)-.5)*.3,(this.h(3,4)-.5)*.2,.5+this.h(4,5)*.5,(this.h(5,6)-.5)*.2,.5+this.h(6,7)*.4)}
  burst(x,y,z,n,sp=1){for(let j=0;j<n;j++){const a=this.h(j,1)*6.283,e=.3+this.h(j,2)*1.1,r=(.8+this.h(j,3)*1.6)*sp;this.emit(x,y,z,Math.cos(a)*r*e,.6+this.h(j,4)*1.8*sp,Math.sin(a)*r*e,.35+this.h(j,5)*.5)}}
- impact(p,k){this.burst(p.x,p.y+.5,p.z,26+Math.round(k*22),1+k*.6);const r=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:'#ff9a46',transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.9}));r.position.set(p.x,p.y+.5,p.z);this.scene.add(r);this.rings.push({r,t0:this.t,s0:.9+k*.7})}
+ impact(p,k){this.burst(p.x,p.y+.5,p.z,26+Math.round(k*22),1+k*.6);const r=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:'#8fe0ff',transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.9}));r.position.set(p.x,p.y+.5,p.z);this.scene.add(r);this.rings.push({r,t0:this.t,s0:.9+k*.7})}
  // objetos desechables para PRECOMPILAR los shaders de los decals durante la carga (R3D.warmShaders): evita el tirón de la primera telegrafía/estela
  warmObjs(){return [new THREE.Mesh(decalGeo,decalMat(TELE_F,false)),new THREE.Mesh(decalGeo,decalMat(SLASH_F,true))].map(m=>{m.position.set(0,-80,0);m.frustumCulled=false;return m})}
  // aviso en el suelo: se pide CADA fotograma mientras dura (key = objeto que lo identifica); u 0..1 = progreso; half = semiángulo (≥ π = círculo)

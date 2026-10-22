@@ -17,7 +17,7 @@ const ISLA=(()=>{
   {npc:'v:9:sariel',name:'Manos de tierra',hi:'Hay trabajo que hacer.',desc:'Necesito 3 troncos de olivo y, de la cantera del norte, 2 de cobre y 2 de estaño. Tráemelos.',rem:'Tala olivos y mina cobre y estaño en la cantera del norte.',turn:'¿Traes los materiales?',deliver:{logs:3,cobre:2,estano:2},reward:{cobre:2,estano:1,logs:1},coins:15,done:'Gracias. Quédate con lo que te sirva. Ve al Ágora y habla con Uriel.'},
   {npc:'v:9:uriel',name:'Fuego',hi:'El fuego no espera.',desc:'Funde 2 barras de cobre en el horno y forja una espada de cobre en el yunque. Luego tráemela.',rem:'Funde las barras en el horno y forja la espada en el yunque.',turn:'¿Está lista la espada?',deliver:{sw_cobre:1},reward:{sw_cobre:1},coins:25,done:'Buen filo. Llévatela. Ve a la fuente y habla con Rafael.'},
   {npc:'v:9:rafael',name:'Agua y cocina',hi:'Ven, siéntate un momento.',desc:'Pesca 3 camarones en la fuente y cocina 2 en la fogata del Ágora. Tráeme los cocinados.',rem:'Pesca en la fuente y cocina en la fogata del Ágora.',turn:'¿Los camarones?',deliver:{c_camaron:2},reward:{c_camaron:1},coins:25,done:'Excelente. Guarda uno. Ve a la Palestra y habla con Miguel.'},
-  {npc:'v:9:miguel',name:'La Palestra',hi:'Firme. Mirada al frente.',desc:'Las gallinas de la Palestra son tu práctica: golpea con puntería, carga un golpe, esquiva con Espacio y derrota a 3. Vuelve cuando acabes.',rem:'Practica con las gallinas de la Palestra.',turn:'¿Has terminado?',done:'Bien. Deposita todo en el banco, saca del banco las 4 ofrendas que aparecerán allí y llévalas a la Arena del Vigía, al sur, fuera de la isla.',coins:40}];
+  {npc:'v:9:miguel',name:'La Palestra',hi:'Firme. Mirada al frente.',desc:'Practica con los corderos de nube de la Palestra: golpea, carga un golpe, esquiva y bloquea. Te presto un arco, un bastón y un escudo: pruébalos y elige con qué arma te enfrentarás a Gabriel. Vuelve cuando acabes.',rem:'Practica con los corderos de nube de la Palestra.',turn:'¿Has terminado?',give:{bw_pino:1,st_pino:1,sh_cobre:1},done:'Bien. Quédate con las armas y elige la tuya. Deposita todo en el banco, saca del banco las 4 ofrendas que aparecerán allí y llévalas a la Arena del Vigía, al sur, fuera de la isla.',coins:40}];
  const QS=(q,ph,o)=>Object.assign({q,ph,npc:QUESTS[q].npc,g:{t:'talk',k:QUESTS[q].npc}},o);
  const BOXP=[-27,-7.5];   // caja de las pertenencias (tiles desde el centro de la isla): en la PUNTA OESTE, junto a un olivo, a ≈ 20 tiles de la llegada (hay que caminar)
  const STEPS=[
@@ -39,10 +39,15 @@ const ISLA=(()=>{
   {cap:3,txt:'Cocina 2 camarones en la fogata',at:[-1.6,-3.7],g:{t:'make',k:'c_camaron',n:2}},
   QS(3,'t',{cap:3,txt:'Vuelve con Rafael y entrégale los camarones'}),
   QS(4,'a',{cap:4,txt:'Habla con Miguel, en la Palestra'}),
-  {cap:4,txt:'Apunta con el ratón y haz clic: golpea a una gallina (3 golpes)',at:[14,10],g:{t:'cnt',k:'swing',n:3}},
-  {cap:4,txt:'Mantén el clic para cargar un golpe y suéltalo',at:[14,10],g:{t:'cnt',k:'charged',n:1}},
+  {cap:4,txt:'Apunta con el ratón y haz clic: golpea a un cordero (3 golpes)',at:[14,10],g:{t:'cnt',k:'swing',n:3}},
+  {cap:4,txt:'Mantén el clic para cargar un golpe y suéltalo (gasta resistencia)',at:[14,10],g:{t:'cnt',k:'charged',n:1}},
   {cap:4,txt:'Esquiva con ESPACIO (2 veces)',g:{t:'dash',k:'dash',n:2},hint:'Espacio'},
-  {cap:4,txt:'Derrota 3 gallinas',at:[14,10],g:{t:'kill',k:'gallina',n:3}},
+  {cap:4,txt:'Mantén el CLIC DERECHO para bloquear (1 vez)',g:{t:'cnt',k:'bstart',n:1}},
+  {cap:4,txt:'Equipa el arco de Miguel (Mochila)',g:{t:'eq',slot:'w',k:'bw_pino'}},
+  {cap:4,txt:'Dispara 3 flechas a los corderos (clic hacia ellos)',at:[14,10],g:{t:'cnt',k:'shot',n:3}},
+  {cap:4,txt:'Equipa el bastón de Miguel (Mochila)',g:{t:'eq',slot:'w',k:'st_pino'}},
+  {cap:4,txt:'Lanza 3 bolas de fuego celestiales (clic o tecla 1; gastan maná)',at:[14,10],g:{t:'cnt',k:'cast',n:3},learn:'cel'},
+  {cap:4,txt:'Derrota 3 corderos de nube con el arma que prefieras',at:[14,10],g:{t:'kill',k:'cordero',n:3}},
   QS(4,'t',{cap:4,txt:'Vuelve con Miguel'}),
   {cap:5,txt:'Deposita todo en el banco',at:[21,-3],g:{t:'dep',k:'dep',n:1}},
   {cap:5,txt:'Saca las 4 ofrendas del banco',at:[21,-3],g:{t:'have',k:['of_tronco','of_estano','of_espada','of_camaron']}},
@@ -74,6 +79,7 @@ const ISLA=(()=>{
    case'panel':return typeof TB!=='undefined'&&TB==='inv'&&typeof panelOpen==='function'&&panelOpen();
    case'have':return g.k.every(k=>own(k)>=1);
    case'item':return have(g.k)>=1;
+   case'eq':return String(S.eq[g.slot]||'').split('~')[0]===g.k;
    case'offer':return i.off.every(v=>v);
    default:if(g.t==='kill'&&g.k==='gabriel')return !!(gm&&gk>=0&&(S.st['kill:gabriel']||0)>gk);   // solo cuenta si ESTA sesión peleó y venció a Gabriel (una partida cargada nunca lo da por muerto)
     return(S.st[key(g)]||0)-i.bs>=g.n}};
@@ -82,9 +88,9 @@ const ISLA=(()=>{
  function boxInit(){if(box&&PO.includes(box))return;if(typeof PO==='undefined')return;const q=wp(BOXP[0],BOXP[1]),got=st().step>1||st().done;box=PO.find(p=>p.pk==='cajaIsla')||null;if(!box){box={po:1,id:'isla_caja',pk:'cajaIsla',n:got?'cofreAbierto':'cofre',nm:'Caja de pertenencias',x:q.x,y:q.y,k:9,_oa:1};PO.push(box)}}
  function search(e){const n=cur();if(!on()||n.g.t!=='item'||have('pendiente')>=1){toast('Una caja vieja. Ya no queda nada dentro.',1800);return}
   if(typeof castStart==='function')castStart('Buscando entre tus cosas…',5000,()=>{add('pendiente');if(e)e.n='cofreAbierto';try{toast('Encuentras: <b>Pendiente de plata</b>',2800);snd('rare')}catch(x){}dirty=1},{e})}
- const CHK=[[12.5,9.5],[15.2,11],[16.5,8.6],[13,12],[14.2,8.2],[11.6,11.2]];
- // asegura `n` gallinas vivas en la Palestra: crea las que falten en los puntos de CHK (en orden, determinista)
- function chickens(n){if(typeof mob!=='function'||!zone())return;const nw=performance.now();let live=M.filter(m=>m.d.id==='gallina'&&m.hx>=zone().x0&&alive(m,nw)).length;for(let k=0;k<CHK.length&&live<n;k++){const [x,y]=CHK[(chI+k)%CHK.length],q=wp(x,y);if(M.some(m=>m.d.id==='gallina'&&alive(m,nw)&&Math.hypot(m.x-q.x,m.y-q.y)<40))continue;mob('gallina',q.x,q.y);live++}chI=(chI+1)%CHK.length}
+ const CHK=[[8.5,7],[14.5,4.8],[20,6.5],[10.5,14],[16.2,10.6],[21.5,11.5]];   // corderos de nube NEUTRALES (como las gallinas), bien separados (≥ 5 tiles) por la Palestra
+ // asegura `n` corderos de nube vivos en la Palestra: crea las que falten en los puntos de CHK (en orden, determinista)
+ function chickens(n){if(typeof mob!=='function'||!zone())return;const nw=performance.now();let live=M.filter(m=>m.d.id==='cordero'&&m.hx>=zone().x0&&alive(m,nw)).length;for(let k=0;k<CHK.length&&live<n;k++){const [x,y]=CHK[(chI+k)%CHK.length],q=wp(x,y);if(M.some(m=>m.d.id==='cordero'&&alive(m,nw)&&Math.hypot(m.x-q.x,m.y-q.y)<40))continue;mob('cordero',q.x,q.y);live++}chI=(chI+1)%CHK.length}
  function tick(dt){if(!zone())return;
   if(!S.islaInit){S.islaInit=1;if((S.goal||0)===0&&!(S.st&&S.st.talk)&&!/[?&](at=|zone=0)/.test(location.search)){st().lock=1;go(0);save()}}
   if(on()&&st().lock&&!S.islaTip){S.islaTip=1}   // 21 oct 2026: la tarjeta gigante de controles del principio se QUITÓ; los controles se enseñan poco a poco (hintsTick)
@@ -100,6 +106,7 @@ const ISLA=(()=>{
   grantOfr();
   {const g0=cur().g;if(g0.t==='kill'&&g0.k==='gabriel'&&!gm&&!intro&&Math.hypot(wp(AR[0],AR[1]).x-P.x,wp(AR[0],AR[1]).y-P.y)<7.5*T){if(!fAt)fAt=performance.now()+1400;else if(performance.now()>=fAt){fAt=0;fight()}}}   // última ofrenda → pausa de 1,4 s y arranca la intro del jefe
   if(cur().g.t==='offer'){OFR.forEach(([it,x,y],k)=>{if(i.off[k])return;const q=wp(x,y);if(Math.hypot(q.x-P.x,q.y-P.y)<2.4*T&&own(it)>=1){give(it);i.off[k]=1;dirty=1;try{snd('rare')}catch(e){}toast('El brasero acepta la ofrenda ('+i.off.reduce((a,b)=>a+b,0)+'/4)',1600)}})}
+  if(cur().learn&&typeof learnSkill==='function')learnSkill(cur().learn);   // la habilidad se aprende al llegar a su paso
   hintsTick(performance.now());
   gTick(performance.now());if(gAlive()){fightAt=performance.now();bossAt=fightAt}   // música de jefe (src/music.js: DEF[9].jefe = gabriel.mp3) mientras dure el combate
 
@@ -116,9 +123,11 @@ const ISLA=(()=>{
   if(s===1&&now-hAt>14000)ctxHint('run',[[['Mayús'],'mantén para correr (gasta resistencia)']],7000);
   if(n.g.t==='panel')ctxHint('bag',[[[],'abre la <b>Mochila</b>: primer icono del menú de la derecha']],8000);
   if(s>=3&&s<8&&now-hAt>8000)ctxHint('jump',[[['V'],'saltar (sin gastar resistencia)']],6000);
-  if(gAlive()&&!intro)ctxHint('block',[[['Clic der.','o Q'],'mantén para bloquear (gasta resistencia; el escudo aguanta más)'],[['Clic der.','justo al golpe'],'parada perfecta: sin daño ni gasto'],[['Espacio','justo al golpe'],'esquiva perfecta: casi gratis']],11000);
-  if(n.cap===4&&n.g.t==='cnt')ctxHint('attack',[[['Clic'],'golpear hacia donde apunta el ratón'],[['Mantén clic'],'cargar un golpe más fuerte'],[['Espacio'],'esquivar']],10000);
-  if(n.cap===4&&M.filter(m=>m.d.id==='gallina'&&alive(m,performance.now())&&Math.hypot(m.x-P.x,m.y-P.y)<260).length>=2&&S.ctxh&&S.ctxh.attack)ctxHint('tab',[[['Tab'],'fijar y cambiar de enemigo']],8000)}
+  if(n.g.t==='eq')ctxHint('equip',[[[],'abre la <b>Mochila</b> y haz clic en el objeto para equiparlo']],7000);
+  if(n.g.t==='cnt'&&n.g.k==='cast')ctxHint('fire',[[['1'],'lanza la bola de fuego celestial (barra bajo la vida)'],[['Mantén clic'],'cárgala: más grande y arde']],7500);
+  if(n.cap===4&&n.g.t==='cnt'&&n.g.k==='bstart')ctxHint('blockT',[[['Clic der.'],'mantén para bloquear'],[['Clic der.','justo al golpe'],'parada perfecta: sin daño ni gasto']],6500);   // el bloqueo se enseña AQUÍ (Palestra), no durante el combate de Gabriel
+  if(n.cap===4&&n.g.t==='cnt')ctxHint('attack',[[['Clic'],'golpear hacia donde apunta el ratón'],[['Mantén clic'],'cargar un golpe más fuerte'],[['Espacio'],'esquivar'],[['Clic der.'],'mantén para bloquear']],10000);
+  if(n.cap===4&&M.filter(m=>m.d.id==='cordero'&&alive(m,performance.now())&&Math.hypot(m.x-P.x,m.y-P.y)<260).length>=2&&S.ctxh&&S.ctxh.attack)ctxHint('tab',[[['Tab'],'fijar y cambiar de enemigo']],8000)}
  // ── MISIONES TIPO WOW: marcador del PNJ y diálogo con opciones ──
  const qIdx=(q,ph)=>STEPS.findIndex(x=>x.q===q&&x.ph===ph),qOf=id=>QUESTS.findIndex(x=>x.npc===id);
  const needOk=q=>{const d=QUESTS[q].deliver;return !d||Object.entries(d).every(([k,n])=>have(k)>=n)};
@@ -144,7 +153,7 @@ const ISLA=(()=>{
   qp.innerHTML=h;qp.querySelectorAll('button').forEach(b=>b.onclick=()=>{const yes=b.dataset.a==='ok';qpHide();if(!yes)return;if(ph==='a')accept(q);else turnIn(q,D)});
   qp.style.display='flex';void qp.offsetWidth;qp.classList.add('on');qpNpc=Q.npc}
  addEventListener('keydown',e=>{if(!qpNpc)return;if(e.key==='Escape'){qpHide();e.preventDefault();e.stopImmediatePropagation()}},true);
- function accept(q){const Q=QUESTS[q];if(!mark(Q.npc)||mark(Q.npc).k!=='new')return;adv();try{toast('❕ Misión aceptada: <b>'+Q.name+'</b>',2600);snd('quest')}catch(e){}}
+ function accept(q){const Q=QUESTS[q];if(!mark(Q.npc)||mark(Q.npc).k!=='new')return;adv();if(Q.give){for(const[k,n]of Object.entries(Q.give))for(let j=0;j<n;j++){if(typeof room==='function'&&!room(k))S.bank[k]=(S.bank[k]||0)+1;else add(k)}try{toast('Miguel te presta: <b>'+list(Q.give,0)+'</b>',3400)}catch(e){}}try{toast('❕ Misión aceptada: <b>'+Q.name+'</b>',2600);snd('quest')}catch(e){}}
  function turnIn(q,D){const Q=QUESTS[q];if(!needOk(q)){try{toast('Te falta algo por entregar.',1800)}catch(e){}return}
   if(Q.deliver)take(Q.deliver);let ex='';if(Q.reward){for(const[k,n]of Object.entries(Q.reward))for(let j=0;j<n;j++){if(typeof room==='function'&&!room(k))S.bank[k]=(S.bank[k]||0)+1;else add(k)}ex='<br><span style="color:#e8cf94">Recibes: '+list(Q.reward,0)+'</span>'}
   if(Q.coins){earn(Q.coins);ex+=(ex?'<br>':'<br>')+'<span style="color:#e8cf94">'+Q.coins+' monedas de cobre</span>'}
@@ -163,12 +172,13 @@ const ISLA=(()=>{
  // Las mecánicas son las de combat.js (`BM.gabriel` se reescribe por fase). El héroe NO puede morir aquí (`noDie`): el golpe «se detiene». Al caer, la cinemática `caida`.
  let gm=null,gph=0;
  const gAlive=()=>!!(gm&&gm.hp>0&&(!gm.rt||gm.rt<=performance.now()));
- // INTRO + COMBATE: la cinemática `gabrielIntro` (cine.js) baja a Gabriel del cielo sobre la arena; al acabar (o saltarla) aparece el combatiente en ese mismo sitio. 60 de vida, 3 fases, golpes con anticipación de brazo (game.js `wind.slow`).
+ // INTRO + COMBATE: la cinemática `gabrielIntro` (cine.js) baja a Gabriel del cielo sobre la arena; al acabar (o saltarla) aparece el combatiente en ese mismo sitio. 30 de vida, 3 fases, golpes con anticipación de brazo (game.js `wind.slow`).
  let intro=0,fAt=0,gk=-1;   // gk = contador de muertes de Gabriel al EMPEZAR el combate de esta sesión
  function spawnBoss(){gk=S.st['kill:gabriel']||0;const q=wp(AR[0],AR[1]);if(!gm||!M.includes(gm)){mob('gabriel',q.x,q.y);gm=M[M.length-1];gm.elite=1}
-  gm.x=gm.hx=gm.tx=q.x;gm.y=gm.hy=gm.ty=q.y;gm.mh=gm.hp=60;gm.dm=3;gm.hunt=1;gm.rt=0;gm.asx=1;gm.gc=0;gm.tel=null;gm.wind=null;gm.nt=performance.now()+1500;gph=0;BM.gabriel=[];
+  gm.x=gm.hx=gm.tx=q.x;gm.y=gm.hy=gm.ty=q.y;gm.mh=gm.hp=30;gm.dm=3;gm.hunt=1;gm.rt=0;gm.asx=1;gm.gc=0;gm.tel=null;gm.wind=null;gm.nt=performance.now()+1500;gph=0;BM.gabriel=[];
   try{banner('Gabriel','El vigía del Cielo','#e8cf94',3000)}catch(e){}try{log('✦ <b>Gabriel</b> te mira. Vigila su brazo: cuando lo alza, esquiva.')}catch(e){}}
- function fight(){if(typeof mob!=='function'||intro)return;const q=wp(AR[0],AR[1]);
+ function fight(){if(typeof mob!=='function'||intro)return;const q=wp(AR[0],AR[1]);if(typeof bossMusic==='function')bossMusic(16000);   // la música del jefe empieza al EMPEZAR a aparecer (intro)
+ 
   if(typeof CINE!=='undefined'&&CINE.SCENES&&CINE.SCENES.gabrielIntro){intro=1;CINE.SCENES.gabrielIntro.anchor=[q.x,q.y];
    if(CINE.start('gabrielIntro',{done:()=>{intro=0;spawnBoss()}}))return;intro=0}
   spawnBoss()}
@@ -179,10 +189,10 @@ const ISLA=(()=>{
  // Devuelve true si ha gestionado la muerte (die() de game.js no hace nada más); fuera del combate de Gabriel devuelve false y die() es el de siempre.
  function noDie(){if(!on()||!gAlive())return false;P.dot=null;try{HOT=[]}catch(e){}P.pjM=null;M.forEach(m=>m.hunt=0);P.hp=maxHp();const q=wp(AR[0],AR[1]-5.2);P.x=q.x;P.y=q.y;try{FD=performance.now()}catch(e){}P.g=P.mv=null;stopA();
   const g=wp(AR[0],AR[1]);gm.x=gm.hx=gm.tx=g.x;gm.y=gm.hy=gm.ty=g.y;gm.hp=gm.mh;gm.hunt=0;gm.tel=null;gm.asx=1;gm.en=0;gm.dm=2;gph=0;BM.gabriel=[];try{snd('die')}catch(e){}toast('☠️ Gabriel te derriba. Despiertas al borde de la arena.',2800);return true}
- // «ESCAPA»: la isla arde. Desaparecen TODOS los PNJ (y las gallinas), el cielo se vuelve rojo (`R3D.skyBurn`), el pasto naranja (`uBurn`), las nubes de fuego y caen brasas (r3d.js `burnFx`). Se invoca al entrar en el paso `esc`.
+ // «ESCAPA»: la isla arde. Desaparecen TODOS los PNJ (y los corderos), el cielo se vuelve rojo (`R3D.skyBurn`), el pasto naranja (`uBurn`), las nubes de fuego y caen brasas (r3d.js `burnFx`). Se invoca al entrar en el paso `esc`.
  let es=0;const gone=[];
  function startEscape(){if(es)return;es=1;for(let k=ST.length-1;k>=0;k--){const e=ST[k];if(e.k===9&&e.npc){gone.push(e);ST.splice(k,1)}}
-  for(let k=M.length-1;k>=0;k--){const m=M[k];if(zone()&&m.hx>=zone().x0&&m.d.id==='gallina'){gone.push({mob:m});M.splice(k,1)}}
+  for(let k=M.length-1;k>=0;k--){const m=M[k];if(zone()&&m.hx>=zone().x0&&m.d.id==='cordero'){gone.push({mob:m});M.splice(k,1)}}
   try{R3D.skyBurn=1}catch(e){}try{banner('¡Escapa!','El cielo arde','#ff6a3a',3600)}catch(e){}try{log('🔥 El cielo arde. Todo lo que conocías desaparece… ¡corre!')}catch(e){}}
  function endEscape(){es=0;try{R3D.skyBurnReset()}catch(e){}gone.splice(0).forEach(e=>{if(e.mob)M.push(e.mob);else ST.push(e)})}
  // tarjeta de bienvenida (UI Susurro: cristal + trazo dorado): cómo moverse, correr, esquivar y golpear; se cierra con el botón o con cualquier tecla de acción
