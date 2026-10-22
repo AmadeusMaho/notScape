@@ -130,6 +130,19 @@ const MODELS={
   lathe(b,0,.585,0,[[.225,0],[.225,.03]],10,lit?COAL:mul(DK,1.2),{sd:963,em:lit?4:0,capEm:lit?4:0,capCol:COAL});
   if(lit){const F=(x,z,h,r,sd2)=>lathe(b,x,.6,z,[[r,0],[r*.72,h*.35],[r*.38,h*.7],[.008,h]],6,FLAME,{sd:sd2,em:3,capEm:3,capCol:FLAME,ph:sd2});F(0,0,.3,.085,964);F(.07,.03,.2,.05,965);F(-.05,-.05,.22,.05,966);lathe(b,0,.6,0,[[.04,0],[.025,.12],[.008,.2]],5,col('#fff0b0'),{sd:967,em:3,capEm:3,capCol:col('#fff0b0')})}
   return b},
+ // ── ARENA DEL VIGÍA (21 oct 2026, combate de Gabriel): disco de mármol de ≈ 5,5 tiles de radio (R=3,7 ×PROP_K) con anillos de lajas, DOS aros de oro incrustados, un SOL dorado en el centro, grada perimetral y ocho columnas bajas con capitel alrededor (fuera del suelo).
+ // Los 4 braseros del ritual son props aparte (braseroG) colocados dentro del disco. Sin tejado: nada que recortar. ──
+ arenaG(o){const b=new B(1001),sd=1001,R=3.7;
+  lathe(b,0,0,0,[[R+.25,0],[R+.25,.05]],36,marble(sd,0),{sd,v:.02});lathe(b,0,.05,0,[[R+.1,0],[R+.1,.04]],36,mul(marble(sd,1),.74),{sd:sd+1,v:.02});
+  [[1.0,1.9,14],[1.9,2.8,22],[2.8,3.6,30]].forEach(([r0,r1,n],ri)=>{for(let k=0;k<n;k++){const a=(k+.5+ri*.3)/n*TAU,rm=(r0+r1)/2,w=Math.max(.2,TAU*rm/n*.96);
+   b.bevel(Math.cos(a)*rm,.075,Math.sin(a)*rm,r1-r0-.03,.026,w*.94,mul(marble(sd,ri*60+k,.05),.94),{r:.012,nb:1,my:-a})}});
+  b.bevel(0,.075,0,2.0,.03,2.0,mul(marble(sd,9),.94),{r:.012,nb:1,my:.4});
+  // aros de oro incrustados y SOL central (ocho rayos)
+  [[1.9,48],[3.55,64]].forEach(([r,n],ri)=>{for(let k=0;k<n;k++){const a=k/n*TAU;b.bevel(Math.cos(a)*r,.098,Math.sin(a)*r,.07,.012,TAU*r/n*1.04,mix(GOLD,GOLDL,hash(sd,k,ri+2)),{r:.004,nb:1,my:-a})}});
+  for(let k=0;k<8;k++){const a=k/8*TAU+.2,l=k%2?.42:.7;b.bevel(Math.cos(a)*(.35+l/2),.098,Math.sin(a)*(.35+l/2),l,.012,.07,mix(GOLD,GOLDL,hash(sd,k,7)),{r:.004,nb:1,my:-a})}
+  b.bevel(0,.098,0,.34,.014,.34,GOLDL,{r:.006,nb:1,my:.785});
+  for(let i=0;i<8;i++){const a=i/8*TAU+.39,x=Math.cos(a)*(R+.55),z=Math.sin(a)*(R+.55);steps(b,x,z,.4,.4,1,.06,0,sd+i*7);column(b,x,z,.06,i%2?.95:1.25,.12,sd+i*17,i%3===0?.6:1)}
+  return b},
  // ── ánfora de terracota con banda oscura (figuras negras) y dos asas ──
  anfora(o){const b=new B(971),sd=971,pr=[[.055,0],[.075,.02],[.115,.08],[.15,.2],[.155,.26],[.13,.34],[.078,.42],[.058,.46],[.07,.5],[.085,.52]],T=vary(TERRA,.08,sd,1);
   lathe(b,0,0,0,pr,10,(i,k)=>i===3||i===4?(i===3?mul(DK,1.3):mix(DK,T,.5)):vary(T,.05,sd,k+i),{sd,top:false});
@@ -154,9 +167,9 @@ export function cieloGeo(n,o,th){if(!MODELS[n])return null;const key='dk:ci:'+n+
  let g=MODELS[n](o||{}).geo();const K=CI_SCALE[n];if(K){g.scale(K,K,K);g.computeBoundingBox();g.computeBoundingSphere()}if(o&&(o.rot||o.dir==='y'))g=swapXZ(g);const r={g,key};GEO.set(key,r);return r}
 export const CI_NAMES=Object.keys(MODELS);
 // props de MÁRMOL: props3d.js los dibuja con el material de las rocas (sombreado continuo, sin textura procedural)
-export const CI_ROCK=new Set(['columnaG','columnaRota','temploG','propileos','agora','estatuaAlada','estelaG','bancoG']);
+export const CI_ROCK=new Set(['columnaG','columnaRota','temploG','propileos','agora','estatuaAlada','estelaG','bancoG','arenaG']);
 // huella y altura medidas (ancho x, alto y, fondo z; sin escalar ×PROP_K) → `python3 tools/r3d/props_sheet.py --medir` o `R3D.props.fp` en el juego. Medido el 21 oct 2026 con Node (`tools/r3d/cielo_check.py`); columna/templo/estatua con `ruins` varían (ver el script).
-export const CI_FOOT={columnaG:[.43,1.73,.43],columnaRota:[1.81,.71,1.31],temploG:[3.65,2.39,6.20],propileos:[7.90,4.71,6.47],agora:[5.20,1.29,5.20],estatuaAlada:[1.51,2.36,1.51],braseroG:[.24,.455,.23],anfora:[.19,.31,.17],estelaG:[.40,.77,.195],bancoG:[.65,.24,.22]};
-export function CI_CASES(){return [['columnaG',{},'columnaG'],['columnaG',{ruins:1},'columnaG'],['columnaRota',{v:0},'columnaRota'],['temploG',{},'temploG'],['temploG',{ruins:1},'temploG'],['propileos',{},'propileos'],['agora',{},'agora'],['estatuaAlada',{},'estatuaAlada'],['estatuaAlada',{ruins:1},'estatuaAlada'],['braseroG',{},'braseroG'],['braseroG',{lit:0},'braseroG'],['anfora',{},'anfora'],['estelaG',{},'estelaG'],['bancoG',{},'bancoG']]}
+export const CI_FOOT={columnaG:[.43,1.73,.43],columnaRota:[1.81,.71,1.31],temploG:[3.65,2.39,6.20],propileos:[7.90,4.71,6.47],agora:[5.20,1.29,5.20],estatuaAlada:[1.51,2.36,1.51],braseroG:[.24,.455,.23],anfora:[.19,.31,.17],estelaG:[.40,.77,.195],bancoG:[.65,.24,.22],arenaG:[8.26,1.29,8.26]};
+export function CI_CASES(){return [['columnaG',{},'columnaG'],['columnaG',{ruins:1},'columnaG'],['columnaRota',{v:0},'columnaRota'],['temploG',{},'temploG'],['temploG',{ruins:1},'temploG'],['propileos',{},'propileos'],['agora',{},'agora'],['estatuaAlada',{},'estatuaAlada'],['estatuaAlada',{ruins:1},'estatuaAlada'],['braseroG',{},'braseroG'],['braseroG',{lit:0},'braseroG'],['anfora',{},'anfora'],['estelaG',{},'estelaG'],['bancoG',{},'bancoG'],['arenaG',{},'arenaG']]}
 // verificador anti-clipping de tejados (regla ANTICLIP; lo usa tools/r3d/roof_clip_check.py)
 export function clipReport(n,o){const b=MODELS[n](o||{});return {clips:b.clips(),roofs:b.R.length}}

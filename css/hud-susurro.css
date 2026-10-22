@@ -763,3 +763,17 @@ body.cine #qms{opacity:0}
 .rtip .rt-n{display:block;font:700 .95em Cinzel,Georgia,serif;letter-spacing:.1em;color:#e8cf94;text-shadow:0 0 .4em rgba(0,0,0,.6)}
 .rtip .rt-s{display:block;font-size:.92em;color:#cdbf9f}
 .rtip .rt-s i{font-style:normal}.rtip .rt-s u{text-decoration:none;opacity:.5}
+
+/* ═══ BARRA DE JEFE estilo Dark Souls (21 oct 2026): abajo-centro, sobre el marco del jugador; todos los jefes (boss:1) y Gabriel. Mini-jefes (boss:2) = nameplate `.np.b2` distinto ═══ */
+#bbar{position:fixed;left:50%;bottom:27%;width:min(54vw,740px);transform:translate(-50%,8px);opacity:0;pointer-events:none;z-index:6;transition:opacity .7s ease,transform .7s ease;text-align:left}
+#bbar.on{opacity:1;transform:translate(-50%,0)}
+#bbar .bb-n{font-family:Cinzel,Spectral,serif;font-weight:600;font-size:min(1.55vw,19px);letter-spacing:.22em;color:#e8cf94;text-shadow:0 0 8px #000,0 1px 0 #000;margin:0 0 .35em .15em}
+#bbar .bb-b{position:relative;height:min(1.05vw,13px);background:rgba(10,8,7,.86);border:1px solid rgba(232,207,148,.7);box-shadow:0 0 0 1px rgba(0,0,0,.8),0 3px 12px rgba(0,0,0,.6);overflow:hidden}
+#bbar .bb-b u,#bbar .bb-b i{position:absolute;left:0;top:0;bottom:0;text-decoration:none}
+#bbar .bb-b u{background:rgba(240,225,190,.62);transition:width .55s ease-out}
+#bbar .bb-b i{background:linear-gradient(180deg,#d8493e,#7c1712);box-shadow:inset 0 2px 3px rgba(255,255,255,.2);transition:width .16s ease-out;z-index:1}
+#bbar .bb-b b{position:absolute;top:0;bottom:0;width:1px;background:rgba(232,207,148,.45);z-index:2}
+#bbar .bb-b b:nth-of-type(1){left:66%}#bbar .bb-b b:nth-of-type(2){left:33%}
+.np.b2 .npb{width:7.4em;height:1.22em;border:1px solid #b9a5e8;box-shadow:0 0 0 1px #000,0 0 .5em rgba(160,130,230,.45)}
+.np.b2 .npb i{background:linear-gradient(180deg,#b58cf0,#5b2f98)}
+.np.b2 .npt{color:#dccdf7}

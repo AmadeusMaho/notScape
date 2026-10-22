@@ -247,7 +247,7 @@ k2:{n:'Morgana, Reina Bruja',lv:44,hp:1,dmg:1,ag:1,boss:2,as:2400,c:'#2e1a48',w:
 k3:{n:'Thrud, Gigante de Hielo',lv:60,hp:1,dmg:1,ag:1,boss:2,as:3000,c:'#8ab0dc',w:34,h:58,co:[900,1700],dr:[['carne_gig',.75],['cuero',.75]]},
 k4:{n:'Kage, Maestro Shinobi',lv:76,hp:1,dmg:1,ag:1,boss:2,as:1800,c:'#3a1a24',w:20,h:40,co:[1300,2300],dr:[['arroz',.75],['cuero',.75]]},
 k5:{n:'Coloso de Magma',lv:97,hp:1,dmg:1,ag:1,boss:2,as:3000,c:'#4a3e42',w:40,h:64,co:[1800,3200],dr:[['sal_vol',.75],['gema',.75]]}};
-MD.gabriel={n:'Gabriel, el Vigía',lv:6,hp:45,dmg:2,ag:1,as:2600,c:'#d9d6cc',w:20,h:44,co:[0,0],dr:[]};   // ISLA-6: jefe del tutorial de la isla del Cielo (src/isla.js lo crea con ISLA.fight(); NO es un jefe de bioma: sin sello, runas ni respawn)
+MD.gabriel={n:'Gabriel, el Vigía',lv:6,hp:90,dmg:3,ag:1,as:1900,c:'#d9d6cc',w:20,h:44,co:[0,0],dr:[]};   // ISLA-6: jefe del tutorial de la isla del Cielo (src/isla.js lo crea con ISLA.fight(); NO es un jefe de bioma: sin sello, runas ni respawn)
 // ── lote C1b-1: CADA criatura suelta el cuero de SU tier (HID[t]); sustituye al `cuero` genérico de sus drops. Tabla editable: criatura → tier (0 = Cuero curtido … 10 = Cuero de kraken).
 // Reparto por bioma (como las menas): Pradera 0-2 · Bosque 3-5 · Cumbres 6 · Oriental 7-8 · Volcán 7-10. Pantano (rana, esqueleto, bruja) y la fauna sin cuero no sueltan. Si una criatura no tenía `cuero` en su drop, se añade (.4; jefes/capitanes .75).
 const HIDEOF={goblin:0,vaca:0,orco:1,b0:1,bandido:2,k0:2,jabali:3,lobo:4,b1:4,oso:5,k1:5,yak:6,ogro:6,gigante:6,b3:6,k3:6,zorro:7,lagarto:7,oni:8,shinobi:8,b4:8,k4:8,demonio:9,b5:9,golem:10,k5:10};
@@ -846,12 +846,14 @@ function hitM(m,d,now,sk,mxv,wt){if(!alive(m,now))return;fightAt=now;m.lx=m.x;m.
  if(d>0&&sk!=='mg'&&window.R3D&&R3D.spell){try{R3D.spell.hit(m.x,m.y,Math.atan2(m.y-P.y,m.x-P.x),mx?1:heavy?.6:0)}catch(e){}}   // impacto 3D: destello + chispas en la dirección del golpe
  if(d>0&&sk!=='mg'&&mxv!==99&&window.R3D&&R3D.blood){try{R3D.blood.hit(m,d,now,{wt:wt==='r'?'r':'m',mx})}catch(e){}}   // Lote R3D-SANGRE (solo ?r3d=1): golpes físicos directos sangran; hechizos (sk='mg'), espinas y sangrado por turnos (mxv=99) no. wt='r' = flecha/virote
  splat(m.x,m.y,d,mx?'#c9a24a':null,m.d.h+6,mx);if(mx){sp(m.x,m.y-m.d.h/2,'#e8cf94',16,120,80,170);sp(m.x,m.y-m.d.h/2,'#fff1c8',8,70,60,190);SHK=now+160;HFX.push({k:'star',tx:m.x,ty:m.y,th:m.d.h/2,t0:now,d:380})}if(d)gain(sk||WSK(),d*xpMul(m));if(m.hp<=0){kill(m,now);if(A&&A.e===m)reseek(m,now)}}
-const inVilla=(x,y)=>{const k=ownAt(x,y);if(k<0)return false;const b=BI[k],v=b.village.safe||[210,770,245,225];return Math.abs(x-(b.ox+v[0]))<v[2]&&Math.abs(y-(b.oy+v[1]))<v[3]}; // zona segura de la aldea (BIOMES.list[k].village.safe = [cx,cy,semiancho,semialto])
+const inVilla=(x,y)=>{const k=ownAt(x,y);if(k<0)return false;if(typeof ISLA!=='undefined'&&ISLA.fightOn())return false;   // la Arena del Vigía queda dentro de la zona segura del Agora: durante el combate de Gabriel NO hay zona segura
+ const b=BI[k],v=b.village.safe||[210,770,245,225];return Math.abs(x-(b.ox+v[0]))<v[2]&&Math.abs(y-(b.oy+v[1]))<v[3]}; // zona segura de la aldea (BIOMES.list[k].village.safe = [cx,cy,semiancho,semialto])
 /* AVISO DE GOLPE de los enemigos (21 oct 2026; pedido del dueño: «avisos de golpe»): ya no pegan al instante. Se paran ~0,42–0,72 s (≈ 22 % de su cadencia) con una pose de preparación y un CONO ROJO en el suelo que se va llenando; al terminar,
    el golpe solo cuenta si sigues dentro del cono (±52°) y del alcance → se esquiva con un paso al lado o con el DASH (i-frames). Los jefes y capitanes conservan además su golpe pesado telegrafado (combat.js). */
 function windHit(m,w,now,dx,dy,dp){const reach=46+(m.d.w||16)*.3+18;let df=Math.abs(Math.atan2(dy,dx)-w.ang);df=df>Math.PI?2*Math.PI-df:df;const hit=P.hp>0&&dp<=reach&&df<=.9;
  m.flare=now;   // fogonazo de ojos al soltar el golpe (actors3d.js)
- if(hit)monHit(m,now);else{m.at0=now;if(P.hp>0&&dp<reach*1.8){splat(P.x,P.y,0,'#e8cf94',26);inc('dodge')}}m.at0=now-.18*(m.d.boss?760:640)}   // la animación del golpe arranca en el tajo
+ if(hit)monHit(m,now);else{m.at0=now;if(P.hp>0&&dp<reach*1.8){splat(P.x,P.y,0,'#e8cf94',26);inc('dodge')}}m.at0=now-.18*(m.d.boss?760:640);
+ if(w.kind==='dbl'&&!w.second&&P.hp>0){const a2=Math.atan2(P.y-m.y,P.x-m.x);m.wind={t0:now+330,t1:now+330+680,d:680,ang:a2,big:false,slow:1,kind:'dbl',second:1}}}   // el combo encadena un 2.o aviso (brazo de nuevo arriba) que apunta a donde estes AHORA   // la animación del golpe arranca en el tajo
 /* 21 oct 2026 (pedido del dueño): los enemigos NORMALES ya no dibujan cono en el suelo: avisan 0,8 s encendiendo los ojos (actors3d.js `eyeFx`) y el fogonazo marca el tajo. El arco en el suelo (decal 3D de spellfx3d.js `tele`)
    queda solo para los "grandes": jefes, élites (m.elite) y enemigos de nivel ≥ 40 (`bigFoe`). */
 const bigFoe=m=>!!(m.d.boss||m.elite||(m.lv||0)>=40);
@@ -1120,8 +1122,9 @@ function upd(dt,now){swingTick(now,dt);if(typeof AMB!=='undefined')AMB.tick(now,
    if(P.hp<=0||inV||Math.hypot(m.x-lx,m.y-ly)>(m.d.boss?260:m.d.ag?190:140)||dp>420){m.hunt=0;m.lx=null;m.ag0=now+6000;m.tel=null;return}
    if(m.d.boss)bossTick(m,now);
    if(telOn(m)&&telUpd(m,now))return;
-   if(m.wind){const w=m.wind;if(now<w.t1){m.f=dx-dy>=0?1:-1;return}m.wind=null;windHit(m,w,now,dx,dy,dp);return}   // AVISO DE GOLPE: el enemigo se queda quieto con el cono rojo y golpea al terminar
-   if(dp>40){const sp2=(m.d.ag?58:45)*dt,nx=m.x+dx/dp*sp2,ny=m.y+dy/dp*sp2;if(!inVilla(nx,ny)){m.x=nx;m.y=ny;m.mv=now;m.f=dx-dy>=0?1:-1}}else if(!busy){m.f=dx-dy>=0?1:-1;if(now>=m.nt){if(telOn(m)&&now>=(m.tn||(m.tn=now+4000)))telStart(m,now);else if(!m.wind){const big=bigFoe(m),wd=big?Math.max(420,Math.min(720,(m.d.as||2400)*.22*(m.asx||1))):800;m.wind={t0:now,t1:now+wd,ang:Math.atan2(dy,dx),big};m.nt=now+(m.d.as||2400)*(m.asx||1)+wd}}if(!A&&!P.g&&!P.mv&&!(K.l||K.r||K.u||K.d))startF(m,now)}return}
+   if(m.wind){const w=m.wind;if(now<w.t1){m.f=dx-dy>=0?1:-1;if(w.slow&&now>w.t0+w.d*.35)sp(m.x+(dx/(dp||1))*14,m.y-m.d.h*.95,'#ffe9a8',1,26,40,-30);return}m.wind=null;windHit(m,w,now,dx,dy,dp);return}   // AVISO DE GOLPE: el enemigo se queda quieto con el cono rojo y golpea al terminar
+   if(dp>40){const sp2=(m.d.ag?58:45)*dt,nx=m.x+dx/dp*sp2,ny=m.y+dy/dp*sp2;if(!inVilla(nx,ny)){m.x=nx;m.y=ny;m.mv=now;m.f=dx-dy>=0?1:-1}}else if(!busy){m.f=dx-dy>=0?1:-1;if(now>=m.nt){if(telOn(m)&&now>=(m.tn||(m.tn=now+4000)))telStart(m,now);else if(!m.wind){const big=bigFoe(m),gb=m.d.id==='gabriel',wd=gb?Math.round(950*Math.max(.8,m.asx||1)):big?Math.max(420,Math.min(720,(m.d.as||2400)*.22*(m.asx||1))):800,kind=gb?((m.gc=(m.gc||0)+1)%3===0?'dbl':'one'):null;   /* GABRIEL (21 oct 2026): ataque BASICO con anticipacion larga del BRAZO (se alza despacio ~1 s, sin cono en el suelo; actors3d.js `wind.slow`) y cada 3.er es un COMBO de dos golpes */
+    m.wind={t0:now,t1:now+wd,d:wd,ang:Math.atan2(dy,dx),big:big&&!gb,slow:gb?1:0,kind};m.nt=now+(m.d.as||2400)*(m.asx||1)+wd+(kind==='dbl'?1000:0)}}if(!A&&!P.g&&!P.mv&&!(K.l||K.r||K.u||K.d))startF(m,now)}return}
   if(now>m.wt){m.wt=now+R(2000,5000);m.tx=m.hx+R(-16,16);m.ty=m.hy+R(-12,12)}
   const ex=m.tx-m.x,ey=m.ty-m.y,d=Math.hypot(ex,ey);if(d>2){const sp3=d>60?55:18,nx=m.x+ex/d*sp3*dt,ny=m.y+ey/d*sp3*dt;if(!inVilla(nx,ny)){m.x=nx;m.y=ny;m.mv=now;m.f=ex-ey>=0?1:-1}}});
  if(A&&A.wh)whTick(now);
@@ -1173,8 +1176,23 @@ const NPS=new Map();let npRoot=null;
 function npGet(m){let e=NPS.get(m);if(e)return e;if(!npRoot){npRoot=document.createElement('div');npRoot.id='nps';document.body.appendChild(npRoot)}
  const el=document.createElement('div');el.className='np';el.innerHTML='<div class="npb"><u></u><i></i><span class="npt"></span><em class="npp"></em></div><b class="npl"></b>';npRoot.appendChild(el);
  e={el,l:el.querySelector('.npl'),t:el.querySelector('.npt'),p:el.querySelector('.npp'),f:el.querySelector('.npb i'),g:el.querySelector('.npb u'),hp:1,seen:0,key:''};NPS.set(m,e);return e}
+/* BARRA DE JEFE (21 oct 2026; decision del dueño: TODOS los jefes siguen el formato Dark Souls = cinematica de inicio + titulo + esta barra; los MINI-JEFES (capitanes boss:2) no llevan cinematica pero su nameplate es distinto, ver CSS `.np.b2`).
+   Barra ancha abajo-centro con el nombre del jefe, relleno dorado-rojo, estela clara que baja tras cada golpe y marcas de fase. La muestra: jefe `boss:1` que te persigue (<620 px) o el combatiente de la isla (`ISLA.bossOn()`); mientras sale, su nameplate flotante se oculta (`BBM`). Al caer un jefe normal sale «DERROTADO». */
+let BBE=null,BBM=null,BBG=1,BBGT=0,BBL=0;
+function bbTick(now){
+ let m=null;if(typeof ISLA!=='undefined'&&ISLA.boss&&ISLA.bossOn()&&alive(ISLA.boss,now))m=ISLA.boss;
+ else{for(const e of M)if(e.d.boss===1&&e.hunt&&!e.sm&&alive(e,now)&&Math.hypot(e.x-P.x,e.y-P.y)<620){m=e;break}}
+ if(!BBE){BBE=document.createElement('div');BBE.id='bbar';BBE.innerHTML='<div class="bb-n"></div><div class="bb-b"><u></u><i></i><b></b><b></b></div>';document.body.appendChild(BBE)}
+ if(BBM&&!m&&BBM!==ISLA_B()&&!alive(BBM,now)&&BBM.d.boss===1&&now-BBL<4000)try{banner(BBM.d.n,'Derrotado','#e8cf94',3200)}catch(e){}
+ if(m!==BBM){BBM=m;if(m){BBE.querySelector('.bb-n').textContent=m.d.n;BBG=m.hp/m.mh;BBE.querySelector('u').style.width=(BBG*100)+'%';BBE.querySelector('i').style.width=(BBG*100)+'%'}}
+ if(m)BBL=now;
+ BBE.classList.toggle('on',!!m&&!(typeof CINE!=='undefined'&&CINE.on)&&!INT);if(!m)return;
+ const p=Math.max(0,Math.min(1,m.hp/m.mh)),f=BBE.querySelector('i'),g=BBE.querySelector('u');
+ if(p<BBG-.0005){BBGT=now+450;BBG=p;f.style.width=(p*100)+'%'}else if(p>BBG+.0005){BBG=p;f.style.width=(p*100)+'%';g.style.width=(p*100)+'%'}
+ if(BBGT&&now>BBGT){g.style.width=(p*100)+'%';BBGT=0}}
+const ISLA_B=()=>typeof ISLA!=='undefined'?ISLA.boss:null;
 function npSweep(){for(const [m,e] of NPS)if(!e.seen){e.el.remove();NPS.delete(m)}else e.seen=0}
-function dMo(m,t,now){if(!alive(m,now))return;const d=m.d,h=(window.R3D&&R3D.actors.topPx(m))||d.h;
+function dMo(m,t,now){if(!alive(m,now)||m===BBM)return;const d=m.d,h=(window.R3D&&R3D.actors.topPx(m))||d.h;
  const dmg=m.hp<m.mh;if(!d.boss&&!d.ag&&!dmg&&Math.hypot(m.x-P.x,m.y-P.y)>300)return;   // «Lv» solo cerca (<300 px), en combate o si el enemigo es jefe/agresivo
  const c=ISO.toCanvas(m.x,m.y,TER.standZ(m.x,m.y)),r=cv.getBoundingClientRect(),k=r.width/cv.width,sy=c.y-(h+4)*SPR*ISO.scale();
  const e=npGet(m);e.seen=1;const gap=m.lv-CBL(),dif=gap>10?'hard':gap>4?'mid':gap<-6?'easy':'';
@@ -1354,7 +1372,7 @@ function draw(now){const t=now/1000;cx=Math.max(0,Math.min(WW-W,P.x-W/2))|0;cy=M
   ...(cin?[]:M).filter(e=>onScr(e.x,e.y)&&R3D.actors.has(e)).map(e=>[ISO.depth(e.x,e.y),()=>spr(e.x,e.y,0,()=>dMo(e,t,now))]),[ISO.depth(P.x,P.y),()=>R3D.drawHero(ctx)]];
  AMBI.draw(ctx,'ground');
  ents.sort((a,b)=>a[0]-b[0]).forEach(o=>o[1]());
- PJ.forEach(p=>{if(now>=p.t0)drawPJ(p,now)});npSweep();whDraw(now);fmDraw(now);fishDraw(now,OCDT);mgUi(now);qmUi(now);castDraw(now);ctxTick(now);drawTel(now);drawWind(now);drawHFX(now);drawAim(now);swingHud(now);
+ PJ.forEach(p=>{if(now>=p.t0)drawPJ(p,now)});npSweep();bbTick(now);whDraw(now);fmDraw(now);fishDraw(now,OCDT);mgUi(now);qmUi(now);castDraw(now);ctxTick(now);drawTel(now);drawWind(now);drawHFX(now);drawAim(now);swingHud(now);
  parts.forEach(p=>p.hs?hsDraw(p):spr(p.x,p.y,12,()=>{ctx.globalAlpha=Math.min(1,p.l);if(p.sp){ctx.beginPath();ctx.arc(p.x,p.y,7,0,7);ctx.fillStyle=p.sp;ctx.fill();T(p.tx,p.x,p.y+4,'#fff')}else if(p.tx)T(p.tx,p.x,p.y,p.c);else Rc(p.c,p.x,p.y,2,2);ctx.globalAlpha=1}));
  AMBI.draw(ctx,'over');
  if(!window.R3D)PAINT.grain(ctx,cv.width,cv.height,ISO.V.dpr,.55); // grano de papel: con WGL lo pone un div con multiply (sin coste por frame); este es el plan B

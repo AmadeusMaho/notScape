@@ -123,4 +123,30 @@ const CINE=(()=>{
    {t:19.2,d:3.8,from:{x:GO[0]*.5,y:GO[1]*.5,zoom:1.9,z:.9},to:{x:GO[0]*.1+10,y:GO[1]*.1-6,zoom:2.5,z:.7},ease:'lin'},{t:23,d:3.5,from:{x:6,y:-4,zoom:3,z:.6},freeze:true},
    {t:26.5,d:3.5,from:{x:4,y:-2,zoom:3.1,z:.55},to:{x:0,y:0,zoom:2.5}},{t:30,d:10,from:{x:0,y:0,zoom:2.2,z:.7},to:{zoom:1.2,z:1.2},shake:.7,ease:'lin'},
    {t:40,d:2,from:{x:0,y:0,zoom:1.2,z:1.2},fade:[0,.92]},{t:42,d:4,from:{x:0,y:0,zoom:1.2,z:1.2},fade:[.92,1],sub:'Cien años.',card:true}]};
+ // «gabrielIntro» (21 oct 2026, pedido del dueño: intro corta de jefe al estilo Dark Souls): la ARENA en calma con brasas → una columna de luz cae del cielo → Gabriel desciende y ATERRIZA (temblor, polvo, estruendo) arrodillado → se incorpora, el halo se enciende →
+ // el título del jefe aparece en letras doradas espaciadas, con campana. Anclada en el centro de la arena (`SCENES.gabrielIntro.anchor` la pone isla.js antes de lanzarla); al acabar (o saltar) isla.js crea al Gabriel combatiente en ese mismo sitio.
+ let GBT=null;
+ SCENES.gabrielIntro={dur:13.2,
+  setup:({anchor,P})=>{const g=R3D.gabriel(anchor[0],anchor[1]);g.faceTo(P.x/ISO.TILE,P.y/ISO.TILE);g.to({kneel:1,head:.5,chest:.2,armR:0,armL:0},.01);g.lift=14;g.grp.visible=false;g.update(0,.5);
+   const hp=g.base,em=R3D.embers(260);em.at(hp.x,hp.z,hp.y);em.level=.5;
+   if(!GBT){GBT=document.createElement('div');GBT.id='gbt';GBT.style.cssText='position:fixed;left:0;right:0;bottom:19%;text-align:center;pointer-events:none;z-index:100000;opacity:0;font-family:Cinzel,Spectral,serif;color:#e8cf94;text-shadow:0 0 18px #000,0 0 6px #000,0 2px 0 #000;transition:none';
+    GBT.innerHTML='<div style="font-size:min(5.6vw,64px);letter-spacing:.42em;padding-left:.42em;font-weight:600">GABRIEL</div><div style="width:min(46vw,520px);height:1px;margin:.7em auto .8em;background:linear-gradient(90deg,transparent,#e8cf94,transparent)"></div><div style="font-size:min(2.3vw,26px);letter-spacing:.38em;padding-left:.38em;font-weight:600;text-shadow:0 0 14px #000,0 0 5px #000,0 2px 0 #000">EL VIGÍA DEL CIELO</div>';document.body.appendChild(GBT)}
+   return{g,em,hp,db:R3D.debris(70),vt:0,done:{}}},
+  update:(T,dt,st)=>{if(!st)return;st.vt+=dt;const{g,em,hp,db,vt}=st,once=(k,t,f)=>{if(T>=t&&!st.done[k]){st.done[k]=1;f()}},ez=u=>u<0?0:u>1?1:u*u*(3-2*u),S_=sfx;
+   // 3,0–5,2 s: la columna de luz se enciende y Gabriel cae (aceleración); 5,2 s: impacto; 6,6–8,6 s: se incorpora
+   const fu=clamp((T-3)/2.2,0,1),fall=fu*fu;g.lift=T<3?14:14*(1-fall);g.grp.visible=T>=3.1;
+   const bm=T<2.6?0:T<5.2?ez((T-2.6)/1.2):clamp(1-(T-5.2)/1.8,0,1);g.setBeam(.62*bm*(0.85+.15*Math.sin(T*31)),.55+.5*bm+(T>5.2?clamp(T-5.2,0,1)*.5:0));
+   g.to(T<3.2?{kneel:1}:T<5.2?{kneel:0,head:-.25,chest:-.1,armR:-.35,armL:-.35}:T<6.6?{kneel:1,head:.5,chest:.22,armR:0,armL:0}:{kneel:0,head:-.1,chest:.0},T<5.3?5:T<6.6?9:1.5);
+   g.setHalo(T<7.4?.15:clamp(.15+(T-7.4)/1.2,0,1),.35);g.update(vt,dt);em.update(vt,dt);db.update(vt,dt);
+   once('a0',.2,()=>{S_.wind(12,.05);S_.choir(98,11,.04,0,[1,1.5,2,3])});once('a1',2.6,()=>{S_.shimmer(3,.05);S_.rumble(3,.08,0,90)});
+   once('hit',5.2,()=>{S_.boom(.3);S_.rumble(3,.12,0,160);db.burst(hp.x,hp.z,hp.y,40,4.5,3.2);em.level=1;
+    try{sp(anc[0],anc[1]+4,'#cfc8b6',24,170,30,40);sp(anc[0],anc[1],'#ffe9a8',14,150,90,120)}catch(e){}});
+   once('brass',6.8,()=>{S_.brass(73.4,4.5,.06);S_.choir(73.4,6,.06,0,[1,1.5,2])});once('bell',9.9,()=>S_.bell(196,.09));
+   if(GBT){const a=T<9.8?0:T<10.8?ez(T-9.8):T<12.4?1:clamp(1-(T-12.4)/.8,0,1);GBT.style.opacity=a.toFixed(3);GBT.style.transform='scale('+(1+.035*clamp((T-9.8)/3.4,0,1)).toFixed(4)+')'}},
+  cleanup:st=>{if(GBT){GBT.remove();GBT=null}if(!st)return;st.g.dispose();st.em.dispose();st.db.dispose()},
+  shots:[{t:0,d:3.2,from:{x:0,y:150,zoom:1.15,z:.5},to:{x:0,y:110,zoom:1.35,z:.6},ease:'out'},
+   {t:3.2,d:2.1,from:{x:0,y:50,zoom:1.55,z:2.2},to:{x:0,y:20,zoom:1.9,z:.5},shake:.55,ease:'in'},
+   {t:5.3,d:1.4,from:{x:6,y:44,zoom:2.5,z:.5},to:{x:0,y:40,zoom:2.8,z:.55},shake:1.1,ease:'out'},
+   {t:6.7,d:3.2,from:{x:0,y:36,zoom:3.3,z:.85},to:{x:0,y:30,zoom:3.7,z:1.05},ease:'lin'},
+   {t:9.9,d:3.3,from:{x:0,y:96,zoom:2.1,z:.85},to:{x:0,y:130,zoom:1.75,z:.9},ease:'lin'}]};
  return{get on(){return on},get T(){return T},get recv(){return recv},set recv(v){recv=clamp(+v||0,0,1)},get look(){return look},set look(v){look=v},seen,mark,seek:t=>{if(on)T=t},start,end,tick,cam,sky,sfx,SCENES,list:()=>Object.keys(SCENES)}})();

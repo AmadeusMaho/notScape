@@ -25,7 +25,7 @@ const FOOT=(()=>{
  // suelo bajo (x,y) en píxeles de mundo: lee los mismos campos que pinta el terreno (caminos PF, adoquines PC, pasarelas DK) + montañas y biomas
  // SUELOS DE MÁRMOL de los props griegos del Cielo (ISLA-3): el ágora, la plataforma de los propíleos, el estilóbato del templo y la base del Altar Quebrado suenan a mármol aunque el terreno de debajo sea hierba.
  // [forma ('c' círculo radio / 'r' rectángulo medio ancho×medio fondo), medidas en tiles SIN escalar] × PROP_K × 32 px; se miden de las huellas del módulo (CI_FOOT).
- const FLOORS={agora:['c',2.6],propileos:['r',3.96,3.23],temploG:['r',1.83,3.1],estatuaAlada:['r',.62,.62],estelaG:['r',.3,.2]};let FL=null,FLn=-1;
+ const FLOORS={agora:['c',2.6],arenaG:['c',3.95],propileos:['r',3.96,3.23],temploG:['r',1.83,3.1],estatuaAlada:['r',.62,.62],estelaG:['r',.3,.2]};let FL=null,FLn=-1;
  // SUELO DE LOS INTERIORES: manda la cultura (tatami del Oriental, basalto del Volcán, troncos del Bosque y cañas del Pantano) y, en las demás, la sala (forja de piedra, banco y templo de mármol, el resto de madera que cruje).
  const INTFLOOR=I=>{const st=I.so&&I.so.style;return st==='shoji'?'rug':st==='basalto'?'stone':st==='troncos'||st==='cana'?'bluntwood':I.id==='herreria'?'concrete':I.id==='banco'||I.id==='temploG'?'marble':'squeakywood'};
  function floorAt(x,y){try{const L=PROPS.list;if(FLn!==L.length){FLn=L.length;FL=L.filter(e=>FLOORS[e.n]);}if(!FL||!FL.length)return null;const K=(window.PROP_K||1)*32;

@@ -28,7 +28,7 @@
  // estaciones del Ágora (horno, yunque, fogata) y el BANCO al pie de la Acrópolis, y el CAMINO DE LAJAS de mármol (cobs → adoquín; suena a mármol) desde la llegada hasta el templo. Zonas y estaciones según docs/PLAN_ISLA_CIELO.md §6.2.
  const RC=(x0,x1,y0,y1)=>{const a=tp(x0,y0),b=tp(x1,y1);return[a[0],b[0],a[1],b[1]]};
  const STN=[['fire','Fogata',...tp(-1.6,-3.7),['co']],['furnace','Horno',...tp(0.4,-5.4),['sm']],['anvil','Yunque',...tp(3.6,-5.4),['sm']],['bank','Banco',...tp(21,-3)]];
- const CAM=[[-26,12.4],[-19,12.4],[-19,-1.6],[2,-6],[9,-6.4],[16,-6.4]],COBZ=[{p:CAM.map(q=>tp(q[0],q[1])),w:60},{p:[tp(16,-6.4),tp(21,-6.4),tp(21,-3.8)],w:44}];   // camino principal (propíleos → ágora → templo) y ramal al banco
+ const CAM=[[-26,12.4],[-19,12.4],[-19,-1.6],[2,-6],[9,-6.4],[16,-6.4]],COBZ=[{p:CAM.map(q=>tp(q[0],q[1])),w:60},{p:[tp(16,-6.4),tp(21,-6.4),tp(21,-3.8)],w:44},{p:[tp(2,-3.6),tp(-.5,3),tp(.5,11),tp(6,17),tp(6,29),tp(6,32)],w:50}];   // camino principal (propíleos → ágora → templo) y ramal al banco
  // ISLA-3 (21 oct 2026) · ARQUITECTURA GRIEGA de MÁRMOL (src/r3d/propsdark_cielo3d.js): Propileos en la llegada, camino de columnas, Ágora, Acrópolis (templo + Altar Quebrado con sus 4 braseros) y ruinas del borde.
  // Coordenadas en tiles desde el centro (como tp); `fp`/`fps` = colisión en px SIN escalar (props.js la multiplica ×PROP_K). Todo es decoración + colisión: los oficios, PNJ y recursos llegan en ISLA-4.
  const PRP=[],put=(n,tx,ty,o,fp,fps,ex)=>{const q=tp(tx,ty);PRP.push(Object.assign({n,x:q[0],y:q[1]},o?{o}:{},fp?{fp}:{},fps?{fps}:{},ex||{}))};
@@ -41,7 +41,11 @@
   put('bancoG',-2,-1.2,null,[11,4]);put('bancoG',1.6,-1.0,null,[11,4]);put('anfora',0.5,-3.1,null,[3,3]);put('anfora',3.5,-3.1,null,[3,3]);
   put('temploG',16,-12,null,[56,94]);
   put('estatuaAlada',16,-3.5,null,[20,20]);
-  [[12.8,-5.2],[19.2,-5.2],[12.8,-1.8],[19.2,-1.8]].forEach(([x,y])=>put('braseroG',x,y,null,[5,5]));
+  // ARENA DEL VIGÍA (21 oct 2026): disco de mármol FUERA de la isla (plataforma al sur, sobre un camino de rocas; coast.js `ZI`) donde se dejan las ofrendas y se pelea contra Gabriel. Centro AR=(6,35) en tiles (isla.js y coast.js lo repiten); 4 braseros dentro del disco, en las diagonales
+  put('arenaG',6,35,null,null,Array.from({length:8},(_,i)=>{const a=i/8*Math.PI*2+.39;return[Math.cos(a)*4.25*T,Math.sin(a)*4.25*T,4,4]}));
+  [[3.6,32.6],[8.4,32.6],[3.6,37.4],[8.4,37.4]].forEach(([x,y])=>put('braseroG',x,y,null,[5,5]));
+  [[2.9,19.5],[9.2,21],[3,24],[9.1,26.5],[2.8,28.6],[9.3,29.4]].forEach(([x,y],i)=>put('roca',x,y,null,[11,11]));   // rocas a los lados del camino de rocas
+  put('columnaRota',2.4,17.2,{v:1},[8,8]);put('columnaRota',9.6,17.6,{v:2},[8,8]);
   put('anfora',13.5,-7,null,[3,3]);put('anfora',18.5,-7,null,[3,3]);
   put('columnaRota',27,-6,{v:0},[8,8]);put('columnaRota',-28,-8,{v:1},[8,8]);put('columnaRota',27.5,2,{v:2},[8,8]);put('estelaG',24,-9.5,{ruins:1},[7,4])}
  // ARBOLEDAS REPARTIDAS (Lote CIELO-ARBOLES, 21 oct 2026): árboles del Cielo por toda la isla, no solo en el olivar. [x0,x1,y0,y1,n] en tiles desde el centro, lejos de edificios, lagos y camino; su «zona» es 1×1 tile (sin aviso de zona de tala).

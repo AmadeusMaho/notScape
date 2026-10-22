@@ -36,7 +36,13 @@ export class Gabriel{
   this.pts=new THREE.Points(pg,new THREE.PointsMaterial({size:7,map:dot(),vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:false}));this.pts.frustumCulled=false;scene.add(this.pts);
   const FM=new THREE.MeshBasicMaterial({color:'#f2ead2',side:THREE.DoubleSide}),FG=new THREE.PlaneGeometry(.055,.24);this.fe=[];
   for(let i=0;i<16;i++){const m=new THREE.Mesh(FG,FM);m.visible=false;scene.add(m);this.fe.push({m,l:0,v:new THREE.Vector3(),s:i*1.37})}
+  // columna de LUZ (intro del jefe): cilindro abierto aditivo, brillante abajo y desvanecido arriba; `lift` = altura sobre el suelo (descenso)
+  const bg=new THREE.CylinderGeometry(.55,1.05,18,28,6,true),bp=bg.attributes.position,bc=new Float32Array(bp.count*3);
+  for(let i=0;i<bp.count;i++){const u=1-(bp.getY(i)+9)/18,f=Math.pow(1-u,1.6);bc[i*3]=1*f;bc[i*3+1]=.82*f;bc[i*3+2]=.45*f}
+  bg.setAttribute('color',new THREE.BufferAttribute(bc,3));this.beamM=new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide});
+  this.beam=new THREE.Mesh(bg,this.beamM);this.beam.position.set(this.base.x,this.base.y+9,this.base.z);this.beam.visible=false;this.beam.frustumCulled=false;scene.add(this.beam);this.lift=0;
   this.acc=0;this.sn=0;this.face(0)}
+ setBeam(op,rad){this.beam.visible=op>.01;this.beamM.opacity=op;this.beam.scale.set(rad,1,rad)}
  face(r){this.grp.rotation.y=r}
  faceTo(wx,wz){this.face(Math.atan2(wx-this.base.x,wz-this.base.z))}   // (coordenadas three)
  to(p,rate){Object.assign(this.T,p);if(rate)this.rate=rate}
@@ -49,7 +55,7 @@ export class Gabriel{
    this.dv[i*3]=(hash(s,5.1,6)-.5)*.25;this.dv[i*3+1]=.18+hash(s,6.6,7)*.45;this.dv[i*3+2]=(hash(s,7.2,8)-.5)*.25;this.dm[i]=this.dl[i]=1.5+hash(s,8.3,9)*1.6}}
  _feather(){for(const f of this.fe)if(f.l<=0){const s=this.sn++,hy=this.H*(.35+hash(s,1,2)*.55),wx=(hash(s,2,3)-.5)*1.4;f.m.visible=true;f.l=3.5+hash(s,3,4)*2;f.s=s;
    f.m.position.set(this.base.x+wx,this.base.y+hy,this.base.z+(hash(s,4,5)-.5)*.5);f.v.set((hash(s,5,6)-.5)*.2,-.14-hash(s,6,7)*.12,(hash(s,7,8)-.5)*.2);return}}
- update(t,dt){const A=this.A,k=1-Math.exp(-dt*this.rate);for(const n in this.T)this.C[n]+=(this.T[n]-this.C[n])*k;
+ update(t,dt){const A=this.A,k=1-Math.exp(-dt*this.rate);this.grp.position.y=this.base.y+this.lift;for(const n in this.T)this.C[n]+=(this.T[n]-this.C[n])*k;
   ANIM.human(A,{t,dt,mv:0,at:-1,wave:0,look:this.C.look});
   const q=this.C.kneel;                                              // arrodillado sobre una rodilla (pierna R delante), cabeza/torso/brazos a mano
   if(q>.001){A.b.pelvis.position.y=A.restP.pelvis.y-q*.31;A.rot('legR',-1.35*q,0,0);A.rot('kneeR',1.4*q,0,0);A.rot('ankR',.2*q,0,0);A.rot('legL',.12*q,0,0);A.rot('kneeL',1.75*q,0,0);A.rot('ankL',.5*q,0,0)}
@@ -64,5 +70,5 @@ export class Gabriel{
   this.pts.material.size=ppx(.085);this.pts.geometry.attributes.position.needsUpdate=true;this.pts.geometry.attributes.color.needsUpdate=true;
   for(const f of this.fe){if(f.l<=0)continue;f.l-=dt;if(f.l<=0||f.m.position.y<=this.base.y+.02){f.l=0;f.m.visible=false;continue}
    f.m.position.x+=(f.v.x+Math.sin(t*1.7+f.s)*.1)*dt;f.m.position.y+=f.v.y*dt;f.m.position.z+=(f.v.z+Math.cos(t*1.3+f.s)*.1)*dt;f.m.rotation.set(Math.sin(t*1.1+f.s)*1.1,t*.8+f.s,Math.cos(t*.9+f.s)*.9)}}
- dispose(){this.scene.remove(this.grp,this.pts);this.halo.geometry.dispose();this.haloM.dispose();this.pts.geometry.dispose();this.pts.material.dispose();for(const f of this.fe){this.scene.remove(f.m)}this.mats.forEach(m=>m.dispose());this.A.dispose&&this.A.dispose()}
+ dispose(){this.scene.remove(this.grp,this.pts,this.beam);this.beam.geometry.dispose();this.beamM.dispose();this.halo.geometry.dispose();this.haloM.dispose();this.pts.geometry.dispose();this.pts.material.dispose();for(const f of this.fe){this.scene.remove(f.m)}this.mats.forEach(m=>m.dispose());this.A.dispose&&this.A.dispose()}
 }

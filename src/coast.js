@@ -71,7 +71,11 @@
  // devuelve tiles tierra adentro (>0) o mar adentro (<0); la protección K (spawn, estaciones) también la sostiene
  const ZI=ZB&&BIOMES.zone?(()=>{const Z=BIOMES.zone,zx=Z.cx/T,zy=Z.cy/T,rx=Z.rx,ry=Z.ry,m=Math.min(rx,ry);
   return(x,y)=>{const dx=x-zx,dy=y-zy,d=Math.hypot(dx/rx,dy/ry),a=Math.atan2(dy,dx),ca=Math.cos(a),sa=Math.sin(a);
-   const rr=1+.16*(vn(ca*1.3+3,sa*1.3,1)-.5)*2+.08*(vn(ca*3.7,sa*3.7+5,2)-.5)*2+.035*(vn(ca*9,sa*9,3)-.5)*2;return(rr-d)*m}})():null;
+   const rr=1+.16*(vn(ca*1.3+3,sa*1.3,1)-.5)*2+.08*(vn(ca*3.7,sa*3.7+5,2)-.5)*2+.035*(vn(ca*9,sa*9,3)-.5)*2,L0=(rr-d)*m;
+   // ARENA DEL VIGÍA (21 oct 2026): FUERA de la isla, al sur, sobre un CAMINO DE ROCAS de ≈ 6 tiles de ancho (con un meandro suave) que sale de la costa y acaba en una plataforma redonda de ≈ 7,6 tiles de radio: se ve el mar de nubes alrededor.
+   // Centro de la plataforma ARENA_C (tiles desde el centro de la isla; isla.js `AR` y sky-biome.js lo repiten). Se une al campo de la isla con max().
+   const px=dx,py=dy,sx=6+.9*Math.sin(py*.33),pa=Math.min(3.2-Math.abs(px-sx),py-14,31-py),qx=px-6,qy=py-35,pr=7.7*(1+.06*(vn(Math.atan2(qy,qx)*2+9,4,5)-.5)*2),pl=pr-Math.hypot(qx,qy);
+   return Math.max(L0,pa,pl)}})():null;
  // ── campo final L ──
  const F=new Float32Array(GX*GY);
  for(let j=0;j<GY;j++)for(let i=0;i<GX;i++){const x=i*CG,y=j*CG,dp=depth(x,y),lb=dp-inset(x,y),k=K[j*GX+i];F[j*GX+i]=ZI&&x>=NXc?Math.min(Math.max(ZI(x,y),k),edge(x,y)-API.MIN_D):Math.min(Math.max(lb,k),edge(x,y)-API.MIN_D)}

@@ -63,7 +63,8 @@ const PROPS=(()=>{
     PARA UN PROP NUEVO CON SUELO ELEVADO: añade su fila aquí (medidas = las del módulo propsdark*; comprobar en el juego que los pies quedan sobre el suelo). Altura en niveles = h·sc·PROP_K / 0,6415. */
  const ELEV={propileos:{sc:2.2,m:.22,r:[{hx:1.75,hy:1.25,h:.12}]},
   temploG:{sc:1,m:.2,r:[{hx:1.825,hy:3.1,h:.07},{hx:1.705,hy:2.98,h:.14},{hx:1.585,hy:2.86,h:.21}]},
-  agora:{sc:1,m:.25,r:[{r:2.6,h:.04},{r:2.48,h:.075},{r:2.3,h:.1}]}};
+  agora:{sc:1,m:.25,r:[{r:2.6,h:.04},{r:2.48,h:.075},{r:2.3,h:.1}]},
+  arenaG:{sc:1,m:.25,r:[{r:3.95,h:.05},{r:3.8,h:.08},{r:3.6,h:.1}]}};
  let ELV=[],ELn=-1;const LVY=.6415,EPS=.07;   // EPS (niveles ≈ 4 cm) = los pies quedan un pelo POR ENCIMA de la losa: con la suela exactamente a ras el pase de profundidad del héroe (rayos X) la daba por tapada y dibujaba la silueta en las piernas
  function elevBuild(){ELn=list.length;ELV=[];for(const e of list){const d=ELEV[e.n];if(!d)continue;const q=32*d.sc*PROP_K,hz=d.sc*PROP_K/LVY;let R=0;for(const c of d.r)R=Math.max(R,(c.r||Math.max(c.hx,c.hy))+d.m);ELV.push({x:e.x,y:e.y,R:R*q,m:d.m*q,L:d.r.map(c=>({hx:(c.hx||c.r)*q,hy:(c.hy||c.r)*q,disc:!!c.r,h:c.h*hz}))})}}
  // altura extra (en niveles) bajo el punto (x,y): máximo de las capas que lo contienen, con rampa de margen `m` hacia fuera

@@ -4,19 +4,20 @@
 //     correr casillas, conseguir/fabricar un objeto, derrotar, depositar en el banco; `n` veces) · `have` (llevar encima todos los objetos de `k`) · `offer` (dejar cada ofrenda junto a su brasero) · `cine` (ver la cinemática de Gabriel).
 //   · ESTADO (se guarda): `S.isla = {step, bs (base del contador), off:[0|1 ×4] (ofrendas dejadas), t:{capítulo: segundos}, done}`. Activo SOLO mientras el héroe está sobre la isla (columna de la zona) y no se ha terminado; en el resto
 //     del mundo manda el tutorial de siempre (GOALS). `?isla=1` o `ISLA.go()` llevan al héroe al varadero; `ISLA.go(n)` salta al paso n; `ISLA.reset()` reinicia.
-//   · DESVIACIONES CONOCIDAS (ver el lote ISLA-5 de AGENTS.md): el jefe Gabriel NO se pelea (al hablar con el altar se reproduce su cinemática y se da por derrotado); «Escapa» se reduce a hablar con Remiel; sin bancos de nubes.
+//   · DESVIACIONES CONOCIDAS (ver el lote ISLA-5 de AGENTS.md): ISLA-9 (21 oct 2026): Gabriel SÍ se pelea, en la ARENA DEL VIGÍA (fuera de la isla) con intro cinemática `gabrielIntro`; «Escapa» se reduce a hablar con Remiel; sin bancos de nubes.
 // Para AÑADIR un paso: una fila en STEPS (y, si hace falta una condición nueva, una rama en `done()`); los diálogos de los maestros están en villagers.js (`EXILES`).
 const ISLA=(()=>{
  const T=32,CAPS=['Llegada','Manos de tierra','Fuego','Agua y cocina','La Palestra','El cofre','El ritual','Escapa'];
  // ofrendas del ritual: [objeto, brasero (tiles desde el centro)] — los 4 braseros están en sky-biome.js alrededor del Altar Quebrado
- const OFR=[['of_tronco',12.8,-5.2],['of_estano',19.2,-5.2],['of_espada',12.8,-1.8],['of_camaron',19.2,-1.8]];   // 21 oct 2026: OFRENDAS = objetos EXCLUSIVOS del tutorial (game.js `I`, valor 0) que aparecen en el banco al depositar; así el paso no depende de lo que el jugador haya gastado o equipado
+ const AR=[6,35];   // ARENA DEL VIGÍA (disco de mármol sobre una plataforma FUERA de la isla, al sur, unida por un camino de rocas; sky-biome.js `arenaG`, coast.js `ZI`): centro en tiles desde el centro de la isla. Las ofrendas se llevan AQUÍ y aquí se pelea contra Gabriel
+ const OFR=[['of_tronco',3.6,32.6],['of_estano',8.4,32.6],['of_espada',3.6,37.4],['of_camaron',8.4,37.4]];   // 21 oct 2026: OFRENDAS = objetos EXCLUSIVOS del tutorial (game.js `I`, valor 0) que aparecen en el banco al depositar; así el paso no depende de lo que el jugador haya gastado o equipado
  // MISIONES TIPO WOW (21 oct 2026): cada maestro da UNA misión con 3 fases = 3 tipos de paso: `ph:'a'` (ACEPTAR: el maestro tiene un «!»; se acepta en su diálogo), los pasos de OBJETIVO (el maestro muestra un «?» gris) y `ph:'t'` (ENTREGAR: «?» dorado; hay que volver y entregar lo que pide `deliver`, y recibir `reward`). Los textos y datos de cada misión están en QUESTS.
  const QUESTS=[
   {npc:'v:9:raguel',name:'Despertar',hi:'Bienvenido, viajero.',desc:'Cuando llegaste traías algo contigo. Recoge tus pertenencias en la caja de la punta oeste, junto a un árbol (te marcaré el camino), mira qué encuentras y tráemelo.',rem:'Busca en la caja de la punta oeste y abre la Mochila.',turn:'¿Encontraste algo?',deliver:{pendiente:1},done:'Es tuyo: lo llevabas al caer. Quédate con lo que recuerdes. Ahora ve al olivar, al oeste, y habla con Sariel: ella te enseña a talar y minar.',coins:5},
   {npc:'v:9:sariel',name:'Manos de tierra',hi:'Hay trabajo que hacer.',desc:'Necesito 3 troncos de olivo y, de la cantera del norte, 2 de cobre y 2 de estaño. Tráemelos.',rem:'Tala olivos y mina cobre y estaño en la cantera del norte.',turn:'¿Traes los materiales?',deliver:{logs:3,cobre:2,estano:2},reward:{cobre:2,estano:1,logs:1},coins:15,done:'Gracias. Quédate con lo que te sirva. Ve al Ágora y habla con Uriel.'},
   {npc:'v:9:uriel',name:'Fuego',hi:'El fuego no espera.',desc:'Funde 2 barras de cobre en el horno y forja una espada de cobre en el yunque. Luego tráemela.',rem:'Funde las barras en el horno y forja la espada en el yunque.',turn:'¿Está lista la espada?',deliver:{sw_cobre:1},reward:{sw_cobre:1},coins:25,done:'Buen filo. Llévatela. Ve a la fuente y habla con Rafael.'},
   {npc:'v:9:rafael',name:'Agua y cocina',hi:'Ven, siéntate un momento.',desc:'Pesca 3 camarones en la fuente y cocina 2 en la fogata del Ágora. Tráeme los cocinados.',rem:'Pesca en la fuente y cocina en la fogata del Ágora.',turn:'¿Los camarones?',deliver:{c_camaron:2},reward:{c_camaron:1},coins:25,done:'Excelente. Guarda uno. Ve a la Palestra y habla con Miguel.'},
-  {npc:'v:9:miguel',name:'La Palestra',hi:'Firme. Mirada al frente.',desc:'Las gallinas de la Palestra son tu práctica: golpea con puntería, carga un golpe, esquiva con Espacio y derrota a 3. Vuelve cuando acabes.',rem:'Practica con las gallinas de la Palestra.',turn:'¿Has terminado?',done:'Bien. Deposita todo en el banco, saca del banco las 4 ofrendas que aparecerán allí y sube a la Acrópolis.',coins:40}];
+  {npc:'v:9:miguel',name:'La Palestra',hi:'Firme. Mirada al frente.',desc:'Las gallinas de la Palestra son tu práctica: golpea con puntería, carga un golpe, esquiva con Espacio y derrota a 3. Vuelve cuando acabes.',rem:'Practica con las gallinas de la Palestra.',turn:'¿Has terminado?',done:'Bien. Deposita todo en el banco, saca del banco las 4 ofrendas que aparecerán allí y llévalas a la Arena del Vigía, al sur, fuera de la isla.',coins:40}];
  const QS=(q,ph,o)=>Object.assign({q,ph,npc:QUESTS[q].npc,g:{t:'talk',k:QUESTS[q].npc}},o);
  const BOXP=[-27,-7.5];   // caja de las pertenencias (tiles desde el centro de la isla): en la PUNTA OESTE, junto a un olivo, a ≈ 20 tiles de la llegada (hay que caminar)
  const STEPS=[
@@ -45,10 +46,9 @@ const ISLA=(()=>{
   QS(4,'t',{cap:4,txt:'Vuelve con Miguel'}),
   {cap:5,txt:'Deposita todo en el banco',at:[21,-3],g:{t:'dep',k:'dep',n:1}},
   {cap:5,txt:'Saca las 4 ofrendas del banco',at:[21,-3],g:{t:'have',k:['of_tronco','of_estano','of_espada','of_camaron']}},
-  {cap:6,txt:'Sube a la Acrópolis',at:[16,-6.4],g:{t:'reach',at:[16,-6.4],r:3}},
-  {cap:6,txt:'Deja las 4 ofrendas en los braseros',at:[16,-3.5],g:{t:'offer'}},
-  {cap:6,txt:'Habla con el Altar Quebrado',at:[16,-3.5],g:{t:'altar'}},
-  {cap:6,txt:'Derrota a Gabriel',at:[16,0],g:{t:'kill',k:'gabriel',n:1}},
+  {cap:6,txt:'Lleva las ofrendas a la Arena del Vigía, al sur, fuera de la isla',at:AR,g:{t:'reach',at:AR,r:5}},
+  {cap:6,txt:'Deja las 4 ofrendas en los braseros',at:AR,g:{t:'offer'}},
+  {cap:6,txt:'Derrota a Gabriel',at:AR,g:{t:'kill',k:'gabriel',n:1}},
   {cap:6,txt:'…',g:{t:'cine'}},
   {cap:7,txt:'¡Escapa! Corre al borde este',at:[28.5,-0.4],esc:1,g:{t:'reach',at:[28.5,-0.4],r:2.6}}];
  // 21 oct 2026 (FIX-OFRENDAS): `have` (game.js) cuenta mochila + BANCO, así que «Saca las 4 ofrendas» se daba por cumplido al depositar, y la espada de cobre EQUIPADA no estaba ni en la mochila ni en el banco (el paso no se podía completar). `own` = mochila + equipo (nunca el banco); `give` entrega desde la mochila o, si no, desequipa la pieza.
@@ -96,6 +96,7 @@ const ISLA=(()=>{
   if(cur().esc&&!es)startEscape();
   i.t[cur().cap]=(i.t[cur().cap]||0)+dt;
   grantOfr();
+  {const g0=cur().g;if(g0.t==='kill'&&g0.k==='gabriel'&&!gm&&!intro){if(!fAt)fAt=performance.now()+1400;else if(performance.now()>=fAt){fAt=0;fight()}}}   // última ofrenda → pausa de 1,4 s y arranca la intro del jefe
   if(cur().g.t==='offer'){OFR.forEach(([it,x,y],k)=>{if(i.off[k])return;const q=wp(x,y);if(Math.hypot(q.x-P.x,q.y-P.y)<2.4*T&&own(it)>=1){give(it);i.off[k]=1;dirty=1;try{snd('rare')}catch(e){}toast('El brasero acepta la ofrenda ('+i.off.reduce((a,b)=>a+b,0)+'/4)',1600)}})}
   hintsTick(performance.now());
   gTick(performance.now());if(gAlive()){fightAt=performance.now();bossAt=fightAt}   // música de jefe (src/music.js: DEF[9].jefe = gabriel.mp3) mientras dure el combate
@@ -159,15 +160,22 @@ const ISLA=(()=>{
  // Las mecánicas son las de combat.js (`BM.gabriel` se reescribe por fase). El héroe NO puede morir aquí (`noDie`): el golpe «se detiene». Al caer, la cinemática `caida`.
  let gm=null,gph=0;
  const gAlive=()=>gm&&gm.hp>0;
- function fight(){if(typeof mob!=='function')return;if(!gm||!M.includes(gm)){const q=wp(16,.4);mob('gabriel',q.x,q.y);gm=M[M.length-1];gm.elite=1;gm.mh=gm.hp=45;gm.dm=2;gm.hunt=1;gm.rt=0}gm.hp=gm.mh;gm.rt=0;gph=0;BM.gabriel=[];
-  try{banner('Gabriel','El vigía del Cielo','#e8cf94',3600)}catch(e){}try{log('✦ <b>Gabriel</b> despierta ante el altar. No bajes el arma.')}catch(e){}}
+ // INTRO + COMBATE: la cinemática `gabrielIntro` (cine.js) baja a Gabriel del cielo sobre la arena; al acabar (o saltarla) aparece el combatiente en ese mismo sitio. 90 de vida, 3 fases, golpes con anticipación de brazo (game.js `wind.slow`).
+ let intro=0,fAt=0;
+ function spawnBoss(){const q=wp(AR[0],AR[1]);if(!gm||!M.includes(gm)){mob('gabriel',q.x,q.y);gm=M[M.length-1];gm.elite=1}
+  gm.x=gm.hx=gm.tx=q.x;gm.y=gm.hy=gm.ty=q.y;gm.mh=gm.hp=90;gm.dm=3;gm.hunt=1;gm.rt=0;gm.asx=1;gm.gc=0;gm.tel=null;gm.wind=null;gm.nt=performance.now()+1500;gph=0;BM.gabriel=[];
+  try{banner('Gabriel','El vigía del Cielo','#e8cf94',3000)}catch(e){}try{log('✦ <b>Gabriel</b> te mira. Vigila su brazo: cuando lo alza, esquiva.')}catch(e){}}
+ function fight(){if(typeof mob!=='function'||intro)return;const q=wp(AR[0],AR[1]);
+  if(typeof CINE!=='undefined'&&CINE.SCENES&&CINE.SCENES.gabrielIntro){intro=1;CINE.SCENES.gabrielIntro.anchor=[q.x,q.y];
+   if(CINE.start('gabrielIntro',{done:()=>{intro=0;spawnBoss()}}))return;intro=0}
+  spawnBoss()}
  function gTick(now){if(!gm||!M.includes(gm))return;const r=gm.hp/gm.mh;if(gm.hp<=0)return;const ph=r<.33?3:r<.66?2:1;if(ph===gph)return;gph=ph;
   if(ph===2){BM.gabriel=['met'];gm.asx=.85;try{banner('Segunda fase','Gabriel marca el suelo','#e8cf94',2600);log('✦ <b>Gabriel</b> levanta la mirada: marca el suelo bajo tus pies. ¡Muévete!')}catch(e){}}
   else if(ph===3){BM.gabriel=['met','nov','enr'];gm.asx=.7;try{banner('Tercera fase','Gabriel pierde el control','#ff9a3a',2600);log('✦ <b>Gabriel</b> abre las alas rotas: carga una onda de luz. ¡Aléjate!')}catch(e){}}}
  // MUERTE EN EL COMBATE (ISLA-7; antes el golpe «se detenía»): si caes ante Gabriel, despiertas un poco antes de él (a 6,5 tiles al sur del altar) con la vida llena, y Gabriel vuelve a su sitio con la vida completa y la fase 1.
  // Devuelve true si ha gestionado la muerte (die() de game.js no hace nada más); fuera del combate de Gabriel devuelve false y die() es el de siempre.
- function noDie(){if(!on()||!gAlive())return false;P.dot=null;try{HOT=[]}catch(e){}P.pjM=null;M.forEach(m=>m.hunt=0);P.hp=maxHp();const q=wp(16,6.5);P.x=q.x;P.y=q.y;try{FD=performance.now()}catch(e){}P.g=P.mv=null;stopA();
-  const g=wp(16,.4);gm.x=gm.hx=gm.tx=g.x;gm.y=gm.hy=gm.ty=g.y;gm.hp=gm.mh;gm.hunt=0;gm.tel=null;gm.asx=1;gm.en=0;gm.dm=2;gph=0;BM.gabriel=[];try{snd('die')}catch(e){}toast('☠️ Gabriel te derriba. Despiertas un poco antes de él.',2800);return true}
+ function noDie(){if(!on()||!gAlive())return false;P.dot=null;try{HOT=[]}catch(e){}P.pjM=null;M.forEach(m=>m.hunt=0);P.hp=maxHp();const q=wp(AR[0],AR[1]-5.2);P.x=q.x;P.y=q.y;try{FD=performance.now()}catch(e){}P.g=P.mv=null;stopA();
+  const g=wp(AR[0],AR[1]);gm.x=gm.hx=gm.tx=g.x;gm.y=gm.hy=gm.ty=g.y;gm.hp=gm.mh;gm.hunt=0;gm.tel=null;gm.asx=1;gm.en=0;gm.dm=2;gph=0;BM.gabriel=[];try{snd('die')}catch(e){}toast('☠️ Gabriel te derriba. Despiertas al borde de la arena.',2800);return true}
  // «ESCAPA»: la isla arde. Desaparecen TODOS los PNJ (y las gallinas), el cielo se vuelve rojo (`R3D.skyBurn`), el pasto naranja (`uBurn`), las nubes de fuego y caen brasas (r3d.js `burnFx`). Se invoca al entrar en el paso `esc`.
  let es=0;const gone=[];
  function startEscape(){if(es)return;es=1;for(let k=ST.length-1;k>=0;k--){const e=ST[k];if(e.k===9&&e.npc){gone.push(e);ST.splice(k,1)}}
@@ -188,6 +196,6 @@ const ISLA=(()=>{
   if(n.npc){const e=ST.find(s=>s.id===n.npc);if(e)return e}if(n.at)return wp(n.at[0],n.at[1]);return null}
  function go(n){const i=st();if(n!=null){i.step=Math.max(0,Math.min(STEPS.length-1,n|0));i.off=[0,0,0,0];i.done=0;base();dirty=1}
   const q=wp(-26,12.4);if(typeof CHEAT!=='undefined'&&CHEAT.tp)CHEAT.tp(q.x,q.y);return i.step}
- function reset(){const bi=PO.findIndex(p=>p.pk==='cajaIsla');if(bi>=0)PO.splice(bi,1);box=null;endEscape();tipHide();if(gm&&M.includes(gm))M.splice(M.indexOf(gm),1);gm=null;gph=0;cs=0;S.isla={step:0,bs:0,off:[0,0,0,0],t:{},done:0,lock:1};S.awk={};S.islaTip=0;sp=0;if(S.cine)delete S.cine.gabriel;dirty=1;return go(0)}
+ function reset(){const bi=PO.findIndex(p=>p.pk==='cajaIsla');if(bi>=0)PO.splice(bi,1);box=null;endEscape();tipHide();if(gm&&M.includes(gm))M.splice(M.indexOf(gm),1);gm=null;gph=0;cs=0;intro=0;fAt=0;S.isla={step:0,bs:0,off:[0,0,0,0],t:{},done:0,lock:1};S.awk={};S.islaTip=0;sp=0;if(S.cine)delete S.cine.gabriel;dirty=1;return go(0)}
  if(/[?&]isla=1\b/.test(typeof location!=='undefined'?location.search:''))setTimeout(()=>{try{go()}catch(e){}},4000);
- return{STEPS,QUESTS,CAPS,OFR,lock,on,tick,talk,mark,dlg,search,altar,html,target,go,reset,prog,adv,altar2:fight,fight,noDie,get boss(){return gm},get step(){return st().step},get state(){return st()}}})();
+ return{fightOn:()=>!!(gAlive()||intro),bossOn:()=>!!(gAlive()&&!intro),STEPS,QUESTS,CAPS,OFR,lock,on,tick,talk,mark,dlg,search,altar,html,target,go,reset,prog,adv,altar2:fight,fight,noDie,get boss(){return gm},get step(){return st().step},get state(){return st()}}})();

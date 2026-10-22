@@ -14,6 +14,7 @@ const COB_SM=location.search.indexOf('cobsm=0')<0;   // R3D-SUELO-BLEND: adoquí
 const PATH_SM=!/[?&]pathsm=0\b/.test(location.search);   // R3D-ESTETICA-2: borde del camino de tierra suavizado (`?pathsm=0` = antes)
 // MONTAÑAS NATURALES (21 oct 2026): altura ANALÍTICA y continua de una cordillera en un punto (tiles): falda = (h−1)·LVY (rampa continua de biomes.js), núcleo = LVY+m; null fuera de ellas. La usan el suelo de la falda y la tapa del núcleo: las dos mallas comparten vértices (sin paredes de tile entre ambas = adiós a la «cuadrícula»)
 const mY=(x,z)=>{const r=BIOMES.rangeAt(x*32,z*32),a=r[0];return a>=2?LVY+r[1]:a>1?(a-1)*LVY:null};
+const EDGESM=!/[?&]edgesm=0/.test(location.search);   // 21 oct 2026: BORDES REDONDOS contra el vacío (isla del Cielo y su arena); `?edgesm=0` = escalera de tiles de antes
 const SMM=4,CS=16,SUB=4,SUBC=12,LVY=.6415,BED=-.44,WY=(.75-1)*LVY,BUDGET=2,MAXC=70;
 // colores del campo por bioma (guía §4.4/§4.8: Pradera = la de la referencia; el resto, puntos de partida de F5)
 const GCOLS=[['#41582c','#5e7a38','#8c9a46'],['#2c4426','#456a34','#6f8a3e'],['#3c4a2a','#5a6a32','#7e8440'],['#5a6a6e','#7e9094','#aab8b4'],['#4a5a2e','#6a8a3a','#9aa44a'],['#6a4a2a','#8a6430','#b08a46'],['#4e4a62','#6e6a88','#9a96b4'],['#8a6a3a','#b08c52','#d2b676'],['#3e5a5e','#5c8084','#8cb0ac'],['#3f8fcb','#5fb1e6','#9ad6f6']];   // F49a: Páramo Arcano, Desierto, Costa · ISLA-1: El Cielo (pasto AZUL CLARO)
@@ -121,6 +122,14 @@ const DKP=[],DKC=[],DKF=this.F&&this.F.DK;
   // ── tapa ── rejilla SUB×SUB por tile; solo en tiles no vacíos y no acantilado
   const fal=(tx,tz)=>{if(!BIOMES.ranges.length)return false;const r=BIOMES.rangeAt((tx+.5)*32,(tz+.5)*32);return r[0]>1.08&&r[0]<2};   // ¿tile de FALDA de una montaña (centro dentro de la rampa)? Lo dibuja la malla de montaña, no el suelo
   const P=[],C=[],WP=[],WD=[],WS=[],PA=[],PB=[],PS=[],PBI=[];const VC=new Map();   // R3D-OPT: caché de vértices (cada esquina se calculaba 6 veces); rejilla común de 12 por tile (SUB=4 y SUBC=12 encajan)
+  // BORDE SUAVE (21 oct 2026; el dueño: «el borde es cuadrado y ese no es el artstyle»): la tierra se decide por tiles, pero el campo continuo `coastD` (>0 tierra adentro) conoce el contorno real. Los vértices de tapa y de pared que están en una arista de tile entre TIERRA y VACÍO se llevan al contorno D=0
+  // (≤ .4 tile, hacia dentro o hacia fuera) con la MISMA función de posición, así tapa y pared siguen cerradas; las paredes hacia el vacío se parten en 4 tramos para que la silueta sea una curva y no una escalera. La colisión sigue siendo por tiles (error visual ≤ .4 tile).
+  const BN=new Map(),bnd=(x,z)=>{if(!EDGESM||!this.coastD)return[x,z];const kk=Math.round(x*12)*4096+Math.round(z*12);let r=BN.get(kk);if(r)return r;r=[x,z];
+   const xr=Math.round(x),zr=Math.round(z),xi=Math.abs(x-xr)<1e-6,zi=Math.abs(z-zr)<1e-6;
+   if(xi||zi){const xs=xi?[xr-1,xr]:[Math.floor(x)],zs=zi?[zr-1,zr]:[Math.floor(z)];let v=false,l=false;for(const a of xs)for(const b of zs){const h=this.h(a,b);if(h<=0)v=true;else if(h>=1)l=true}
+    if(v&&l){const D=this.coastD,e=.5,d0=D(x*32,z*32),gx=(D((x+e)*32,z*32)-D((x-e)*32,z*32))/(2*e),gz=(D(x*32,(z+e)*32)-D(x*32,(z-e)*32))/(2*e),g=Math.hypot(gx,gz);
+     if(g>.05){const t=Math.max(-.4,Math.min(.4,-d0/g));r=[x+gx/g*t,z+gz/g*t]}}}
+   BN.set(kk,r);return r};
   const top=(x,z)=>{const kk=Math.round(x*12)*4096+Math.round(z*12);let r=VC.get(kk);if(!r){r=top0(x,z);VC.set(kk,r)}return r};
   const top0=(x,z)=>{const f=this.field(x,z),tx=Math.max(0,Math.min(this.NX-1,Math.floor(x))),tz=Math.max(0,Math.min(this.NY-1,Math.floor(z))),k=TER.biomeOf?TER.biomeOf(tx,tz):0;
    col.copy(this.gc(x,z,k)).multiplyScalar(.82);
@@ -137,7 +146,7 @@ const DKP=[],DKC=[],DKF=this.F&&this.F.DK;
    if(DKF&&DKF[tz*this.NX+tx])deck(tx,tz,DKF[tz*this.NX+tx]);
    let cob=0;for(const[u,v]of[[.5,.5],[.1,.1],[.9,.1],[.1,.9],[.9,.9]])cob=Math.max(cob,this.pathAt(tx+u,tz+v)[1]);let S=cob>.05&&this.q>.3?SUBC:SUB;   // adoquín: malla densa para el relieve real
    if(h===.75&&S===SUB){const out=tx<0||tz<0||tx>=this.NX||tz>=this.NY,d=out||!this.coastD?(out?99:-1):-this.coastD((tx+.5)*32,(tz+.5)*32);S=d>this.shelf+3?1:d>6?2:SUB}   // Fase 49b: mar abierto = fondo casi plano (1–2 divisiones por tile); cerca de la costa se conserva la malla fina de la plataforma
-   for(let b=0;b<S;b++)for(let a=0;a<S;a++){const xa=tx+a/S,xb=tx+(a+1)/S,za=tz+b/S,zb=tz+(b+1)/S,q=[[xa,za],[xa,zb],[xb,zb],[xb,za]].map(([x,z])=>{const[y,c,pf,pc,sa,wt,ps]=top(x,z);return[x,y,z,c,pf,pc,sa,wt,ps]});
+   for(let b=0;b<S;b++)for(let a=0;a<S;a++){const xa=tx+a/S,xb=tx+(a+1)/S,za=tz+b/S,zb=tz+(b+1)/S,q=[[xa,za],[xa,zb],[xb,zb],[xb,za]].map(([x,z])=>{const[y,c,pf,pc,sa,wt,ps]=top(x,z),bp=bnd(x,z);return[bp[0],y,bp[1],c,pf,pc,sa,wt,ps]});
     [0,1,2,0,2,3].forEach(k=>{const v=q[k];P.push(v[0],v[1],v[2]);C.push(v[3].r,v[3].g,v[3].b);PA.push(v[4]);PB.push(v[5]);PS.push(v[6],v[7],v[8]);PBI.push(kb)})}
    if(h===.75||this.near(tx,tz,.75)){const sea=TER.seaAt?TER.seaAt(tx,tz):0;let N=sea?((tx<0||tz<0||tx>=this.NX||tz>=this.NY||(this.coastD&&this.coastD((tx+.5)*32,(tz+.5)*32)<-24))?2:3):1;   // mar: rejilla 3×3 para el oleaje en vértices; estanque/lago: 1 quad
     // R3D-AGUA-ORILLA (20 oct 2026): cerca de la tierra la lámina de agua usa la MISMA rejilla (SUB=4) y las MISMAS alturas que la tapa del terreno. Antes llevaba 1 quad (lago) o 3×3 (mar) y la profundidad se interpolaba entre esquinas lejanas:
@@ -188,11 +197,11 @@ const DKP=[],DKC=[],DKF=this.F&&this.F.DK;
    // paredes hacia los 4 vecinos más bajos
    for(const[dx,dz,ax0,az0,bx0,bz0]of[[1,0,tx+1,tz,tx+1,tz+1],[-1,0,tx,tz+1,tx,tz],[0,1,tx+1,tz+1,tx,tz+1],[0,-1,tx,tz,tx+1,tz]]){const hn=this.h(tx+dx,tz+dz);
     if(hn>=2||(hn>0&&h<2)||(h<1&&hn<=0)||(h>=2&&hn>=1&&hn<2&&this.nearMt(tx,tz)))continue;   // sin pared entre el núcleo de una montaña y su falda: son la misma superficie continua   // solo hay pared hacia un vecino más bajo (o el vacío); Fase 49b: el MAR no lleva faldón hacia el vacío (el borde del mundo es mar abierto y continúa en el PAD)
-    const NS=h>=2&&this.nearMt(tx,tz)?SMM:1;   // junto a una cordillera el borde se parte en 3 tramos, igual que la malla de la tapa (si no, quedan huecos triangulares entre tapa y pared)
+    const VO=EDGESM&&hn<=0&&h<2&&!!this.coastD,NS=VO?4:h>=2&&this.nearMt(tx,tz)?SMM:1;   // junto a una cordillera el borde se parte en 3 tramos, igual que la malla de la tapa (si no, quedan huecos triangulares entre tapa y pared)
     for(let sg=0;sg<NS;sg++){const t0=sg/NS,t1=(sg+1)/NS,ax=ax0+(bx0-ax0)*t0,az=az0+(bz0-az0)*t0,bx=ax0+(bx0-ax0)*t1,bz=az0+(bz0-az0)*t1;
      const ya=h>=2?topY(ax,az):this.field(ax,az).y,yb2=h>=2?topY(bx,bz):this.field(bx,bz).y;let yb;
      if(hn<=0)yb=(h>=2?LVY:Math.min(ya,yb2))-1.05;else yb=Math.min(this.field(ax,az).y,this.field(bx,bz).y)-.02;
-     wall(ax,az,bx,bz,ya,yb2,yb,dx,dz,NS>1)}}}}
+     if(VO){const A=bnd(ax,az),Bq=bnd(bx,bz);wall(A[0],A[1],Bq[0],Bq[1],ya,yb2,yb,dx,dz,false)}else wall(ax,az,bx,bz,ya,yb2,yb,dx,dz,NS>1)}}}}
   yield;  if(RP.length){const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(RP,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(RC,3));geo.computeVertexNormals();const m=new THREE.Mesh(geo,this.matRock);m.receiveShadow=m.castShadow=true;g.add(m)}
   yield;  if(MP.length){const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(MP,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(MC,3));geo.setAttribute('normal',new THREE.Float32BufferAttribute(MN,3));const m=new THREE.Mesh(geo,this.matMtn);m.castShadow=true;m.receiveShadow=false;g.add(m)}   // Fase 3: las cumbres NO reciben sombra del mapa (en la cara opuesta al sol la pendiente rasante dibujaba franjas de acné de sombra / moiré; el sombreado toon ya oscurece esa cara); siguen proyectando sombra al suelo
   yield;  if(DKP.length){const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(DKP,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(DKC,3));geo.computeVertexNormals();const m=new THREE.Mesh(geo,this.matDeck);m.receiveShadow=m.castShadow=true;g.add(m)}
