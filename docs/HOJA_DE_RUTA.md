@@ -6,6 +6,7 @@
 > **REGLA DEL DUEÑO (22 oct 2026): CADA ENTREGA ACTUALIZA ESTE ARCHIVO** (sección «Registro de avance» de abajo + la fila de la fase que toques) **y además su lote en `AGENTS.md`**, para que cualquier agente sepa en segundos qué se hizo y qué falta. Una entrega que no actualiza la hoja de ruta no está terminada.
 
 ## REGISTRO DE AVANCE (lo último hecho primero; una línea por entrega, con el lote de AGENTS.md)
+- **22 oct 2026 · Puntería de rango:** el tiro de arco/bola va al enemigo que hay bajo el cursor (selección en pantalla); si no, hacia el cursor con imán. Nota en AGENTS.md.
 - **22 oct 2026 · Imán de proyectiles** (flechas/bola de fuego): rayo más ancho con la distancia y vuelo hacia el centro del enemigo. Nota en AGENTS.md.
 - **22 oct 2026 · Tiempos entre golpes más cortos** (daga .7, espada 1, puños 1,1, arco/bastón 1,4, mandoble 2; bola de fuego 1,2 s) con el DPS conservado vía `SWDMG`. Nota en AGENTS.md. Sin probar a mano.
 - **22 oct 2026 · Combate fluido (Fase 2·a):** barra de **stagger** + aturdimiento (×1,5, primer golpe seguro) · **contraataque** tras parada perfecta (×2) · **imán** de dirección del golpe · **paso atrás** de la esquiva · **retícula de distancia** para arco/magia · textos flotantes (parada/esquiva perfecta, **mitigado**, aturdido) y reembolso visible de resistencia · parada perfecta con estallido dorado y campanilla · arreglo de las chispas de golpe (volvían azules). Lote STAGGER-CONTRAATAQUE-IMAN-RETICULA. Sin probar a mano.

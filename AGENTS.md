@@ -298,6 +298,9 @@ Orden por **FASES 1→16**: **1** cerrar lo abierto · **2** combate base (estam
 
 > **⚠ EL 3D ES EL JUEGO (Fase 17–18, 20 oct 2026):** sin parámetros carga el 3D; el 2D del mundo está RETIRADO (no existe `?2d=1` ni plan B: sin WebGL 2 el juego muestra un aviso). `?r3d=1` sigue siendo inofensivo. Donde un lote antiguo diga «solo con `?r3d=1`», léase «siempre».
 
+### Nota 22 oct 2026 — puntería de rango: el tiro va a lo que hay BAJO el cursor
+- **Causa de que el arco no se sintiera bien:** el ángulo del tiro se calculaba con el punto del SUELO bajo el cursor; pero el cuerpo del enemigo está elevado, así que apuntar a su pecho daba un punto del suelo más allá y la flecha pasaba rozando. **Arreglo (`swing`, game.js):** con arco o bola de fuego, si el cursor está SOBRE un enemigo (`pickEnt`, selección en pantalla; solo mobs vivos) el tiro apunta a ese enemigo y le da (`SWG.tg`, `tgHit` en `swingResolve`) si está al alcance (arco 300 px, bola 330); si no, va hacia el cursor con el imán de `rayHit` (`AIMASSIST`). Verificado en el arnés con `pickEnt` simulado (el ángulo corrige de 0 a 0,29 rad hacia el enemigo y el proyectil lleva su objetivo; sin enemigo bajo el cursor, `tg=null`). NO probado a mano con el ratón real (la selección de `pickEnt` usa un radio de 34 px).
+
 ### Nota 22 oct 2026 — imán de proyectiles (arco, bola de fuego, hechizos del báculo)
 - `rayHit` (game.js) ensancha el rayo de apuntado con la distancia (`AIMASSIST`: +0,12 px por px recorrido, hasta +26 px) y los proyectiles vuelan hacia el CENTRO del enemigo si lo alcanzan (antes pasaban de largo rozando la hitbox). Verificado: un goblin a 22 px del eje a 200 px de distancia ahora recibe el tiro (antes no); a 44 px sigue fallando; ajustable en `AIMASSIST` si se siente poco/mucho. NO probado a mano.
 
