@@ -9,14 +9,14 @@
 const ISLA=(()=>{
  const T=32,CAPS=['Llegada','Manos de tierra','Fuego','Agua y cocina','La Palestra','El cofre','El ritual','Escapa'];
  // ofrendas del ritual: [objeto, brasero (tiles desde el centro)] — los 4 braseros están en sky-biome.js alrededor del Altar Quebrado
- const OFR=[['logs',12.8,-5.2],['estano',19.2,-5.2],['sw_cobre',12.8,-1.8],['c_camaron',19.2,-1.8]];
+ const OFR=[['of_tronco',12.8,-5.2],['of_estano',19.2,-5.2],['of_espada',12.8,-1.8],['of_camaron',19.2,-1.8]];   // 21 oct 2026: OFRENDAS = objetos EXCLUSIVOS del tutorial (game.js `I`, valor 0) que aparecen en el banco al depositar; así el paso no depende de lo que el jugador haya gastado o equipado
  // MISIONES TIPO WOW (21 oct 2026): cada maestro da UNA misión con 3 fases = 3 tipos de paso: `ph:'a'` (ACEPTAR: el maestro tiene un «!»; se acepta en su diálogo), los pasos de OBJETIVO (el maestro muestra un «?» gris) y `ph:'t'` (ENTREGAR: «?» dorado; hay que volver y entregar lo que pide `deliver`, y recibir `reward`). Los textos y datos de cada misión están en QUESTS.
  const QUESTS=[
   {npc:'v:9:raguel',name:'Despertar',hi:'Bienvenido, viajero.',desc:'Cuando llegaste traías algo contigo. Recoge tus pertenencias en la caja de la punta oeste, junto a un árbol (te marcaré el camino), mira qué encuentras y tráemelo.',rem:'Busca en la caja de la punta oeste y abre la Mochila.',turn:'¿Encontraste algo?',deliver:{pendiente:1},done:'Es tuyo: lo llevabas al caer. Quédate con lo que recuerdes. Ahora ve al olivar, al oeste, y habla con Sariel: ella te enseña a talar y minar.',coins:5},
   {npc:'v:9:sariel',name:'Manos de tierra',hi:'Hay trabajo que hacer.',desc:'Necesito 3 troncos de olivo y, de la cantera del norte, 2 de cobre y 2 de estaño. Tráemelos.',rem:'Tala olivos y mina cobre y estaño en la cantera del norte.',turn:'¿Traes los materiales?',deliver:{logs:3,cobre:2,estano:2},reward:{cobre:2,estano:1,logs:1},coins:15,done:'Gracias. Quédate con lo que te sirva. Ve al Ágora y habla con Uriel.'},
   {npc:'v:9:uriel',name:'Fuego',hi:'El fuego no espera.',desc:'Funde 2 barras de cobre en el horno y forja una espada de cobre en el yunque. Luego tráemela.',rem:'Funde las barras en el horno y forja la espada en el yunque.',turn:'¿Está lista la espada?',deliver:{sw_cobre:1},reward:{sw_cobre:1},coins:25,done:'Buen filo. Llévatela. Ve a la fuente y habla con Rafael.'},
   {npc:'v:9:rafael',name:'Agua y cocina',hi:'Ven, siéntate un momento.',desc:'Pesca 3 camarones en la fuente y cocina 2 en la fogata del Ágora. Tráeme los cocinados.',rem:'Pesca en la fuente y cocina en la fogata del Ágora.',turn:'¿Los camarones?',deliver:{c_camaron:2},reward:{c_camaron:1},coins:25,done:'Excelente. Guarda uno. Ve a la Palestra y habla con Miguel.'},
-  {npc:'v:9:miguel',name:'La Palestra',hi:'Firme. Mirada al frente.',desc:'Las gallinas de la Palestra son tu práctica: golpea con puntería, carga un golpe, esquiva con Espacio y derrota a 3. Vuelve cuando acabes.',rem:'Practica con las gallinas de la Palestra.',turn:'¿Has terminado?',done:'Bien. Deposita todo en el banco, saca las 4 ofrendas (troncos, estaño, espada de cobre y camarón cocinado) y sube a la Acrópolis.',coins:40}];
+  {npc:'v:9:miguel',name:'La Palestra',hi:'Firme. Mirada al frente.',desc:'Las gallinas de la Palestra son tu práctica: golpea con puntería, carga un golpe, esquiva con Espacio y derrota a 3. Vuelve cuando acabes.',rem:'Practica con las gallinas de la Palestra.',turn:'¿Has terminado?',done:'Bien. Deposita todo en el banco, saca del banco las 4 ofrendas que aparecerán allí y sube a la Acrópolis.',coins:40}];
  const QS=(q,ph,o)=>Object.assign({q,ph,npc:QUESTS[q].npc,g:{t:'talk',k:QUESTS[q].npc}},o);
  const BOXP=[-27,-7.5];   // caja de las pertenencias (tiles desde el centro de la isla): en la PUNTA OESTE, junto a un olivo, a ≈ 20 tiles de la llegada (hay que caminar)
  const STEPS=[
@@ -44,20 +44,25 @@ const ISLA=(()=>{
   {cap:4,txt:'Derrota 3 gallinas',at:[14,10],g:{t:'kill',k:'gallina',n:3}},
   QS(4,'t',{cap:4,txt:'Vuelve con Miguel'}),
   {cap:5,txt:'Deposita todo en el banco',at:[21,-3],g:{t:'dep',k:'dep',n:1}},
-  {cap:5,txt:'Saca las 4 ofrendas del banco',at:[21,-3],g:{t:'have',k:['logs','estano','sw_cobre','c_camaron']}},
+  {cap:5,txt:'Saca las 4 ofrendas del banco',at:[21,-3],g:{t:'have',k:['of_tronco','of_estano','of_espada','of_camaron']}},
   {cap:6,txt:'Sube a la Acrópolis',at:[16,-6.4],g:{t:'reach',at:[16,-6.4],r:3}},
   {cap:6,txt:'Deja las 4 ofrendas en los braseros',at:[16,-3.5],g:{t:'offer'}},
   {cap:6,txt:'Habla con el Altar Quebrado',at:[16,-3.5],g:{t:'altar'}},
   {cap:6,txt:'Derrota a Gabriel',at:[16,0],g:{t:'kill',k:'gabriel',n:1}},
   {cap:6,txt:'…',g:{t:'cine'}},
   {cap:7,txt:'¡Escapa! Corre al borde este',at:[28.5,-0.4],esc:1,g:{t:'reach',at:[28.5,-0.4],r:2.6}}];
+ // 21 oct 2026 (FIX-OFRENDAS): `have` (game.js) cuenta mochila + BANCO, así que «Saca las 4 ofrendas» se daba por cumplido al depositar, y la espada de cobre EQUIPADA no estaba ni en la mochila ni en el banco (el paso no se podía completar). `own` = mochila + equipo (nunca el banco); `give` entrega desde la mochila o, si no, desequipa la pieza.
+ const own=k=>S.inv.filter(x=>x===k).length+Object.values(S.eq).filter(x=>x===k).length;
+ const give=k=>{const j=S.inv.indexOf(k);if(j>=0){S.inv.splice(j,1);return}const sl=Object.keys(S.eq).find(x=>S.eq[x]===k);if(sl){S.eq[sl]=null;try{syncTools()}catch(e){}}};
+ // ANTI-BRICK: en los pasos «saca» y «deja» las ofrendas que falten (aún no entregadas) se vuelven a poner en el BANCO, pase lo que pase
+ const grantOfr=()=>{const i=S.isla,g=cur().g;if(!i||(g.t!=='have'&&g.t!=='offer'))return;let n=0;OFR.forEach(([it],k)=>{if(g.t==='offer'&&i.off[k])return;if(own(it)+(S.bank[it]||0)<1){S.bank[it]=1;n++}});if(n){dirty=1;try{toast('Aparecen ofrendas en tu <b>banco</b>',2600);snd('rare')}catch(e){}}}
  const st=()=>S.isla||(S.isla={step:0,bs:0,off:[0,0,0,0],t:{},done:0});
  const zone=()=>BIOMES.zone,B9=()=>BIOMES.list[9],wp=(tx,ty)=>{const b=B9();return{x:b.ox+b.w/2+tx*T,y:b.oy+b.h/2+ty*T}};
  const cur=()=>STEPS[Math.min(st().step,STEPS.length-1)];
  const key=g=>g.t==='kill'?'kill:'+g.k:g.t==='got'?'got:'+g.k:g.t==='make'?'make:'+g.k:g.k;
  const base=()=>{const g=cur().g;st().bs=(g.t==='kill'||g.t==='got'||g.t==='make'||g.t==='run'||g.t==='dep'||g.t==='dash'||g.t==='cnt')?(S.st[key(g)]||0):0};
  const on=()=>{try{const z=zone();return !!z&&!st().done&&P.x>=z.x0&&!(typeof INT!=='undefined'&&INT)}catch(e){return false}};
- const prog=()=>{const g=cur().g,i=st();if(g.t==='offer')return[i.off.reduce((a,b)=>a+b,0),4];if(g.n)return[Math.min(g.n,(S.st[key(g)]||0)-i.bs),g.n];if(g.t==='have')return[g.k.filter(k=>have(k)>=1).length,g.k.length];return null};
+ const prog=()=>{const g=cur().g,i=st();if(g.t==='offer')return[i.off.reduce((a,b)=>a+b,0),4];if(g.n)return[Math.min(g.n,(S.st[key(g)]||0)-i.bs),g.n];if(g.t==='have')return[g.k.filter(k=>own(k)>=1).length,g.k.length];return null};
  function adv(){const i=st(),c=cur().cap;i.step++;cs=0;i.off=[0,0,0,0];if(i.step>=STEPS.length){finish();return}base();if(cur().esc)startEscape();dirty=1;try{snd('quest')}catch(e){}
   const n=cur();toast('✔ '+(n.cap!==c?'<b>'+CAPS[n.cap]+'</b>':'Hecho'),1800);save()}
  function finish(){const i=st();i.done=1;i.lock=0;endEscape();
@@ -67,7 +72,7 @@ const ISLA=(()=>{
   switch(g.t){case'talk':case'altar':case'cine':return false;   // los resuelven talk()/altar()/el final de la cinemática
    case'reach':{const q=wp(g.at[0],g.at[1]);return Math.hypot(q.x-P.x,q.y-P.y)<g.r*T}
    case'panel':return typeof TB!=='undefined'&&TB==='inv'&&typeof panelOpen==='function'&&panelOpen();
-   case'have':return g.k.every(k=>have(k)>=1);
+   case'have':return g.k.every(k=>own(k)>=1);
    case'item':return have(g.k)>=1;
    case'offer':return i.off.every(v=>v);
    default:return(S.st[key(g)]||0)-i.bs>=g.n}};
@@ -90,7 +95,8 @@ const ISLA=(()=>{
   if(cur().cap===4&&(now_=performance.now())>chT){chT=now_+1500;chickens(4)}   // durante la misión de la Palestra siempre hay ≥ 4 gallinas VIVAS: no hay que esperar al reaparecer para seguir la cadena
   if(cur().esc&&!es)startEscape();
   i.t[cur().cap]=(i.t[cur().cap]||0)+dt;
-  if(cur().g.t==='offer'){OFR.forEach(([it,x,y],k)=>{if(i.off[k])return;const q=wp(x,y);if(Math.hypot(q.x-P.x,q.y-P.y)<2.4*T&&have(it)>=1){take({[it]:1});i.off[k]=1;dirty=1;try{snd('rare')}catch(e){}toast('El brasero acepta la ofrenda ('+i.off.reduce((a,b)=>a+b,0)+'/4)',1600)}})}
+  grantOfr();
+  if(cur().g.t==='offer'){OFR.forEach(([it,x,y],k)=>{if(i.off[k])return;const q=wp(x,y);if(Math.hypot(q.x-P.x,q.y-P.y)<2.4*T&&own(it)>=1){give(it);i.off[k]=1;dirty=1;try{snd('rare')}catch(e){}toast('El brasero acepta la ofrenda ('+i.off.reduce((a,b)=>a+b,0)+'/4)',1600)}})}
   hintsTick(performance.now());
   gTick(performance.now());if(gAlive()){fightAt=performance.now();bossAt=fightAt}   // música de jefe (src/music.js: DEF[9].jefe = gabriel.mp3) mientras dure el combate
 
