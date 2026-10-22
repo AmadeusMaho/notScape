@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 // FASE B · ORACIÓN Y ESTILOS DE COMBATE (13 oct 2026, lote B1). Se carga después de combat.js y antes de game.js; usa globales de game.js (S, L, P, M, toast, snd, log, gain, dirty…) solo en tiempo de llamada.
-//  · Skill «Oración» (`pr`, la 13.ª): se entrena ENTERRANDO huesos (clic en el hueso del inventario) o ofreciéndolos en el ALTAR de la aldea (×2 de XP, los ofrece todos de golpe).
+//  · Skill «Oración» (`pr`, la 13.ª): se entrena ENTERRANDO huesos (LMB en el hueso del inventario) o ofreciéndolos en el ALTAR de la aldea (×2 de XP, los ofrece todos de golpe).
 //  · PUNTOS DE ORACIÓN `PP` (orbe amarillo junto a los demás): máximo = nivel de Oración; cada oración activa los gasta por minuto (`dr`); se rellenan en el altar. Sin puntos se apagan todas.
 //  · ORACIONES: protección (una a la vez: −40 % a los golpes normales del estilo y −100 % al golpe pesado telegrafado), mejoras de defensa / fuerza / precisión (una por grupo) y curación (regeneración).
 //  · ESTILOS: cada enemigo ataca con un estilo (`m` cuerpo a cuerpo · `r` distancia · `g` magia; `MSTY`); algunos jefes lo CAMBIAN en cada golpe pesado (`MSW`): el color del círculo y el icono dicen cuál viene.
@@ -45,10 +45,10 @@ function prTog(id){prInit();const p=PRB[id];if(!p)return;if(L('pr')<p.lv){toast(
  prSync();dirty=1}
 function prTick(dt){prInit();if(PP>prMax())PP=prMax();if(PRA.length&&P.hp>0&&!INT){let d=0;for(const id of PRA)d+=PRB[id].dr/60*dt;PP-=d;if(PP<=0){PP=0;PRA=[];toast('🙏 Te quedaste sin puntos de oración.');snd('miss');dirty=1}}
  const r=pry('reg');if(r&&P.hp>0&&P.hp<maxHp())P.hp=Math.min(maxHp(),P.hp+r*dt)}
-// enterrar un hueso del inventario (clic en el inventario)
+// enterrar un hueso del inventario (LMB en el inventario)
 function bury(i){const id=S.inv[i],x=BONEXP[id];if(!x)return false;const now=performance.now();if(now<BCD)return true;BCD=now+450;S.inv.splice(i,1);gain('pr',x,false);snd('xp');inc('bury');log('🙏 Entierras '+I[id][0]+' (+'+x+' XP de Oración).');dirty=1;return true}
 // altar de la aldea: rellena los puntos y ofrece TODOS los huesos de la mochila con ×2 de XP
-function prAltar(){prInit();if(P.dot){P.dot=null;log('🙏 El altar te limpia de tu herida.')}const was=PP;PP=prMax();let xp=0,n=0;for(const id in BONEXP){const c=count(id);if(c){xp+=BONEXP[id]*2*c;n+=c;S.inv=S.inv.filter(x=>x!==id)}}
+function prAltar(){prInit();if(STS.list(P).some(s=>s.d.bad)){STS.clear(P,1);log('🙏 El altar te limpia de tus heridas.')}const was=PP;PP=prMax();let xp=0,n=0;for(const id in BONEXP){const c=count(id);if(c){xp+=BONEXP[id]*2*c;n+=c;S.inv=S.inv.filter(x=>x!==id)}}
  if(xp){gain('pr',xp,false);snd('lvl');toast('🙏 Ofrendas: '+n+' hueso'+(n>1?'s':'')+' → +'+xp+' XP de Oración (×2).<br>Puntos de oración restaurados.',3600);inc('bury')}
  else if(was<PP-.01){snd('xp');toast('🙏 Puntos de oración restaurados ('+prMax()+').<br>Trae huesos para ofrecerlos aquí con ×2 de XP.',3200)}
  else toast('🙏 Tus puntos de oración ya están completos.<br>Trae huesos para ofrecerlos aquí con ×2 de XP.',3200);

@@ -2,7 +2,7 @@
 // Script clásico, global `DLG`. Se carga tras villagers.js (usa `VNPC`, `VILL`, `ISLA`, `BIOMES` solo al llamar).
 //   · LOS CAMBIOS viven en `data/dialogos.json` (los escribe la herramienta `tools/dialogos/`, ver su README): {npcs:{<id>:{conv:[[página,…],…]}}, quests:{<id de PNJ>:{name,hi,desc,rem,turn,done}}}.
 //     El juego los lee al arrancar (`fetch`); si el archivo no existe o falla, se queda con los textos del código (nada se rompe).
-//   · `npcs[id].conv` = CONVERSACIONES que REEMPLAZAN a las del código para ese PNJ: al hablar se rota entre ellas (1.ª vez la 1.ª, 2.ª vez la 2.ª…); cada conversación es una lista de páginas (clic/tecla = siguiente página).
+//   · `npcs[id].conv` = CONVERSACIONES que REEMPLAZAN a las del código para ese PNJ: al hablar se rota entre ellas (1.ª vez la 1.ª, 2.ª vez la 2.ª…); cada conversación es una lista de páginas (LMB/tecla = siguiente página).
 //     Los PNJ de aldea de todos los biomas comparten id: `guardia`, `herrera`, `anciano` valen para las 9 aldeas; los demás (`v:<bioma>:…`) son de una aldea concreta.
 //   · `quests[id de PNJ]` pisa los textos de las misiones del tutorial del Cielo (`ISLA.QUESTS`): name, hi (saludo), desc (descripción), rem (recordatorio), turn (al volver), done (al entregar).
 //   · `DLG.dump()` devuelve los textos ORIGINALES del código (los usa el editor para enseñarlos como referencia); NO aplica cambios.

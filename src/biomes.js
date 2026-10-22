@@ -147,7 +147,7 @@ const BIOMES=(()=>{
  //   amp ondulación del borde en px, seed, pk altura de cumbre en unidades 3D sobre el borde del acantilado, col:[bajo,alto,cumbre] colores 3D}].
  // rangeAt(x,y) (px de mundo) → [h, m, i] (ARRAY COMPARTIDO: léelo al momento): h = altura de tile (0 = no hay cordillera · 1,3/1,6/1,9 = falda · 2 = NÚCLEO = HCLIFF, no se pisa),
  // m = altura 3D extra de la cumbre sobre el borde (solo en el núcleo; vale 0 justo en el borde, así la malla enlaza con los acantilados normales), i = índice de la cordillera.
- // La LÓGICA (colisión, clic, caminos) solo ve h (mismo contrato de alturas que siempre: nada nuevo por encima de 2); m solo lo lee la malla 3D (terrain3d.js).
+ // La LÓGICA (colisión, LMB, caminos) solo ve h (mismo contrato de alturas que siempre: nada nuevo por encima de 2); m solo lo lee la malla 3D (terrain3d.js).
  const ranges=[],RG=[0,0,-1],sm=t=>t<=0?0:t>=1?1:t*t*(3-2*t);
  API.ranges=ranges;
  API.addRange=q=>{q.cum=[0];q.len=[];for(let i=0;i<q.p.length-1;i++){const l=Math.hypot(q.p[i+1][0]-q.p[i][0],q.p[i+1][1]-q.p[i][1]);q.len.push(l);q.cum.push(q.cum[i]+l)}

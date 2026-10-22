@@ -324,10 +324,10 @@ body.hs-on #ctl button.bt.danger:hover{background:rgba(160,60,50,.28)}
 body.hs-on #ctl button.bt.danger[data-arm="1"]{background:rgba(160,60,50,.5);color:#fff1e8;border-color:rgba(255,190,170,.7)}
 
 /* ══ H10 · menús restantes en el lenguaje Susurro (20 oct 2026): títulos, filas, botones, barras, logros, tienda/banco ══ */
-body.hs-on #pn h2,body.hs-on #swb h2{display:flex;align-items:center;gap:.7em;font:600 .78em Cinzel,Georgia,serif;letter-spacing:.24em;text-transform:uppercase;color:#e8cf94;margin:.2em 0 .7em}
-body.hs-on #pn h2::before,body.hs-on #swb h2::before{content:"";width:.45em;height:.45em;background:#b5893a;transform:rotate(45deg);flex:none}
-body.hs-on #pn h2::after,body.hs-on #swb h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#b5893a,transparent)}
-body.hs-on #pn h2 small,body.hs-on #swb h2 small{order:3;font:500 .95em Spectral,Georgia,serif;letter-spacing:.04em;text-transform:none;color:#b9ad93}
+body.hs-on #pn h2,body.hs-on #swb h2,body.hs-on #bw h2{display:flex;align-items:center;gap:.7em;font:600 .78em Cinzel,Georgia,serif;letter-spacing:.24em;text-transform:uppercase;color:#e8cf94;margin:.2em 0 .7em}
+body.hs-on #pn h2::before,body.hs-on #swb h2::before,body.hs-on #bw h2::before{content:"";width:.45em;height:.45em;background:#b5893a;transform:rotate(45deg);flex:none}
+body.hs-on #pn h2::after,body.hs-on #swb h2::after,body.hs-on #bw h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#b5893a,transparent)}
+body.hs-on #pn h2 small,body.hs-on #swb h2 small,body.hs-on #bw h2 small{order:3;font:500 .95em Spectral,Georgia,serif;letter-spacing:.04em;text-transform:none;color:#b9ad93}
 body.hs-on #pn h2 small{margin-left:auto}
 /* filas: línea fina, sin puntos gruesos */
 body.hs-on #pw .row,body.hs-on #sw .row{border-bottom:1px solid rgba(201,181,127,.14);padding:.35em .2em;border-radius:.3em}
@@ -605,8 +605,8 @@ body.cine #cine .cn-t,body.cine #cine .cn-b{height:max(0px,calc((100vh - 100vw/2
 /* CINE-3 · cielo ardiendo (resplandor + grietas de luz) y tarjeta final */
 #cine .cn-sky{position:absolute;inset:0;opacity:0;mix-blend-mode:screen;background:radial-gradient(130% 80% at 70% -12%,rgba(255,140,50,.68),rgba(255,70,20,.28) 44%,transparent 74%),radial-gradient(90% 60% at 6% 108%,rgba(255,90,20,.38),transparent 70%),radial-gradient(90% 60% at 96% 108%,rgba(255,90,20,.34),transparent 70%),radial-gradient(60% 45% at 0% 32%,rgba(255,110,30,.24),transparent 70%),radial-gradient(60% 45% at 100% 28%,rgba(255,110,30,.22),transparent 70%)}
 #cine .cn-sky svg{position:absolute;inset:0;width:100%;height:100%;animation:ckF 2.6s steps(1,end) infinite}
-#cine .cn-sky .ck{fill:none;stroke:#fff4cf;stroke-width:.3;stroke-linecap:round;stroke-linejoin:miter;stroke-dasharray:1 1;stroke-dashoffset:calc(1 - clamp(0, var(--ck,0)*1.9 - var(--d,0), 1));filter:drop-shadow(0 0 1.5px #fff2c0) drop-shadow(0 0 6px #ff9a3a) drop-shadow(0 0 14px #ff4a10)}
-#cine .cn-sky .cw{fill:none;stroke:#ff7a22;stroke-width:1.15;stroke-linecap:round;opacity:.26;stroke-dasharray:1 1;stroke-dashoffset:calc(1 - clamp(0, var(--ck,0)*1.9 - var(--d,0), 1));filter:blur(.6px)}
+#cine .cn-sky .ck{fill:none;stroke:#fff4cf;stroke-width:.3;stroke-linecap:round;stroke-linejoin:miter;stroke-dasharray:1 1;stroke-dashoffset:calc(1 - clamp(0, var(--ck,0)*1.9 - var(--d,0), 1))}
+#cine .cn-sky .cw{fill:none;stroke:#ff7a22;stroke-width:1.5;stroke-linecap:round;opacity:.2;stroke-dasharray:1 1;stroke-dashoffset:calc(1 - clamp(0, var(--ck,0)*1.9 - var(--d,0), 1))}   /* 22 oct 2026: sin filter/drop-shadow por trazo (≈40 filtros repintados por fotograma = tirón, sobre todo en móvil); el halo es este trazo ancho translúcido */
 #cine .cn-sky .ck.b{stroke-width:.17}#cine .cn-sky .cw.b{stroke-width:.7}
 @keyframes ckF{0%{opacity:1}8%{opacity:.55}10%{opacity:1}44%{opacity:.8}46%{opacity:1}71%{opacity:.68}73%{opacity:1}88%{opacity:.9}}
 #cine .cn-sub.card{bottom:50%;transform:translateY(50%);font:400 clamp(24px,3.8vw,54px)/1.2 Cinzel,Georgia,serif;font-style:normal;letter-spacing:.32em;text-indent:.32em}
@@ -618,7 +618,7 @@ body.cine #cine .cn-t,body.cine #cine .cn-b{height:max(0px,calc((100vh - 100vw/2
 #hs-sw>b:nth-of-type(1){left:calc(50% - .95em)}#hs-sw>b:nth-of-type(2){left:calc(50% - .17em)}#hs-sw>b:nth-of-type(3){left:calc(50% + .61em)}
 #hs-sw>b.lit{background:#e8cf94;box-shadow:0 0 5px rgba(232,207,148,.8)}
 
-/* Carga del golpe (21 oct 2026): la barra de swing se llena de naranja mientras se mantiene el clic */
+/* Carga del golpe (21 oct 2026): la barra de swing se llena de naranja mientras se mantiene el LMB */
 #hs-sw.chg>i{background:linear-gradient(90deg,#9a4a1a,#ffb060)}#hs-sw.cf>i{background:#ffe2a8;box-shadow:0 0 8px rgba(255,170,70,.9)}
 
 /* Aviso «F · Entrar / Hablar / Abrir…» (#fp) y tarjeta de bienvenida de la isla (#isla-tip) en el lenguaje Susurro (21 oct 2026): cristal oscuro, trazo dorado fino, Cinzel/Spectral */
@@ -754,7 +754,7 @@ body.cine #qms{opacity:0}
 #cast .cs-b i{display:block;height:100%;width:0;background:linear-gradient(90deg,#a07a2a,#f0d98c)}
 
 /* Ayudas contextuales de controles (21 oct 2026; game.js ctxHint): cristal oscuro suave con teclas, sobre el marco del jugador; entran y salen con fundido */
-#ctxh{position:fixed;left:50%;bottom:calc(var(--hu,16px)*15.5);z-index:6;display:flex;flex-direction:column;gap:.35em;align-items:flex-start;padding:.7em 1.1em;font-size:calc(var(--hu,16px)*.95);color:#f3e8cc;pointer-events:none;opacity:0;transform:translate(-50%,.5em);transition:opacity .5s ease,transform .5s ease;background:linear-gradient(180deg,rgba(24,20,15,.82),rgba(12,10,8,.82));border:1px solid rgba(232,207,148,.3);border-radius:.6em;box-shadow:0 .4em 1.4em rgba(0,0,0,.5)}
+#ctxh{position:fixed;left:50%;bottom:calc(var(--hu,16px)*15.5 + var(--ctxup,0px));z-index:6;display:flex;flex-direction:column;gap:.35em;align-items:flex-start;padding:.7em 1.1em;font-size:calc(var(--hu,16px)*.95);color:#f3e8cc;pointer-events:none;opacity:0;transform:translate(-50%,.5em);transition:opacity .5s ease,transform .5s ease,bottom .25s ease;background:linear-gradient(180deg,rgba(24,20,15,.82),rgba(12,10,8,.82));border:1px solid rgba(232,207,148,.3);border-radius:.6em;box-shadow:0 .4em 1.4em rgba(0,0,0,.5)}
 #ctxh.on{opacity:1;transform:translate(-50%,0)}
 #ctxh div{display:flex;align-items:center;gap:.45em;font-family:Spectral,Georgia,serif;font-weight:600}
 #ctxh kbd{font:700 .85em Cinzel,Georgia,serif;min-width:1.6em;padding:.15em .5em;text-align:center;color:#e8cf94;background:rgba(16,13,10,.8);border:1px solid rgba(232,207,148,.6);border-radius:.35em}
@@ -832,3 +832,68 @@ body.cine #qms{opacity:0}
 #cdr b.lit{background:#e8cf94;box-shadow:0 0 5px rgba(232,207,148,.85)}
 
 #cdr[data-d]::after{left:1.7em;top:-.45em}   /* la distancia (rango) queda fuera de la ruedita de enfriamiento */
+
+/* ═══ Estados alterados (22 oct 2026, status.js) ═══ Ceguera del jugador: viñeta oscura que se cierra alrededor del héroe (el radio `--r` lo anima STS.tick). Por debajo del HUD (#hs z 2) para que los marcos sigan legibles. */
+#blind{position:fixed;inset:0;z-index:1;pointer-events:none;display:none;background:radial-gradient(circle at 50% 52%,transparent var(--r,70vmin),rgba(6,4,10,.9) calc(var(--r,70vmin) + 16vmin),rgba(2,1,4,.97) calc(var(--r,70vmin) + 34vmin))}
+
+/* ═══ Opciones ordenadas (22 oct 2026) ═══ Sonido · Juego · Gráficos · Partida: una fila por opción, etiquetas sin emojis; los deslizadores de óleo/viento/nubes/inclinación se retiraron (valores fijos por defecto). */
+body.hs-on #ctl{display:flex;flex-wrap:wrap;gap:.35em;width:min(340px,86vw);padding:.7em .8em}
+body.hs-on #ctl button.bt{flex:1 1 100%;text-align:left;font:600 .82em var(--f);letter-spacing:.02em;padding:.5em .8em;color:#efe4c8;background:rgba(241,231,210,.06);border:1px solid rgba(232,207,148,.22);border-radius:.4em;box-shadow:none}
+body.hs-on #ctl button.bt:hover{background:rgba(232,207,148,.16);border-color:rgba(232,207,148,.55)}
+body.hs-on #ctl button.bt.danger{flex:0 0 auto;margin-left:auto;text-align:center}
+body.hs-on #ctl label.sl span{flex:0 0 4.8em;font:600 .78em var(--cap);letter-spacing:.1em;text-transform:uppercase;color:#a89870}
+body.hs-on #ctl .ctl-sep{font:700 .72em var(--cap);letter-spacing:.2em;text-transform:uppercase;margin-top:.5em}
+
+/* ═══ Arrastrar objetos + banco + bolsas (22 oct 2026; src/dragdrop.js) ═══ Fantasma que sigue al cursor con suavizado; origen atenuado; destinos que se iluminan; ranuras de mochila sobre la cuadrícula. */
+.slot[data-dg]{cursor:grab;user-select:none;-webkit-user-select:none}
+body.dragging,body.dragging *{cursor:grabbing!important}body.dragging #tip{display:none!important}
+.dg{position:fixed;left:0;top:0;z-index:60;pointer-events:none;display:grid;place-items:center;box-sizing:border-box;background:none;border:0;box-shadow:none;scale:1;opacity:1;transition:scale .22s cubic-bezier(.2,1.6,.4,1),opacity .28s ease,top .3s ease}
+.dg.pick{scale:1.6}   /* en la mano del cursor el OBJETO crece (sin el cuadrado de la casilla) */
+.dg>*{max-width:88%;max-height:88%;object-fit:contain;filter:drop-shadow(0 .5em .45em rgba(0,0,0,.6)) drop-shadow(0 0 .7em color-mix(in srgb,var(--rc,#e8cf94) 55%,transparent))}
+.dg .cnt{position:absolute;right:.45em;bottom:.3em;font:700 .6em Cinzel,Georgia,serif;color:#fff1cf;text-shadow:0 0 .3em #000,0 0 .15em #000}
+.dg.dg-world>*{filter:drop-shadow(0 .5em .45em rgba(0,0,0,.6)) drop-shadow(0 0 .8em rgba(216,106,90,.9))}
+.dg.dg-bad{opacity:.5}
+.dg.dg-in{scale:.25;opacity:0;transition:scale .22s ease-in,opacity .22s ease-in}
+.dg.dg-dock{scale:1;opacity:.15;transition:translate .3s cubic-bezier(.3,1.1,.5,1),rotate .3s ease,scale .3s ease,opacity .28s ease .1s}
+.dg.dg-fall{scale:.7;opacity:0;top:1.8em;transition:scale .3s ease-in,opacity .3s ease-in,top .3s ease-in}
+.dg.dg-back{scale:1;opacity:.2;transition:translate .3s cubic-bezier(.3,1.25,.5,1),rotate .3s ease,scale .3s ease,opacity .3s ease .08s}
+.slot.dg-src{opacity:.28;filter:grayscale(.5)}
+#pw.dz-hot,#sw.dz-hot{box-shadow:inset 0 0 0 1.5px rgba(232,207,148,.85),0 0 1.6em rgba(232,207,148,.3)}
+.bagslot.dz-hot{border-color:#e8cf94!important;box-shadow:0 0 .8em rgba(232,207,148,.6);background:rgba(232,207,148,.14)!important}
+.dz-ok{animation:dzok .36s ease-out}@keyframes dzok{0%{filter:brightness(1.6)}100%{filter:none}}
+.bagbar{display:flex;gap:.4em;margin:.1em 0 .7em;align-items:center}
+.bagslot{position:relative;flex:none;width:2.5em;height:2.5em;padding:0;display:grid;place-items:center;border:1.5px dashed rgba(232,207,148,.3);border-radius:8px;background:rgba(0,0,0,.28);color:#e8cf94;transition:border-color .2s,background .2s,box-shadow .2s}
+.bagslot:not(.full):not(.base)::after{content:"+";font:600 1.1em Cinzel,Georgia,serif;color:rgba(232,207,148,.35)}
+.bagslot.base{border-style:solid;border-color:rgba(232,207,148,.5);margin-right:.3em}.bagslot svg{width:62%;height:62%;fill:none;stroke:#e8cf94;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.bagslot.full{border-style:solid;border-color:rgba(232,207,148,.6);background:linear-gradient(180deg,rgba(232,207,148,.12),rgba(0,0,0,.3));cursor:pointer}.bagslot.full:hover{background:rgba(160,60,50,.3);border-color:#d88a7a}
+.bagslot img{width:78%;height:78%;object-fit:contain}.bagslot em{position:absolute;right:.15em;bottom:-.1em;font:700 .62em Cinzel,Georgia,serif;font-style:normal;color:#e8cf94;text-shadow:0 0 .3em #000}
+#swb .bkh{margin:-.1em 0 .6em;font-size:.72em;color:#a89870}
+#sw[data-k="bank"]{width:min(392px,calc(100vw - 16px))}
+#swb .bkg{grid-template-columns:repeat(7,1fr);gap:5px}
+/* ═══ Panel de Habilidades (22 oct 2026): tarjetas con icono de línea, agrupadas; sin emojis ═══ */
+#pn .skhd{display:flex;gap:.45em;margin:.1em 0 .6em}
+#pn .skhd span{flex:1;display:flex;flex-direction:column;gap:.1em;padding:.45em .6em;border:1px solid rgba(232,207,148,.22);border-radius:.5em;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.22));font:600 .6em Cinzel,Georgia,serif;letter-spacing:.16em;text-transform:uppercase;color:#a89870}
+#pn .skhd b{font:700 2em Cinzel,Georgia,serif;letter-spacing:0;color:#e8cf94;text-transform:none}
+#pn .sks{display:flex;align-items:center;gap:.6em;margin:.85em 0 .35em;font:700 .66em Cinzel,Georgia,serif;letter-spacing:.24em;text-transform:uppercase;color:#b5893a}
+#pn .sks::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(181,137,58,.6),transparent)}
+#pn .skg{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5em,1fr));gap:.4em}
+#pn .skc{display:flex;gap:.55em;align-items:center;margin:0!important;padding:.45em .55em;border:1px solid rgba(232,207,148,.16);border-radius:.55em;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(0,0,0,.22));transition:border-color .2s,background .2s}
+#pn .skc:hover{border-color:rgba(232,207,148,.5);background:linear-gradient(180deg,rgba(232,207,148,.1),rgba(0,0,0,.2))}
+#pn .skc.lk{opacity:.42}
+#pn .ski{flex:none;width:2.2em;height:2.2em;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(232,207,148,.24),rgba(0,0,0,.42));border:1px solid rgba(232,207,148,.5)}
+#pn .ski svg{width:60%;height:60%;fill:none;stroke:#e8cf94;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#pn .skm{flex:1;min-width:0;display:flex;flex-direction:column;gap:.2em}
+#pn .skt{display:flex;justify-content:space-between;align-items:baseline;gap:.4em}
+#pn .skt b{font:600 .74em Cinzel,Georgia,serif;letter-spacing:.02em;color:#efe4c8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pn .skt .gold{font:700 .72em Cinzel,Georgia,serif;color:#e8cf94}
+#pn .skm .bar{height:.34em;border:0;border-radius:1em;background:rgba(0,0,0,.55);overflow:hidden;margin:0}
+#pn .skm .bar i{display:block;height:100%;background:linear-gradient(90deg,#9c7326,#e8cf94);box-shadow:0 0 .55em rgba(232,207,148,.5);transition:width .4s ease}
+#pn .skm .hint{float:none!important;margin:0!important;font-size:.64em;color:#9d917a}
+
+.slot.dz-hot{border-color:#e8cf94!important;box-shadow:inset 0 0 .9em rgba(232,207,148,.45),0 0 .9em rgba(232,207,148,.45)!important;background:rgba(232,207,148,.14)!important}
+.slot.eq.dz-hot svg.sil{color:#e8cf94}
+/* mochila flotante junto a la hoja de personaje (#bw) */
+#bw{position:fixed;z-index:6;width:min(360px,calc(100vw - 16px));padding:.8em .9em .9em;box-sizing:border-box;background:rgba(16,13,10,.9);border:1px solid rgba(201,181,127,.4);border-radius:8px;box-shadow:0 .3em 1.2em rgba(0,0,0,.45);backdrop-filter:blur(8px);color:#efe4c8;pointer-events:auto;animation:swin2 .26s var(--ease)}
+#bw[hidden]{display:none}
+#bw .inv{grid-template-columns:repeat(7,1fr);gap:5px}
+#bw.dz-hot{box-shadow:inset 0 0 0 1.5px rgba(232,207,148,.85),0 0 1.6em rgba(232,207,148,.3)}

@@ -5,7 +5,7 @@
 // · Héroe: se dibuja en un renderer propio (fondo transparente) y se copia al canvas 2D EN SU HUECO DE PROFUNDIDAD (drawHero), así los árboles o casas
 //   que tiene delante lo tapan y los de detrás no. Un clon invisible (capa 2, solo lo ve la cámara de sombras) proyecta su sombra sobre el terreno.
 // · Giro de cámara (rueda pulsada y arrastrar, o teclas , . — Inicio vuelve a 45°): se parchean ISO.toCanvas/toWorld/depth/keyDir, así los sprites 2D
-//   se recolocan como billboards, los clics van por rayo y las flechas siguen los ejes de pantalla. Al soltar cerca de 45° se encaja exacto.
+//   se recolocan como billboards, los LMB van por rayo y las flechas siguen los ejes de pantalla. Al soltar cerca de 45° se encaja exacto.
 import * as THREE from 'three';
 import {G,TOD,TODH,OIL,OIL_GLSL,setOil,setInk,mixTod,oilK} from './materials3d.js';
 import {HeroGrade} from './herograde3d.js';
@@ -28,7 +28,7 @@ import {SunRays} from './rays3d.js';
 import {LampGlow} from './lampglow3d.js';
 import {DynLight} from './dynlight3d.js';   // Lote R3D-LUZ-DIN: luces con oclusión por altura (sustituye a las PointLight)   // Lote R3D-LUZ: halos y charcos de luz de faroles/fuegos   // Lote R3D-F7-RAYOS: haces de sol del Bosque
 import {Rooms3D,INT_TP} from './interiors3d.js';   // Lote R3D-F15b: interiores en 3D
-import {Drops} from './drops3d.js';   // Lote R3D-DROPS-3D: objetos del suelo en 3D, recogida por clic y estela de luz en los raros
+import {Drops} from './drops3d.js';   // Lote R3D-DROPS-3D: objetos del suelo en 3D, recogida por LMB y estela de luz en los raros
 import {SkyZone} from './skyzone3d.js';   // Lote ISLA-2: acantilado, mar de nubes, anillo de nubes y cascadas de la zona del Cielo
 import {Fragment,Debris,Embers} from './cinefx3d.js';
 import {SkyFire} from './skyfire3d.js';   // 22 oct 2026: llamaradas alrededor de la isla mientras arde el cielo
@@ -104,7 +104,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  ISO.depth=(wx,wy,w=0,h=0)=>isStraight()?O.depth(wx,wy,w,h):((wx+w)*Math.sin(az)+(wy+h)*Math.cos(az))*Math.SQRT2;
  ISO.keyDir=(l,rr,u,d)=>{if(isStraight())return O.keyDir(l,rr,u,d);const hh=(rr|0)-(l|0),v=(d|0)-(u|0),x=hh*Math.cos(az)+v*Math.sin(az),y=-hh*Math.sin(az)+v*Math.cos(az),n=Math.hypot(x,y);return n?{x:x/n,y:y/n}:{x:0,y:0}};
  // ── giro: rueda pulsada + arrastrar · teclas , y . · Inicio = 45° ──
- c2d.addEventListener('pointerdown',e=>{if(e.button===1){drag={x:e.clientX,a:azT,btn:e.button,moved:true};e.preventDefault();try{c2d.setPointerCapture(e.pointerId)}catch(x){}}},true);   // rueda: gira siempre; CLIC DERECHO: gira si arrastras más de 6 px (si no, es «ir a ese punto», lo resuelve game.js al soltar)
+ c2d.addEventListener('pointerdown',e=>{if(e.button===1){drag={x:e.clientX,a:azT,btn:e.button,moved:true};e.preventDefault();try{c2d.setPointerCapture(e.pointerId)}catch(x){}}},true);   // rueda: gira siempre; RMB: gira si arrastras más de 6 px (si no, es «ir a ese punto», lo resuelve game.js al soltar)
  c2d.addEventListener('pointermove',e=>{if(drag){if(!drag.moved&&Math.abs(e.clientX-drag.x)>6){drag.moved=1;drag.x=e.clientX}if(drag.moved)azT=drag.a-(e.clientX-drag.x)*.008}});
  const endDrag=()=>{if(!drag)return;window.CAMD={btn:drag.btn,moved:drag.moved};drag=null;if(window.CAMD.moved)snap()};c2d.addEventListener('pointerup',endDrag);c2d.addEventListener('pointercancel',endDrag);
  c2d.addEventListener('auxclick',e=>{if(e.button===1)e.preventDefault()});
@@ -265,20 +265,13 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  // precarga: construye todos los chunks a la vista antes de quitar la pantalla de carga
  function preload(){const V=ISO.V,w=ISO.unproj(ISO.cam.x,ISO.cam.y,1),k=ppu(),R=Math.hypot(V.cw,V.ch)/k*.78+6;const cx=w.x/ISO.TILE,cz=w.y/ISO.TILE;terr.update(cx,cz,R,true);const n=terr.pending(cx,cz,R);return n}
  // F3d · perilla «Óleo» (0–100 %): guardada en localStorage (NO en S: es un ajuste del cliente, no de la partida). Slider #ov del HUD (oculto sin ?r3d=1).
- const OK_='ns_oleo';let oilV=null;try{const v=localStorage.getItem(OK_);if(v!==null&&v!==''&&isFinite(+v))oilV=Math.max(0,Math.min(100,+v))}catch(e){}
- if(oilV!==null)setOil(oilV/100);
- {const sl=document.getElementById('ov'),lb=document.getElementById('ovl');if(sl){sl.value=Math.round(OIL.K*100);if(lb)lb.hidden=false;
-  sl.oninput=e=>{setOil(+e.target.value/100);try{localStorage.setItem(OK_,String(Math.round(OIL.K*100)))}catch(_){}}}}
- // H4 · Opciones → Gráficos (20 oct 2026): inclinación-desenfoque, sombras de nubes y viento ajustables en vivo y guardados (ns_tilt/ns_cloud/ns_wind). Un parámetro de la URL (?tilt= ?cloud= ?wind=) manda sobre lo guardado.
- {const q=new URLSearchParams(location.search),GF=[['tilt','ns_tilt',()=>TILT_K,v=>{TILT_K=Math.max(0,Math.min(1.5,v))},1.5,.6],['cloud','ns_cloud',()=>cloudK,v=>{cloudK=Math.max(0,Math.min(2.5,v))},2.5,1.35],['wind','ns_wind',()=>G.uWindK.value,v=>{G.uWindK.value=Math.max(0,Math.min(3,v))},3,1.6]];
-  for(const[id,key,get,set,max]of GF){const sl=document.getElementById('gf-'+id),lb=document.getElementById('gf-'+id+'-l');if(!sl)continue;
-   if(q.get(id)==null){try{const sv=localStorage.getItem(key);if(sv!=null&&sv!==''&&isFinite(+sv))set(+sv/100*max)}catch(_){}}
-   sl.value=Math.round(get()/max*100);if(lb)lb.hidden=false;
-   sl.oninput=e=>{set(+e.target.value/100*max);try{localStorage.setItem(key,e.target.value)}catch(_){}}}
-  const rs=document.getElementById('gf-reset');if(rs){rs.hidden=false;rs.onclick=()=>{for(const[id,key,,set,max,def]of GF){set(def);const sl=document.getElementById('gf-'+id);if(sl)sl.value=Math.round(def/max*100);try{localStorage.removeItem(key)}catch(_){}}}}}
+ // 22 oct 2026 (dueño): Opciones ya NO ofrece óleo/inclinación/nubes/viento; el juego usa SIEMPRE los valores por defecto (los parámetros de URL ?oleo= ?tilt= ?cloud= ?wind= siguen valiendo para depurar). Se purgan los valores que otras versiones guardaron.
+ try{['ns_oleo','ns_tilt','ns_cloud','ns_wind'].forEach(k=>localStorage.removeItem(k))}catch(e){}
  return{gpu:GPU,dbg:{terr,cts,composer,bloom,grade,sun,pool,lantern,aLantern,aSun,aBack,ar,hgrade,parts,scene,aScene},get water(){return water},outfits:{list:OUTFITS,of:outfitOf,unlocked:outfitUnlocked,resolve:resolveLook},preview:cvs=>new HeroPreview(cvs),talkHead:cvs=>new TalkHead(cvs),get shrineMin(){return shrMin},set shrineMin(v){shrMin=Math.max(0,Math.min(1,+v||0))},get contact(){return cts.k},set contact(v){cts.k=Math.max(0,Math.min(1.5,+v||0))},get clouds(){return cloudK},get tilt(){return TILT_K},set tilt(v){TILT_K=Math.max(0,Math.min(1.5,+v||0))},get wind(){return G.uWindK.value},set wind(v){G.uWindK.value=Math.max(0,Math.min(3,+v||0))},set clouds(v){cloudK=Math.max(0,Math.min(1.5,+v||0))},get oilDay(){return OIL.H},set oilDay(v){OIL.H=Math.max(0,Math.min(1,+v||0));setOil(OIL.K)},get oil(){return OIL.K},set oil(v){setOil(v);const sl=document.getElementById('ov');if(sl)sl.value=Math.round(OIL.K*100)},frame,drawHero,show,preload,get tod(){return TODc},get propsOn(){return props.on},get parts3d(){return parts.on},parts,get resOn(){return res.on},get dropsOn(){return drops.on},drops,rays,glow,lm:dl,rooms,get intOn(){return rooms.on},get stOn(){return sta.on},get facOn(){return fac.on},get poOn(){return sta.poOn},sta,props,res,actors,blood,get az(){return az},set az(v){az=azT=v},get tscale(){return tsT},set tscale(v){tsT=Math.max(0,Math.min(1,+v||0))},get frozen(){return frz},get skyBurn(){return burnT},set skyBurn(v){burnT=Math.max(0,Math.min(1,+v||0))},get skyBurnNow(){return burn},skyBurnReset(){burnT=burn=0},get vclock(){return last},tsync(){tsT=tsK=1;vlag=0;frz=0},renderer:r,scene,W3,get sky(){return sky},get gait(){const a=hero&&hero.anim;return{g:a?a.gph:0,run:!!a&&a.runK>.5,vis:frz<.5}},   // marcha del héroe para los PASOS (footsteps.js): fase de pie `gph` (un pie toca el suelo cada vez que cambia floor(2·gph)), ¿corriendo?, ¿audible? (no en el tiempo detenido)
  async warmShaders(maxMs=30000,all=true){actors.bake();   // Lote FREEZE-SHADERS: compila de antemano TODOS los programas del mundo (tras la pantalla de carga) para que no se compilen a mitad de partida (paradas de 8 s o más)
   const hid=[];if(all)scene.traverse(o=>{if(!o.visible){o.visible=true;hid.push(o)}});
+  // 22 oct 2026: llamaradas y brasas del cielo en llamas se crean ya (antes nacían al prender el cielo y compilaban sus shaders EN la cinemática = tirón); invisibles se saltan, así que se muestran un momento
+  try{if(!skyFire)skyFire=new SkyFire(scene,W3);if(!bem)bem=new Embers(scene,360);[skyFire.mesh,bem.pts].forEach(o=>{if(o&&!o.visible){o.visible=true;hid.push(o)}})}catch(e){}
   // 21 oct 2026: lo que se crea bajo demanda (decals de combate, ojos de aviso, copias de árboles/menas que caen) también se precompila: si no, la PRIMERA vez que ocurre el juego se congela
   const tmp=[...spell.warmObjs(),...res.warmObjs(),...actors.warmObjs(),new THREE.Sprite(new THREE.SpriteMaterial({color:"#ffffff",transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}))];tmp.forEach(o=>scene.add(o));
   const t0=performance.now(),n0=r.info.programs.length;

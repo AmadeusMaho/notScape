@@ -41,13 +41,13 @@ const TRADE=(()=>{
  function render(){if(!V)return;const d=$('#vend'),v=VEND[V.id];d.querySelector('.shtabs').innerHTML=tabsOf().map(([t,l])=>'<button data-t="'+t+'" class="'+(t===tab?'on':'')+'">'+l+'</button>').join('');
   d.querySelector('.shq').style.display=tab==='up'?'none':'';let h='';const ok=id=>!q||nrm(I[id][0]).includes(q);
   if(tab==='buy'){const rows=v.stock(V.k).filter(([id])=>ok(id));if(!v.stock(V.k).length)h='<div class="shem">Por ahora no tiene mercancía a la venta.</div>';else h=rows.map(([id,lim])=>{const left=remaining(V.id,id,lim),pr=buyPrice(id),cant=S.coins<pr||left<=0||!room(id);return rowItem(id,moneyH(pr),{a:'buy',cant,sub:lim?(left>0?'quedan '+left:'agotado'):''})}).join('')||'<div class="shem">Nada que mostrar.</div>'}
-  else if(tab==='sell'){const ids=[...new Set(S.inv)].filter(id=>I[id]&&I[id][2]>0&&ok(id));h=ids.map(id=>rowItem(id,moneyH(sellPrice(id)),{a:'sell',sub:'x'+count(id)})).join('')||'<div class="shem">No tienes nada que vender.</div>';
-   if(ids.length&&!q)h+='<div class="shr act" data-a="sellall"><b>Vender todo lo de la mochila</b><span class="shpr">'+moneyH(S.inv.reduce((a,x)=>a+sellPrice(x),0))+'</span></div>'}
+  else if(tab==='sell'){const ids=[...new Set(S.inv)].filter(id=>I[id]&&I[id][2]>0&&!QITEM.has(id)&&ok(id));h=ids.map(id=>rowItem(id,moneyH(sellPrice(id)),{a:'sell',sub:'x'+count(id)})).join('')||'<div class="shem">No tienes nada que vender.</div>';
+   if(ids.length&&!q)h+='<div class="shr act" data-a="sellall"><b>Vender todo lo de la mochila</b><span class="shpr">'+moneyH(S.inv.reduce((a,x)=>a+(QITEM.has(x)?0:sellPrice(x)),0))+'</span></div>'}
   else if(tab==='bb'){h=(S.bb||[]).map((b,i)=>rowItem(b.id,moneyH(b.p*b.n),{a:'bb',cant:S.coins<b.p*b.n||!room(b.id),sub:'x'+b.n}).replace('data-a="bb"','data-a="bb" data-n="'+i+'"')).join('')||'<div class="shem">Aquí aparece lo que vendas, por si te arrepientes.</div>'}
   else if(tab==='up'){h='<div class="shsec">Mejoras permanentes</div>'+UP.map((u,i)=>{const lv=S[u[0]]||0,c=u[3][lv],no=c==null||S.coins<c;return '<div class="shr up'+(no?' cant':'')+'" data-a="up" data-n="'+i+'"><div class="shnm"><b>'+u[1]+' <em>nv. '+lv+'/'+u[3].length+'</em></b><em>'+u[2]+'</em></div><span class="shpr">'+(c==null?'Máx':moneyH(c))+'</span></div>'}).join('')
    +'<div class="shsec">Runas de viaje rápido</div>'+BI.slice(0,S.st.bio).map((b,k)=>{const id='rv_'+k,own=count(id)>0||S.bank[id]>0,c=RVC[k],no=own||S.coins<c;return '<div class="shr up'+(no?' cant':'')+'" data-a="rv" data-n="'+k+'" data-i="'+id+'"><i class="mi">'+ic(id)+'</i><div class="shnm"><b>'+I[id][0]+'</b><em>Reutilizable · 45 s</em></div><span class="shpr">'+(own?'Tienes':moneyH(c))+'</span></div>'}).join('')}
   d.querySelector('.shl').innerHTML=h;d.querySelector('.shp').innerHTML=moneyH(S.coins);
-  d.querySelector('.shn').textContent=tab==='buy'?'Clic: comprar 1 · Mayús: 5 · Ctrl: todo lo que puedas':tab==='sell'?'Clic: vender 1 · Mayús: todos':tab==='bb'?'Clic: recomprar':'Pagos únicos'}
+  d.querySelector('.shn').textContent=tab==='buy'?'LMB: comprar 1 · Mayús: 5 · Ctrl: todo lo que puedas':tab==='sell'?'LMB: vender 1 · Mayús: todos':tab==='bb'?'LMB: recomprar':'Pagos únicos'}
  function onClick(e){const t=e.target.closest('[data-t]');if(t&&t.parentNode.classList.contains('shtabs')){tab=t.dataset.t;render();return}
   const r=e.target.closest('.shr[data-a]');if(!r||!V)return;const a=r.dataset.a,id=r.dataset.id,n=+r.dataset.n;
   if(a==='buy'){const lim=(VEND[V.id].stock(V.k).find(x=>x[0]===id)||[0,0])[1];let want=e.ctrlKey||e.metaKey?999:e.shiftKey?5:1,got=0;
@@ -59,7 +59,7 @@ const TRADE=(()=>{
   else if(a==='up'){buyU(UP[n][0],n)}
   else if(a==='rv'){buyRV(n)}
   render()}
- function sellN(id,n,quiet){let c=0;for(let i=0;i<n;i++){const j=S.inv.indexOf(id);if(j<0)break;S.inv.splice(j,1);c++}if(!c)return;const p=sellPrice(id);earn(p*c);inc('sell');
+ function sellN(id,n,quiet){if(QITEM.has(id))return;let c=0;for(let i=0;i<n;i++){const j=S.inv.indexOf(id);if(j<0)break;S.inv.splice(j,1);c++}if(!c)return;const p=sellPrice(id);earn(p*c);inc('sell');
   S.bb=S.bb||[];const b=S.bb.find(x=>x.id===id&&x.p===p);if(b)b.n+=c;else S.bb.unshift({id,n:c,p});if(S.bb.length>12)S.bb.length=12;if(!quiet){snd('coin');log('Vendiste '+c+'× '+I[id][0]+' por '+money(p*c));dirty=1;save()}}
  // ══ MERCADO GLOBAL (simulado) ══
  const SELLERS=['Aldric','Maelis','Torvin','Selka','Brannoch','Yuna','Dorian','Hakon','Isolde','Pipo','Garrick','Lenka','Ostrel','Vesper','Kaito','Mirren','Rurik','Tamsin','Odalys','Burk'];
@@ -105,7 +105,7 @@ const TRADE=(()=>{
   const ctl=d.querySelector('.shctl'),L=d.querySelector('.shl');let h='';
   if(mtab==='browse'){ctl.innerHTML='<input class="shq" data-k="q" type="search" placeholder="Buscar objeto…" value="'+esc(mq)+'" autocomplete="off"><div class="shcats">'+CATS.map(([c,l])=>'<button data-c="'+c+'" class="'+(c===mcat?'on':'')+'">'+l+'</button>').join('')+'</div><div class="shsort">Ordenar: <button data-s="price" class="'+(msort==='price'?'on':'')+'">Precio</button><button data-s="name" class="'+(msort==='name'?'on':'')+'">Nombre</button><button data-s="time" class="'+(msort==='time'?'on':'')+'">Tiempo</button></div>';
    const res=MK.search(mq,mcat,msort);h='<div class="shth"><span>Objeto</span><span>Vendedor</span><span>Tiempo</span><span>Precio</span></div>'+(res.map(o=>'<div class="shr mk'+(S.coins<o.p?' cant':'')+'" data-a="mbuy" data-id="'+o.id+'" data-i="'+o.it+'"><i class="mi"'+sfx(o.it)+'>'+ic(o.it)+'</i><div class="shnm"><b>'+esc(I[o.it][0])+'</b><em>x'+o.n+'</em></div><span class="shsl">'+o.sel+'</span><span class="shsl">'+left(o)+'</span><span class="shpr">'+moneyH(o.p)+'<small>c/u</small></span></div>').join('')||'<div class="shem">No hay ofertas con ese filtro.</div>');
-   d.querySelector('.shn').textContent='Clic: comprar 1 · Mayús: 5 · Ctrl: toda la oferta'}
+   d.querySelector('.shn').textContent='LMB: comprar 1 · Mayús: 5 · Ctrl: toda la oferta'}
   else if(mtab==='sell'){const ids=[...new Set(S.inv)].filter(id=>trade(id));ctl.innerHTML='<div class="shsec">Elige un objeto de tu mochila</div>';
    const it=msel&&count(msel)>0?msel:null;if(msel&&!it)msel=null;
    h=(ids.map(id=>'<div class="shr'+(id===msel?' sel':'')+'" data-a="msel" data-id="'+id+'" data-i="'+id+'"><i class="mi"'+sfx(id)+'>'+ic(id)+'</i><div class="shnm"><b>'+esc(I[id][0])+'</b><em>x'+count(id)+' · precio justo ≈ '+money(fair(id))+'</em></div></div>').join('')||'<div class="shem">No tienes nada que se pueda vender.</div>');

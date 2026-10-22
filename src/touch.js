@@ -24,7 +24,7 @@
  document.addEventListener('pointermove',e=>{if(e.pointerType!=='touch'||!st||st.fired)return;if(Math.hypot(e.clientX-st.x,e.clientY-st.y)>MV){clearTimeout(tm);tm=0;st=null}},{passive:true});
  document.addEventListener('pointerup',e=>{if(e.pointerType==='touch')end()},{passive:true});
  document.addEventListener('pointercancel',e=>{if(e.pointerType==='touch')end()},{passive:true});
- // el «clic» que sigue a una pulsación larga se descarta; el menú contextual del navegador (pulsación larga) no sale sobre objetos
+ // el «LMB» que sigue a una pulsación larga se descarta; el menú contextual del navegador (pulsación larga) no sale sobre objetos
  document.addEventListener('click',e=>{if(performance.now()<supUntil&&e.target.closest&&e.target.closest('[data-i],[data-x]')){e.stopImmediatePropagation();e.preventDefault()}},true);
  document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('[data-i],[data-x]'))e.preventDefault()});
  window.TOUCH={LP,active:()=>!!active,fire:el=>{st={el,x:0,y:0,fired:0};fire()}};

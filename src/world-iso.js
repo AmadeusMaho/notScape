@@ -33,7 +33,7 @@ const TER=(()=>{
  const isLand=h=>h>=HGROUND&&h<HCLIFF;   // suelo pisable: llano o montículo (1 ≤ h < 2)
  // Altura a la que se DIBUJA a quien está de pie en (x,y) (jugador, recursos, cámara). Igual que heightAt salvo en un punto pisable que visualmente cae en un
  // tile de acantilado (la banda de colisión de cliff() mide 26–28 px y el tile 32: 15 px del tile quedan pisables). Ahí se dibuja a nivel de suelo: sin «salto» de altura.
- // Los clics y el cursor siguen usando heightAt (lo que se ve). La colisión no cambia.
+ // Los LMB y el cursor siguen usando heightAt (lo que se ve). La colisión no cambia.
  // ¿hay un tile de acantilado a menos de m px de (x,y)? Es la colisión de pared: sale del MISMO tileH que se dibuja, así que lo que se ve como pared bloquea
  // (y m deja un margen antes de ella). F1-C4b: sustituye a la banda de 26–28 px de cliff() que no coincidía con los tiles.
  const cliffNear=(x,y,m)=>{const tx0=Math.floor((x-m)/T),tx1=Math.floor((x+m)/T),ty0=Math.floor((y-m)/T),ty1=Math.floor((y+m)/T);for(let tx=tx0;tx<=tx1;tx++)for(let ty=ty0;ty<=ty1;ty++)if(th(tx,ty)===HCLIFF)return true;return false};

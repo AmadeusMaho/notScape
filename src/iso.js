@@ -21,7 +21,7 @@ const ISO=(()=>{
  function snap(wx,wy,z){cam.init=false;follow(wx,wy,z,1)}
  // mundo -> píxel real del canvas
  function toCanvas(wx,wy,z=0){const p=proj(wx,wy,z),s=scale();return{x:Math.round((p.x-cam.x)*s+V.cw/2),y:Math.round((p.y-cam.y)*s+V.ch/2)}}
- // píxel real del canvas -> mundo. hz(wx,wy) = altura del suelo (niveles). Un clic puede caer en varias alturas posibles
+ // píxel real del canvas -> mundo. hz(wx,wy) = altura del suelo (niveles). Un LMB puede caer en varias alturas posibles
 // (junto a un acantilado): se prueba cada nivel y gana el candidato más cercano a la cámara (el que se ve encima).
 function toWorld(px,py,hz,levels){const s=scale(),sx=(px-V.cw/2)/s+cam.x,sy=(py-V.ch/2)/s+cam.y;if(!hz){const w=unproj(sx,sy,0);return{x:w.x,y:w.y,z:0}}
  let best=null;for(const z of levels||[0,.75,1,2]){const w=unproj(sx,sy,z);if(Math.abs((hz(w.x,w.y)||0)-z)<1e-6&&(!best||w.x+w.y>best.x+best.y))best={x:w.x,y:w.y,z}}

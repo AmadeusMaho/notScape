@@ -137,7 +137,7 @@ export class Blood{
   this.dropMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,uniforms:Object.assign({uLight:this.decMat.uniforms.uLight},{uFresh:U.uFresh,uHi:U.uHi,uGlow:U.uGlow}),vertexShader:DROP_VS,fragmentShader:DROP_FS});
   this.drops=new THREE.Mesh(pg,this.dropMat);this.drops.frustumCulled=false;this.drops.renderOrder=2;this.drops.name='blood_drops';this.drops.raycast=()=>{};this.drops.visible=false;scene.add(this.drops);
   this.nDrops=0;this.qk=1;this.tmp=new V3();this.tmp2=new V3();this.tmp3=new V3()}
- _btn(){const b=document.getElementById('sgb');if(b){b.hidden=false;b.textContent='🩸 Sangre: '+['NO','Poca','Normal'][this._lv];b.onclick=()=>{this.level=(this._lv+2)%3}}}   // el botón cicla Normal → NO → Poca → Normal
+ _btn(){const b=document.getElementById('sgb');if(b){b.hidden=false;b.textContent='Sangre: '+['NO','Poca','Normal'][this._lv];b.onclick=()=>{this.level=(this._lv+2)%3}}}   // el botón cicla Normal → NO → Poca → Normal
  get level(){return this._lv}
  set level(v){v=cl(Math.round(+v)||0,0,2);this._lv=v;try{localStorage.setItem('ns_sangre',String(v))}catch(e){}if(v===0)this.clear();this._btn()}
  clear(){this.dS.fill(0);this.pOn.fill(0);this.pP.fill(0);this.nDrops=0;this.nDec=0;this.aDS.needsUpdate=true;this.aPP.needsUpdate=true;this.decals.visible=false;this.drops.visible=false}

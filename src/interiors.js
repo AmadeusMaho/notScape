@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 // INTERIORES (lote 5, oct 2026). Cada aldea tiene 3 casas con puerta: Herrería (casa 1), Taberna/Salón (casa 2) y Taller (casa del sur-este).
-// Se entra con F / clic en la puerta (punto «door» en ST) y se sale por la puerta de la sala (punto «exit»). Dentro NO hay combate, clima ni monstruos.
+// Se entra con F / LMB en la puerta (punto «door» en ST) y se sale por la puerta de la sala (punto «exit»). Dentro NO hay combate, clima ni monstruos.
 // Diseño del motor (para tocar lo mínimo de game.js):
 //  · Al entrar, las listas del mundo (N, ST, M, PO, GD, GA) se GUARDAN y se vacían; se meten las instalaciones de la sala en ST (horno, yunque, taller, escritorio…),
 //    así que pickEnt / useNear / iwFrame / openIW funcionan igual que fuera. Al salir se restauran.

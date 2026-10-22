@@ -47,7 +47,7 @@ function telStart(m,now){const sw=MSW[m.d.id];if(sw){const j=((sw.indexOf(mst(m)
  m.tn=now+(m.d.boss===1?7000:m.d.boss===2?8500:9500)*(m.asx||1);m.nt=now+1600}
 function telUpd(m,now){if(!m.tel)return false;m.f=P.x-m.x-(P.y-m.y)>=0?1:-1;if(now<m.tel.t1)return true;
  const T=m.tel,cx=T.cx==null?m.x:T.cx,cy=T.cy==null?m.y:T.cy,dp=Math.hypot(P.x-cx,P.y-cy),r=T.r;m.tel=null;m.nt=now+1200*(m.asx||1);snd('thunder');SHK=now+180;sp(cx,cy-4,'#ff6a3a',14,r*1.4,40,100);
- if(dp<=r&&P.hp>0&&!dashInv()){const g0=guardHit(m,Math.max(1,Math.round((m.dm||1)*(T.f||2.2))),now,1);if(g0.kind&&g0.d<=0)return true;const q=prMod(m,g0.d,1),d=q.d;if(q.blocked&&!d){fText('Absorbido','#6ab0ff',P.x,P.y,46);log('🙏 Tu oración absorbió el golpe pesado de '+m.d.n+'.');return true}P.hp-=d;splat(P.x,P.y,d,q.blocked?'#6ab0ff':'#d4261c',26);snd('hurt');HURT=now;P.pjM=m;P.pj=now+4800;bossHit(m,d,now);if(P.hp<=0)die()}
+ if(dp<=r&&P.hp>0&&!dashInv()){const g0=guardHit(m,Math.max(1,Math.round((m.dm||1)*(T.f||2.2)*STS.out(m))),now,1);if(g0.kind&&g0.d<=0)return true;const q=prMod(m,g0.d,1),d=STS.inP(q.d,now);if(q.blocked&&!d){fText('Absorbido','#6ab0ff',P.x,P.y,46);log('🙏 Tu oración absorbió el golpe pesado de '+m.d.n+'.');return true}P.hp-=d;splat(P.x,P.y,d,q.blocked?'#6ab0ff':'#d4261c',26);snd('hurt');HURT=now;P.pjM=m;P.pj=now+4800;bossHit(m,d,now);if(P.hp<=0)die()}
  else if(P.hp>0){if(dashInv()&&dp<=r*1.15)pdCheck(m,now);log('Esquivaste el golpe pesado de '+m.d.n+'.');if(dp<=r)fText('Esquiva','#9fe0ff',P.x,P.y,46)}return true}
 function drawTel(now){const s=ISO.scale();for(const m of M){if(!m.tel)continue;const u=Math.min(1,(now-m.tel.t0)/1200),r=m.tel.r,cx=m.tel.cx==null?m.x:m.tel.cx,cy=m.tel.cy==null?m.y:m.tel.cy;
   try{R3D.spell.tele(m.tel,cx,cy,0,r,7,u,SCOL[mst(m)])}catch(e){}   // círculo en el suelo = decal 3D de bordes suaves (spellfx3d.js); solo el rótulo sigue en 2D
@@ -70,10 +70,10 @@ function summon(m,id,now){log('📣 ¡<b>'+m.d.n+'</b> llama refuerzos!');snd('t
 // esbirros: se retiran al morir, o cuando su jefe muere o deja de perseguirte
 function bossClean(now){for(let i=M.length-1;i>=0;i--){const e=M[i];if(!e.sm)continue;if(e.rt||!e.sm.hunt||e.sm.rt||P.hp<=0){if(A&&A.e===e)stopA();if(P.pjM===e)P.pjM=null;M.splice(i,1)}}}
 // efectos de un golpe del jefe que ha dañado (d>0): robavida y herida por segundo
-function bossHit(m,d,now){if(!d||m.sm)return;if(bmech(m,'lif')){const h=Math.max(1,Math.round(d/2));m.hp=Math.min(m.mh,m.hp+h);splat(m.x,m.y,h,'#6ad04a',m.d.h+6)}
- const dt=bmech(m,'dot');if(dt&&Math.random()<.4&&!P.dot){const k=dt.split(':')[1];P.dot={k,n:5,t:now+1000,v:Math.max(1,Math.round((m.dm||1)*.12))};log(DOTN[k][0]+' ¡'+DOTN[k][1]+'! Pierdes vida cada segundo (un altar de oración te limpia).')}}
-function dotTick(now){const D=P.dot;if(!D)return;if(P.hp<=0||INT){P.dot=null;return}if(now<D.t)return;D.t=now+1000;P.hp-=D.v;splat(P.x,P.y,D.v,DOTN[D.k][2],26);HURT=now;if(--D.n<=0)P.dot=null;if(P.hp<=0){P.dot=null;die()}}
+function bossHit(m,d,now){if(!d||m.sm)return;STS.onHit(m,now);if(bmech(m,'lif')){const h=Math.max(1,Math.round(d/2));m.hp=Math.min(m.mh,m.hp+h);splat(m.x,m.y,h,'#6ad04a',m.d.h+6)}
+ const dt=bmech(m,'dot');if(dt&&Math.random()<.4){const k=dt.split(':')[1];STS.add(P,{sangrado:'bleed',veneno:'poison',quemadura:'burn'}[k]||'bleed',{dur:5000,v:Math.max(1,Math.round((m.dm||1)*.12))})}}   // 22 oct 2026: la herida de los jefes ya es un estado del motor STS (status.js)
+function dotTick(now){return;const D=P.dot;if(!D)return;if(P.hp<=0||INT){P.dot=null;return}if(now<D.t)return;D.t=now+1000;P.hp-=D.v;splat(P.x,P.y,D.v,DOTN[D.k][2],26);HURT=now;if(--D.n<=0)P.dot=null;if(P.hp<=0){P.dot=null;die()}}
 
 // ═══ LOTE B2 · AUTO-RETALIATE (defenderse solo) ═══ Como en OSRS: con «Auto» activado (por defecto), cuando un enemigo te golpea y no estás luchando, empiezas a pelear contra él. Botón en los ajustes (#arb) o tecla T. Se guarda en S.ar (0 = apagado).
 function arTog(){S.ar=S.ar===0?1:0;arPaint();snd(S.ar===0?'miss':'xp');toast(S.ar===0?'⚔️ Defensa automática: <b>desactivada</b>. Los enemigos te golpearán sin que respondas.':'⚔️ Defensa automática: <b>activada</b>. Responderás a quien te ataque.',2400);dirty=1}
-function arPaint(){const el=document.getElementById('arb');if(!el)return;const on=S.ar!==0;el.textContent='⚔️ Defensa automática: '+(on?'SÍ':'NO')+' (T)';el.title='Defensa automática (tecla T): '+(on?'respondes':'NO respondes')+' a los enemigos que te atacan.'}
+function arPaint(){const el=document.getElementById('arb');if(!el)return;const on=S.ar!==0;el.textContent='Defensa automática: '+(on?'SÍ':'NO')+' (T)';el.title='Defensa automática (tecla T): '+(on?'respondes':'NO respondes')+' a los enemigos que te atacan.'}

@@ -49,7 +49,7 @@ const CHEAT=(()=>{
  const ITEMS=()=>{const q=IQ.trim().toLowerCase();return Object.keys(I).filter(k=>!q||k.toLowerCase().includes(q)||String(I[k][0]).toLowerCase().includes(q))};
  function itemsTab(b){
   b.innerHTML=`<div class="row"><input id="cq" type="search" placeholder="Buscar objeto (nombre o id)…" style="flex:1" value="${IQ.replace(/"/g,'')}"><label style="min-width:0">Cant.</label><input id="cn" type="number" min="1" max="5000" value="${IQty}" style="width:70px"></div>
-  <div class="row">${[1,10,100,1000].map(n=>`<button data-q="${n}">×${n}</button>`).join('')}<span class="hint" id="cc"></span></div><div class="grid" id="cg"></div><div class="hint">Clic = dar la cantidad indicada. Respeta el espacio de la mochila.</div>`;
+  <div class="row">${[1,10,100,1000].map(n=>`<button data-q="${n}">×${n}</button>`).join('')}<span class="hint" id="cc"></span></div><div class="grid" id="cg"></div><div class="hint">LMB = dar la cantidad indicada. Respeta el espacio de la mochila.</div>`;
   const g=b.querySelector('#cg'),cc=b.querySelector('#cc'),fill=()=>{const l=ITEMS(),sh=l.slice(0,160);cc.textContent=l.length+' objetos'+(l.length>sh.length?' (mostrando '+sh.length+')':'');
    g.innerHTML=sh.map(k=>{let rc='';try{const r=rr(k);if(r)rc=` style="--rc:${RAR[r][1]}"`}catch(e){}return`<button class="it" data-id="${k}" title="${String(I[k][0]).replace(/"/g,'')} · ${k}"><img src="${icon(k)}"><i class="r"${rc}></i></button>`}).join('')};
   fill();

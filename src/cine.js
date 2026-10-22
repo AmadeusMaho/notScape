@@ -58,7 +58,7 @@ const CINE=(()=>{
  function start(id,opt){opt=opt||{};const s=typeof id==='string'?SCENES[id]:id;if(on||!s||typeof P==='undefined'||!window.R3D)return false;const fk=s.flag||(typeof id==='string'?id:null);if(opt.once&&fk&&seen(fk))return false;   // `flag` de la escena = clave en S.cine (por defecto su id)
   dom();sc=s;fin=opt.done||null;T=0;last=0;skipT=0;holding=0;hintOff=0;anc=s.anchor||[P.x,P.y];
   saved={zoom:ISO.V.zoom,az:R3D.az};recv=0;look=null;sc.st=null;try{if(sc.setup)sc.st=sc.setup({anchor:anc,P})}catch(e){console.warn('[CINE] setup',e)}
-  try{P.mv=null;P.g=null;A=null;for(const k in K)K[k]=0}catch(e){}   // quieto: sin clic pendiente ni tecla pegada
+  try{P.mv=null;P.g=null;A=null;for(const k in K)K[k]=0}catch(e){}   // quieto: sin LMB pendiente ni tecla pegada
   fz=false;on=true;document.body.classList.add('cine');if(skip)skip.style.opacity=1;return true}
  function end(skipped){if(!on)return;recv=0;look=null;sky(0);sfx.stop();try{R3D.skyBurnReset()}catch(e){}setFreeze(false,true);R3D.tsync();on=false;document.body.classList.remove('cine');sub.textContent='';sub.style.opacity=0;
   try{ISO.V.zoom=saved.zoom;R3D.az=saved.az;ISO.snap(P.x,P.y,TER.standZ(P.x,P.y));if(R3D.parts)R3D.parts.snap()}catch(e){}

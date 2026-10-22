@@ -8,7 +8,7 @@
 //   · cuadrúpedos, ave y rana → `Proto` (abajo): mismos `part`/`hull`, esqueleto propio (QUAD / BIRD / FROG), se hornea con el mismo bake().
 // ANIMACIÓN: procedural por huesos (andar por DISTANCIA recorrida, respiración, ataque con anticipación-golpe-recuperación, daño con destello y retroceso,
 // muerte que cae y se hunde). Los datos del juego que lee: m.x/m.y, m.mv (último paso), m.at0 (inicio del ataque), m.fl (destello de daño), alive(m,now),
-// m.d.boss. NO toca lógica, colisiones ni picking: el clic sigue yendo por las cajas de MD (w,h).
+// m.d.boss. NO toca lógica, colisiones ni picking: el LMB sigue yendo por las cajas de MD (w,h).
 // CÓMO AÑADIR UNA CRIATURA: una fila en HUM (spec Mini + altura H en px de modelo = CRE.H de creatures.js) o QUADS/BIRD/FROG. Altura en el mundo = H/52 unidades
 // (52 px = el héroe). Los ojos que brillan (aEmit=2) vienen de `glow()`; el resto se hornea con color de vértice.
 // TRAMPAS: (1) el material `chr` lee G.uChrB (pies→cabeza del héroe): r3d.js lo pone a (0,0) antes del pase del mundo; (2) los SkinnedMesh no se recortan solos

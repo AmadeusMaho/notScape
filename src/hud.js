@@ -87,7 +87,7 @@ const HUDSU=(()=>{
  const fmt=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return s>=60?Math.floor(s/60)+':'+String(s%60).padStart(2,'0'):s+'s'};
  function buffs(now){const list=[],tN=Date.now();
   for(const k in BF){const r=(S.buf[k]||0)-tN;if(r>0){tot[k]=Math.max(tot[k]||0,r);list.push({id:'b'+k,i3:BF[k][1],img:(typeof ITEMICON!=='undefined'?ITEMICON.url(BF[k][1]):''),tip:BF[k][0],p:r/tot[k],tx:fmt(r)})}else tot[k]=0}
-  if(P.dot&&typeof DOTN!=='undefined'&&DOTN[P.dot.k]){const D=P.dot,d=DOTN[D.k];list.push({id:'dot',emo:d[0],tip:d[1],p:Math.max(0,D.n)/5,tx:Math.max(0,D.n)+'s',bad:1})}
+  if(typeof STS!=='undefined')STS.list(P).forEach(s=>list.push({id:'s'+s.k,emo:s.d.ic,tip:s.d.n+(s.n>1?' ×'+s.n:''),p:s.rem/s.tot,tx:fmt(s.rem),bad:s.d.bad}));   // estados alterados (status.js)
   if(typeof PRA!=='undefined'&&PRA.length)list.push({id:'pray',emo:'🙏',tip:'Oración activa · puntos: '+Math.floor(PP||0),p:Math.min(1,(PP||0)/Math.max(1,prMax())),tx:String(Math.floor(PP||0))});
   const seen={};list.forEach(o=>{seen[o.id]=1;let e=chips[o.id];
    if(!e){const d=document.createElement('div');d.className='chip'+(o.bad?' bad':'');d.innerHTML=(o.img?'<img alt="" data-i3="'+(o.i3||'')+'" src="'+o.img+'">':'<s>'+o.emo+'</s>')+'<b></b>';fxr.appendChild(d);e=chips[o.id]={d,b:d.lastChild,tx:'',p:-1}}
@@ -112,10 +112,10 @@ const HUDSU=(()=>{
  function banner(t,sub,c,dur){clearTimeout(bt1);clearTimeout(bt2);bn.querySelector('h3').textContent=t;bn.querySelector('p').textContent=sub||'';bn.style.setProperty('--c',c||'#e8cf94');bn.classList.add('on','pop');setTimeout(()=>bn.classList.remove('pop'),260);
   bt1=setTimeout(()=>bn.classList.remove('on'),Math.max(1200,(dur||3000)-500))}
  // ── muñeco 3D de la pestaña Personaje (reemplaza al dibujo 2D de `paintDoll`): un canvas PERSISTENTE (un solo contexto WebGL) que se re-inserta cada vez que panel() rehace el HTML.
- // Arrastrar con el ratón/dedo lo gira; doble clic lo devuelve al frente. Se dibuja a ~30 fps solo mientras la pestaña está visible. ──
+ // Arrastrar con el ratón/dedo lo gira; doble LMB lo devuelve al frente. Se dibuja a ~30 fps solo mientras la pestaña está visible. ──
  let dcv=null,dv=null,dDir=2,dNx=0,dDrag=null;
  function doll(){if(!(window.R3D&&R3D.outfits&&R3D.preview))return false;const c=document.getElementById('doll');if(!c)return false;
-  if(!dcv){dcv=document.createElement('canvas');dcv.id='doll';dcv.className='live3d';dcv.width=dcv.height=320;dcv.title='Arrastra para girar · doble clic: de frente';
+  if(!dcv){dcv=document.createElement('canvas');dcv.id='doll';dcv.className='live3d';dcv.width=dcv.height=320;dcv.title='Arrastra para girar · doble LMB: de frente';
    dcv.addEventListener('pointerdown',e=>{dDrag={x:e.clientX,d:dDir};try{dcv.setPointerCapture(e.pointerId)}catch(x){}});
    dcv.addEventListener('pointermove',e=>{if(dDrag)dDir=dDrag.d-(e.clientX-dDrag.x)/70});
    dcv.addEventListener('pointerup',()=>{dDrag=null});dcv.addEventListener('pointercancel',()=>{dDrag=null});dcv.addEventListener('dblclick',()=>{dDir=2})}
@@ -130,7 +130,7 @@ const HUDSU=(()=>{
  const esc=t=>t.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
  function dlg(D){if(!D)return;clearTimeout(dClose);
   const [nm,rol]=String(D.n||'').split(' · ');dNm.innerHTML='<span style="color:'+(D.c||'var(--gold)')+'">'+esc(nm||'')+'</span>'+(rol?'<small>'+esc(rol)+'</small>':'');
-  dFull=D.p[D.i]||'';dT0=performance.now();dN=-1;dTyping=!/</.test(dFull);const last=D.i>=D.p.length-1;dMo.textContent=last?(D.then?'▸ clic para comerciar':'▸ clic para cerrar'):'▸ clic para continuar';dMo.classList.remove('on');
+  dFull=D.p[D.i]||'';dT0=performance.now();dN=-1;dTyping=!/</.test(dFull);const last=D.i>=D.p.length-1;dMo.textContent=last?(D.then?'▸ LMB para comerciar':'▸ LMB para cerrar'):'▸ LMB para continuar';dMo.classList.remove('on');
   // OPCIONES (misiones tipo WoW, 21 oct 2026): en la última página, `D.opts` = [[texto, función],…] como botones numerados (teclas 1, 2…); sin `opts` todo sigue igual
   curOpts=last&&D.opts&&D.opts.length?D.opts:null;dOp.classList.remove('on');dOp.innerHTML=curOpts?curOpts.map((o,i)=>'<button type="button" data-i="'+i+'"><b>'+(i+1)+'.</b> '+esc(String(o[0]))+'</button>').join(''):'';if(curOpts)dMo.textContent='';
   if(!dTyping){dTx.innerHTML=dFull;dMo.classList.add('on');if(curOpts)dOp.classList.add('on')}else dTx.innerHTML='<span class="v"></span><span class="r">'+esc(dFull)+'</span>';
@@ -160,7 +160,7 @@ const HUDSU=(()=>{
  let last=0,lvT=-1,nmT='',tgM=null,tgOff=0,hideT=0;
  function frame(now){if(document.hidden)return;const dt=Math.min(.05,last?(now-last)/1000:.016),tt=now/1000;last=now;
   const mh=maxHp(),hpv=Math.max(0,P.hp),low=hpv/mh<.3&&hpv>0;
-  setBar(B.hp,hpv/mh,Math.ceil(hpv)+' / '+mh);const mm=mnMax();setBar(B.mp,MN/Math.max(1,mm),Math.floor(MN)+' / '+mm);B.hp.el.classList.toggle('low',low);skFrame();{const st=P.dot&&P.dot.k||'';if(B.hp.el.dataset.st!==st){if(st)B.hp.el.dataset.st=st;else delete B.hp.el.dataset.st}}   /* estado alterado del jugador (P.dot.k: veneno/quemadura/sangrado) tiñe la barra de vida; ver css «Vida con estado» */
+  setBar(B.hp,hpv/mh,Math.ceil(hpv)+' / '+mh);const mm=mnMax();setBar(B.mp,MN/Math.max(1,mm),Math.floor(MN)+' / '+mm);B.hp.el.classList.toggle('low',low);skFrame();{const dd=typeof STS!=='undefined'&&STS.list(P).find(s=>s.d.st),st=dd?dd.d.st:'';if(B.hp.el.dataset.st!==st){if(st)B.hp.el.dataset.st=st;else delete B.hp.el.dataset.st}}   /* estado alterado del jugador (P.dot.k: veneno/quemadura/sangrado) tiñe la barra de vida; ver css «Vida con estado» */
   const lv=SKL.reduce((s,k)=>s+L(k),0);if(lv!==lvT){lvT=lv;$('#hs-lv').textContent=lv}
   const nm=(S.app&&S.app.name)||'Aventurero';if(nm!==nmT){nmT=nm;$('#hs-nm').textContent=nm}
   heroPortrait(now);buffs(now);

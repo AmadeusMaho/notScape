@@ -16,7 +16,7 @@ export class Contact{
  constructor(scene,W3){this.W3=W3;this.k=1;this.on=true;this.sig='';this.nS=0;this.stats={estaticas:0,dinamicas:0};
   const geo=new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2);
   this.mat=new THREE.MeshBasicMaterial({map:blobTex(),color:'#07100f',transparent:true,opacity:.55,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
-  this.mesh=new THREE.InstancedMesh(geo,this.mat,CAP);this.mesh.frustumCulled=false;this.mesh.count=0;this.mesh.renderOrder=-1;this.mesh.name='contact3d';this.mesh.raycast=()=>{};   // que no estorbe a los rayos de clic
+  this.mesh=new THREE.InstancedMesh(geo,this.mat,CAP);this.mesh.frustumCulled=false;this.mesh.count=0;this.mesh.renderOrder=-1;this.mesh.name='contact3d';this.mesh.raycast=()=>{};   // que no estorbe a los rayos de LMB
   this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);scene.add(this.mesh);this.o=new THREE.Object3D()}
  // escribe un blob: centro (x,z) en unidades 3D, altura y del suelo, semiejes (sx,sz) en tiles
  put(i,x,y,z,sx,sz){const o=this.o;o.position.set(x,y+.035,z);o.scale.set(sx*2,1,sz*2);o.updateMatrix();this.mesh.setMatrixAt(i,o.matrix)}

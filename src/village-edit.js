@@ -69,8 +69,8 @@ const VEDIT=(()=>{
   ov=document.createElement('canvas');ov.id='vedc';ov.style.display='none';document.body.appendChild(ov);ovg=ov.getContext('2d')}
  function updUI(){if(!ui)return;const i=document.getElementById('vedi'),g=ui.querySelector('[data-a=grid]');if(g)g.classList.toggle('on',grid);
   const n=Object.keys(D.o).length+D.add.length;
-  i.innerHTML=(sel?'<b>'+sel.n+'</b> · x '+sel._src.x+' y '+sel._src.y+(sel._src.o&&sel._src.o.rot?' · girado':'')+(sel.sc&&sel.sc!==1?' · ×'+sel.sc:'')+' · ':'Clic en un objeto para elegirlo · ')+'arrastra = mover · R rotar · [ ] tamaño · D duplicar · Supr borrar · Ctrl+Z deshacer · '+n+' ajuste'+(n===1?'':'s')+' guardado'+(n===1?'':'s')}
- // selección por clic: entre las piezas editables bajo el puntero gana la de menor caja (así una farola gana a la casa que tiene detrás)
+  i.innerHTML=(sel?'<b>'+sel.n+'</b> · x '+sel._src.x+' y '+sel._src.y+(sel._src.o&&sel._src.o.rot?' · girado':'')+(sel.sc&&sel.sc!==1?' · ×'+sel.sc:'')+' · ':'LMB en un objeto para elegirlo · ')+'arrastra = mover · R rotar · [ ] tamaño · D duplicar · Supr borrar · Ctrl+Z deshacer · '+n+' ajuste'+(n===1?'':'s')+' guardado'+(n===1?'':'s')}
+ // selección por LMB: entre las piezas editables bajo el puntero gana la de menor caja (así una farola gana a la casa que tiene detrás)
  function pick(px,py){const s=ISO.scale(),w=ISO.toWorld(px,py,TER.heightAt);let best=null,ba=1e12;
   PROPS.list.forEach(e=>{if(!editable(e)||Math.abs(e.x-w.x)>260||Math.abs(e.y-w.y)>260)return;const b=PROPS.sprite(e,s),p=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y)),sc=e.sc||1,
    m=b.bb||[0,0,b.c.width,b.c.height],x0=p.x-b.ax*sc+m[0]*sc,y0=p.y-b.ay*sc+m[1]*sc,ww=m[2]*sc,hh=m[3]*sc;

@@ -1,4 +1,4 @@
-// NotScape · R3D · Lote R3D-DROPS-3D (20 oct 2026) · OBJETOS DEL SUELO (drops de enemigos, animales y jefes) EN 3D, con recogida MANUAL por clic y ESTELA DE LUZ en los raros.
+// NotScape · R3D · Lote R3D-DROPS-3D (20 oct 2026) · OBJETOS DEL SUELO (drops de enemigos, animales y jefes) EN 3D, con recogida MANUAL por LMB y ESTELA DE LUZ en los raros.
 // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 // QUÉ HACE
 //   · Dibuja en la escena 3D cada entrada de `GD` (lista global de game.js; se llena con `dropGround()`): el MODELO real del objeto (armas, armaduras, menas, comida, cuero, huesos…),
@@ -6,7 +6,7 @@
 //   · RAROS (rareza ≥ 2 = Raro/Épico/Legendario, y los «drop raro» de criatura): ESTELA DE LUZ vertical del color de la rareza (más alta y ancha cuanto mejor), halo en el suelo,
 //     chispas que suben y un ANILLO + destello al caer. El SONIDO lo reproduce game.js (`dropUpd`): «rare» (raro) o «epic» (épico/legendario) al caer.
 //     Poco común (rareza 1) = halo verde y chispas, sin estela. De noche el 2D de `light.js` ya ilumina el suelo con el color de la calidad.
-//   · Ya NO se recogen solos: hay que hacer CLIC (pickEnt/engage de game.js: el héroe camina hasta el objeto y `pickG` lo guarda). Al recoger, el modelo vuela al héroe y se encoge (380 ms).
+//   · Ya NO se recogen solos: hay que hacer LMB (pickEnt/engage de game.js: el héroe camina hasta el objeto y `pickG` lo guarda). Al recoger, el modelo vuela al héroe y se encoge (380 ms).
 //   · Hover: `HOV` (game.js) agranda el objeto, avivando la estela, y el tooltip del cursor dice el nombre con el color de su rareza (resTip).
 // MODELOS (nada se duplica): `build()` de icons3d.js (armas por cultura, armaduras con Mini, GEN genéricos) + los modelos nuevos de itemgen3d.js (comida, botín, runas…) en POSE DE SUELO (`info.ground`).
 //   Se construye UNA plantilla por id (caché) y cada drop es un clon barato (misma geometría y material; los contornos de casco van incluidos). Tamaño real por tipo en SIZE

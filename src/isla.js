@@ -39,14 +39,14 @@ const ISLA=(()=>{
   {cap:3,txt:'Cocina 2 camarones en la fogata',at:[-1.6,-3.7],g:{t:'make',k:'c_camaron',n:2}},
   QS(3,'t',{cap:3,txt:'Vuelve con Rafael y entrégale los camarones'}),
   QS(4,'a',{cap:4,txt:'Habla con Miguel, en la Palestra'}),
-  {cap:4,txt:'Apunta con el ratón y haz clic: golpea a un cordero (3 golpes)',at:[14,10],g:{t:'cnt',k:'swing',n:3}},
-  {cap:4,txt:'Mantén el clic para cargar un golpe y suéltalo (gasta resistencia)',at:[14,10],g:{t:'cnt',k:'charged',n:1}},
+  {cap:4,txt:'Apunta con el ratón y pulsa LMB: golpea a un cordero (3 golpes)',at:[14,10],g:{t:'cnt',k:'swing',n:3}},
+  {cap:4,txt:'Mantén LMB para cargar un golpe y suéltalo (gasta resistencia)',at:[14,10],g:{t:'cnt',k:'charged',n:1}},
   {cap:4,txt:'Esquiva con ESPACIO (2 veces)',g:{t:'dash',k:'dash',n:2},hint:'Espacio'},
-  {cap:4,txt:'Mantén el CLIC DERECHO para bloquear (1 vez)',g:{t:'cnt',k:'bstart',n:1}},
+  {cap:4,txt:'Mantén RMB para bloquear (1 vez)',g:{t:'cnt',k:'bstart',n:1}},
   {cap:4,txt:'Equipa el arco de Miguel (Mochila)',g:{t:'eq',slot:'w',k:'bw_pino'}},
-  {cap:4,txt:'Dispara 3 flechas a los corderos (clic hacia ellos)',at:[14,10],g:{t:'cnt',k:'shot',n:3}},
+  {cap:4,txt:'Dispara 3 flechas a los corderos (LMB hacia ellos)',at:[14,10],g:{t:'cnt',k:'shot',n:3}},
   {cap:4,txt:'Equipa el bastón de Miguel (Mochila)',g:{t:'eq',slot:'w',k:'st_pino'}},
-  {cap:4,txt:'Pulsa 1 para seleccionar la bola de fuego y lánzala con clic (3 veces; gasta maná)',at:[14,10],g:{t:'cnt',k:'cast',n:3},learn:'cel'},
+  {cap:4,txt:'Pulsa 1 para seleccionar la bola de fuego y lánzala con LMB (3 veces; gasta maná)',at:[14,10],g:{t:'cnt',k:'cast',n:3},learn:'cel'},
   {cap:4,txt:'Derrota 3 corderos de nube con el arma que prefieras',at:[14,10],g:{t:'kill',k:'cordero',n:3}},
   QS(4,'t',{cap:4,txt:'Vuelve con Miguel'}),
   {cap:5,txt:'Deposita todo en el banco',at:[21,-3],g:{t:'dep',k:'dep',n:1}},
@@ -86,7 +86,7 @@ const ISLA=(()=>{
    default:if(g.t==='kill'&&g.k==='gabriel')return !!(gm&&gk>=0&&(S.st['kill:gabriel']||0)>gk);   // solo cuenta si ESTA sesión peleó y venció a Gabriel (una partida cargada nunca lo da por muerto)
     return(S.st[key(g)]||0)-i.bs>=g.n}};
  let sp=0,cs=0,chT=0,now_=0,chI=0,box=null;
- // CAJA DE PERTENENCIAS (misión de Raguel): un cofre pequeño (PO con pk 'cajaIsla') junto al borde; F o clic → `search`: barra de casteo de 5 s con el héroe agachado buscando → recibes el PENDIENTE que llevabas al caer.
+ // CAJA DE PERTENENCIAS (misión de Raguel): un cofre pequeño (PO con pk 'cajaIsla') junto al borde; F o LMB → `search`: barra de casteo de 5 s con el héroe agachado buscando → recibes el PENDIENTE que llevabas al caer.
  function boxInit(){if(box&&PO.includes(box))return;if(typeof PO==='undefined')return;const q=wp(BOXP[0],BOXP[1]),got=st().step>1||st().done;box=PO.find(p=>p.pk==='cajaIsla')||null;if(!box){box={po:1,id:'isla_caja',pk:'cajaIsla',n:got?'cofreAbierto':'cofre',nm:'Caja de pertenencias',x:q.x,y:q.y,k:9,_oa:1};PO.push(box)}}
  function search(e){const n=cur();if(!on()||n.g.t!=='item'||have('pendiente')>=1){toast('Una caja vieja. Ya no queda nada dentro.',1800);return}
   if(typeof castStart==='function')castStart('Buscando entre tus cosas…',5000,()=>{add('pendiente');if(e)e.n='cofreAbierto';try{toast('Encuentras: <b>Pendiente de plata</b>',2800);snd('rare')}catch(x){}dirty=1},{e})}
@@ -125,10 +125,10 @@ const ISLA=(()=>{
   if(s===1&&now-hAt>14000)ctxHint('run',[[['Mayús'],'mantén para correr (gasta resistencia)']],7000);
   if(n.g.t==='panel')ctxHint('bag',[[[],'abre la <b>Mochila</b>: primer icono del menú de la derecha']],8000);
   if(s>=3&&s<8&&now-hAt>8000)ctxHint('jump',[[['V'],'saltar (sin gastar resistencia)']],6000);
-  if(n.g.t==='eq')ctxHint('equip',[[[],'abre la <b>Mochila</b> y haz clic en el objeto para equiparlo']],7000);
-  if(n.g.t==='cnt'&&n.g.k==='cast')ctxHint('fire',[[['1'],'selecciona la bola de fuego (barra bajo la vida; se ve resaltada)'],[['Clic'],'lánzala hacia el cursor (necesita bastón y maná)'],[['Mantén clic'],'cárgala: más grande y arde']],7500);
-  if(n.cap===4&&n.g.t==='cnt'&&n.g.k==='bstart')ctxHint('blockT',[[['Clic der.'],'mantén para bloquear'],[['Clic der.','justo al golpe'],'parada perfecta: sin daño ni gasto']],6500);   // el bloqueo se enseña AQUÍ (Palestra), no durante el combate de Gabriel
-  if(n.cap===4&&n.g.t==='cnt')ctxHint('attack',[[['Clic'],'golpear hacia donde apunta el ratón'],[['Mantén clic'],'cargar un golpe más fuerte'],[['Espacio'],'esquivar'],[['Clic der.'],'mantén para bloquear']],10000);
+  if(n.g.t==='eq')ctxHint('equip',[[[],'abre la <b>Mochila</b> y pulsa LMB sobre el objeto para equiparlo']],7000);
+  if(n.g.t==='cnt'&&n.g.k==='cast')ctxHint('fire',[[['1'],'selecciona la bola de fuego (barra bajo la vida; se ve resaltada)'],[['LMB'],'lánzala hacia el cursor (necesita bastón y maná)'],[['Mantén LMB'],'cárgala: más grande y arde']],7500);
+  if(n.cap===4&&n.g.t==='cnt'&&n.g.k==='bstart')ctxHint('blockT',[[['RMB'],'mantén para bloquear'],[['RMB','justo al golpe'],'parada perfecta: sin daño ni gasto']],6500);   // el bloqueo se enseña AQUÍ (Palestra), no durante el combate de Gabriel
+  if(n.cap===4&&n.g.t==='cnt')ctxHint('attack',[[['LMB'],'golpear hacia donde apunta el ratón'],[['Mantén LMB'],'cargar un golpe más fuerte'],[['Espacio'],'esquivar'],[['RMB'],'mantén para bloquear']],10000);
   if(n.cap===4&&M.filter(m=>m.d.id==='cordero'&&alive(m,performance.now())&&Math.hypot(m.x-P.x,m.y-P.y)<260).length>=2&&S.ctxh&&S.ctxh.attack)ctxHint('tab',[[['Tab'],'fijar y cambiar de enemigo']],8000)}
  // ── MISIONES TIPO WOW: marcador del PNJ y diálogo con opciones ──
  const qIdx=(q,ph)=>STEPS.findIndex(x=>x.q===q&&x.ph===ph),qOf=id=>QUESTS.findIndex(x=>x.npc===id);
@@ -189,7 +189,7 @@ const ISLA=(()=>{
   else if(ph===3){BM.gabriel=['met','nov','enr'];gm.asx=.7;try{banner('Tercera fase','Gabriel pierde el control','#ff9a3a',2600);log('✦ <b>Gabriel</b> abre las alas rotas: carga una onda de luz. ¡Aléjate!')}catch(e){}}}
  // MUERTE EN EL COMBATE (ISLA-7; antes el golpe «se detenía»): si caes ante Gabriel, despiertas un poco antes de él (a 6,5 tiles al sur del altar) con la vida llena, y Gabriel vuelve a su sitio con la vida completa y la fase 1.
  // Devuelve true si ha gestionado la muerte (die() de game.js no hace nada más); fuera del combate de Gabriel devuelve false y die() es el de siempre.
- function noDie(){if(!on()||!gAlive())return false;P.dot=null;try{HOT=[]}catch(e){}P.pjM=null;M.forEach(m=>m.hunt=0);P.hp=maxHp();const q=wp(AR[0],AR[1]-5.2);P.x=q.x;P.y=q.y;try{FD=performance.now()}catch(e){}P.g=P.mv=null;stopA();
+ function noDie(){if(!on()||!gAlive())return false;P.dot=null;STS.clear(P);try{HOT=[]}catch(e){}P.pjM=null;M.forEach(m=>m.hunt=0);P.hp=maxHp();const q=wp(AR[0],AR[1]-5.2);P.x=q.x;P.y=q.y;try{FD=performance.now()}catch(e){}P.g=P.mv=null;stopA();
   const g=wp(AR[0],AR[1]);gm.x=gm.hx=gm.tx=g.x;gm.y=gm.hy=gm.ty=g.y;gm.hp=gm.mh;gm.hunt=0;gm.tel=null;gm.sgM=null;gm.stun=0;gm.sgIm=0;gm.rip=0;gm.asx=1;gm.en=0;gm.dm=2;gph=0;BM.gabriel=[];try{snd('die')}catch(e){}toast('☠️ Gabriel te derriba. Despiertas al borde de la arena.',2800);return true}
  // «ESCAPA»: la isla arde. Desaparecen TODOS los PNJ (y los corderos), el cielo se vuelve rojo (`R3D.skyBurn`), el pasto naranja (`uBurn`), las nubes de fuego y caen brasas (r3d.js `burnFx`). Se invoca al entrar en el paso `esc`.
  let es=0;const gone=[];
@@ -200,7 +200,7 @@ const ISLA=(()=>{
  // tarjeta de bienvenida (UI Susurro: cristal + trazo dorado): cómo moverse, correr, esquivar y golpear; se cierra con el botón o con cualquier tecla de acción
  let tipEl=null;
  function tipShow(){if(tipEl||S.islaTip)return;const R=(k,t)=>`<div class="rw"><div class="ks">${k}</div><span>${t}</span></div>`;tipEl=document.createElement('div');tipEl.id='isla-tip';
-  tipEl.innerHTML='<h3>DESPIERTAS</h3><div class="sb">Así se mueve este cuerpo</div>'+R('<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>','Moverte')+R('<kbd>Mayús</kbd>','Correr (mantén; gasta resistencia)')+R('<kbd>Espacio</kbd>','Esquivar: un paso rápido que te protege un instante')+R('<kbd>Clic</kbd>','Golpear hacia donde apunta el ratón')+R('<kbd>Mantén clic</kbd>','Cargar el golpe y soltarlo: pega mucho más')+R('<kbd>Tab</kbd>','Fijar y cambiar de enemigo')+R('<kbd>F</kbd>','Hablar, entrar y usar lo que tengas delante')+'<button>ENTENDIDO</button>';
+  tipEl.innerHTML='<h3>DESPIERTAS</h3><div class="sb">Así se mueve este cuerpo</div>'+R('<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>','Moverte')+R('<kbd>Mayús</kbd>','Correr (mantén; gasta resistencia)')+R('<kbd>Espacio</kbd>','Esquivar: un paso rápido que te protege un instante')+R('<kbd>LMB</kbd>','Golpear hacia donde apunta el ratón')+R('<kbd>Mantén LMB</kbd>','Cargar el golpe y soltarlo: pega mucho más')+R('<kbd>Tab</kbd>','Fijar y cambiar de enemigo')+R('<kbd>F</kbd>','Hablar, entrar y usar lo que tengas delante')+'<button>ENTENDIDO</button>';
   document.body.appendChild(tipEl);tipEl.querySelector('button').onclick=()=>{S.islaTip=1;tipHide();save()}}
  function tipHide(){if(tipEl){tipEl.remove();tipEl=null}}
  function lock(){return !!(S.isla&&S.isla.lock&&!S.isla.done)}
