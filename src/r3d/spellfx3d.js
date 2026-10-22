@@ -9,7 +9,10 @@ import {ppx} from './cinefx3d.js';
 const glowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,238,200,1)');r.addColorStop(.22,'rgba(255,170,70,.8)');r.addColorStop(.55,'rgba(205,70,22,.32)');r.addColorStop(1,'rgba(90,18,4,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
 const dotTex=(()=>{const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d'),r=g.createRadialGradient(16,16,0,16,16,16);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.5,'rgba(255,255,255,.45)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,32,32);return new THREE.CanvasTexture(c)})();
 // 22 oct 2026: BOLA DE FUEGO CELESTIAL — el fuego de la bola, las brasas y el impacto son CELESTES (la magia que aprende el jugador en el tutorial del Cielo)
-const HOT=new THREE.Color('#e8fbff'),MID=new THREE.Color('#5ac8ff'),COOL=new THREE.Color('#2a6fd0'),ASH=new THREE.Color('#0c1c3a');
+// PALETAS POR TIPO de partícula (22 oct 2026): 0 = fuego/chispas de golpe (naranja), 1 = fuego CELESTE (bola, brasas de «arde», impacto de la bola), 2 = DORADO (parada perfecta). Antes la paleta celeste era única y tiñó también las chispas de los golpes normales.
+const PAL=[[new THREE.Color('#ffd89a'),new THREE.Color('#ff8a2a'),new THREE.Color('#b8321a'),new THREE.Color('#3a1208')],
+ [new THREE.Color('#e8fbff'),new THREE.Color('#5ac8ff'),new THREE.Color('#2a6fd0'),new THREE.Color('#0c1c3a')],
+ [new THREE.Color('#fffbe8'),new THREE.Color('#ffe08a'),new THREE.Color('#e0a83a'),new THREE.Color('#3a2a10')]];
 const NP=520,TL=.034;   // partículas máximas · px de mundo → unidades (1/32)
 
 /* COMBATE · AVISOS Y GOLPES EN 3D (21 oct 2026): sustituyen a los conos/anillos de polígonos del lienzo 2D. Un solo shader de «decal» sobre un plano horizontal:
@@ -40,7 +43,7 @@ const decalMat=(frag,add)=>new THREE.ShaderMaterial({vertexShader:DECAL_V,fragme
 
 export class SpellFX{
  constructor(scene,W3){this.scene=scene;this.W3=W3;this.n=0;this.balls=[];this.rings=[];this.t=0;this.tq=[];this.tm=new Map();this.sl=[];this.fl=[];
-  this.p=new Float32Array(NP*3);this.c=new Float32Array(NP*3);this.v=new Float32Array(NP*3);this.l=new Float32Array(NP);this.l0=new Float32Array(NP);this.k=0;
+  this.p=new Float32Array(NP*3);this.c=new Float32Array(NP*3);this.v=new Float32Array(NP*3);this.l=new Float32Array(NP);this.l0=new Float32Array(NP);this.ty=new Uint8Array(NP);this.k=0;
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(this.p,3));g.setAttribute('color',new THREE.BufferAttribute(this.c,3));
   this.pts=new THREE.Points(g,new THREE.PointsMaterial({size:6,sizeAttenuation:false,map:dotTex,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));this.pts.frustumCulled=false;this.pts.renderOrder=6;scene.add(this.pts);
   // orbe de carga (en la mano del héroe)
@@ -49,7 +52,7 @@ export class SpellFX{
    mid=new THREE.Mesh(new THREE.IcosahedronGeometry(.17,1),new THREE.MeshBasicMaterial({color:'#3aa8ff',transparent:true,opacity:.78,depthWrite:false,toneMapped:false})),
    halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:'#7fd0ff',transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.9}));halo.scale.setScalar(1.1);
   group.add(core,mid,halo);group.scale.setScalar(s);return{group,core,mid,halo,s}}
- emit(x,y,z,vx,vy,vz,life){const i=this.n++%NP;this.p[i*3]=x;this.p[i*3+1]=y;this.p[i*3+2]=z;this.v[i*3]=vx;this.v[i*3+1]=vy;this.v[i*3+2]=vz;this.l[i]=this.l0[i]=life}
+ emit(x,y,z,vx,vy,vz,life,ty=1){const i=this.n++%NP;this.ty[i]=ty;this.p[i*3]=x;this.p[i*3+1]=y;this.p[i*3+2]=z;this.v[i*3]=vx;this.v[i*3+1]=vy;this.v[i*3+2]=vz;this.l[i]=this.l0[i]=life}
  h(a,b){return hash(this.k++,a,b)}
  // bola de fuego: de la mano (x0,y0) al punto (x1,y1) en `ms` ms; k = carga (0..1)
  fireball(x0,y0,x1,y1,ms,k=0){const a=this.W3(x0,y0,TER.standZ(x0,y0)),b=this.W3(x1,y1,TER.standZ(x1,y1)),s=.7+.55*k,ball=this.makeBall(s);ball.group.position.copy(a);this.scene.add(ball.group);
@@ -65,9 +68,13 @@ export class SpellFX{
  // estela del golpe del héroe: arranca tras `delay` ms y barre ±half rad en `ms` ms; dir ±1 alterna el sentido del combo
  slash(x,y,ang,reach,dir,col,heavy,delay=0,ms=170){const m=new THREE.Mesh(decalGeo,decalMat(SLASH_F,true)),u=m.material.uniforms;u.uCol.value.set(col||'#f0dcb0');u.uAng.value=ang;u.uHalf.value=heavy?1.15:.95;u.uDir.value=dir;u.uA.value=heavy?1:.8;
   m.scale.setScalar(reach/32*(heavy?1.12:1));m.renderOrder=5;m.visible=false;m.frustumCulled=false;this.scene.add(m);this.sl.push({m,x,y,a:u.uA.value,t0:this.t+delay/1000,dur:ms/1000})}
+ // PARADA PERFECTA (22 oct 2026): estallido DORADO en el punto de contacto (chispas radiales rápidas + anillo de luz + destello en la dirección del golpe parado)
+ parry(x,y,ang){const p=this.W3(x,y,TER.standZ(x,y));for(let j=0;j<34;j++){const a=this.h(j,21)*6.283,sp=1.6+this.h(j,22)*3.2;this.emit(p.x,p.y+.9,p.z,Math.cos(a)*sp,.2+this.h(j,23)*1.6,Math.sin(a)*sp,.22+this.h(j,24)*.3,2)}
+  for(let j=0;j<10;j++){const a=ang+(this.h(j,25)-.5)*.9,sp=3+this.h(j,26)*2.5;this.emit(p.x,p.y+.9,p.z,Math.cos(a)*sp,.3+this.h(j,27)*.8,Math.sin(a)*sp,.2+this.h(j,28)*.2,2)}
+  for(const [c,s0,o] of [['#fff1c8',1.1,1],['#ffd27a',.6,.9]]){const r=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:c,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:o}));r.position.set(p.x,p.y+.9,p.z);this.scene.add(r);this.rings.push({r,t0:this.t,s0})}}
  // impacto en un enemigo: destello + chispas hacia donde va el golpe (k 1 = golpe máximo)
  hit(x,y,ang,k=0){const p=this.W3(x,y,TER.standZ(x,y)),n=7+Math.round(k*9);
-  for(let j=0;j<n;j++){const a=ang+(this.h(j,11)-.5)*1.5,sp=(1.2+this.h(j,12)*2.2)*(1+k*.5);this.emit(p.x,p.y+.55,p.z,Math.cos(a)*sp,.5+this.h(j,13)*1.1,Math.sin(a)*sp,.18+this.h(j,14)*.22)}
+  for(let j=0;j<n;j++){const a=ang+(this.h(j,11)-.5)*1.5,sp=(1.2+this.h(j,12)*2.2)*(1+k*.5);this.emit(p.x,p.y+.55,p.z,Math.cos(a)*sp,.5+this.h(j,13)*1.1,Math.sin(a)*sp,.18+this.h(j,14)*.22,0)}
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:k?'#ffe2a8':'#ffc070',transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.95}));s.position.set(p.x,p.y+.55,p.z);this.scene.add(s);this.fl.push({s,t0:this.t,s0:.55+k*.45})}
  _decals(t){
   const seen=new Set();for(const q of this.tq){const [key,x,y,ang,R,half,u,col]=q;let e=this.tm.get(key);if(!e){const m=new THREE.Mesh(decalGeo,decalMat(TELE_F,false));m.renderOrder=3;m.frustumCulled=false;this.scene.add(m);e={m};this.tm.set(key,e)}
@@ -90,6 +97,6 @@ export class SpellFX{
   // partículas (brasas): suben, se enfrían de crema a naranja, rojo y ceniza
   let alive=0;for(let i=0;i<NP;i++){let l=this.l[i];if(l<=0){this.c[i*3]=this.c[i*3+1]=this.c[i*3+2]=0;continue}l-=dt;this.l[i]=l;alive++;const f=Math.max(0,l)/this.l0[i];
    this.p[i*3]+=this.v[i*3]*dt;this.p[i*3+1]+=this.v[i*3+1]*dt;this.p[i*3+2]+=this.v[i*3+2]*dt;this.v[i*3+1]-=.9*dt;this.v[i*3]*=1-dt*1.2;this.v[i*3+2]*=1-dt*1.2;
-   const c=f>.66?HOT.clone().lerp(MID,(1-f)/.34):f>.33?MID.clone().lerp(COOL,(.66-f)/.33):COOL.clone().lerp(ASH,(.33-f)/.33),a=Math.min(1,f*1.6);this.c[i*3]=c.r*a;this.c[i*3+1]=c.g*a;this.c[i*3+2]=c.b*a}
+   const PL=PAL[this.ty[i]],c=f>.66?PL[0].clone().lerp(PL[1],(1-f)/.34):f>.33?PL[1].clone().lerp(PL[2],(.66-f)/.33):PL[2].clone().lerp(PL[3],(.33-f)/.33),a=Math.min(1,f*1.6);this.c[i*3]=c.r*a;this.c[i*3+1]=c.g*a;this.c[i*3+2]=c.b*a}
   this.pts.visible=alive>0;if(alive>0){this.pts.material.size=ppx(.11);this.pts.geometry.attributes.position.needsUpdate=true;this.pts.geometry.attributes.color.needsUpdate=true}}
 }

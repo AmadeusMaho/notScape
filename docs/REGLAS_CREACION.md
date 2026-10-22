@@ -6,6 +6,7 @@
 ## 0 · Protocolo de entrega (siempre)
 1. Trabaja en segmentos pequeños; un entregable por mensaje; cierra diciendo **qué probar a mano**.
 2. Si cambias algo: **detállalo en `AGENTS.md`** (lote corto: qué, por qué, cómo se verificó, qué NO) — el lote más antiguo pasa a `docs/HISTORIAL.md` cuando haya >14.
+2b. **ACTUALIZA SIEMPRE LA HOJA DE RUTA (regla del dueño, 22 oct 2026):** cada entrega añade una línea al «Registro de avance» de `docs/HOJA_DE_RUTA.md` y marca el estado de la fase que toca (además del lote en `AGENTS.md`), para que otros agentes vean en segundos qué se hizo. Si descubres un error o una decisión nueva, va a `docs/REGLAS_CREACION.md` §11.
 3. Arregla sin preguntar cualquier fallo que veas en tu camino (y cuéntalo). Se pregunta solo lo que es **de gusto** o cambia el diseño acordado; si dudas entre dos aspectos, entrega ambos en captura.
 4. Comprueba la consola (`ns.py logs` / `read_console_messages`) y ejecuta las herramientas de tu área (tabla del §10) antes de darlo por hecho. Lo que no se pueda verificar aquí (fps en GPU/móvil, tacto del combate, oído) se dice en la entrega.
 5. Cambio de formato de guardado → sube `S.ver` (los guardados NO importan: se pueden descartar). Textos del juego en **español**.
@@ -132,11 +133,14 @@ Se comprueba y se cuenta en la entrega: (1) **ESCALA** vs. héroe (≈1 unidad �
 11. **Ids de objeto con calidad** (`sw_cobre~2`): compara con `String(id).split('~')[0]`.
 12. **Pruebas en el arnés (`tools/fast/ns.py`)**: la 3D va a ~2 fps, así que prueba la lógica con `eval` y llamando a las funciones (`swingResolve`, `guardHit`, `pdCheck`, `heroState3D`, `ISLA.tick`) y usa `CINE.seek(t)` + `NSTEST.frames(n)` para capturas de cinemáticas; el panel de la Mochila puede abrirse solo (`setPanel(false,0)`); el día/noche avanza rápido durante las capturas.
 
+13. **Paletas/estados compartidos tiñen todo lo que los usa**: cambiar el color de las partículas de la bola de fuego volvió azules las chispas de los golpes normales. Parametriza por tipo (`PAL` en spellfx3d.js) y comprueba otros usos (`grep`) antes de recolorear algo compartido.
+
 **Decisiones de diseño vigentes (del dueño; no se revierten sin hablarlo)**
 - **Jefes (`boss:1`)**: formato Dark Souls = cinemática de intro corta + título + barra de jefe abajo-centro + música de jefe desde que empieza a aparecer (`bossMusic`) + ataques con anticipación visible del cuerpo (no solo conos). **Mini-jefes (`boss:2`)**: sin cinemática pero barra/nameplate distinto (`.np.b2`). Ver §8.
 - **Arena de Gabriel** FUERA de la isla (camino de rocas + plataforma redonda, se ven las nubes); las 4 ofrendas son objetos exclusivos del tutorial que aparecen en el banco (anti-brickeo, `grantOfr`).
 - **Controles**: WASD mueve; clic izquierdo = golpear/interactuar/lanzar; **clic derecho MANTENIDO (o Q) = bloquear**; **botón del medio = girar cámara** (no mueve al personaje); Espacio = esquivar; V = saltar; Tab = fijar; **1 = SELECCIONAR habilidad (no lanza)**. Ya no existe «clic derecho = ir a ese punto».
 - **Bloqueo**: solo cuerpo a cuerpo y puños (arco y magia no). Escudo 80 % / arma 50 % / puños 30 %, gasta resistencia por daño, guardia rota si no alcanza; **parada perfecta** (200 ms, 260 con escudo) sin daño ni gasto y con CD 2,5 s; **esquiva perfecta** (golpe en los primeros 170 ms) devuelve el 80 % de la resistencia + imagen fantasma. Constantes en `BLK`/`DSH`.
+- **Stagger y contraataque**: todo enemigo con daño tiene barra de stagger; a 0 queda aturdido (×1,5 y primer golpe seguro); la parada perfecta abre un contraataque ×2. Los jefes la muestran bajo su barra de vida. Todo jefe/enemigo nuevo debe funcionar con `m.stun` (no actuar mientras `m.stun>now`).
 - **Ataque**: una mano/daga/puños = OBJETIVO ÚNICO (el fijado con Tab o el más alineado con el cursor) y solo ese hace aggro; **solo armas a dos manos CARGADAS (y futuras magias de área con `s.area`) golpean en área (hasta 3, 60 % a los secundarios)**; **todo ataque cargado (>55 %) gasta resistencia** (12+18·carga, mandoble ×1,5; sin resistencia sale sin carga).
 - **Rango = APUNTADO LIBRE**: con arco o hechizo seleccionado el héroe mira SIEMPRE al cursor en combate (no se encara solo al enemigo); el encarar automático es solo para cuerpo a cuerpo.
 - **Magia**: `MAGIC_ON=false` sigue (rediseño); lo único activo es la **bola de fuego CELESTIAL** del bastón, aprendida en el tutorial, que se SELECCIONA en la barra de habilidades (bajo la vida, hasta 6 casillas) y se lanza con el clic. Sin seleccionar, el bastón golpea cuerpo a cuerpo.

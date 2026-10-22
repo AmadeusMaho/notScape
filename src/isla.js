@@ -175,7 +175,7 @@ const ISLA=(()=>{
  // INTRO + COMBATE: la cinemática `gabrielIntro` (cine.js) baja a Gabriel del cielo sobre la arena; al acabar (o saltarla) aparece el combatiente en ese mismo sitio. 30 de vida, 3 fases, golpes con anticipación de brazo (game.js `wind.slow`).
  let intro=0,fAt=0,gk=-1;   // gk = contador de muertes de Gabriel al EMPEZAR el combate de esta sesión
  function spawnBoss(){gk=S.st['kill:gabriel']||0;const q=wp(AR[0],AR[1]);if(!gm||!M.includes(gm)){mob('gabriel',q.x,q.y);gm=M[M.length-1];gm.elite=1}
-  gm.x=gm.hx=gm.tx=q.x;gm.y=gm.hy=gm.ty=q.y;gm.mh=gm.hp=30;gm.dm=3;gm.hunt=1;gm.rt=0;gm.asx=1;gm.gc=0;gm.tel=null;gm.wind=null;gm.nt=performance.now()+1500;gph=0;BM.gabriel=[];
+  gm.x=gm.hx=gm.tx=q.x;gm.y=gm.hy=gm.ty=q.y;gm.mh=gm.hp=30;gm.sgM=null;gm.stun=0;gm.sgIm=0;gm.rip=0;gm.dm=3;gm.hunt=1;gm.rt=0;gm.asx=1;gm.gc=0;gm.tel=null;gm.wind=null;gm.nt=performance.now()+1500;gph=0;BM.gabriel=[];
   try{banner('Gabriel','El vigía del Cielo','#e8cf94',3000)}catch(e){}try{log('✦ <b>Gabriel</b> te mira. Vigila su brazo: cuando lo alza, esquiva.')}catch(e){}}
  function fight(){if(typeof mob!=='function'||intro)return;const q=wp(AR[0],AR[1]);if(typeof bossMusic==='function')bossMusic(16000);   // la música del jefe empieza al EMPEZAR a aparecer (intro)
  
@@ -188,7 +188,7 @@ const ISLA=(()=>{
  // MUERTE EN EL COMBATE (ISLA-7; antes el golpe «se detenía»): si caes ante Gabriel, despiertas un poco antes de él (a 6,5 tiles al sur del altar) con la vida llena, y Gabriel vuelve a su sitio con la vida completa y la fase 1.
  // Devuelve true si ha gestionado la muerte (die() de game.js no hace nada más); fuera del combate de Gabriel devuelve false y die() es el de siempre.
  function noDie(){if(!on()||!gAlive())return false;P.dot=null;try{HOT=[]}catch(e){}P.pjM=null;M.forEach(m=>m.hunt=0);P.hp=maxHp();const q=wp(AR[0],AR[1]-5.2);P.x=q.x;P.y=q.y;try{FD=performance.now()}catch(e){}P.g=P.mv=null;stopA();
-  const g=wp(AR[0],AR[1]);gm.x=gm.hx=gm.tx=g.x;gm.y=gm.hy=gm.ty=g.y;gm.hp=gm.mh;gm.hunt=0;gm.tel=null;gm.asx=1;gm.en=0;gm.dm=2;gph=0;BM.gabriel=[];try{snd('die')}catch(e){}toast('☠️ Gabriel te derriba. Despiertas al borde de la arena.',2800);return true}
+  const g=wp(AR[0],AR[1]);gm.x=gm.hx=gm.tx=g.x;gm.y=gm.hy=gm.ty=g.y;gm.hp=gm.mh;gm.hunt=0;gm.tel=null;gm.sgM=null;gm.stun=0;gm.sgIm=0;gm.rip=0;gm.asx=1;gm.en=0;gm.dm=2;gph=0;BM.gabriel=[];try{snd('die')}catch(e){}toast('☠️ Gabriel te derriba. Despiertas al borde de la arena.',2800);return true}
  // «ESCAPA»: la isla arde. Desaparecen TODOS los PNJ (y los corderos), el cielo se vuelve rojo (`R3D.skyBurn`), el pasto naranja (`uBurn`), las nubes de fuego y caen brasas (r3d.js `burnFx`). Se invoca al entrar en el paso `esc`.
  let es=0;const gone=[];
  function startEscape(){if(es)return;es=1;for(let k=ST.length-1;k>=0;k--){const e=ST[k];if(e.k===9&&e.npc){gone.push(e);ST.splice(k,1)}}

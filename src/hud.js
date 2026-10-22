@@ -176,5 +176,7 @@ const HUDSU=(()=>{
   dlgFrame(now);dollFrame(now);if(tg.classList.contains('on'))tpFrame(now);fx(B.hp,tt,dt,low);fx(B.mp,tt,dt,0);if(tg.classList.contains('on'))fx(B.th,tt,dt,0);if(ac)fx(B.ac,tt,dt,0)}
  function warm(){if(thFail||!window.R3D||!R3D.talkHead)return;try{if(!th)th=R3D.talkHead(dCv);th.warm('guardia');th.key=''}catch(e){thFail=1}
  if(!tth&&!tthFail){try{tth=R3D.talkHead(tCv);tth.warm('goblin',true);tth.warm('lobo',true);tth.key=''}catch(e){tthFail=1}}}   // 21 oct 2026: el contexto WebGL del retrato del enemigo se creaba al 1.er objetivo (tirón de 100–200 ms medido): ahora en la carga, con un humanoide y una bestia compilados   // contexto WebGL de la cabeza de diálogo creado en la carga (antes: en la 1.ª conversación = tirón)
- return{ok:true,warm,frame,xp,banner,hasOpts:()=>!!(dOn&&curOpts),portraitDirty,doll,dlg,dlgHide,dlgSkip,get head(){return th},B,root}
+ // REEMBOLSO de resistencia (esquiva perfecta): el anillo de resistencia destella y sale «+N» (22 oct 2026)
+ function refund(n){wh.classList.add('show');wh.classList.remove('rf');void wh.offsetWidth;wh.classList.add('rf');const t=document.createElement('span');t.className='wf';t.textContent='+'+n;wh.appendChild(t);setTimeout(()=>{t.remove();wh.classList.remove('rf')},900)}
+ return{ok:true,warm,frame,xp,banner,refund,hasOpts:()=>!!(dOn&&curOpts),portraitDirty,doll,dlg,dlgHide,dlgSkip,get head(){return th},B,root}
 })();

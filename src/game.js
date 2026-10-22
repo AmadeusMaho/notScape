@@ -153,8 +153,10 @@ const MAGIC_ON=false;
 function wtype(){const w=S.eq.w;return !w||SW[w]?'m':BOW[w]?'r':MAGIC_ON?'g':'m'}
 /* VELOCIDAD DE ARMA ESTILO WoW (21 oct 2026; decisión del dueño): segundos por golpe según el tipo de arma, no por «ticks». Puños y dagas 1,2 s · espadas y cetros 1,5 s · arcos y bastones 2,4 s · pesadas (mandoble, ballesta) 3,0 s.
    El daño por golpe escala con la velocidad (×seg/2,4: lo rápido pega menos) para que el DPS siga parecido al de antes. Las tablas WSP (ticks) quedan solo para compatibilidad. */
-const SWSEC={fist:2,dagger:1.2,sword:1.5,scepter:1.5,bow:2.4,staff:2.4,great:3,xbow:3};
-const swingSecOf=w=>{if(!w)return SWSEC.fist;const m=/^lw_\d+([dmbc])/.exec(w);if(m)return SWSEC[{d:'dagger',m:'great',b:'xbow',c:'scepter'}[m[1]]];return SW[w]?SWSEC.sword:BOW[w]?SWSEC.bow:SWSEC.staff},swingSec=()=>swingSecOf(S.eq.w),spdK=()=>S.eq.w?swingSec()/2.4:.4,mxs=()=>Math.max(1,Math.round(maxHit()*spdK()))
+/* TIEMPO ENTRE GOLPES (22 oct 2026, decisión del dueño: bajarlo; el combate es activo, un clic por golpe): SWSEC = segundos por ataque (daga .7, espada/cetro 1, puños 1,1, arco/bastón 1,4, mandoble/ballesta 2; antes 1,2/1,5/2/2,4/3).
+   SWDMG = los valores ANTIGUOS: solo escalan el DAÑO por golpe (`spdK`), así el daño por segundo NO cambia (golpes más rápidos y más pequeños). La bola de fuego pasó de 1,5 a 1,2 s sin tocar su daño (+25 % de DPS). */
+const SWSEC={fist:1.1,dagger:.7,sword:1,scepter:1,bow:1.4,staff:1.4,great:2,xbow:2},SWDMG={fist:2,dagger:1.2,sword:1.5,scepter:1.5,bow:2.4,staff:2.4,great:3,xbow:3};
+const secOf=(w,T)=>{if(!w)return T.fist;const m=/^lw_\d+([dmbc])/.exec(w);if(m)return T[{d:'dagger',m:'great',b:'xbow',c:'scepter'}[m[1]]];return SW[w]?T.sword:BOW[w]?T.bow:T.staff},swingSecOf=w=>secOf(w,SWSEC),swingSec=()=>swingSecOf(S.eq.w),spdK=()=>S.eq.w?secOf(S.eq.w,SWDMG)/2.4:.4,mxs=()=>Math.max(1,Math.round(maxHit()*spdK()))
 // forma del arma para la animación (lote G1, oct 2026): 'sword' (sw_*, una mano), 'dagger' (lw_*d), 'great' (lw_*m mandoble, DOS manos), 'xbow' (lw_*b ballesta), 'scepter' (lw_*c cetro), 'bow', 'staff'
 function wKind(){const w=S.eq.w;if(!w)return null;const m=/^lw_\d+([dmbc])/.exec(w);if(m)return{d:'dagger',m:'great',b:'xbow',c:'scepter'}[m[1]];if(STF[w])return 'staff';const t=wtype();return t==='r'?'bow':t==='g'?'staff':'sword'}
 function accFor(sk,b,m){return Math.max(.08,Math.min(.95,.6+.03*(L(sk)-m.lv)+.004*b))}
@@ -709,7 +711,7 @@ function startG(e,now){if(!alive(e,now))return;const a=ACT[e.t][e.i];
  A={ty:'g',e,sk:e.t,i:e.i,t0:now,d:dur(e.t,a),pr:0,amt:hitAmt(e.t,a),per:hitPeriod(e.t),base:hitPeriod(e.t)};S.cur={sk:e.t,i:e.i};if(WHEEL_SK[e.t])whInit(now);if(e.t==='fi')fishInit(now);dirty=1}
 // F5-C · el siguiente golpe se TIRA al empezar cada ciclo (no al final) para que la animación sepa si será máximo (daño amarillo) y use la versión especial del arma.
 // rollAtk devuelve {m,wt,hit,d1,sp,heavy}; act() lo usa al final del ciclo si sigue valiendo (mismo objetivo y mismo tipo de arma), si no lo vuelve a tirar. `exec` se aplica al final (depende de la vida de entonces).
-function rollAtk(m){const wt=wtype(),hit=Math.random()<hitChance(m),d0=hit?R(1,mxs()):0,d1=d0&&Math.random()*100<pv('crit')?Math.round(d0*1.75):d0;let sp=null;
+function rollAtk(m){const wt=wtype(),hit=sureHit(m)||Math.random()<hitChance(m),d0=hit?R(1,mxs()):0,d1=d0&&Math.random()*100<pv('crit')?Math.round(d0*1.75):d0;let sp=null;
  if(wt==='g'){const si=autoSpell();if(si>=0){const sl=SPL[si],mx=spMax(sl),h=Math.random()<spAcc(m);sp={si,hit:h,d:h?R(Math.ceil(mx*.5),mx):0,mx}}}
  return{m,wt,hit,d1,sp,heavy:wt==='g'?!!(sp&&sp.d>=2&&sp.d>=sp.mx):d1>=2&&d1>=mxs()}}
 function startF(e,now){if(!alive(e,now))return;if(aimOn()&&e.d){e.hunt=1;return}   // con el combate dirigido no hay «combate fijado»: se golpea apuntando (swing())
@@ -836,7 +838,31 @@ function fin(now){const{ty,sk,i,e}=A,a=ACT[sk][i],cb=sk==='co'?count(a[2]):0;if(
    sobre un enemigo (quemadura, sangrado…); los efectos que sufre el jugador usan los mismos colores (`DOTN` en combat.js). Se reorganizará con el motor de estados alterados (Fase 23). */
 const STC={burn:'#ff8a2a',bleed:'#d4261c',poison:'#6ad04a',frost:'#7ad0ff',shock:'#c9a0ff',stun:'#e8d36a'};
 function dotHit(m,d,now,kind){if(!alive(m,now)||!(d>0))return;m.hp-=d;m.fl=now+80;splat(m.x,m.y,d,STC[kind]||'#ffffff',m.d.h+6);if(m.hp<=0){kill(m,now);if(A&&A.e===m)reseek(m,now)}}
-function hitM(m,d,now,sk,mxv,wt){if(!alive(m,now))return;fightAt=now;m.lx=m.x;m.ly=m.y;m.hp-=d;m.fl=now+120;snd(d?'hit':'miss');
+/* ═══ STAGGER (22 oct 2026; pedido del dueño) ═══ Cada enemigo con daño (y todo jefe/élite) tiene una barra de STAGGER (`m.sg` de `m.sgM`): cada golpe que recibes la baja (el pesado/cargado más), tarda `SG.wait` ms en regenerarse. A 0 queda ATURDIDO `SG.stunMs` ms
+   (jefes `SG.bossMs`): no actúa, recibe ×1,5 de daño y el PRIMER golpe que le des siempre acierta; luego tiene `SG.imm` ms de inmunidad al stagger. La barra se ve en la barra de jefe (`.bb-s`) y en el nameplate (`.nps`). PARADA PERFECTA = contraataque (`m.rip`): quita el 60 % del stagger y abre una ventana de 1,6 s con ×2 de daño y golpe seguro.
+   Neutrales sin daño (gallinas, corderos) no tienen stagger. DoT/quemadura (mxv 99) no lo tocan. Constantes en `SG`. */
+const SG={wait:3500,regen:.25,stunMs:3000,bossMs:3200,imm:7000,mulStun:1.5,mulRip:2,ripMs:1600};let RIP=null,FTI=0;
+function sgInit(m){const d=m.d;if(m.sm||(d.dmg===0&&!d.boss&&!m.elite))return 0;m.sgM=Math.max(4,Math.round(m.mh*(d.boss===2?.4:(d.boss===1||m.elite)?.45:.5)));m.sg=m.sgM;return m.sgM}
+function stagger(m,amt,now){if(m.hp<=0||m.stun>now||(m.sgIm||0)>now)return;if(m.sgM==null&&!sgInit(m))return;if(!m.sgM)return;m.sg=Math.max(0,(m.sg==null?m.sgM:m.sg)-amt);m.sgT=now+SG.wait;if(m.sg<=0)stunStart(m,now,(m.d.boss===1||m.elite)?SG.bossMs:SG.stunMs)}
+function stunStart(m,now,ms){m.stun=now+ms;m.sg=0;m.stSure=0;m.sgIm=now+ms+SG.imm;m.wind=null;m.tel=null;m.nt=Math.max(m.nt||0,m.stun+500);m.fl=now+220;
+ sp(m.x,m.y-m.d.h*.6,'#ffe9a8',16,110,80,130);sp(m.x,m.y-m.d.h*.6,'#ffffff',8,70,60,110);SHK=Math.max(SHK,now+180);try{tone(190,.3,'sawtooth',.06,80);tone(1320,.18,'triangle',.05,1800)}catch(e){}
+ fText('¡ATURDIDO!','#ffe08a',m.x,m.y,m.d.h+16);log('💫 <b>'+m.d.n+'</b> queda aturdido: recibe más daño y tu primer golpe acierta.')}
+function sgTick(dt,now){for(const m of M){if(!m.sgM)continue;if(m.stun&&now>=m.stun){m.stun=0;m.sg=m.sgM;m.nt=Math.max(m.nt||0,now+700);continue}
+  if(m.stun>now){const q=(now/120)|0;if(q!==m._sgf){m._sgf=q;const a=now/160;sp(m.x+Math.cos(a)*11,m.y-m.d.h*1.02,'#ffe9a8',1,8,16,-20)}continue}
+  if(now>(m.sgT||0)&&m.sg<m.sgM)m.sg=Math.min(m.sgM,m.sg+m.sgM*SG.regen*dt)}}
+const sureHit=m=>{const n=performance.now();if(m.stun>n&&!m.stSure){m.stSure=1;return true}if(m.rip>n&&!m.ripSure){m.ripSure=1;return true}return false};
+// TEXTO FLOTANTE de feedback (parada, esquiva, mitigado, aturdido…): DOM sobre un punto del mundo, sube y se desvanece (≈ 1 s)
+function fText(tx,c,wx,wy,hpx){if(!npRoot){npRoot=document.createElement('div');npRoot.id='nps';document.body.appendChild(npRoot)}
+ const el=document.createElement('div');el.className='ftx';el.textContent=tx;el.style.color=c;const cc=ISO.toCanvas(wx,wy,TER.standZ(wx,wy)),r=cv.getBoundingClientRect(),k=r.width/cv.width;FTI=(FTI+1)%3;
+ el.style.left=(r.left+cc.x*k)+'px';el.style.top=(r.top+(cc.y-(hpx||40)*SPR*ISO.scale())*k-FTI*15)+'px';npRoot.appendChild(el);setTimeout(()=>el.remove(),1150)}
+// IMÁN de dirección del golpe cuerpo a cuerpo (22 oct 2026): el swing se corrige hasta ≈ 17° hacia el enemigo más cercano a donde apuntas (el fijado con Tab pesa el doble); con un CONTRAATAQUE activo apunta solo al enemigo parado. Solo cuerpo a cuerpo.
+function magnetAng(a,now){if(wtype()!=='m'||(wKind()==='staff'&&skl().sel))return a;const reach=(wKind()==='dagger'?66:wKind()==='great'?92:80)+10;
+ if(RIP&&RIP.rip>now&&alive(RIP,now)&&Math.hypot(RIP.x-P.x,RIP.y-P.y)<160)return Math.atan2(RIP.y-P.y,RIP.x-P.x);
+ let best=null,bd=.3;for(const m of M){if(!alive(m,now)||sealed(m))continue;const vx=m.x-P.x,vy=m.y-P.y,d=Math.hypot(vx,vy);if(d>reach+(m.d.w||16)*.3)continue;let df=Math.abs(Math.atan2(vy,vx)-a);df=df>Math.PI?2*Math.PI-df:df;if(m===LOCK)df*=.5;if(df<bd){bd=df;best=m}}
+ return best?Math.atan2(best.y-P.y,best.x-P.x):a}
+function hitM(m,d,now,sk,mxv,wt){if(!alive(m,now))return;fightAt=now;
+ if(d>0&&mxv!==99){const mul=m.stun>now?SG.mulStun:(m.rip>now?SG.mulRip:1);if(mul>1){d=Math.max(d+1,Math.round(d*mul));if(m.rip>now&&!(m.stun>now)){m.rip=0;fText('¡CONTRAATAQUE!','#ffe08a',m.x,m.y,m.d.h+14)}}}   // aturdido ×1,5 · contraataque ×2
+ m.lx=m.x;m.ly=m.y;m.hp-=d;if(d>0&&mxv!==99)stagger(m,d*((SWG.hv&&sk!=='mg'&&now-SWG.t0<500)?1.7:1),now);m.fl=now+120;snd(d?'hit':'miss');
  const mx=d>=2&&d>=(mxv||maxHit()),heavy=d>0&&sk!=='mg'&&mxv!==99&&wt!=='r'&&!!SWG.hv&&now-SWG.t0<500;   // IMPACTOS DISTINTOS (21 oct 2026): normal · PESADO (3.er golpe del combo o carga ≥ 55 %) · CRÍTICO (golpe máximo)
  if(d>0&&heavy){try{tone(92,.2,'sine',.24,-45);noise(.1,.15,240,'lowpass')}catch(e){}}
  if(d>0&&mx){try{tone(1480,.1,'triangle',.07);tone(2300,.18,'sine',.04,-320)}catch(e){}}
@@ -883,7 +909,8 @@ const SWG={t0:0,ms:0,wind:0,dx:1,dy:0,ang:0,done:1,c:0,wt:'m',cd:0,last:0,tg:nul
 /* CARGA (21 oct 2026; propuesta del dueño): MANTENER el clic (o E) carga el golpe y SOLTAR lo lanza: un toque corto (< 0,22 s) es el golpe normal; cargando 0,22→1,1 s el golpe gana hasta +100 % de daño con arco, +80 % cuerpo a cuerpo
    y, con el báculo, la BOLA DE FUEGO crece (+120 %), cuesta más maná y a partir de media carga deja al enemigo ARDIENDO. Mientras cargas el héroe aguanta la pose y mira al cursor; la barra de swing se llena de naranja. Un golpe cargado no avanza el combo. */
 const CHG={on:0,t0:0},chgK=now=>Math.max(0,Math.min(1,(now-CHG.t0-220)/880));
-function chargeStart(now){if(BLK.on||INT||CK||P.hp<=0||(typeof CINE!=='undefined'&&CINE.on)||CHG.on)return;CHG.on=1;CHG.t0=now;ATKIN.held=1;P.g=P.mv=null;if(A)stopA()}   // atacar CANCELA la ruta pendiente (antes el héroe seguía andando hacia el último clic derecho mientras golpeaba)
+function chargeStart(now){if(BLK.on||INT||CK||P.hp<=0||(typeof CINE!=='undefined'&&CINE.on)||CHG.on)return;if(now<SWG.cd||now<ATKT)return;   /* 22 oct 2026: si el ataque NO está listo el clic se IGNORA del todo (antes empezaba una «carga» que frenaba al héroe al 30 % y le cancelaba la ruta al spamear clic): solo pega cuando toca */
+ CHG.on=1;CHG.t0=now;ATKIN.held=1;P.g=P.mv=null;if(A)stopA()}   // atacar CANCELA la ruta pendiente (antes el héroe seguía andando hacia el último clic derecho mientras golpeaba)
 /* COMPROMISO DEL GOLPE (21 oct 2026): mientras cargas o dura la preparación/recuperación del swing el héroe se mueve al 30 %; y un golpe cuerpo a cuerpo hacia un enemigo cercano pero fuera de alcance da una pequeña EMBESTIDA (`SWG.lg` px) en vez de caminar. */
 const swSlow=now=>CHG.on||BLK.on||(now>=SWG.t0&&now<SWG.t0+SWG.wind+280);
 /* ATAQUE CARGADO GASTA RESISTENCIA (22 oct 2026; decisión del dueño): soltar una carga ≥ 55 % cuesta 12 + 18·carga (12–30; el mandoble ×1,5) y pausa la regeneración. Sin resistencia suficiente el golpe sale SIN carga (normal) y no cobra nada. Solo el mandoble cargado barre hasta 3 objetivos (`swingResolve`). */
@@ -898,7 +925,7 @@ const aggro=(m,now)=>{m.hunt=1;m.nt=Math.max(m.nt||0,now+900)};
 function swing(now,ang,k=0){if(INT||CK||P.hp<=0||(typeof CINE!=='undefined'&&CINE.on)||now<SWG.cd||now<ATKT)return false;
  /* (22 oct 2026) el toast grande «Apunta con el ratón y haz clic…» se QUITÓ: tapaba la pantalla; los controles se enseñan con las pistas cortas del tutorial (isla.js `hintsTick`) */
  inc('swing');if(k>=.3)inc('charged');
- const fb=wKind()==='staff'&&skl().cel&&skl().sel==='cel'&&MN>=fbCost(k),chg=k>.04,ms=fb?1500:manMs(),c=chg?SWG.c:(now-SWG.last<ms*1.9)?(SWG.c+1)%3:0;if(ang==null)ang=aimAng();
+ const fb=wKind()==='staff'&&skl().cel&&skl().sel==='cel'&&MN>=fbCost(k),chg=k>.04,ms=fb?1200:manMs(),c=chg?SWG.c:(now-SWG.last<ms*1.9)?(SWG.c+1)%3:0;if(ang==null)ang=aimAng();ang=magnetAng(ang,now);
  Object.assign(SWG,{t0:now,ms,wind:Math.min(chg?60:55,Math.round(ms*.2)),ang,dx:Math.cos(ang),dy:Math.sin(ang),done:0,c,k,fb,wt:wtype(),cd:now+ms,last:now,hv:(c===2||k>.55)?1:0,lg:0});ATKT=now+ms;P.g=P.mv=null;if(A)stopA();
  if(SWG.wt==='m'&&!fb){   // melé: embestida corta hacia un enemigo cercano en el arco y estela 3D del golpe
   const rch=(wKind()==='dagger'?66:wKind()==='great'?92:80);let bd=1e9;M.forEach(m=>{if(!alive(m,now)||sealed(m))return;const vx=m.x-P.x,vy=m.y-P.y,d=Math.hypot(vx,vy);let df=Math.abs(Math.atan2(vy,vx)-ang);df=df>Math.PI?2*Math.PI-df:df;if(df<.6&&d>rch*.7&&d<150&&d<bd){bd=d;SWG.lg=Math.min(18,d-rch*.7)}});}/* estela 3D R3D.spell.slash quitada a petición del dueño */P.cbT=now;P.dir=HERO.dirOf(SWG.dx,SWG.dy);return true}
@@ -910,7 +937,7 @@ function selSpell(i){const s=SPL[i];if(!s||!s.atk||L('mg')<s.lv)return;S.selSp=i
 function swingResolve(now){const wt=SWG.wt,c=SWG.c,kc=SWG.k||0;SWG.done=1;let hit=0,primary=null,pb=9;const a0=SWG.ang,cand=[];
  M.forEach(m=>{if(!alive(m,now)||sealed(m))return;const vx=m.x-P.x,vy=m.y-P.y;let df=Math.abs(Math.atan2(vy,vx)-a0);df=df>Math.PI?2*Math.PI-df:df;cand.push({m,d:Math.hypot(vx,vy),df})});
  if(SWG.fb){const cost=fbCost(kc),sh=rayHit(a0,330,6),mx=Math.max(2,2+Math.floor(L('mg')/6))*(1+kc*1.2),m=sh.m,ex=P.x+Math.cos(a0)*sh.t,ey=P.y+Math.sin(a0)*sh.t;   // BOLA DE FUEGO (báculo + maná): proyectil apuntado; la precisión decide si daña; con carga ≥ ½ deja ardiendo
-  MN=Math.max(0,MN-cost);let d=0,acc=false;if(m){acc=Math.random()<spAcc(m);d=acc?R(Math.ceil(mx*.5),Math.round(mx)):0;aggro(m,now);primary=m;hit=1}
+  MN=Math.max(0,MN-cost);let d=0,acc=false;if(m){acc=sureHit(m)||Math.random()<spAcc(m);d=acc?R(Math.ceil(mx*.5),Math.round(mx)):0;aggro(m,now);primary=m;hit=1}
   const ms=Math.max(120,sh.t/.62);PJ.push({x:P.x,y:P.y,sh:14,tx:ex,ty:ey,th:m?m.d.h/2:12,t0:now,t1:now+ms,m,d,wt:'g',sk:'mg',mxv:mx,fb:1,k:kc});
   try{R3D.spell.fireball(P.x,P.y,ex,ey,ms,kc)}catch(e){}snd('magic');inc('cast');if(m&&acc&&kc>=.5)m.burn={n:4+Math.round(kc*4),t:now+ms+700,d:1+Math.floor(L('mg')/15)};dirty=1}
  else if(wt==='m'){const reach=(wKind()==='dagger'?66:wKind()==='great'?92:80)+kc*14;
@@ -927,7 +954,7 @@ function swingResolve(now){const wt=SWG.wt,c=SWG.c,kc=SWG.k||0;SWG.done=1;let hi
  if(!hit)snd('miss');if(primary){SWG.tg=primary;P.pjM=primary;P.pj=now+4800}SLASH.push({a:a0,t0:now,c,hit});if(SLASH.length>6)SLASH.shift()}
 function burnTick(now){for(const m of M){const b=m.burn;if(!b)continue;if(!alive(m,now)){m.burn=null;continue}try{if(Math.random()<.5)R3D.spell.ember(m.x,m.y,m.d.h/28)}catch(e){}
   if(now>=b.t){b.t=now+800;b.n--;dotHit(m,b.d,now,'burn');if(b.n<=0)m.burn=null}}}   // QUEMADURA de la bola de fuego cargada: 1 golpe cada 0,8 s mientras dura
-function swingTick(now,dt){blkTick(dt||.016,now);burnTick(now);if(!aimOn())return;if(SWG.lg>0&&dt){const s=Math.min(SWG.lg,230*dt);SWG.lg-=s;step(SWG.dx*s,0);step(0,SWG.dy*s)}   // embestida del golpe
+function swingTick(now,dt){blkTick(dt||.016,now);sgTick(dt||.016,now);burnTick(now);if(!aimOn())return;if(SWG.lg>0&&dt){const s=Math.min(SWG.lg,230*dt);SWG.lg-=s;step(SWG.dx*s,0);step(0,SWG.dy*s)}   // embestida del golpe
  if(!SWG.done&&now>=SWG.t0+SWG.wind)swingResolve(now)}
 const aimTarget=now=>SWG.tg&&SWG.tg.hp>0&&now-SWG.last<5000?SWG.tg:null;
 function drawAim(now){}   // (21 oct 2026: se quitaron el arco guía y el destello circular a petición del dueño; solo queda la barra de swing del HUD)
@@ -1000,7 +1027,9 @@ function blockEnd(){BLK.on=0}
 function blkTick(dt,now){if(BLK.on&&(!blkCan()||S.sta<=0))BLK.on=0;if(BLK.on)STP=Math.max(STP,.9);const t=BLK.on?1:0;BLK.k+=(t-BLK.k)*(1-Math.exp(-dt*(t?16:10)));if(BLK.k<.005)BLK.k=0}
 // un golpe de `m` de daño `d0` llega al jugador: devuelve {d: daño que pasa, kind: null|'block'|'perfect'|'broke'}. `heavy` = golpe pesado telegrafado.
 function guardHit(m,d0,now,heavy){if(!BLK.on)return{d:d0,kind:null};const sh=hasSh();
- if(now-BLK.t0<=(sh?BLK.pws:BLK.pw)&&now>=BLK.pcd){BLK.pcd=now+2500;BLK.hit=now;m.nt=Math.max(m.nt||0,now+900);m.wind=null;m.tel=null;
+ if(now-BLK.t0<=(sh?BLK.pws:BLK.pw)&&now>=BLK.pcd){BLK.pcd=now+2500;BLK.hit=now;m.nt=Math.max(m.nt||0,now+900);m.wind=null;m.tel=null;m.rip=now+SG.ripMs;m.ripSure=0;RIP=m;stagger(m,(m.sgM||sgInit(m)||4)*.6,now);   // CONTRAATAQUE: ventana x2 + golpe seguro
+  {const mx=(m.x+P.x)/2,my=(m.y+P.y)/2;try{R3D.spell.parry(mx,my,Math.atan2(m.y-P.y,m.x-P.x))}catch(e){}HFX.push({k:'star',tx:mx,ty:my,th:16,t0:now,d:420});fText('¡PARADA PERFECTA!','#ffe08a',P.x,P.y,52);try{tone(1180,.38,'triangle',.07,1100);tone(1790,.3,'sine',.05,1700);tone(2650,.22,'sine',.035,2500);tone(210,.2,'square',.05,70)}catch(e){}}
+  
   sp(P.x,P.y-12,'#fff1c8',12,120,80,130);sp(P.x,P.y-10,'#ffd27a',10,90,60,110);splat(P.x,P.y,0,'#e8cf94',26);SHK=now+160;snd('rare');try{tone(1480,.14,'triangle',.07,1000);tone(740,.2,'sine',.05,400)}catch(e){}
   if(window.R3D){R3D.tscale=.05;clearTimeout(window.__hs);window.__hs=setTimeout(()=>{if(!(typeof CINE!=='undefined'&&CINE.on))R3D.tscale=1},85)}
   log('✦ <b>¡Parada perfecta!</b> '+m.d.n+' queda aturdido.');inc('pblock');return{d:0,kind:'perfect'}}
@@ -1008,13 +1037,14 @@ function guardHit(m,d0,now,heavy){if(!BLK.on)return{d:d0,kind:null};const sh=has
  const mit=sh?BLK.mit:S.eq.w?BLK.mitW:BLK.mitF,cost=Math.ceil((sh?2.2:4.5)*d0*(heavy?1.4:1)+(sh?2:5));
  if(S.sta<cost){S.sta=0;STP=3;BLK.on=0;sp(P.x,P.y-8,'#ff6a5a',9,90,60,110);try{tone(150,.2,'sawtooth',.07,70)}catch(e){}log('¡Guardia rota! Sin resistencia para aguantar el golpe.');return{d:d0,kind:'broke'}}
  S.sta-=cost;STP=2;BLK.hit=now;sp(P.x,P.y-10,'#cfe3ff',sh?10:6,90,50,110);sp(P.x,P.y-8,'#ffffff',4,60,40,90);SHK=Math.max(SHK,now+(sh?90:60));snd('hit');try{tone(sh?820:620,.08,'square',.05,sh?520:380)}catch(e){}
- return{d:Math.max(0,Math.round(d0*(1-mit))),kind:'block'}}
+ {const dd=Math.max(0,Math.round(d0*(1-mit)));fText(dd<d0?'MITIGADO −'+(d0-dd):'BLOQUEADO',sh?'#9fd0ff':'#cfe3ff',P.x,P.y,46);return{d:dd,kind:'block'}}}
 // PERFECT DODGE: el golpe de `m` cae en los primeros 170 ms de la esquiva → reembolso de resistencia, fantasma y un instante de cámara lenta (una vez por esquiva)
 function pdCheck(m,now){if(DSH.pd===DSH.t0)return;const t=now-DSH.t0;if(t<0||t>170)return;DSH.pd=DSH.t0;
  S.sta=Math.min(100,(S.sta||0)+Math.round(DSH.cost*.8));DSH.cd=now+120;STP=.4;inc('pdodge');
  try{const z=TER.standZ(P.x,P.y),sx=DSH.sx==null?P.x:DSH.sx,sy=DSH.sy==null?P.y:DSH.sy;R3D.ghost([[sx,sy,TER.standZ(sx,sy)],[(sx*2+P.x)/3,(sy*2+P.y)/3,z],[(sx+P.x*2)/3,(sy+P.y*2)/3,z]],'#bfe6ff')}catch(e){}
  sp(P.x,P.y-6,'#bfe6ff',12,100,60,110);splat(P.x,P.y,0,'#9fe0ff',26);try{tone(1180,.16,'sine',.06,1760);tone(1760,.2,'sine',.04,2200)}catch(e){}
  if(window.R3D&&!(typeof CINE!=='undefined'&&CINE.on)){R3D.tscale=.3;clearTimeout(window.__hs);window.__hs=setTimeout(()=>{R3D.tscale=1},170)}
+ fText('¡ESQUIVA PERFECTA!','#9fe0ff',P.x,P.y,52);try{HUDSU.refund(Math.round(DSH.cost*.8))}catch(e){}
  log('✦ <b>¡Esquiva perfecta!</b>')}
 /* SALTO (21 oct 2026; pedido del dueño): saltito de ≈ .55 niveles (≈ 35 cm de mundo) que NO gasta resistencia ni da invulnerabilidad; solo es visual (la colisión es 2D y no cambia). Botón `#jmpb` (HUD) o tecla V.
    `JMP.u` = fase 0..1 (heroState3D → `jmp` para la animación y `z` + `jh`); no se puede encadenar en el aire. */
@@ -1024,7 +1054,9 @@ function jump(){const now=performance.now();if(INT||CK||P.hp<=0||now<JMP.t0+JMP.
 /* (el botón físico `#jmpb` se QUITÓ el 21 oct 2026: habrá una UI única en modo móvil; el salto queda en la tecla V y en `jump()`) */
 function dash(){const now=performance.now();if(INT||CK||P.hp<=0||now<DSH.cd||(typeof CINE!=='undefined'&&CINE.on))return false;if(S.sta==null)S.sta=100;
  if(S.sta<DSH.cost){if(now-DSH.warn>1500){DSH.warn=now;log('Sin aliento para esquivar.')}return false}
- const kd=ISO.keyDir(K.l,K.r,K.u,K.d);let dx=kd.x,dy=kd.y;if(!dx&&!dy){dx=P.ldx||0;dy=P.ldy||0}if(!dx&&!dy){dx=0;dy=1}const l=Math.hypot(dx,dy);dx/=l;dy/=l;
+ const kd=ISO.keyDir(K.l,K.r,K.u,K.d);let dx=kd.x,dy=kd.y;if(!dx&&!dy){   /* sin teclas en combate: PASO ATRÁS (lejos del cursor o del enemigo encarado) */
+  let ax=0,ay=0;if(nowCombat()&&CUR.on&&!CUR.touch&&aimOn()){const w=ISO.toWorld(CUR.px,CUR.py,TER.heightAt);ax=P.x-w.x;ay=P.y-w.y}else if(nowCombat()){const f=combatFoe(now);if(f){ax=P.x-f.x;ay=P.y-f.y}}
+  if(Math.hypot(ax,ay)>4){dx=ax;dy=ay}else{dx=P.ldx||0;dy=P.ldy||0}}if(!dx&&!dy){dx=0;dy=1}const l=Math.hypot(dx,dy);dx/=l;dy/=l;
  if(now<SWG.t0+SWG.ms){if(!SWG.done)swingResolve(now);SWG.t0=-1e9;SWG.cd=Math.min(SWG.cd,now+DSH.len*1000+200);ATKT=Math.min(ATKT,SWG.cd);SWG.lg=0}   // ESQUIVA CANCELA EL RETROCESO del golpe (21 oct 2026): el golpe pendiente se resuelve al instante, la animación de recuperación se corta y puedes volver a atacar justo al acabar la esquiva (ventana de combo)
  S.sta-=DSH.cost;STP=nowCombat()?3.5:1.5;BLK.on=0;Object.assign(DSH,{sx:P.x,sy:P.y,on:1,t0:now,t1:now+DSH.len*1000,an:now+DSH.len*1000+320,dx,dy,inv:now+DSH.ifr*1000,cd:now+DSH.cdt});P.g=P.mv=null;stopA();CK=null;inc('dash');
  sp(P.x,P.y-4,'#e8cf94',9,70,40,90);sp(P.x,P.y-2,'#ffffff',5,50,30,70);try{if(typeof FOOT!=='undefined')FOOT.sfx('dash',.9)}catch(e){}return true}
@@ -1175,6 +1207,7 @@ function upd(dt,now){swingTick(now,dt);if(typeof AMB!=='undefined')AMB.tick(now,
   if(m.hunt){const lx=m.lx==null?m.hx:m.lx,ly=m.lx==null?m.hy:m.ly;
    if(P.hp<=0||inV||Math.hypot(m.x-lx,m.y-ly)>(m.d.boss?260:m.d.ag?190:140)||dp>420){m.hunt=0;m.lx=null;m.ag0=now+6000;m.tel=null;return}
    if(m.d.boss)bossTick(m,now);
+   if(m.stun>now){m.wind=null;m.tel=null;m.f=dx-dy>=0?1:-1;return}   // ATURDIDO: no se mueve ni ataca
    if(telOn(m)&&telUpd(m,now))return;
    if(m.wind){const w=m.wind;if(now<w.t1){m.f=dx-dy>=0?1:-1;if(w.slow&&now>w.t0+w.d*.35)sp(m.x+(dx/(dp||1))*14,m.y-m.d.h*.95,'#ffe9a8',1,26,40,-30);return}m.wind=null;windHit(m,w,now,dx,dy,dp);return}   // AVISO DE GOLPE: el enemigo se queda quieto con el cono rojo y golpea al terminar
    if(dp>40){const sp2=(m.d.ag?58:45)*dt,nx=m.x+dx/dp*sp2,ny=m.y+dy/dp*sp2;if(!inVilla(nx,ny)){m.x=nx;m.y=ny;m.mv=now;m.f=dx-dy>=0?1:-1}}else if(!busy){m.f=dx-dy>=0?1:-1;if(now>=m.nt){if(telOn(m)&&now>=(m.tn||(m.tn=now+4000)))telStart(m,now);else if(!m.wind){const big=bigFoe(m),gb=m.d.id==='gabriel',wd=gb?Math.round(950*Math.max(.8,m.asx||1)):big?Math.max(420,Math.min(720,(m.d.as||2400)*.22*(m.asx||1))):800,kind=gb?((m.gc=(m.gc||0)+1)%3===0?'dbl':'one'):null;   /* GABRIEL (21 oct 2026): ataque BASICO con anticipacion larga del BRAZO (se alza despacio ~1 s, sin cono en el suelo; actors3d.js `wind.slow`) y cada 3.er es un COMBO de dos golpes */
@@ -1228,18 +1261,19 @@ function dS(e,t){const x=e.x,y=e.y,id=e.id;if(e.nodraw)return;if(id==='door'||id
    Muestra nombre (Cinzel), nivel en una insignia de color según la dificultad frente a tu nivel de combate y, solo si está herido, la barra de vida. Jefes = marco ámbar con «◆»; agresivos = «⚔». Se pide cada fotograma desde dMo y `npSweep()` oculta los no pedidos. */
 const NPS=new Map();let npRoot=null;
 function npGet(m){let e=NPS.get(m);if(e)return e;if(!npRoot){npRoot=document.createElement('div');npRoot.id='nps';document.body.appendChild(npRoot)}
- const el=document.createElement('div');el.className='np';el.innerHTML='<div class="npb"><u></u><i></i><span class="npt"></span><em class="npp"></em></div><b class="npl"></b>';npRoot.appendChild(el);
- e={el,l:el.querySelector('.npl'),t:el.querySelector('.npt'),p:el.querySelector('.npp'),f:el.querySelector('.npb i'),g:el.querySelector('.npb u'),hp:1,seen:0,key:''};NPS.set(m,e);return e}
+ const el=document.createElement('div');el.className='np';el.innerHTML='<div class="npb"><u></u><i></i><span class="npt"></span><em class="npp"></em></div><b class="npl"></b><s class="nps"><i></i></s>';npRoot.appendChild(el);
+ e={el,l:el.querySelector('.npl'),t:el.querySelector('.npt'),p:el.querySelector('.npp'),f:el.querySelector('.npb i'),sg:el.querySelector('.nps'),sgi:el.querySelector('.nps i'),g:el.querySelector('.npb u'),hp:1,seen:0,key:''};NPS.set(m,e);return e}
 /* BARRA DE JEFE (21 oct 2026; decision del dueño: TODOS los jefes siguen el formato Dark Souls = cinematica de inicio + titulo + esta barra; los MINI-JEFES (capitanes boss:2) no llevan cinematica pero su nameplate es distinto, ver CSS `.np.b2`).
    Barra ancha abajo-centro con el nombre del jefe, relleno dorado-rojo, estela clara que baja tras cada golpe y marcas de fase. La muestra: jefe `boss:1` que te persigue (<620 px) o el combatiente de la isla (`ISLA.bossOn()`); mientras sale, su nameplate flotante se oculta (`BBM`). Al caer un jefe normal sale «DERROTADO». */
 let BBE=null,BBM=null,BBG=1,BBGT=0,BBL=0;
 function bbTick(now){
  let m=null;if(typeof ISLA!=='undefined'&&ISLA.boss&&ISLA.bossOn()&&alive(ISLA.boss,now))m=ISLA.boss;
  else{for(const e of M)if(e.d.boss===1&&e.hunt&&!e.sm&&alive(e,now)&&Math.hypot(e.x-P.x,e.y-P.y)<620){m=e;break}}
- if(!BBE){BBE=document.createElement('div');BBE.id='bbar';BBE.innerHTML='<div class="bb-n"></div><div class="bb-b"><u></u><i></i><b></b><b></b></div>';document.body.appendChild(BBE)}
+ if(!BBE){BBE=document.createElement('div');BBE.id='bbar';BBE.innerHTML='<div class="bb-n"></div><div class="bb-b"><u></u><i></i><b></b><b></b></div><div class="bb-s"><i></i></div>';document.body.appendChild(BBE)}
  if(BBM&&!m&&BBM!==ISLA_B()&&!alive(BBM,now)&&BBM.d.boss===1&&now-BBL<4000)try{banner(BBM.d.n,'Derrotado','#e8cf94',3200)}catch(e){}
  if(m!==BBM){BBM=m;if(m){BBE.querySelector('.bb-n').textContent=m.d.n;BBG=m.hp/m.mh;BBE.querySelector('u').style.width=(BBG*100)+'%';BBE.querySelector('i').style.width=(BBG*100)+'%'}}
  if(m)BBL=now;
+ if(m){const sf=BBE.querySelector('.bb-s i'),sg=m.sgM?Math.max(0,m.sg/m.sgM):1;sf.style.width=(m.stun>now?100:sg*100)+'%';BBE.classList.toggle('stn',m.stun>now)}   // barra de STAGGER bajo la de vida
  BBE.classList.toggle('on',!!m&&!(typeof CINE!=='undefined'&&CINE.on)&&!INT);if(!m)return;
  const p=Math.max(0,Math.min(1,m.hp/m.mh)),f=BBE.querySelector('i'),g=BBE.querySelector('u');
  if(p<BBG-.0005){BBGT=now+450;BBG=p;f.style.width=(p*100)+'%'}else if(p>BBG+.0005){BBG=p;f.style.width=(p*100)+'%';g.style.width=(p*100)+'%'}
@@ -1254,6 +1288,7 @@ function dMo(m,t,now){if(!alive(m,now)||m===BBM)return;const d=m.d,h=(window.R3D
  if(e.key!==key){e.key=key;e.el.className='np'+(d.boss?' boss b'+d.boss:'')+(sealed(m)?' seal':'')+(d.ag?' ag':'')+(dif?' '+dif:'');e.l.textContent=m.lv;e.t.textContent=(d.boss===1?'◆ ':d.boss===2?'◇ ':d.ag?'⚔ ':'')+d.n}
  e.el.classList.toggle('dmg',dmg);if(!e.p.textContent)e.p.textContent=Math.ceil(m.hp/m.mh*100)+'%';const pct=Math.max(0,Math.min(1,m.hp/m.mh));
  if(pct!==e.hp){if(pct<e.hp)e.g.style.width=(e.hp*100)+'%';e.hp=pct;e.f.style.width=(pct*100)+'%';e.p.textContent=Math.ceil(pct*100)+'%';clearTimeout(e.gt);e.gt=setTimeout(()=>{e.g.style.width=(pct*100)+'%'},320)}
+ {const q=m.sgM?Math.max(0,m.sg/m.sgM):1,st=m.stun>now;e.sg.classList.toggle('full',q>=.999&&!st);e.sg.classList.toggle('stn',st);e.sgi.style.width=(st?100:q*100)+'%'}   // barrita de stagger bajo la vida (solo si has empezado a bajarla)
  e.el.style.transform='translate('+(r.left+c.x*k).toFixed(1)+'px,'+(r.top+sy*k).toFixed(1)+'px) translate(-50%,-100%)'}
 
 
@@ -1378,10 +1413,18 @@ function resTip(){const e=HOV;if(!RTD){RTD=document.createElement('div');RTD.cla
  if(k!==RTK){RTK=k;RTD.innerHTML='<b class="rt-n">'+a[0]+'</b><span class="rt-s"><i style="'+(badL?'color:'+R:'')+'">Nivel '+lv+'</i>'+(tk?' <u>·</u> <i style="'+(badT?'color:'+R:'')+'">'+tk[0]+' '+tn(e.t,tl)+'</i>':'')+'</span>'}
  const r=cv.getBoundingClientRect();RTD.style.left=Math.round(r.left+CUR.px*r.width/cv.width+16)+'px';RTD.style.top=Math.round(r.top+CUR.py*r.height/cv.height+14)+'px';RTD.style.display='block'}
 const AIMR=(()=>{const e=document.createElement('div');e.id='aimr';e.innerHTML='<i></i>';document.body.appendChild(e);return e})();let aimShow=0,aimEn=0;
+// RETÍCULA DE DISTANCIA (arco y hechizo seleccionado, 22 oct 2026): línea desde el héroe hasta donde LLEGA el tiro (alcance máx. 330 px), marca de fin de alcance y la distancia en metros junto a la mira; roja y tenue si el cursor queda fuera de alcance.
+let AIML=null,AIME=null;
+function aimRange(w){if(!AIML){AIML=document.createElement('div');AIML.id='aiml';AIME=document.createElement('div');AIME.id='aime';document.body.append(AIML,AIME)}
+ if(!freeAim()){AIML.style.display=AIME.style.display='none';AIMR.classList.remove('far');AIMR.removeAttribute('data-d');return}
+ const RG=330,dx=w.x-P.x,dy=w.y-P.y,d=Math.hypot(dx,dy),L=Math.min(d,RG),ux=dx/(d||1),uy=dy/(d||1),ex=P.x+ux*L,ey=P.y+uy*L,r=cv.getBoundingClientRect(),k=r.width/cv.width,
+  a=ISO.toCanvas(P.x,P.y,TER.standZ(P.x,P.y)+.5),b=ISO.toCanvas(ex,ey,TER.standZ(ex,ey)),ax=r.left+a.x*k,ay=r.top+a.y*k,bx=r.left+b.x*k,by=r.top+b.y*k,len=Math.hypot(bx-ax,by-ay);
+ AIML.style.display='block';AIML.style.width=len+'px';AIML.style.transform='translate('+ax+'px,'+ay+'px) rotate('+Math.atan2(by-ay,bx-ax)+'rad)';
+ const far=d>RG;AIME.style.display=far?'block':'none';AIME.style.transform='translate('+bx+'px,'+by+'px)';AIMR.classList.toggle('far',far);AIML.classList.toggle('far',far);AIMR.dataset.d=Math.round(d/32*1.75)+' m'}
 function aimReticle(on){   // MIRA del modo de cursor oculto (reemplaza al cursor): anillo dorado fino con punto; se pone rojizo sobre un enemigo y se achica al cargar el golpe
  if(on!==aimShow){aimShow=on;AIMR.style.display=on?'block':'none'}if(!on)return;
  const w=ISO.toWorld(CUR.px,CUR.py,TER.heightAt),now=performance.now();let en=0;for(const m of M){if(alive(m,now)&&!sealed(m)&&Math.hypot(m.x-w.x,m.y-w.y)<(m.d.w||16)*.7+10){en=1;break}}
- if(en!==aimEn){aimEn=en;AIMR.classList.toggle('en',!!en)}AIMR.classList.toggle('chg',!!CHG.on);AIMR.style.transform='translate('+CUR.cx+'px,'+CUR.cy+'px)'}
+ if(en!==aimEn){aimEn=en;AIMR.classList.toggle('en',!!en)}AIMR.classList.toggle('chg',!!CHG.on);aimRange(w);AIMR.style.transform='translate('+CUR.cx+'px,'+CUR.cy+'px)'}
 function hovUpdate(){HOV=null;CUR.hov=null;if(curHid()){cv.style.cursor='none';aimReticle(CUR.on?1:0);resTip();return}aimReticle(0);if(!CUR.on||CK){cv.style.cursor='';resTip();return}const nw=performance.now();HOV=pickEnt(CUR.px,CUR.py,nw);CUR.hov=HOV;const atk=aimOn()&&(CHG.on||ATKIN.held||nw-SWG.last<700);   // cursor: espada al pasar sobre un enemigo, espada «en tajo» al atacar, mano sobre lo interactuable
  cv.style.cursor=atk?(UI.cursor('slash')||'crosshair'):HOV?(HOV.d?(UI.cursor('sword')||'crosshair'):(UI.cursor('hand')||'pointer')):'';resTip()}
 
