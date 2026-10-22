@@ -55,7 +55,7 @@ const ISLA=(()=>{
   {cap:6,txt:'Deja las 4 ofrendas en los braseros',at:AR,g:{t:'offer'}},
   {cap:6,txt:'Derrota a Gabriel',at:AR,g:{t:'kill',k:'gabriel',n:1}},
   {cap:6,txt:'…',g:{t:'cine'}},
-  {cap:7,txt:'¡Escapa! Corre al borde este',at:[28.5,-0.4],esc:1,g:{t:'reach',at:[28.5,-0.4],r:2.6}}];
+  {cap:7,txt:'¡Escapa! Corre al borde este',at:[28.5,-0.4],esc:1,g:{t:'reach',at:[28.5,-0.4],r:6}}];
  // 21 oct 2026 (FIX-OFRENDAS): `have` (game.js) cuenta mochila + BANCO, así que «Saca las 4 ofrendas» se daba por cumplido al depositar, y la espada de cobre EQUIPADA no estaba ni en la mochila ni en el banco (el paso no se podía completar). `own` = mochila + equipo (nunca el banco); `give` entrega desde la mochila o, si no, desequipa la pieza.
  const own=k=>S.inv.filter(x=>x===k).length+Object.values(S.eq).filter(x=>x===k).length;
  const give=k=>{const j=S.inv.indexOf(k);if(j>=0){S.inv.splice(j,1);return}const sl=Object.keys(S.eq).find(x=>S.eq[x]===k);if(sl){S.eq[sl]=null;try{syncTools()}catch(e){}}};
@@ -70,9 +70,11 @@ const ISLA=(()=>{
  const prog=()=>{const g=cur().g,i=st();if(g.t==='offer')return[i.off.reduce((a,b)=>a+b,0),4];if(g.n)return[Math.min(g.n,(S.st[key(g)]||0)-i.bs),g.n];if(g.t==='have')return[g.k.filter(k=>own(k)>=1).length,g.k.length];return null};
  function adv(){const i=st(),c=cur().cap;i.step++;cs=0;i.off=[0,0,0,0];if(i.step>=STEPS.length){finish();return}base();if(cur().esc)startEscape();dirty=1;try{snd('quest')}catch(e){}
   const n=cur();toast('✔ '+(n.cap!==c?'<b>'+CAPS[n.cap]+'</b>':'Hecho'),1800);save()}
- function finish(){const i=st();i.done=1;i.lock=0;endEscape();
+ function finish(){const i=st();i.done=1;i.lock=0;try{MUSIC.scene('all_i_had_to_do',false)}catch(e){}   // 22 oct 2026: el FUNDIDO A NEGRO empieza YA (antes se apagaba el cielo en llamas ANTES de oscurecer y se veía regenerarse): `endEscape` y el reseteo ocurren con la pantalla en negro (callback de PLAYA.start)
+ const rest=()=>{endEscape();
   // «Despiertas…»: se pierde TODO lo de la isla (mochila, banco de nubes, equipo y monedas); se conservan la apariencia, los descubrimientos y los niveles despertados (nivel 1)
-  S.inv.length=0;S.bank={};for(const k in S.eq)S.eq[k]=null;S.coins=0;try{S.amn=0}catch(e){}tipHide();dirty=1;try{snd('quest')}catch(e){}toast('<b>Despiertas…</b>',4000);const b=BIOMES.list[0];if(typeof PLAYA!=='undefined')PLAYA.start();else if(typeof CHEAT!=='undefined'&&CHEAT.tp)CHEAT.tp(b.ox+b.spawn[0],b.oy+b.spawn[1]);save()}
+  S.inv.length=0;S.bank={};for(const k in S.eq)S.eq[k]=null;S.coins=0;try{S.amn=0}catch(e){}tipHide();dirty=1;save()};
+ if(typeof PLAYA!=='undefined')PLAYA.start(rest);else{rest();const b=BIOMES.list[0];if(typeof CHEAT!=='undefined'&&CHEAT.tp)CHEAT.tp(b.ox+b.spawn[0],b.oy+b.spawn[1])}}
  const done=()=>{const g=cur().g,i=st();
   switch(g.t){case'talk':case'altar':case'cine':return false;   // los resuelven talk()/altar()/el final de la cinemática
    case'reach':{const q=wp(g.at[0],g.at[1]);return Math.hypot(q.x-P.x,q.y-P.y)<g.r*T}

@@ -496,6 +496,11 @@ export class HeroAnim{
   // resolver (marco del suelo → torso, mano en la cuerda) y fundir con la pose anterior si cambió el estado
   // BLOQUEO (21 oct 2026): `st.blk` 0..1 (la rampa la lleva el juego). Mezcla la pose de combate hacia la pose de bloqueo del arma/escudo (brazos, mano y arma; las piernas siguen con la marcha) y agacha un poco el cuerpo.
   const bk=st.blk||0;if(bk>.001){const bp=this.blockPose(cls,sh),e=bk*bk*(3-2*bk);for(let i=C.rp;i<N;i++)v[i]+=(bp[i]-v[i])*e;v[C.cx]+=.12*e;v[C.hx]-=.05*e;v[C.py]-=.035*e;v[C.pz]+=.03*e;v[C.two]=bp[C.two]*e+v[C.two]*(1-e)}
+  // LEVANTARSE (22 oct 2026): con `st.sleep` entre 0 y 1 el héroe pasa de tumbado a de pie: (r=1−sleep) 0–.4 se incorpora el torso con las manos hacia atrás (apoyo) · .4–.8 las piernas se recogen y se alza en cuclillas · .8–1 se pone de pie. El giro del cuerpo entero lo hace herom3d.js.
+  {const sl0=st.sleep||0;if(sl0>.001){const r=1-sl0,a1=ss(0,.4,r),a2=ss(.4,.8,r),a3=ss(.8,1,r),bend=1.25*a1*(1-a2)+.42*a2*(1-a3),hp=a1*(1-a2);
+   v[C.cx]+=bend;v[C.hx]-=bend*.65;v[C.py]-=.24*a2*(1-a3);
+   for(let i=0;i<3;i++){const R=[-.2,.26,-.2][i],Lh=[.2,.26,-.2][i];v[C.rp+i]+=(R-v[C.rp+i])*hp;v[C.lp+i]+=(Lh-v[C.lp+i])*hp}   // manos apoyadas detrás
+   const k=a2*(1-a3);v[C.fl+1]+=.1*k;v[C.fr+1]+=.08*k;v[C.fl+2]+=.0;v[C.pz]+=.05*k}}
   this.resolve(v);if(this.xd)this.holsterOver(v,this.xd>0?this.xp:1-this.xp);v[C.spin]=Math.atan2(Math.sin(v[C.spin]),Math.cos(v[C.spin]));
   const ds=st.dash||0;if(ds>.001&&ds<.999){
    // QUICKSTEP estilo BLOODBORNE (21 oct 2026; el dueño descartó la voltereta): paso rápido y bajo, SIN giros. El cuerpo se agacha y se inclina hacia donde va (`env`: sube rápido, se mantiene y se suelta suave),

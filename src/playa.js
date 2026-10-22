@@ -64,9 +64,10 @@ const PLAYA=(()=>{
  function start0(){try{MUSIC.scene('wakeup',true)}catch(e){}const q=loc('hero');if(!CINE.SCENES||!CINE.SCENES.playa){adv();return}sl=1;CINE.SCENES.playa.anchor=[q.x,q.y];if(!CINE.start('playa',{done:()=>{sl=0;adv()}})){sl=0;adv()}}
  // lo llama isla.js `finish()`: nueva partida del mundo real = la playa, dormido y en ropa interior
  // lo llama isla.js `finish()` (al llegar al borde de la isla en llamas): FUNDIDO A NEGRO (1,3 s) → mover al jugador a la playa → cinemática `playa` (negro, «Cien años.», fundido a la playa). El estado se prepara YA (si se recarga en medio, `tick` arranca la cinemática).
- function start(){S.playa={step:0,done:0};S.app=S.app||{};S.app.under=1;cineTried=1;sl=1;boxed=null;dirty=1;try{save()}catch(e){}
-  const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;background:#000;opacity:0;transition:opacity 1.3s ease-in;z-index:99998;pointer-events:none';document.body.appendChild(ov);requestAnimationFrame(()=>requestAnimationFrame(()=>{ov.style.opacity=1}));
-  setTimeout(()=>{placeRu();const q=loc('hero');try{if(typeof CHEAT!=='undefined'&&CHEAT.tp)CHEAT.tp(q.x,q.y);else{P.x=q.x;P.y=q.y}}catch(e){P.x=q.x;P.y=q.y}try{P.mv=P.g=null;ISO.snap(P.x,P.y,TER.standZ(P.x,P.y))}catch(e){}
-   start0();setTimeout(()=>ov.remove(),500)},1450)}
+ function start(cb){S.playa={step:0,done:0};S.app=S.app||{};S.app.under=1;cineTried=1;sl=1;boxed=null;dirty=1;try{save()}catch(e){}
+  const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;background:#000;opacity:0;transition:opacity 2.8s ease-in;z-index:99998;pointer-events:none';document.body.appendChild(ov);requestAnimationFrame(()=>requestAnimationFrame(()=>{ov.style.opacity=1}));
+  setTimeout(()=>{try{if(cb)cb()}catch(e){}placeRu();const q=loc('hero');try{if(typeof CHEAT!=='undefined'&&CHEAT.tp)CHEAT.tp(q.x,q.y);else{P.x=q.x;P.y=q.y}}catch(e){P.x=q.x;P.y=q.y}try{P.mv=P.g=null;ISO.snap(P.x,P.y,TER.standZ(P.x,P.y))}catch(e){}
+   try{zoneCheck(performance.now());for(let i=0;i<10&&R3D.preload()>0;i++);}catch(e){}   // FIX: tras el salto de 75 tiles se fuerza la carga de los chunks del terreno alrededor (la pantalla sigue negra), si no la playa salía a trozos
+   start0();setTimeout(()=>ov.remove(),500)},3000)}
  function reset(){try{MUSIC.scene('wakeup',false)}catch(e){}musOn=0;S.playa=null;if(S.app)S.app.under=0;sl=0;cineTried=0;ruGoHome()}   // para `ISLA.reset()` y pruebas
  return{STEPS,SP,TXT,on,html,target,tick,start,reset,chest,ruTalk,dlg,adv,loc,placeRu,ruGoHome,get sl(){return sl},set sl(v){sl=Math.max(0,Math.min(1,+v||0))},get step(){return on()?st().step:-1}}})();

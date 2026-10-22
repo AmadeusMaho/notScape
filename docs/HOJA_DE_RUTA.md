@@ -6,6 +6,7 @@
 > **REGLA DEL DUEÑO (22 oct 2026): CADA ENTREGA ACTUALIZA ESTE ARCHIVO** (sección «Registro de avance» de abajo + la fila de la fase que toques) **y además su lote en `AGENTS.md`**, para que cualquier agente sepa en segundos qué se hizo y qué falta. Una entrega que no actualiza la hoja de ruta no está terminada.
 
 ## REGISTRO DE AVANCE (lo último hecho primero; una línea por entrega, con el lote de AGENTS.md)
+- **22 oct 2026 · Fix de la playa:** chunks precargados, la pluma a Orsen avanza (el `then` de la tienda ya no lo pisa), animación de levantarse, fundido final más temprano y largo. Lote FIX-PLAYA.
 - **22 oct 2026 · Campamentos:** guardias y capitán reaparecen a los 4 min (y nunca delante de ti); abrir el cofre = casteo de 5 s. Nota en AGENTS.md.
 - **22 oct 2026 · Música de escena + rayos + fuego del cielo:** `wakeup` en la playa con Ru, `all_i_had_to_do` (desde 0:25) durante el cielo en llamas; rayos del cielo con ramas y parpadeo; anillo de llamaradas alrededor de la isla. Lote MUSICA-DE-ESCENA. Sin oír/probar a mano.
 - **22 oct 2026 · Orden corregido:** el «Cien años.» va tras HUIR (fundido a negro → texto → playa), no al matar a Gabriel. Nota en AGENTS.md.

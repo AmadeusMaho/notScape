@@ -161,14 +161,14 @@ const CINE=(()=>{
    {t:9.9,d:3.3,from:{x:0,y:12,zoom:2.7,z:.95},to:{x:0,y:8,zoom:2.35,z:1.0},ease:'lin'}]};   // al salir el NOMBRE la cámara queda CENTRADA en Gabriel
  // «playa» (22 oct 2026): DESPERTAR tras escapar de Gabriel. Negro + «Cien años.» → el héroe DORMIDO en la arena de la playa de la Pradera (cielo con la cicatriz roja: `R3D.skyBurn` hasta que acaba) con Ru a su lado → Ru habla bajito → el héroe despierta y se incorpora.
  // Anclada en el héroe (isla `PLAYA.start`); `PLAYA.sl` (0..1) = grado de sueño que lee el héroe 3D (tumbado boca arriba). Textos en PLAYA.TXT.wake.
- SCENES.playa={dur:18.4,
+ SCENES.playa={dur:19.8,
   setup:()=>{try{R3D.skyBurn=1}catch(e){}PLAYA.sl=1;return{done:{}}},
-  update:(T,dt,st)=>{if(!st)return;PLAYA.sl=T<12.6?1:1-clamp((T-12.6)/2.8,0,1);const once=(k,t,f)=>{if(T>=t&&!st.done[k]){st.done[k]=1;f()}};
+  update:(T,dt,st)=>{if(!st)return;PLAYA.sl=T<12.6?1:1-clamp((T-12.6)/4.4,0,1);const once=(k,t,f)=>{if(T>=t&&!st.done[k]){st.done[k]=1;f()}};
    once('w',.2,()=>{sfx.wind(16,.05);sfx.choir(98,13,.035,0,[1,1.5,2])});once('s',12.4,()=>sfx.shimmer(3.5,.04))},
   cleanup:()=>{PLAYA.sl=0},
   shots:[{t:0,d:3.8,from:{x:10,y:150,zoom:1.25,z:.9},fade:[1,1],sub:'Cien años.',card:true},   // NEGRO con el texto (la playa aún no se ve)
    {t:3.8,d:1.8,from:{x:10,y:150,zoom:1.25,z:.9},to:{x:10,y:135,zoom:1.3,z:.9},fade:[1,0]},      // fundido DESDE el negro hacia la playa
    {t:5.6,d:3.4,from:{x:10,y:135,zoom:1.3,z:.9},to:{x:10,y:105,zoom:1.5,z:.8},sub:'Ru: «Respira… sigue respirando.»'},
    {t:9,d:3.6,from:{x:34,y:14,zoom:3.1,z:.3},to:{x:30,y:12,zoom:3.4,z:.3},sub:'Ru: «El mar te dejó aquí entero. No sé cómo.»'},
-   {t:12.6,d:5.8,from:{x:10,y:6,zoom:3.6,z:.25},to:{x:12,y:10,zoom:2.5,z:.5},sub:'Ru: «Despacio. No te levantes de golpe.»'}]};
+   {t:12.6,d:7.2,from:{x:10,y:6,zoom:3.2,z:.25},to:{x:12,y:12,zoom:2.4,z:.6},sub:'Ru: «Despacio. No te levantes de golpe.»'}]};
  return{get on(){return on},get T(){return T},get recv(){return recv},set recv(v){recv=clamp(+v||0,0,1)},get look(){return look},set look(v){look=v},seen,mark,seek:t=>{if(on)T=t},start,end,tick,cam,sky,sfx,SCENES,list:()=>Object.keys(SCENES)}})();
