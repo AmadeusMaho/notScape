@@ -588,17 +588,13 @@ function whDraw(now){if(!(A&&A.wh)||INT||CK){whEl.style.display='none';return}co
  for(let i=1;i<=7;i++){g.lineWidth=7;g.strokeStyle='rgba(255,255,255,'+(.3*(1-i/8))+')';g.beginPath();g.arc(C,C,R,o+th-i*.07,o+th-(i-1)*.07);g.stroke()}   // estela del marcador
  const mx=C+Math.cos(o+th)*R,my=C+Math.sin(o+th)*R;g.save();g.shadowColor='#fff';g.shadowBlur=12;g.fillStyle='#fff';g.beginPath();g.arc(mx,my,7.5,0,TAU2);g.fill();g.restore();
  if(A.fl){const u=(now-A.fl.t)/320;if(u>=1)A.fl=null;else{const q=A.fl.q;g.lineWidth=5*(1-u)+1;g.strokeStyle=q===2?'rgba(255,242,192,'+(1-u)+')':q===1?'rgba('+GC+','+(.9*(1-u))+')':'rgba(190,80,64,'+(.8*(1-u))+')';g.beginPath();g.arc(C,C,R+8+u*(q===2?26:14),0,TAU2);g.stroke()}}}
-/* MINIJUEGO DE HERRERÍA (21 oct 2026; decisión del dueño: ritmo de martillo con calor). Solo en yunque/armero (el horno sigue automático).
-   · La pieza está al rojo (`fmHeat`: 1→0 en `FM_CT` ms) y un anillo se cierra sobre ella al compás (`fmBP`): LMB/E justo al cerrarse = golpe (perfecto ±70 ms, bueno ±170 ms).
-   · Calor ≥.55 golpe pleno · .25–.55 medio (×.6) · <.25 en frío (clang sordo, casi no avanza ni suma calidad). R = recalentar (`FM_RH` ms sin golpear; el calor vuelve a 1).
-   · Precisión × calor de cada golpe → `A.perf/A.tot` → `QBON` (calidad superior). NUNCA se pierde la pieza ni materiales. El héroe espera con el martillo ARRIBA (ph .65) y al pulsar solo baja (impacto a `FM_IMP` ms). */
 /* AYUDA DE CONTROLES + ENFOQUE DE CÁMARA DE LOS MINIJUEGOS (21 oct 2026; pedido del dueño). Patrón COMÚN para todo minijuego nuevo:
    · `mgBegin(key)` al empezar (cuenta las veces en `S.mgh[key]`); `mgHintRows(key)` devuelve las filas [[teclas…],'verbo'] según el estado; `mgUi(now)` (cada fotograma, tras los draw de los minijuegos) coloca/funde el aviso junto a la estación.
    · El aviso sale las primeras `MG_HINTS` veces de cada minijuego y se funde suave (sin bloque ni toast). Para uno nuevo: añade su clave en `mgKey()` y sus filas en `mgHintRows`.
    · Enfoque: mientras hay minijuego `mgK`→1 y la cámara se acerca ×`MG_ZOOM` hacia la estación (suave, sin cine; no actúa dentro de interiores ni durante una escena). */
 const MG_HINTS=5,MG_ZOOM=.42,MG_ZOOM_WK=.85,MG_PULL=.4;let mgK=0,mgZf=MG_ZOOM;   // MG_ZOOM_WK: más cerca al craftear para ver al personaje (Hoja de trabajo)
 const mgEl=(()=>{const d=document.createElement('div');d.id='mgh';document.body.appendChild(d);return d})();let mgTx='';
-const mgKey=()=>A?(A.fm?'fm':A.wh?'wh':A.fg?'fg':A.wk?'wk':null):null;
+const mgKey=()=>A?(A.wh?'wh':A.fg?'fg':A.wk?'wk':null):null;
 /* AYUDAS CONTEXTUALES (21 oct 2026; el dueño: «no pongas todos los controles en la cara al jugador, muéstralos a medida que avanza»): `ctxHint(id, filas, ms)` muestra UNA vez por partida (`S.ctxh[id]`, se guarda) un aviso suave con teclas (`<kbd>`) sobre el marco del jugador;
    si ya hay uno visible, espera en cola. Filas = [[teclas],'texto']. Las dispara el motor del tutorial (isla.js `hintsTick`) en el momento en que cada control importa; úsalo también para enseñar cualquier mecánica nueva. `?hints=0` los apaga. */
 const ctxEl=(()=>{const d=document.createElement('div');d.id='ctxh';document.body.appendChild(d);return d})(),ctxQ=[];let ctxT=0,ctxBusy=0;
@@ -634,7 +630,6 @@ function mgBegin(key){S.mgh=S.mgh||{};S.mgh[key]=(S.mgh[key]||0)+1}
 const K_=(...k)=>k;
 function mgHintRows(key){const g=A&&A.fg;
  if(key==='wh')return[[K_('LMB','E'),'golpear con el marcador en el arco dorado']];
- if(key==='fm'){const r=[[K_('LMB','E'),'martillar al cerrarse el anillo']];if(A.fm&&fmHeat(performance.now())<.4)r.push([K_('R'),'recalentar la pieza']);return r}
  if(key==='fg'){if(!g||g.st==='wait')return[[[],'espera la picada…']];if(g.st==='bite')return[[K_('LMB','E'),'¡ahora, clava el anzuelo!']];
   if(g.st==='fight')return[[K_('W','A','S','D'),'muévete en dirección contraria al pez']];if(g.st==='reel')return[[K_('LMB'),'repetido para recogerlo']]}
  return[]}
@@ -646,32 +641,7 @@ function mgUi(now){const key=mgKey(),on=!!key&&!INT&&!CK&&!(typeof CINE!=='undef
  if(tx!==mgTx){mgTx=tx;mgEl.innerHTML=rows.map(r=>'<div>'+r[0].map(k=>'<kbd>'+k+'</kbd>').join('')+'<span>'+r[1]+'</span></div>').join('')}
  const e=A.e,r=cv.getBoundingClientRect(),k=r.width/cv.width,c0=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y));
  mgEl.style.transform='translate('+(r.left+c0.x*k).toFixed(1)+'px,'+(r.top+(c0.y+8*SPR*ISO.scale())*k).toFixed(1)+'px) translate(-50%,0)';mgEl.classList.add('on')}
-const FM_IMP=30,FM_CT=5500,FM_RH=900,fmBP=()=>Math.max(850,1200-L('sm')*3);
-const fmHeat=now=>now<A.rl?A.rh0+(1-A.rh0)*(1-(A.rl-now)/FM_RH):Math.max(0,1-(now-A.fh0)/FM_CT),fmDt=now=>{const bp=fmBP(),x=((now-A.fb0)%bp+bp)%bp;return Math.min(x,bp-x)};
-function fmInit(now){const a=ACT[A.sk][A.i];Object.assign(A,{fm:1,h0:-1e9,hq:0,wc:now+120,wl:now,fl:null,perf:0,tot:0,fb0:now+fmBP()*.5,fh0:now,rl:0,rh0:1,hm:1,hcold:0,amt:1/whHitsC(a)});
- mgBegin('fm')}
-function fmPress(now){if(!A||!A.fm||now<A.wc||now<A.rl)return;A.hn=(A.hn||0)+1;A.p0=armP0(now-A.h0,FM_IMP,FM_IMP+WH_REC,.65);const ht=fmHeat(now),d=fmDt(now),tq=d<=70?2:d<=170?1:0,hf=ht>=.55?1:ht>=.25?.6:.1;
- A.hq=tq+1;A.h0=now;A.wc=now+220;A.wl=now;A.fl={t:now,q:tq,c:ht<.25};A.hcold=ht<.25?1:0;A.hm=(tq===2?1.3:tq===1?1:.55)*hf;A.perf+=(tq===2?1:tq===1?.6:.2)*(ht>=.55?1:ht>=.25?.6:0);A.tot++;
- if(tq===2&&!A.hcold)tone(700,.11,'triangle',.07);else if(tq===1&&!A.hcold)tone(470,.08,'triangle',.05);else tone(170,.07,'sawtooth',.03)}
-function fmReheat(now){if(!A||!A.fm||now<A.rl||now<A.h0+FM_IMP+120)return;A.rh0=fmHeat(now);A.rl=now+FM_RH;A.fh0=A.rl;A.wl=now;noise(.7,.09,700,'lowpass');tone(240,.7,'sawtooth',.025,220);
- const f=window.R3D&&R3D.fx,e=A.e;if(f&&e){f.spark(e.x,e.y,14,'#ff9a2a',9,{spread:.8,up:2.2,g:-.5,size:.08,life:.8});f.smoke(e.x,e.y,14,'#8a867e',2,{size:.14,grow:2.4,life:.8,up:.5,alpha:.25})}}
-function fmTick(now){if(now-A.wl>20000)return stopA();
- if(A.hq&&now>=A.h0+FM_IMP){const q=A.hq-1,e=A.e;A.hq=0;if(A.hcold){noise(.05,.1,420,'lowpass');tone(105,.12,'square',.05,-20)}else{whSnd('sm',q);whFx('sm',e,q);if(q===2)whPulse(now)}
-  A.pr+=A.amt*A.hm;if(A.pr>=1){A.pr=.99;fin(now)}}}
-const fgEl=(()=>{const c=document.createElement('canvas');c.id='fgl';c.width=c.height=192;c.style.display='none';document.body.appendChild(c);return c})(),fgX=fgEl.getContext('2d');
-const fmMix=(a,b,t)=>{const h=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));const u=h(a),v=h(b);return'rgb('+u.map((c,i)=>Math.round(c+(v[i]-c)*Math.max(0,Math.min(1,t)))).join(',')+')'};
-function fmDraw(now){if(!(A&&A.fm)||CK){fgEl.style.display='none';return}const e=A.e,r=cv.getBoundingClientRect(),k=r.width/cv.width;let x,y;
- if(INT){x=r.left+r.width*.5;y=r.top+r.height*.36}else{const c0=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y));x=r.left+c0.x*k;y=r.top+(c0.y-14*SPR*ISO.scale())*k}   // en interiores (sin posición de pantalla fiable) se centra arriba
- fgEl.style.display='block';fgEl.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) translate(-50%,-50%)';
- const g=fgX,C=96,ht=fmHeat(now),lock=now<A.rl,col=ht>=.55?fmMix('#ffa23a','#fff2c0',(ht-.55)/.45):ht>=.25?fmMix('#8a2a10','#ff7a20',(ht-.25)/.3):fmMix('#2a2420','#8a2a10',ht/.25);g.clearRect(0,0,192,192);
- g.save();g.shadowColor=col;g.shadowBlur=6+ht*26;g.fillStyle=col;g.beginPath();g.roundRect?g.roundRect(C-30,C-10,60,20,6):g.rect(C-30,C-10,60,20);g.fill();g.restore();   // la pieza: brilla más cuanto más caliente
- g.strokeStyle='rgba(14,12,10,.7)';g.lineWidth=2;g.beginPath();g.roundRect?g.roundRect(C-30,C-10,60,20,6):g.rect(C-30,C-10,60,20);g.stroke();
- if(!lock){const bp=fmBP(),u=(((now-A.fb0)%bp)+bp)%bp/bp,near=fmDt(now)<=70;   // anillo que se cierra sobre la pieza; en la ventana perfecta el aro objetivo se enciende
-  g.lineWidth=3;g.strokeStyle='rgba(232,207,148,'+(.2+.7*u)+')';g.beginPath();g.arc(C,C,20+52*(1-u),0,TAU2);g.stroke();
-  g.lineWidth=near?4:1.6;g.strokeStyle=near?'#fff6d8':'rgba(232,207,148,.7)';g.beginPath();g.arc(C,C,20,0,TAU2);g.stroke()}
- const H=Math.max(2,Math.min(8,Math.round(1/A.amt))),pr=Math.min(1,A.pr||0);for(let j=0;j<H;j++){g.fillStyle=j<pr*H-.0001?'#e8cf94':'rgba(14,12,10,.65)';g.beginPath();g.arc(C+(j-(H-1)/2)*13,C+46,4,0,TAU2);g.fill()}   // un punto por golpe necesario
- if(ht<.3&&!lock){const a=.55+.45*Math.sin(now/130);g.font='bold 15px Cinzel,serif';g.textAlign='center';g.fillStyle='rgba(232,207,148,'+a+')';g.fillText('R',C,C-44)}   // pieza fría: recalentar
- if(A.fl){const u=(now-A.fl.t)/320;if(u>=1)A.fl=null;else{const q=A.fl.q;g.lineWidth=5*(1-u)+1;g.strokeStyle=A.fl.c?'rgba(120,120,130,'+(.7*(1-u))+')':q===2?'rgba(255,242,192,'+(1-u)+')':q===1?'rgba(232,207,148,'+(.9*(1-u))+')':'rgba(190,80,64,'+(.8*(1-u))+')';g.beginPath();g.arc(C,C,22+u*(q===2?30:16),0,TAU2);g.stroke()}}}
+const FM_IMP=30;   // ms entre pulsar y el impacto del martillo (lo usa la Hoja de trabajo, workui.js). El minijuego de calor `fm*` se RETIRÓ el 23 oct 2026 (D1).
 /* MINIJUEGO DE PESCA v2 (21 oct 2026; el dueño: «que se vea visualmente, sin ruedas ni tan gráfico: el pez que se mueva y el jugador va en la dirección contraria con la caña, como Sea of Thieves»). TODO SE LEE EN EL MUNDO:
    · wait  — la caña echada; tras 2,5–6 s el pez pica: el flotador se hunde, salpica y suena; sale un «!» pequeño.
    · bite  — 1,3 s para pulsar LMB (o E) y clavar el anzuelo; si no, se escapa (a la 3.ª se recoge la caña).
@@ -856,8 +826,8 @@ function kill(m,now){if(m.sm){snd('kill');m.rt=now+1;return}const d=m.d;if(windo
  const dl=Math.max(0,m.lv-d.lv);earn(Math.round(R(d.co[0],d.co[1])*(1+.05*dl)*(1+pv('prosp')/100)));MN=Math.min(mnMax(),MN+Math.round(pv('siph')));d.dr.forEach(([id,p])=>{if(Math.random()<Math.min(DRMAX,p*(1+.03*dl)))dropGround(id,m.x,m.y)});(RUD[d.id]||[]).forEach(([k,a,b,p])=>{if(Math.random()<Math.min(DRMAX,p*.6*(1+.03*dl))){const n=R(a,b);S.runes[k]=(S.runes[k]||0)+n;disc('rn_'+k);log('<span style="color:#c8a0ff">+'+n+' runa'+(n>1?'s':'')+' de '+RNN[k]+'</span>')}});
  if(d.rare&&Math.random()<(1+.25*S.luck+.02*dl)/d.rare[1]){dropGround(d.rare[0],m.x,m.y,{rare:1});inc('rare');toast(ic(d.rare[0])+' ¡Drop raro: <b>'+I[d.rare[0]][0]+'</b>!',3000)}
  inc('kill:'+d.id);log('Mataste a '+d.n+' (nv. '+m.lv+').');if(d.boss===1)bossKill(m,now);else if(d.boss===2)capKill(m,now);rollLoot(m,d.boss===1?3:d.boss===2?2:1);if(m.tmp){qMobDead(m);dirty=1;return}rollLv(m);dirty=1}
-function fin(now){const{ty,sk,i,e}=A,a=ACT[sk][i],cb=sk==='co'?count(a[2]):0;if(ty==='c'&&(A.wh||A.fm))QBON=1+1.4*(A.tot?A.perf/A.tot:0);const okA=stepAct(sk,i,false,(A.wh&&ty==='g'&&sk!=='fi')?e:null);QBON=1;if(!okA){stopA();return}if(sk==='fi'&&window.R3D&&R3D.water)R3D.water.event('catch',e);   // R3D-AGUA-IMPL: captura = chapuzón + el pez vuela a la mano
- if(ty==='c'){if(A.wh){A.pr=0;A.perf=0;A.tot=0;A.wl=now}if(A.fm){A.pr=0;A.perf=0;A.tot=0;A.wl=now;A.fh0=now;A.rl=0}A.left--;if(sk==='co'&&count(a[2])>cb&&Math.random()<BONUSP+.04*S.cfg){BL=A.left;dirty=1;save();stopA();startBonus(i);return}
+function fin(now){const{ty,sk,i,e}=A,a=ACT[sk][i],cb=sk==='co'?count(a[2]):0;if(ty==='c'&&A.wh)QBON=1+1.4*(A.tot?A.perf/A.tot:0);const okA=stepAct(sk,i,false,(A.wh&&ty==='g'&&sk!=='fi')?e:null);QBON=1;if(!okA){stopA();return}if(sk==='fi'&&window.R3D&&R3D.water)R3D.water.event('catch',e);   // R3D-AGUA-IMPL: captura = chapuzón + el pez vuela a la mano
+ if(ty==='c'){if(A.wh){A.pr=0;A.perf=0;A.tot=0;A.wl=now}A.left--;if(sk==='co'&&count(a[2])>cb&&Math.random()<BONUSP+.04*S.cfg){BL=A.left;dirty=1;save();stopA();startBonus(i);return}
   if(!hasIn(a[1])){dirty=1;save();stopA('Te quedaste sin materiales.');return}if(A.left<=0){dirty=1;save();stopA('Listo: terminaste la tanda.');return}}
  if(ty==='g'&&e.g){gain(sk,xv(ACT[sk][i])*4);earn(20+L(sk)*2);toast('✨ ¡Recurso dorado! Bonus de XP y oro');snd('rare');if(A.wh&&sk!=='fi')for(let n=0;n<3;n++)dropGround(a[1],e.x,e.y,{au:1,rare:1})}if(ty==='g'){if((sk==='wc'||sk==='mi')&&window.R3D&&R3D.res){try{R3D.res.fell(e,P.x,P.y)}catch(x){}
    if(sk==='wc'){noise(.5,.1,320,'bandpass');tone(95,.55,'sawtooth',.05,-35);setTimeout(()=>{noise(.35,.2,140,'lowpass');tone(60,.3,'sine',.25,-20);noise(.5,.08,2500,'highpass')},1750)}
@@ -957,6 +927,8 @@ const ATKIN={t:0,held:0},manual=()=>typeof FEEL==='undefined'||FEEL.manual!==0,m
 const SWG={t0:0,ms:0,wind:0,dx:1,dy:0,ang:0,done:1,c:0,wt:'m',cd:0,last:0,tg:null,hv:0},SLASH=[];
 /* CARGA (21 oct 2026; propuesta del dueño): MANTENER el LMB (o E) carga el golpe y SOLTAR lo lanza: un toque corto (< 0,22 s) es el golpe normal; cargando 0,22→1,1 s el golpe gana hasta +100 % de daño con arco, +80 % cuerpo a cuerpo
    y, con el báculo, la BOLA DE FUEGO crece (+120 %), cuesta más maná y a partir de media carga deja al enemigo ARDIENDO. Mientras cargas el héroe aguanta la pose y mira al cursor; la barra de swing se llena de naranja. Un golpe cargado no avanza el combo. */
+/* CONTROLES DEL RATÓN (23 oct 2026; pedido del dueño): MANTENER el LMB = golpes seguidos hacia el cursor (`MSB.atk`, repetidos desde `swingTick`); MANTENER LMB + RMB a la vez = CARGAR el golpe (se lanza al soltar cualquiera de los dos); el RMB solo sigue siendo bloquear. Táctil: sin cambios (toque = carga/suelta). */
+const MSB={l:0,r:0,atk:0};
 const CHG={on:0,t0:0},chgK=now=>Math.max(0,Math.min(1,(now-CHG.t0-220)/880));
 function chargeStart(now){if(STS.frozen(P)||BLK.on||INT||CK||P.hp<=0||(typeof CINE!=='undefined'&&CINE.on)||CHG.on)return;if(now<SWG.cd||now<ATKT)return;   /* 22 oct 2026: si el ataque NO está listo el LMB se IGNORA del todo (antes empezaba una «carga» que frenaba al héroe al 30 % y le cancelaba la ruta al spamear LMB): solo pega cuando toca */
  CHG.on=1;CHG.t0=now;ATKIN.held=1;P.g=P.mv=null;if(A)stopA()}   // atacar CANCELA la ruta pendiente (antes el héroe seguía andando hacia el último RMB mientras golpeaba)
@@ -1011,7 +983,9 @@ function burnTick(now){for(const m of M){const b=m.burn;if(!b)continue;if(!alive
 const POI_RESP=240000;
 // los guardias de un campamento NUNCA reaparecen delante de ti: si vas a estar a menos de ~22 tiles de su sitio cuando les toque, se retrasa 20 s más
 function campTick(now){for(const m of M){if(!m.poi||!m.rt||m.rt<=0)continue;if(m.rt-now<20000&&Math.hypot((m.hx!=null?m.hx:m.x)-P.x,(m.hy!=null?m.hy:m.y)-P.y)<700)m.rt=now+20000}}
-function swingTick(now,dt){campTick(now);STS.tick(now,dt||.016);blkTick(dt||.016,now);sgTick(dt||.016,now);burnTick(now);if(!aimOn())return;if(SWG.lg>0&&dt){const s=Math.min(SWG.lg,230*dt);SWG.lg-=s;step(SWG.dx*s,0);step(0,SWG.dy*s)}   // embestida del golpe
+function swingTick(now,dt){campTick(now);STS.tick(now,dt||.016);blkTick(dt||.016,now);sgTick(dt||.016,now);burnTick(now);if(!aimOn())return;
+ if(MSB.atk&&MSB.l&&!CHG.on){if(MSB.r){if(BLK.on)blockEnd();chargeStart(now)}else if(!BLK.on&&swing(now)){ATKIN.held=1;P.g=P.mv=null;if(A)stopA()}}   // LMB mantenido = golpes seguidos; LMB+RMB = carga
+if(SWG.lg>0&&dt){const s=Math.min(SWG.lg,230*dt);SWG.lg-=s;step(SWG.dx*s,0);step(0,SWG.dy*s)}   // embestida del golpe
  if(!SWG.done&&now>=SWG.t0+SWG.wind)swingResolve(now)}
 const aimTarget=now=>SWG.tg&&SWG.tg.hp>0&&now-SWG.last<5000?SWG.tg:null;
 function drawAim(now){}   // (21 oct 2026: se quitaron el arco guía y el destello circular a petición del dueño; solo queda la barra de swing del HUD)
@@ -1024,7 +998,7 @@ function swingHud(now){const col=document.getElementById('hs-col');if(!col)retur
   const nn=now-SWG.last<SWG.ms*1.9?SWG.c+1:0;CDR.querySelectorAll('b').forEach((b,i)=>b.classList.toggle('lit',i<nn))}
  if(!on)return;const u=CHG.on?chgK(now):Math.min(1,(now-SWG.t0)/Math.max(1,SWG.ms));el.firstChild.style.width=(u*100).toFixed(0)+'%';el.classList.toggle('rd',u>=1);
  const n=now-SWG.last<SWG.ms*1.9?SWG.c+1:0,ps=el.querySelectorAll('b');ps.forEach((b,i)=>b.classList.toggle('lit',i<n))}   // barra de swing: relleno = enfriamiento del golpe, 3 puntos = combo
-function atkKey(down){const now=performance.now();if(BLK.on&&down)return;if(A&&A.wk)return;if(A&&A.fm){if(down)fmPress(now);return}if(A&&A.wh){if(down)whPress(now);return}if(A&&A.fg){if(down)fishPress(now);return}if(!down){if(aimOn())chargeEnd();ATKIN.held=0;return}ATKIN.t=now;ATKIN.held=1;if(aimOn()){chargeStart(now);return}if(A&&A.ty==='f')return;
+function atkKey(down){const now=performance.now();if(BLK.on&&down)return;if(A&&A.wk)return;if(A&&A.wh){if(down)whPress(now);return}if(A&&A.fg){if(down)fishPress(now);return}if(!down){if(aimOn())chargeEnd();ATKIN.held=0;return}ATKIN.t=now;ATKIN.held=1;if(aimOn()){chargeStart(now);return}if(A&&A.ty==='f')return;
  let b=null,bd=150;M.forEach(m=>{if(!alive(m,now)||sealed(m))return;const d=Math.hypot(m.x-P.x,m.y-P.y);if(d<bd){bd=d;b=m}});if(b){if(A)stopA();P.g=null;P.mv=null;engage(b,now)}}
 function act(now){if(!A)return;
  if(A.ty==='f'){const m=A.e,dd=Math.hypot(P.x-m.x,P.y-m.y);if(dd>(wtype()==='m'?75:210)){if(!m.hunt)stopA();return}
@@ -1069,7 +1043,7 @@ const dashInv=()=>performance.now()<DSH.inv;
    Ajustables en BLK/DSH. El golpe de los jefes `dot` (veneno…) no se bloquea. */
 /* BARRA DE HABILIDADES (22 oct 2026; pedido del dueño): barra pequeña bajo la vida (hud.js `#hs-sk`). Hoy una habilidad aprendida en el tutorial del Cielo: BOLA DE FUEGO CELESTIAL (tecla 1 o LMB en la casilla; necesita un BÁCULO equipado y maná;
    con la habilidad SELECCIONADA (tecla 1 / LMB en la casilla) el LMB del bastón la lanza). `S.skl` = {id:1} aprendidas (se guarda); `skl()` lo crea. Para añadir una: fila en ABIL + `learnSkill(id)`; la barra admite hasta 6 casillas (teclas 1–6; hoy solo la 1 está conectada a `castSkill`). */
-const skl=()=>S.skl||(S.skl={}),ABIL=[{id:'cel',n:'Bola de fuego celestial',key:'1',cost:1,cd:1400,t:0,col:'#7fd0ff',d:'Pulsa para seleccionarla; con un bastón equipado y maná, el LMB la lanza hacia el cursor. Mantén el LMB para cargarla.'}];
+const skl=()=>S.skl||(S.skl={}),ABIL=[{id:'cel',n:'Bola de fuego celestial',key:'1',cost:1,cd:1400,t:0,col:'#7fd0ff',d:'Pulsa para seleccionarla; con un bastón equipado y maná, el LMB la lanza hacia el cursor. Mantén LMB+RMB para cargarla.'}];
 function learnSkill(id){const d=ABIL.find(x=>x.id===id);if(!d||skl()[id])return;skl()[id]=1;dirty=1;try{snd('rare');toast('✨ Aprendes <b>'+d.n+'</b> (tecla <b>'+d.key+'</b>)',3600)}catch(e){}save()}
 // SELECCIONAR (no lanzar): la tecla 1 o un LMB en la casilla marca/desmarca la habilidad (`skl().sel`); con el bastón equipado y la bola seleccionada, el LMB la lanza (22 oct 2026, pedido del dueño: más claro). Sin seleccionar, el bastón golpea cuerpo a cuerpo.
 function selSkill(i){const d=ABIL[i];if(!d||!skl()[d.id])return false;const on=skl().sel===d.id;skl().sel=on?null:d.id;dirty=1;try{tone(on?300:700,.06,'triangle',.05)}catch(e){}
@@ -1277,9 +1251,9 @@ function upd(dt,now){swingTick(now,dt);if(typeof AMB!=='undefined')AMB.tick(now,
   if(now>m.wt){m.wt=now+R(2000,5000);m.tx=m.hx+R(-16,16);m.ty=m.hy+R(-12,12)}
   const ex=m.tx-m.x,ey=m.ty-m.y,d=Math.hypot(ex,ey);if(d>2){const sp3=d>60?55:18,nx=m.x+ex/d*sp3*dt,ny=m.y+ey/d*sp3*dt;if(!inVilla(nx,ny)){m.x=nx;m.y=ny;m.mv=now;m.f=ex-ey>=0?1:-1}}});
  if(A&&A.wh)whTick(now);
- if(A&&A.fm)fmTick(now);if(A&&A.wk)WKUI.tick(now);castTick(now);
+ if(A&&A.wk)WKUI.tick(now);castTick(now);
  if(A&&A.fg)fishTick(now,dt);
- if(A&&!A.wh&&!A.fg&&!A.fm&&!A.wk){const ph=swPh(now),imp=A.lp!=null&&ph<A.lp-.4;A.lp=ph;if(imp&&A.ty!=='f'){const e=A.e,k=A.sk;snd(k);
+ if(A&&!A.wh&&!A.fg&&!A.wk){const ph=swPh(now),imp=A.lp!=null&&ph<A.lp-.4;A.lp=ph;if(imp&&A.ty!=='f'){const e=A.e,k=A.sk;snd(k);
   if(k==='wc')sp(e.x,e.y-26,'#5ab04a',2,30,10,60);else if(k==='mi')sp(e.x,e.y-10,'#ffd27a',4,60,40,160);else if(k==='sm')sp(e.x,e.y-8,'#ff9a2a',5,70,50,200);
   else if(k==='fi'){sp(e.x,e.y,'#cfe8ff',3,30,30,100);TER.ripple(e.x,e.y);if(window.R3D&&R3D.water)R3D.water.event('tug',e)}else if(k==='co')sp(e.x,e.y-14,'#aaa',2,10,25,-10);else if(k==='cr'||k==='es')sp(e.x,e.y-10,'#d8c9a3',2,30,20,80);else if(k==='ins')sp(e.x,e.y-18,'#ffe8a0',4,60,60,-20);A.pr+=A.amt*hitMul(now);if(A.pr>=1){A.pr=Math.min(A.pr-1,.99);fin(now)}}}
  parts.forEach(p=>{p.x+=p.vx*DT;p.y+=p.vy*DT;p.vy+=p.g*DT;p.l-=DT*1.1});parts=parts.filter(p=>p.l>0)}
@@ -1367,7 +1341,6 @@ function actState(now){if(CAST&&!INT)return{k:'se',ph:0};
  if(A.ty==='f'){const wt=wtype(),hv=A.nx&&A.nx.wt===wt&&A.nx.heavy?1:0,armed=!!wColor(),wk=wKind();return Object.assign({k:'f',wt,wk,wcol:wColor(),orb:ORB[tierOf(S.eq.w||'')],hv},animPh(A.ms,A.ph-now,A.lh!=null?now-A.lh:1e9,wt==='r'?(hv?1150:900):wt==='g'?(hv?900:750):hv?(wk==='great'?880:760):wk==='great'?740:wk==='dagger'?400:armed?560:440))} // hv: el golpe que viene es máximo → animación especial del arma (hero.js)
  if(A.fg){const g=A.fg,tg=g.st==='bite'?.5+.5*Math.sin(now/55):g.st==='fight'?(g.pull?.35+.65*Math.min(1,g.T/80):.1):g.st==='reel'?.7:0;return{k:'fi',ph:Math.min(.99,(now-A.t0)/2400),tug:tg}}   // pesca: la caña tironea con el pez
  if(A.wk)return WKUI.pose(now);
- if(A.fm){const id=A.e&&A.e.id;if(now<A.rl)return{k:'sm',ph:0,id};return Object.assign({k:'sm',id,n:A.hn||0},armPose(now-A.h0,FM_IMP,FM_IMP+WH_REC,.65,A.p0))}   // herrería: martillo ARRIBA en espera; al pulsar solo baja
  if(A.wh&&A.ty==='g'){const an=whPose(now);return Object.assign({k:A.sk,col:TCOL[TT[S.tool[A.sk]]]||'#aaa'},an)}   // rueda: el héroe solo golpea cuando pulsas; la pose sale de whPose (continua, ver más arriba)
  if(A.ty==='g'){const per=A.per||900;if(A.sk==='fi'){const sg=ph*per;return{k:'fi',ph:Math.min(.99,(now-A.t0)/2400),tug:sg<320&&now-A.t0>per?q4(1-sg/320):0}} // pesca: lanza UNA vez al empezar y espera; en cada «picada» (vuelta del ciclo) la caña da un tirón
   return Object.assign({k:A.sk,col:TCOL[TT[S.tool[A.sk]]]||'#aaa'},animPh(per,per*(1-ph),per*ph,A.sk==='wc'?720:680))}
@@ -1540,7 +1513,7 @@ function draw(now){const t=now/1000;cx=Math.max(0,Math.min(WW-W,P.x-W/2))|0;cy=M
   ...(cin?[]:M).filter(e=>onScr(e.x,e.y)&&R3D.actors.has(e)).map(e=>[ISO.depth(e.x,e.y),()=>spr(e.x,e.y,0,()=>dMo(e,t,now))]),[ISO.depth(P.x,P.y),()=>R3D.drawHero(ctx)]];
  AMBI.draw(ctx,'ground');
  ents.sort((a,b)=>a[0]-b[0]).forEach(o=>o[1]());
- PJ.forEach(p=>{if(now>=p.t0)drawPJ(p,now)});npSweep();bbTick(now);whDraw(now);fmDraw(now);fishDraw(now,OCDT);mgUi(now);qmUi(now);castDraw(now);ctxTick(now);drawTel(now);drawWind(now);drawHFX(now);drawAim(now);swingHud(now);
+ PJ.forEach(p=>{if(now>=p.t0)drawPJ(p,now)});npSweep();bbTick(now);whDraw(now);fishDraw(now,OCDT);mgUi(now);qmUi(now);castDraw(now);ctxTick(now);drawTel(now);drawWind(now);drawHFX(now);drawAim(now);swingHud(now);
  parts.forEach(p=>p.hs?hsDraw(p):spr(p.x,p.y,12,()=>{ctx.globalAlpha=Math.min(1,p.l);if(p.sp){ctx.beginPath();ctx.arc(p.x,p.y,7,0,7);ctx.fillStyle=p.sp;ctx.fill();T(p.tx,p.x,p.y+4,'#fff')}else if(p.tx)T(p.tx,p.x,p.y,p.c);else Rc(p.c,p.x,p.y,2,2);ctx.globalAlpha=1}));
  AMBI.draw(ctx,'over');
  if(!window.R3D)PAINT.grain(ctx,cv.width,cv.height,ISO.V.dpr,.55); // grano de papel: con WGL lo pone un div con multiply (sin coste por frame); este es el plan B
@@ -1553,20 +1526,19 @@ if(hsOn())HUDSU.frame(now);;hudPlate(now)}if(!(typeof CINE!=="undefined"&&CINE.o
 }
 let RPEND=null;   // RMB: «ir a» se decide al SOLTAR (si arrastraste, era un giro de cámara); la rueda solo gira la cámara y no mueve al personaje
 cv.addEventListener('pointerup',ev=>{if(ev.button===2){blockEnd();return}if(ev.button!==2||!RPEND)return;const q=RPEND;RPEND=null;if(Math.abs(ev.clientX-q.cx)>6)return;/* arrastraste con el RMB: fue un giro de cámara (r3d.js) */if(CK||ZMP)return;const now=performance.now(),b=curHid()?null:pickEnt(q.px,q.py,now);if(A)stopA();if(b){P.g={e:b};P.mv=null}else{const w=ISO.toWorld(q.px,q.py,TER.heightAt);P.mv={x:w.x,y:w.y};P.g=null}});
-cv.addEventListener('pointerdown',ev=>{if(ev.button===1)return;if(ev.button===2){if(!CK&&!ZMP)blockStart();return}   /* 22 oct 2026: RMB mantenido = BLOQUEAR (ya no «ir a ese punto»); la cámara gira SOLO con el botón del medio (r3d.js); el medio no mueve al personaje */
+cv.addEventListener('pointerdown',ev=>{if(ev.button===1)return;if(ev.button===2){MSB.r=1;if(!CK&&!ZMP&&!(MSB.l&&MSB.atk&&aimOn()))blockStart();return}   /* 22 oct 2026: RMB mantenido = BLOQUEAR (ya no «ir a ese punto»); la cámara gira SOLO con el botón del medio (r3d.js); el medio no mueve al personaje */
  if(ev.button===2&&!CK&&!ZMP){const r=cv.getBoundingClientRect();RPEND={px:(ev.clientX-r.left)*cv.width/r.width,py:(ev.clientY-r.top)*cv.height/r.height,cx:ev.clientX};return}if(CK){cookHit();return}if(ZMP)return;const r=cv.getBoundingClientRect(),px=(ev.clientX-r.left)*cv.width/r.width,py=(ev.clientY-r.top)*cv.height/r.height,now=performance.now(),sc=ISO.scale(),k=SPR*sc;
  const b=curHid()?null:pickEnt(px,py,now);   // cursor oculto: el LMB nunca elige entidades (golpe / moverse)
- if(A&&A.fm&&ev.button!==2&&(!b||b===A.e)){fmPress(now);return}   // herrería: el LMB es el martillazo
  if(A&&A.wh&&ev.button!==2&&(!b||b===A.e)){whPress(now);return}   // rueda de recolección: el LMB es el golpe
  if(A&&A.fg&&ev.button!==2&&(!b||b===A.e)){fishPress(now);return}   // pesca: el LMB clava el anzuelo / recoge
- if(aimOn()&&ev.button!==2){CUR.touch=ev.pointerType==='touch';if(b&&b.d){chargeStart(now);return}if(!b&&!CUR.touch){chargeStart(now);return}}   // combate dirigido: LMB = swing hacia el cursor; RMB / táctil sobre el suelo = moverse
+ if(aimOn()&&ev.button!==2){CUR.touch=ev.pointerType==='touch';if(CUR.touch){if(b&&b.d){chargeStart(now);return}}else if(b&&b.d||!b){MSB.l=1;MSB.atk=1;ATKIN.held=1;if(MSB.r)blockEnd();return}}   // combate dirigido: LMB = swing hacia el cursor; RMB / táctil sobre el suelo = moverse
  if(!aimOn()&&b&&b.d&&manual()){ATKIN.t=now;ATKIN.held=1;if(A&&A.ty==='f'&&A.e===b)return}   // combate activo: el LMB es el golpe (mantener = seguidos); sobre el mismo objetivo no reinicia el combate
  if(A)stopA();if(b){P.g={e:b};P.mv=null}else{const w=ISO.toWorld(px,py,TER.heightAt);P.mv={x:w.x,y:w.y};P.g=null}});
 const KM={ArrowLeft:'l',a:'l',ArrowRight:'r',d:'r',ArrowUp:'u',w:'u',ArrowDown:'d',s:'d'};
 addEventListener('keydown',e=>{if(e.key==='Alt'){ALTK=1;e.preventDefault()}const k=KM[e.key]||KM[String(e.key).toLowerCase()];   // con Mayús pulsada (correr) las letras llegan en MAYÚSCULA: sin normalizar, W/A/S/D dejaban de dirigir al correr
  if(k){K[k]=1;e.preventDefault()}if(e.key==='Shift'&&!e.repeat&&!RUN){if(S.exh)log('Estás agotado: recupera el aliento para volver a correr.');else{RUN=1;SHRUN=1;S.hintR=1;if(typeof rhHide==='function')rhHide();runBtn()}}   // MAYÚS = CORRER (mantener); R quedó LIBRE (21 oct 2026)
-if(e.key==='1'&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||''))selSkill(0);if((e.key==='q'||e.key==='Q')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||''))blockStart();if(e.key==='Tab'&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||'')&&!INT&&!CK){e.preventDefault();lockCycle()}if((e.key==='v'||e.key==='V')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||''))jump();if((e.key==='t'||e.key==='T')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))arTog();if((e.key==='r'||e.key==='R')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||''))fmReheat(performance.now());if(e.key==='m'||e.key==='M')MM=(MM+1)%3;if(e.key==='g'||e.key==='G')tgCur();if(e.key==='F4'){perfTog();e.preventDefault()}if((e.key==='+'||e.key==='=')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setZoom(ZMI+1);if((e.key==='-'||e.key==='_')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setZoom(ZMI-1);if((e.key==='e'||e.key==='E')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||'')&&!CK&&!INT)atkKey(true);if((e.key===' '||e.key==='Enter')&&CK){cookHit();e.preventDefault()}else if(e.key===' '&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT|BUTTON/.test((e.target||{}).tagName||'')){if(dash())e.preventDefault()}if((e.key==='f'||e.key==='F')&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')&&!CK){useNear();e.preventDefault()}if(e.key==='Escape'){if(QOPEN)qCloseBoard();else if(CK)CK=null;else if(IW)closeIW();else if(panelOpen()){setPanel(false,1);document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('on'))}}if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')){const TK={i:'inv',p:'ch',k:'sk',q:'qm',l:'q',c:'col',z:'mg',o:'pr'}[(e.key||'').toLowerCase()];if(TK&&!CK)tabClick(TK);if(e.key==='v'||e.key==='V')specTog()}});addEventListener('blur',()=>blockEnd());addEventListener('keyup',e=>{if(e.key==='q'||e.key==='Q')blockEnd();if(e.key==='Alt'){ALTK=0;e.preventDefault()}const k=KM[e.key]||KM[String(e.key).toLowerCase()];if(k)K[k]=0;if(e.key==='e'||e.key==='E')atkKey(false);if(e.key==='Shift'&&SHRUN){SHRUN=0;RUN=0;runBtn()}});addEventListener('blur',()=>{ALTK=0;if(SHRUN){SHRUN=0;RUN=0;runBtn()}K.l=K.r=K.u=K.d=0;ATKIN.held=0});
-addEventListener('pointerdown',()=>pd=1);addEventListener('pointerup',()=>{if(aimOn())chargeEnd();ATKIN.held=0;setTimeout(()=>pd=0,60)});
+if(e.key==='1'&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||''))selSkill(0);if((e.key==='q'||e.key==='Q')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||''))blockStart();if(e.key==='Tab'&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||'')&&!INT&&!CK){e.preventDefault();lockCycle()}if((e.key==='v'||e.key==='V')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||''))jump();if((e.key==='t'||e.key==='T')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))arTog();if(e.key==='m'||e.key==='M')MM=(MM+1)%3;if(e.key==='g'||e.key==='G')tgCur();if(e.key==='F4'){perfTog();e.preventDefault()}if((e.key==='+'||e.key==='=')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setZoom(ZMI+1);if((e.key==='-'||e.key==='_')&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setZoom(ZMI-1);if((e.key==='e'||e.key==='E')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||'')&&!CK&&!INT)atkKey(true);if((e.key===' '||e.key==='Enter')&&CK){cookHit();e.preventDefault()}else if(e.key===' '&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA|SELECT|BUTTON/.test((e.target||{}).tagName||'')){if(dash())e.preventDefault()}if((e.key==='f'||e.key==='F')&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')&&!CK){useNear();e.preventDefault()}if(e.key==='Escape'){if(QOPEN)qCloseBoard();else if(CK)CK=null;else if(IW)closeIW();else if(panelOpen()){setPanel(false,1);document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('on'))}}if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')){const TK={i:'inv',p:'ch',k:'sk',q:'qm',l:'q',c:'col',z:'mg',o:'pr'}[(e.key||'').toLowerCase()];if(TK&&!CK)tabClick(TK);if(e.key==='v'||e.key==='V')specTog()}});addEventListener('blur',()=>blockEnd());addEventListener('keyup',e=>{if(e.key==='q'||e.key==='Q')blockEnd();if(e.key==='Alt'){ALTK=0;e.preventDefault()}const k=KM[e.key]||KM[String(e.key).toLowerCase()];if(k)K[k]=0;if(e.key==='e'||e.key==='E')atkKey(false);if(e.key==='Shift'&&SHRUN){SHRUN=0;RUN=0;runBtn()}});addEventListener('blur',()=>{ALTK=0;if(SHRUN){SHRUN=0;RUN=0;runBtn()}K.l=K.r=K.u=K.d=0;ATKIN.held=0;MSB.l=MSB.r=MSB.atk=0});
+addEventListener('pointerdown',()=>pd=1);addEventListener('pointerup',ev=>{MSB.l=ev.buttons&1;MSB.r=ev.buttons&2?1:0;if(!MSB.l)MSB.atk=0;if(aimOn())chargeEnd();ATKIN.held=MSB.atk;setTimeout(()=>pd=0,60)});
 /* progreso offline retirado (21 oct 2026): al volver a la pestaña no se simulan acciones */
 
 // ---------- paneles ----------

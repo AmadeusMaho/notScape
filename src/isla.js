@@ -40,7 +40,7 @@ const ISLA=(()=>{
   QS(3,'t',{cap:3,txt:'Vuelve con Rafael y entrégale los camarones'}),
   QS(4,'a',{cap:4,txt:'Habla con Miguel, en la Palestra'}),
   {cap:4,txt:'Apunta con el ratón y pulsa LMB: golpea a un cordero (3 golpes)',at:[14,10],g:{t:'cnt',k:'swing',n:3}},
-  {cap:4,txt:'Mantén LMB para cargar un golpe y suéltalo (gasta resistencia)',at:[14,10],g:{t:'cnt',k:'charged',n:1}},
+  {cap:4,txt:'Mantén LMB+RMB a la vez para cargar un golpe y suéltalo (gasta resistencia)',at:[14,10],g:{t:'cnt',k:'charged',n:1}},
   {cap:4,txt:'Esquiva con ESPACIO (2 veces)',g:{t:'dash',k:'dash',n:2},hint:'Espacio'},
   {cap:4,txt:'Mantén RMB para bloquear (1 vez)',g:{t:'cnt',k:'bstart',n:1}},
   {cap:4,txt:'Equipa el arco de Miguel (Mochila)',g:{t:'eq',slot:'w',k:'bw_pino'}},
@@ -126,9 +126,9 @@ const ISLA=(()=>{
   if(n.g.t==='panel')ctxHint('bag',[[[],'abre la <b>Mochila</b>: primer icono del menú de la derecha']],8000);
   if(s>=3&&s<8&&now-hAt>8000)ctxHint('jump',[[['V'],'saltar (sin gastar resistencia)']],6000);
   if(n.g.t==='eq')ctxHint('equip',[[[],'abre la <b>Mochila</b> y pulsa LMB sobre el objeto para equiparlo']],7000);
-  if(n.g.t==='cnt'&&n.g.k==='cast')ctxHint('fire',[[['1'],'selecciona la bola de fuego (barra bajo la vida; se ve resaltada)'],[['LMB'],'lánzala hacia el cursor (necesita bastón y maná)'],[['Mantén LMB'],'cárgala: más grande y arde']],7500);
+  if(n.g.t==='cnt'&&n.g.k==='cast')ctxHint('fire',[[['1'],'selecciona la bola de fuego (barra bajo la vida; se ve resaltada)'],[['LMB'],'lánzala hacia el cursor (necesita bastón y maná)'],[['LMB+RMB'],'mantenlos para cargarla: más grande y arde']],7500);
   if(n.cap===4&&n.g.t==='cnt'&&n.g.k==='bstart')ctxHint('blockT',[[['RMB'],'mantén para bloquear'],[['RMB','justo al golpe'],'parada perfecta: sin daño ni gasto']],6500);   // el bloqueo se enseña AQUÍ (Palestra), no durante el combate de Gabriel
-  if(n.cap===4&&n.g.t==='cnt')ctxHint('attack',[[['LMB'],'golpear hacia donde apunta el ratón'],[['Mantén LMB'],'cargar un golpe más fuerte'],[['Espacio'],'esquivar'],[['RMB'],'mantén para bloquear']],10000);
+  if(n.cap===4&&n.g.t==='cnt')ctxHint('attack',[[['LMB'],'golpear hacia donde apunta el ratón'],[['Mantén LMB'],'golpes seguidos'],[['LMB+RMB'],'cargar un golpe más fuerte'],[['Espacio'],'esquivar'],[['RMB'],'mantén para bloquear']],10000);
   if(n.cap===4&&M.filter(m=>m.d.id==='cordero'&&alive(m,performance.now())&&Math.hypot(m.x-P.x,m.y-P.y)<260).length>=2&&S.ctxh&&S.ctxh.attack)ctxHint('tab',[[['Tab'],'fijar y cambiar de enemigo']],8000)}
  // ── MISIONES TIPO WOW: marcador del PNJ y diálogo con opciones ──
  const qIdx=(q,ph)=>STEPS.findIndex(x=>x.q===q&&x.ph===ph),qOf=id=>QUESTS.findIndex(x=>x.npc===id);
@@ -200,7 +200,7 @@ const ISLA=(()=>{
  // tarjeta de bienvenida (UI Susurro: cristal + trazo dorado): cómo moverse, correr, esquivar y golpear; se cierra con el botón o con cualquier tecla de acción
  let tipEl=null;
  function tipShow(){if(tipEl||S.islaTip)return;const R=(k,t)=>`<div class="rw"><div class="ks">${k}</div><span>${t}</span></div>`;tipEl=document.createElement('div');tipEl.id='isla-tip';
-  tipEl.innerHTML='<h3>DESPIERTAS</h3><div class="sb">Así se mueve este cuerpo</div>'+R('<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>','Moverte')+R('<kbd>Mayús</kbd>','Correr (mantén; gasta resistencia)')+R('<kbd>Espacio</kbd>','Esquivar: un paso rápido que te protege un instante')+R('<kbd>LMB</kbd>','Golpear hacia donde apunta el ratón')+R('<kbd>Mantén LMB</kbd>','Cargar el golpe y soltarlo: pega mucho más')+R('<kbd>Tab</kbd>','Fijar y cambiar de enemigo')+R('<kbd>F</kbd>','Hablar, entrar y usar lo que tengas delante')+'<button>ENTENDIDO</button>';
+  tipEl.innerHTML='<h3>DESPIERTAS</h3><div class="sb">Así se mueve este cuerpo</div>'+R('<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>','Moverte')+R('<kbd>Mayús</kbd>','Correr (mantén; gasta resistencia)')+R('<kbd>Espacio</kbd>','Esquivar: un paso rápido que te protege un instante')+R('<kbd>LMB</kbd>','Golpear hacia donde apunta el ratón')+R('<kbd>Mantén LMB</kbd>','Golpes seguidos')+R('<kbd>LMB+RMB</kbd>','Mantener ambos: cargar el golpe y soltarlo, pega mucho más')+R('<kbd>Tab</kbd>','Fijar y cambiar de enemigo')+R('<kbd>F</kbd>','Hablar, entrar y usar lo que tengas delante')+'<button>ENTENDIDO</button>';
   document.body.appendChild(tipEl);tipEl.querySelector('button').onclick=()=>{S.islaTip=1;tipHide();save()}}
  function tipHide(){if(tipEl){tipEl.remove();tipEl=null}}
  function lock(){return !!(S.isla&&S.isla.lock&&!S.isla.done)}

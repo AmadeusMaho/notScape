@@ -35,6 +35,8 @@ Además: objetos en la escena ≤ **21 000** (hoy ≈ 19 700), en la escena del 
 
 **P10 · Cómo medir (navegador integrado con GPU real, panel VISIBLE; SwiftShader no vale para fps pero SÍ para triángulos/objetos):** `R3D.budget()`; `R3D.stats()` (tris y llamadas del último fotograma); CPU envolviendo `R3D.frame`, `R3D.renderer.render`, `R3D.dbg.ar.render` y `scene.updateMatrixWorld` con `performance.now()` (hoy ≈ 3,7 ms de `R3D.frame` en un PC rápido); triángulos por pase midiendo `renderer.info.render.triangles` antes/después de cada `render(scene)` y de `shadowMap.render`; carga con el texto de `#bt-msg` cada 50 ms (hoy ≈ 7 s). Panel F4 en el juego. **Los fps reales los da el dueño en su integrada y su móvil.**
 
+- **Opción del jugador «Pasto» (23 oct 2026):** el deslizador de Opciones → Gráficos (`GRASSK`) solo MULTIPLICA la densidad de briznas (`Terrain.gk`), nunca sube `GRASS_Q`; por encima de 100 % solo actúa en Máxima/Alta. No reutilices `GRASS_Q`/`terr.q` para eso (`q` también decide el adoquín denso).
+
 ## 0 · Protocolo de entrega (siempre)
 1. Trabaja en segmentos pequeños; un entregable por mensaje; cierra diciendo **qué probar a mano**.
 2. Si cambias algo: **detállalo en `AGENTS.md`** (lote corto: qué, por qué, cómo se verificó, qué NO) — el lote más antiguo pasa a `docs/HISTORIAL.md` cuando haya >14.
@@ -237,6 +239,9 @@ Se comprueba y se cuenta en la entrega: (1) **ESCALA** vs. héroe (≈1 unidad �
 - Claves nuevas del sistema de oficios: `S.wkb[oficio]` (barra, macros, acciones vistas) · `S.eqt[oficio][ranura]` (equipo) · `S.wkf[idReceta]` (primera vez). **Reservadas:** `S.casa[bioma]` (casa del jugador) · `S.granja[bioma][parcela]` (cultivos). Toda clave nueva se lee con valor por defecto (`S.x=S.x||{}`); los guardados antiguos son descartables (se puede subir `S.ver`).
 ### 13.6 Categorías de icono (para D4, `icons3d.js`)
 Cada prefijo cae en UNA categoría de icono paramétrico con la paleta de su tier: `herramienta` (`og_*_m/s`, `ax_`, `pk_`, `rd_`, cuchillo) · `ropa-oficio` (`og_*_h/d/g`) · `arma` · `armadura` · `munición` · `barra/lingote` (`b_`) · `madera` (`logs…`, `tb_`) · `cuero/piel` (`pc_`, `cu_`, `piel_`) · `tela/fibra` (`fb_`, `mj_`, `te_`) · `piedra` (`bl_`, `ld_`) · `pieza` (`mn_`, `hj_`, `hr_`, `eng_`) · `gema` (`gm_`, `eg_`) · `planta` (`hb_`, `cv_`, `sem_`) · `comida/poción` (`c_`, `f_`, `pot_`, `rc_`) · `mueble` (`mb_`). Un objeto de oficio NUNCA debe caer al icono emoji.
+### 13.7 Botín de criaturas y comprobación de ids
+- Todo drop de una criatura (`MD[id].dr` = `[[idObjeto, prob],…]` y `MD[id].rare` = `[idObjeto, valor]`) usa ids EXISTENTES de `I` y respeta las convenciones de 13.1. Un id con una errata no suelta nada y no avisa.
+- **`python tools/ids_check.py`** (con la sesión rápida en marcha: `python tools/fast/ns.py start --no3d`) comprueba que existan en `I` los ids de: drops y raros de `MD`, ingredientes y resultados de TODAS las recetas `ACT`, `OFGEAR.G` y `QITEM`; y que ningún id rompa la forma (`[a-z0-9_]` + `~calidad`). Falla (código 1) si hay inexistentes. Correrlo al añadir objetos, recetas o criaturas.
 ```ids-skills
 wc mi fi co sm cr es ins mg cb ra pr
 ```

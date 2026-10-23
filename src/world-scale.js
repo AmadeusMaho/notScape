@@ -1,7 +1,7 @@
 // NotScape · FASE 44-0 (i) · MUNDO ×K (19 oct 2026). Se carga DESPUÉS de layouts.js y ANTES de props/world-iso/game.
 // Los layouts (src/layouts.js, biomes.js, biome-spots.js) siguen escritos para un bioma de 4608×3008 px con la aldea en (2300,1500). Aquí se les aplica UNA transformación
 // de escala `W2` a los datos ya construidos, en lugar de reescribir cientos de coordenadas a mano. K = 2 (por defecto) → bioma 9216×6016 px = 288×188 tiles, mundo 27 648×12 032 px.
-//   · `?wk=1` (o window.WORLD_K=1 antes de cargar) = el mundo de siempre, IDÉNTICO (la transformación no se aplica). `?wk=1.5`… admite 1–3.
+//   · `?wk=1` (o window.WORLD_K=1 antes de cargar) = el mundo de siempre, IDÉNTICO (la transformación no se aplica). `?wk=1.5`… admite 1–6 (desde el 23 oct 2026; 1–3 son los valores probados con 3D, 4–6 solo medidos sin 3D).
 //   · W2 por eje: un NÚCLEO de ±A0 px alrededor del centro de la aldea se ESCALA ×VK (= `vilXf`, Fase 44b, 19 oct 2026: la aldea crece ×1,5 lineal en las SEIS aldeas con la misma función; antes era una
 //     meseta de ±640 px que solo se trasladaba) y fuera de él el espacio se estira LINEALMENTE hasta que el borde del bioma cae exactamente en K× su posición (bordes, compuertas y rejilla de biomas
 //     siguen alineados con las losetas de 32 px). `?vk=1` = núcleo sin escalar (comparar); `?vk=1.5` (por defecto), admite 1–2.
@@ -14,7 +14,7 @@
  const G=typeof globalThis!=='undefined'?globalThis:window;
  const qs=typeof location!=='undefined'?location.search:'';
  const mm=/[?&]wk=([\d.]+)/.exec(qs);
- const K=Math.max(1,Math.min(3,(mm?+mm[1]:+G.WORLD_K)||2));
+ const K=Math.max(1,Math.min(6,(mm?+mm[1]:+G.WORLD_K)||2));
  const OW=4608,OH=3008,CX=2300,CY=1500,T=32;
  const vm=/[?&]vk=([\d.]+)/.exec(qs),VK=Math.max(1,Math.min(2,vm?+vm[1]:(+G.VILLAGE_K||1.5))),A0=VK>1?500:640;   // vilXf: escala del núcleo de aldea (Fase 44b). Con VK=1 el núcleo vuelve a ser la meseta de ±640 px que solo se trasladaba (= el mundo de la Fase 44a, idéntico)
  const NW=Math.round(OW*K/T)*T,NH=Math.round(OH*K/T)*T,C1X=Math.round(CX*NW/OW),C1Y=Math.round(CY*NH/OH);

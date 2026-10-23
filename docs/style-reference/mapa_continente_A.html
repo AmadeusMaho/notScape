@@ -1,0 +1,57 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#fff"><canvas id="mp" width="680" height="480" style="width:680px;height:480px;display:block"></canvas>
+<script>
+(function(){
+var W=680,H=480,cv=document.getElementById('mp'),g=cv.getContext('2d');
+function hs(x,y){var h=Math.imul(x,374761393)+Math.imul(y,668265263);h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967295}
+function vn(x,y){var xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,s=function(t){return t*t*(3-2*t)};var a=hs(xi,yi),b=hs(xi+1,yi),c=hs(xi,yi+1),d=hs(xi+1,yi+1);return a+(b-a)*s(xf)+(c-a)*s(yf)+(a-b-c+d)*s(xf)*s(yf)}
+function fb(x,y){return vn(x,y)*.6+vn(x*2.1,y*2.1)*.3+vn(x*4.3,y*4.3)*.1}
+var B={1:['Pradera','Aire','Planeo y salto doble','#a9cf72',1],2:['Bosque','Vida','Curación y cultivos','#5a9650',2],3:['Pantano','Agua','Vadear y nadar sin límite','#6f9a84',3],4:['Cumbres','Hielo','Congelar y cruzar aguas heladas','#dde4e8',4],5:['Páramo Arcano','Arcana','Runas y portales','#9a7fb0',9],6:['Desierto','Tierra','Excavar cuevas y romper roca','#e6c982',6],7:['Oriental','Metal','Parada perfecta y forja maestra','#d98e8e',7],8:['Costa de las Tormentas','Rayo','Cargas y viaje rápido','#8fa9b8',5],9:['Volcán','Fuego','Encender y fundir','#c0603f',8]};
+var X0=45,Y0=38,CW=150,CH=132;
+var BL=[[.7,.45,.42],[.9,.8,.35],[.55,1.35,.45],[.8,1.55,.35],[.7,2.05,.34],[.55,2.45,.25],[.42,2.72,.18],[1.2,1.2,.26],[1.55,.55,.32],[1.65,.95,.34],[1.75,1.45,.36],[1.7,1.85,.28],[1.95,2.25,.3],[2.2,2.55,.2],[2.55,2.7,.15],[2.45,1.2,.42],[2.55,.45,.36],[2.9,.3,.28],[2.85,2.1,.4],[3.1,2.35,.25],[3.35,1.35,.28],[3.65,1.25,.2],[2.1,1.0,.25],[2.9,1.0,.25],[2.8,1.7,.3]];
+function F(u,v){var s=0;for(var i=0;i<BL.length;i++){var b=BL[i],dx=u-b[0],dy=v-b[1];s+=Math.pow(b[2]*b[2]/(dx*dx+dy*dy+.015),1.8)}return s}
+var SEED=[[1,.6,1.4],[2,.8,.55],[3,.6,2.3],[4,1.6,.75],[4,1.7,1.6],[8,2.1,2.4],[5,2.7,.4],[6,2.45,1.25],[9,2.95,2.2],[7,3.5,1.3]];
+var img=g.createImageData(W,H),bm=new Uint8Array(W*H),cx=[],cy=[],cn=[];for(var q=0;q<10;q++){cx[q]=0;cy[q]=0;cn[q]=0}
+function hex(c){return[parseInt(c.substr(1,2),16),parseInt(c.substr(3,2),16),parseInt(c.substr(5,2),16)]}
+var col={};for(var k in B)col[k]=hex(B[k][3]);
+for(var y=0;y<H;y++)for(var x=0;x<W;x++){
+ var u=(x-X0)/CW,v=(y-Y0)/CH,thr=1+(fb(x/30,y/30)-.5)*1.1+(fb(x/110+5,y/110+9)-.5)*.7,f=F(u,v),p=(y*W+x)*4,r,gg,b;
+ if(f>thr){
+  var wu=u+(fb(x/70+7,y/70+3)-.5)*.5,wv=v+(fb(x/70+31,y/70+19)-.5)*.5,best=1e9,id=1;
+  for(var i=0;i<SEED.length;i++){var dx=wu-SEED[i][1],dy=wv-SEED[i][2],d=dx*dx+dy*dy;if(d<best){best=d;id=SEED[i][0]}}
+  bm[y*W+x]=id;cx[id]+=x;cy[id]+=y;cn[id]++;
+  var cc=col[id],nz=.92+.16*fb(x/7,y/7);if(id===4){nz=.82+.3*fb(x/16,y/16)}
+  r=cc[0]*nz;gg=cc[1]*nz;b=cc[2]*nz;if(f<thr+.12){r*=.7;gg*=.76;b*=.7}
+ }else{var sh=f>thr-.55;r=sh?122:80;gg=sh?176:132;b=sh?200:162}
+ img.data[p]=r;img.data[p+1]=gg;img.data[p+2]=b;img.data[p+3]=255}
+g.putImageData(img,0,0);
+function P(u,v){return[X0+u*CW,Y0+v*CH]}
+function land(u,v){var x=Math.round(X0+u*CW),y=Math.round(Y0+v*CH);return x>=0&&x<W&&y>=0&&y<H&&bm[y*W+x]>0}
+function river(u,v,sd){g.beginPath();var a=P(u,v);g.moveTo(a[0],a[1]);var n=0;while(n<1100&&land(u,v)){var e=.01,gx=F(u+e,v)-F(u-e,v),gy=F(u,v+e)-F(u,v-e),m=Math.hypot(gx,gy)||1,t=n*.09+sd;u+=-gx/m*.012+Math.cos(t)*.004;v+=-gy/m*.012+Math.sin(t*1.3)*.004;a=P(u,v);g.lineTo(a[0],a[1]);n++}g.strokeStyle='#5b9cc0';g.lineWidth=2.6;g.lineJoin='round';g.stroke()}
+river(1.6,.7,1);river(1.7,1.3,3);river(1.75,1.7,5);river(1.65,.95,2);
+function road(a,b,off){var pa=P(a[0],a[1]),pb=P(b[0],b[1]),mx=(pa[0]+pb[0])/2+off*(pb[1]-pa[1]),my=(pa[1]+pb[1])/2-off*(pb[0]-pa[0]),pr=null;g.strokeStyle='rgba(70,50,30,.8)';g.lineWidth=1.6;g.setLineDash([5,4]);for(var i=0;i<=40;i++){var t=i/40,x=(1-t)*(1-t)*pa[0]+2*t*(1-t)*mx+t*t*pb[0],y=(1-t)*(1-t)*pa[1]+2*t*(1-t)*my+t*t*pb[1],ok=bm[Math.round(y)*W+Math.round(x)]>0;if(pr&&ok){g.beginPath();g.moveTo(pr[0],pr[1]);g.lineTo(x,y);g.stroke()}pr=ok?[x,y]:null}g.setLineDash([])}
+var V={pra:[.6,1.4],bos:[.8,.55],pan:[.6,2.3],cum:[1.65,1.2],cos:[2.1,2.4],des:[2.45,1.25],vol:[2.95,2.2],par:[2.7,.4],ori:[3.5,1.3]};
+function road(pts){var ps=pts.map(function(a){return P(a[0],a[1])}),pr=null;g.strokeStyle='rgba(70,50,30,.85)';g.lineWidth=1.6;g.setLineDash([5,4]);function cr(a,b,c,d,t){var t2=t*t,t3=t2*t;return .5*((2*b)+(-a+c)*t+(2*a-5*b+4*c-d)*t2+(-a+3*b-3*c+d)*t3)}for(var s=0;s<ps.length-1;s++){var p0=ps[Math.max(0,s-1)],p1=ps[s],p2=ps[s+1],p3=ps[Math.min(ps.length-1,s+2)];for(var i=0;i<=20;i++){var tt=i/20,x=cr(p0[0],p1[0],p2[0],p3[0],tt),y=cr(p0[1],p1[1],p2[1],p3[1],tt),ok=bm[Math.round(y)*W+Math.round(x)]>0;if(pr&&ok){g.beginPath();g.moveTo(pr[0],pr[1]);g.lineTo(x,y);g.stroke()}pr=ok?[x,y]:null}}g.setLineDash([])}
+road([V.pra,[.65,1.0],V.bos]);road([V.pra,[.65,1.9],V.pan]);road([V.pra,[1.0,1.3],[1.4,1.25],V.cum]);road([V.cum,[1.75,1.8],[1.95,2.2],V.cos]);road([V.cum,[2.0,1.1],V.des]);road([V.des,[2.9,1.1],[3.2,1.25],V.ori]);road([V.des,[2.55,.8],V.par]);road([V.des,[2.7,1.7],V.vol]);
+var sd=7;function rnd(){sd=(sd*16807)%2147483647;return sd/2147483647}
+function sc(id,n,fn){var t=0,k=0;while(k<n&&t<6000){t++;var x=Math.floor(rnd()*W),y=Math.floor(rnd()*H);if(bm[y*W+x]===id){fn(x,y);k++}}}
+function tri(x,y,s,c,w){g.beginPath();g.moveTo(x-s,y+s*.7);g.lineTo(x,y-s);g.lineTo(x+s,y+s*.7);g.strokeStyle=c;g.lineWidth=w||1.6;g.stroke()}
+sc(4,38,function(x,y){tri(x,y,9+rnd()*5,'#6d7a84',1.8);g.beginPath();g.moveTo(x-3,y-4);g.lineTo(x,y-9);g.lineTo(x+3,y-4);g.fillStyle='#fff';g.fill()});
+sc(2,42,function(x,y){g.beginPath();g.arc(x,y,3.2,0,6.3);g.fillStyle='#2f6a3a';g.fill()});
+sc(6,14,function(x,y){g.beginPath();g.arc(x,y,9,3.4,6.0);g.strokeStyle='rgba(150,100,40,.55)';g.lineWidth=1.6;g.stroke()});
+sc(3,22,function(x,y){g.beginPath();g.moveTo(x,y);g.lineTo(x,y-6);g.moveTo(x+3,y);g.lineTo(x+3,y-4);g.strokeStyle='#3f6a52';g.lineWidth=1.4;g.stroke()});
+sc(5,16,function(x,y){g.beginPath();g.arc(x,y,2.4,0,6.3);g.fillStyle='#d8c6f0';g.fill()});
+sc(8,8,function(x,y){g.beginPath();g.arc(x,y,2.6,0,6.3);g.fillStyle='#8aa0ac';g.fill()});
+sc(7,10,function(x,y){g.beginPath();g.rect(x-4,y-3,8,5);g.fillStyle='#a8473f';g.fill()});
+var vo=P(2.95,2.1);g.beginPath();g.moveTo(vo[0]-17,vo[1]+13);g.lineTo(vo[0]-4,vo[1]-12);g.lineTo(vo[0]+4,vo[1]-12);g.lineTo(vo[0]+17,vo[1]+13);g.closePath();g.fillStyle='#6b2f24';g.fill();g.beginPath();g.arc(vo[0]+2,vo[1]-16,5,0,6.3);g.fillStyle='rgba(210,210,210,.7)';g.fill();
+function star(u,v,c){var a=P(u,v);g.fillStyle=c;g.strokeStyle='#2b2118';g.lineWidth=1.2;g.beginPath();for(var i=0;i<10;i++){var r=i%2?4:9,t=-Math.PI/2+i*Math.PI/5;g.lineTo(a[0]+Math.cos(t)*r,a[1]+Math.sin(t)*r)}g.closePath();g.fill();g.stroke()}
+star(V.pra[0],V.pra[1],'#ffd24a');star(V.ori[0],V.ori[1],'#f2c0c0');
+function dot(p){var a=P(p[0],p[1]);g.beginPath();g.arc(a[0],a[1],4,0,6.3);g.fillStyle='#fff';g.fill();g.strokeStyle='#2b2118';g.lineWidth=1.3;g.stroke()}
+[V.bos,V.pan,V.cum,V.cos,V.des,V.vol,V.par].forEach(dot);
+function cloud(x,y,s){g.fillStyle='#f4f8fb';g.strokeStyle='#b9cad6';g.lineWidth=1.4;g.beginPath();g.ellipse(x,y,26*s,10*s,0,0,6.3);g.fill();g.stroke();g.beginPath();g.ellipse(x-8*s,y-7*s,12*s,9*s,0,0,6.3);g.fill();g.beginPath();g.ellipse(x+9*s,y-8*s,11*s,8*s,0,0,6.3);g.fill()}
+var ci=P(3.45,.3);cloud(ci[0],ci[1],1.2);g.beginPath();g.moveTo(ci[0]-10,ci[1]+12);g.lineTo(ci[0],ci[1]+26);g.lineTo(ci[0]+10,ci[1]+12);g.fillStyle='#d9a56b';g.fill();
+var inf=P(3.6,2.75);g.beginPath();g.arc(inf[0],inf[1],17,0,6.3);g.fillStyle='#241520';g.fill();g.strokeStyle='#c0392b';g.lineWidth=2;g.stroke();g.beginPath();g.arc(inf[0],inf[1],8,0,6.3);g.strokeStyle='#e0623f';g.lineWidth=1.6;g.stroke();
+function lab(t,x,y){g.font='500 12px sans-serif';g.textAlign='center';var tw=g.measureText(t).width+14;g.fillStyle='rgba(255,252,244,.9)';g.fillRect(x-tw/2,y-9,tw,18);g.strokeStyle='rgba(40,30,20,.5)';g.lineWidth=.8;g.strokeRect(x-tw/2,y-9,tw,18);g.fillStyle='#2b2118';g.fillText(t,x,y+4)}
+for(var id in B){var xx=cx[id]/cn[id],yy=cy[id]/cn[id];if(+id===4)yy-=30;lab(B[id][4]+' · '+B[id][0].replace(' de las Tormentas','').replace(' Arcano','')+' · '+B[id][1],xx,yy)}
+lab('10 · Cielo · Luz',ci[0],ci[1]+42);lab('11 · Infierno · Sombra',inf[0],inf[1]+32);
+})();
+</script>

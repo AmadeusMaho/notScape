@@ -56,3 +56,12 @@ Cabe sin scroll horizontal · blancos ≥ 44 px · sin hover obligatorio · se c
 3. ¿FSR **activado por defecto en móvil**? (hoy apagado en escritorio por decisión del dueño).
 4. ¿Se incluye la háptica?
 5. ¿Distribución como web normal o **PWA instalable** (pantalla completa, sin barra del navegador)?
+
+## 7 · Mundo grande (K=8) en móvil — soluciones acordadas (23 oct 2026)
+**Cuello de botella = MEMORIA, no los fps.** Estimado: ≈0,4 GB de montón a K=2, ≈1,2 GB a K=8; iOS mata la pestaña hacia 1–1,5 GB. Mismo mundo para todos (NO se hace un K menor en móvil); se recorta lo que se tiene cargado, no el mapa.
+1. **Generación de sector bajo demanda:** cada sector se genera desde su semilla (determinista) al acercarse y se descarga al alejarse; en la partida solo se guarda el estado DINÁMICO (recursos agotados, cofres, muertos, cambios del jugador), nunca el sector entero.
+2. **Datos compactos:** `Float32Array`/`Uint16Array`/`Uint8Array` por chunk en lugar de objetos JS (alturas, máscaras de costa/camino/agua, `N`/`M` por sector); nada de un objeto por tile ni por brizna.
+3. **Radios cortos en móvil:** `lodR`, radio de dibujo y de actividad menores (sectores activos 1 en móvil frente a 2–3 en escritorio); calidad **Baja** por defecto (`MOBQ`, ya existe).
+4. **Mapa y niebla ligeros:** mapa del mundo en baja resolución (lienzo pequeño ampliado) y `S.fog` dispersa (celdas reveladas en conjunto, no una matriz densa).
+5. **Presupuesto móvil explícito (criterio de cierre M5):** montón JS < 400 MB y ≤ 0,66 M triángulos por fotograma medido en un Android de gama media; si no se cumple, se acorta el radio, no se reduce el mundo.
+**Orden:** el streaming por sector (E2 de la Fase 3·e) se diseña ya con estas reglas; la medición en el dispositivo se hace en M5.

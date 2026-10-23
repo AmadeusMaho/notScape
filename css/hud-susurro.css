@@ -669,7 +669,7 @@ body.hs-on #fp .tap{filter:drop-shadow(0 0 2px rgba(232,207,148,.6))}
 #hs .hp[data-st="sangrado"]{filter:drop-shadow(0 0 .4em rgba(190,30,25,.6))}
 
 /* Rueda de recolección (21 oct 2026): canvas flotante sobre el recurso (game.js whDraw) */
-#whl,#fgl{position:fixed;left:0;top:0;width:calc(var(--hu,16px)*5);height:calc(var(--hu,16px)*5);pointer-events:none;z-index:3;filter:drop-shadow(0 .15em .5em rgba(0,0,0,.55))}
+#whl{position:fixed;left:0;top:0;width:calc(var(--hu,16px)*5);height:calc(var(--hu,16px)*5);pointer-events:none;z-index:3;filter:drop-shadow(0 .15em .5em rgba(0,0,0,.55))}
 
 /* Icono de picada de la pesca (21 oct 2026): cristal oscuro + trazo dorado + anillo de tiempo (--u), «!» en Cinzel; nace con un pequeño rebote */
 #fsh{position:fixed;left:0;top:0;z-index:3;pointer-events:none;width:calc(var(--hu,16px)*2.5);height:calc(var(--hu,16px)*2.5);border-radius:50%;place-items:center;font-family:"Cinzel",Georgia,serif;
@@ -686,7 +686,6 @@ body.hs-on #fp .tap{filter:drop-shadow(0 0 2px rgba(232,207,148,.6))}
 @keyframes mghp{50%{border-color:rgba(255,246,216,.95);color:#fff6d8}}
 
 /* el anillo de la forja se lee mejor algo mayor (la cámara también se acerca en el minijuego) */
-#fgl{width:calc(var(--hu,16px)*7.5);height:calc(var(--hu,16px)*7.5)}
 
 
 
