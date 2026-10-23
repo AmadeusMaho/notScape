@@ -3,7 +3,7 @@
 // (independiente de `transform`, que las ventanas usan para sus animaciones). La posición se guarda por ventana en localStorage (`ns_win`);
 // doble clic en una zona vacía la devuelve a su sitio. Para una ventana nueva basta añadir su selector a SEL.
 const WINMOVE=(()=>{
-  const SEL=['#wk','#sw','#pw','#bw','#qpn','#ctl','#goalp'];
+  const SEL=['#wk','#ofw','#sw','#pw','#bw','#qpn','#ctl','#goalp'];
   const SKIP='button,a,input,select,textarea,label,canvas,[data-dg],[data-i],[data-x],[data-eq],[data-w],[onclick],.bar,.sl,kbd';
   let pos={};try{pos=JSON.parse(localStorage.getItem('ns_win')||'{}')}catch(e){}
   const save=()=>{try{localStorage.setItem('ns_win',JSON.stringify(pos))}catch(e){}};

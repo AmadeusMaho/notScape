@@ -34,11 +34,12 @@ const WKUI=(()=>{
      +'<div class="wk-side"><div><small>Resistencia</small><b id="wk-du"></b></div><div><small>Puntos de oficio</small><b id="wk-po" class="po"></b></div>'
      +'<div><small>Concentración</small><b id="wk-iq"></b></div><div id="wk-cd" class="wk-cd"></div></div></div>'
      +'<div id="wk-ac" class="wk-ac"></div><div id="wk-mc" class="wk-mc"></div>'
-     +'<div class="wk-f"><div id="wk-bar" class="wk-bar"></div><div class="wk-bt"><button id="wk-sg">Sugerir</button><button id="wk-ex">Salir</button></div></div>'
+     +'<div class="wk-f"><div id="wk-bar" class="wk-bar"></div><div class="wk-bt"><button id="wk-qk" hidden>Rápida</button><button id="wk-sg">Sugerir</button><button id="wk-ex">Salir</button></div></div>'
      +'<div id="wk-m" class="wk-m"></div>';
     document.body.appendChild(el);
     $('#wk-sg').onclick=()=>{if(!A||!A.wk)return;const id=WK.suggest(A.wk.s);msg(id?'Sugerencia: '+WK.A[id].n:'');hl=id;render()};
     $('#wk-ex').onclick=()=>stopA('Dejas la pieza.');
+    $('#wk-qk').onclick=quick;
     el.addEventListener('mousedown',e=>e.stopPropagation());
     el.addEventListener('click',click);
     // arrastre libro → barra (puntero: vale ratón y dedo)
@@ -78,8 +79,9 @@ const WKUI=(()=>{
     $('#wk-nx').innerHTML=t+' <span class="mu">· '+Math.round(f*100)+' % al nv '+(lvl+1)+'</span>'}
   function render(){
     if(!el||!A||!A.wk)return;const w=A.wk,s=w.s,rec=w.rec,lvl=s.lvl;
-    $('#wk-n').textContent=rec.name;$('#wk-s').textContent='Herrería nv '+lvl+' · receta nv '+rec.lvl+(A.left<1e8&&A.left>1?' · quedan '+A.left:'');
+    $('#wk-n').textContent=rec.name;$('#wk-s').textContent='Herrería nv '+lvl+' · Maña '+Math.round(s.mana)+' · Pulso '+Math.round(s.pulso)+' · receta nv '+rec.lvl+(A.left<1e8&&A.left>1?' · quedan '+A.left:'');
     metaHTML(lvl);
+    $('#wk-qk').hidden=!(lvl-rec.lvl>=15&&!s.over&&!s.hist.length);   // síntesis rápida: recetas ≥ 15 niveles por debajo de las tuyas
     const hq=WK.hq(s);
     $('#wk-pt').textContent=Math.min(s.prog,s.progMax)+' / '+s.progMax;$('#wk-pb').style.width=Math.min(100,100*s.prog/s.progMax)+'%';
     $('#wk-qt').textContent=hq+' % calidad superior';$('#wk-qb').style.width=Math.min(100,hq)+'%';
@@ -133,7 +135,7 @@ const WKUI=(()=>{
     f.spark(e.x,e.y,n,c,12,{spread:1.6,up:3.2,g:-.5,size:.08,life:1.4});f.spark(P.x,P.y,Math.round(n/2),c,4,{spread:1.8,up:2.4,g:-.1,size:.06,life:1.5});
     if(q>=.8&&typeof whPulse==='function')whPulse(performance.now())}
   // variante de animación del héroe por acción (la lee heroanim3d.js: smith → v)
-  const VAR={p:'h',pq:'h',q:'t',b:'c',r:'m',u:'o'};
+  const VAR={p:'h',pq:'h',q:'t',b:'c',r:'m',u:'o'},GEST={c:900,m:1000,o:700,f:1300};
   // ---------- uso de una acción ----------
   function use(id){
     if(!A||!A.wk||A.wk.over)return false;const now=performance.now();if(now<lock)return false;
@@ -141,7 +143,7 @@ const WKUI=(()=>{
     const exc=s.cond==='excelente',a=WK.A[id],t=a.t,hit=(t==='p'||t==='q'||t==='pq');
     const r=WK.use(s,id);if(!r.ok){msg(r.why||'');return false}
     hl=null;A.wl=now;fxAct(id,exc,r.hit===false);
-    A.wkv=(id==='gd'||id==='gw'||id==='is'||id==='mu')?'H':(id==='by'?'B':VAR[t]||'h');A.wkv0=now;
+    A.wkv=(id==='gd'||id==='gw'||id==='is'||id==='mu')?'H':(id==='by'?'B':VAR[t]||'h');A.wkv0=now;A.wkn=(A.wkn||0)+1;
     if(hit){A.hn++;A.p0=armP0(now-A.h0,FM_IMP,FM_IMP+WH_REC,.65);A.h0=now;pend={t:now+FM_IMP,q:!r.hit?0:exc?2:1,miss:!r.hit};lock=now+640}
     else{lock=now+420;tone(t==='r'?440:520,.14,'sine',.04,260)}
     el.style.setProperty('--lk',(lock-now)+'ms');el.querySelectorAll('.wk-sl').forEach(x=>{x.classList.remove('lk');void x.offsetWidth;x.classList.add('lk')});
@@ -163,10 +165,20 @@ const WKUI=(()=>{
     if(!s.ok){fxEnd(false,0);msg('La pieza se agota sin terminarse. No pierdes materiales.');tone(150,.3,'sawtooth',.04,-60);return reopen(now,1500)}
     const q=WK.hq(s)/100;QBON=1+1.4*q;const a=w.a,ok=stepAct(A.sk,A.i,false);QBON=1;
     if(!ok)return stopA();
+    A.wkv='f';A.wkv0=now;A.wkn=(A.wkn||0)+1;   // levanta la pieza para mirarla
     fxEnd(true,q);msg('Pieza hecha · calidad superior '+WK.hq(s)+' %');tone(660,.2,'triangle',.06,330);setTimeout(()=>tone(880,.25,'triangle',.05,440),120);
+    // la pieza dura más que antes (≈ 5 + 0,2·nivel pasos): XP extra para mantener la XP por segundo (tope ×3,5)
+    {const k=Math.max(1,Math.min(3.5,(WK.stepsEst(a[3])*.64+2)/(a[5]/1000))),ex=Math.round(a[4]*(k-1));if(ex>0)gain(OF,ex,true)}
     // primera vez que fabricas esta receta: bono grande de XP
     S.wkf=S.wkf||{};if(!S.wkf[a[2]]){S.wkf[a[2]]=1;const bonus=Math.round(a[4]*1.5);gain(OF,bonus,false);log('✨ Primera vez: <b>'+a[0]+'</b> (+'+bonus+' XP)');try{banner('Receta nueva',a[0],'#e8cf94',2200)}catch(e){}}
     A.left--;reopen(now,1300)}
+  // Síntesis rápida (recetas muy por debajo de tu nivel): una pulsación, calidad normal, sin rotación
+  function quick(){
+    if(!A||!A.wk||A.wk.s.hist.length||A.wk.s.over)return;const w=A.wk,a=w.a;
+    if(!WK.quick(w.rec,w.s.lvl).ok){msg('Esa receta no admite síntesis rápida.');return}
+    w.s.over=true;w.s.ok=true;QBON=1;const ok=stepAct(A.sk,A.i,false);QBON=1;if(!ok)return stopA();
+    tone(560,.1,'triangle',.05,300);const f=window.R3D&&R3D.fx,e=A.e;if(f&&e)f.spark(e.x,e.y,10,'#e8dfc8',6,{spread:.9,up:1.8,g:-.3,size:.06,life:.9});
+    msg('Síntesis rápida: pieza hecha.');A.left--;endAt=0;reopen(performance.now(),700)}
   function reopen(now,ms){
     const a=A.wk.a;
     setTimeout(()=>{if(!A||!A.wk)return;if(A.left<=0||!hasIn(a[1]))return stopA();start(performance.now())},ms)}
@@ -177,8 +189,9 @@ const WKUI=(()=>{
     setTimeout(()=>{try{banner('Nueva acción',names,'#7fb4e8',3200)}catch(e){}},1800)}
   function close(){if(el)el.style.display='none';runQ=[]}
   function pose(now){
-    const id=A.e&&A.e.id;if(!A.hn&&!A.wkv)return{k:'sm',ph:0,id};
-    return Object.assign({k:'sm',id,n:A.hn||0,v:A.wkv,vt:A.wkv?(now-(A.wkv0||now))/1000:0},armPose(now-A.h0,FM_IMP,FM_IMP+WH_REC,.65,A.p0));
+    const id=A.e&&A.e.id,v=A.wkv;if(!A.hn&&!v)return{k:'sm',ph:0,id};
+    if(v&&GEST[v]){const u=(now-A.wkv0)/GEST[v];return{k:'sm',id,n:A.wkn||0,v,ph:u<1?Math.max(.001,Math.min(.999,u)):0}}   // gestos (concentración, reparación, observar): línea de tiempo propia
+    return Object.assign({k:'sm',id,n:A.wkn||0,v},armPose(now-A.h0,FM_IMP,FM_IMP+WH_REC,.65,A.p0));
   }
   // teclas 1..0 y Mayús+1..0 → casillas (en captura para que el '1' no seleccione habilidad de combate)
   addEventListener('keydown',ev=>{

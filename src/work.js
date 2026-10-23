@@ -2,7 +2,8 @@
 // Plan y tablas: docs/PLAN_OFICIOS_FF14.md. Sin Math.random: PRNG con semilla (regla online). Una acción nueva = una fila en A.
 const WK=(()=>{
   const MAXIQ=10, DUR_STEP=10;
-  const PROG0=3.6,PROG1=.035,QUAL0=6.5,QUAL1=.14;   // dificultad de receta (unidades de «100 %»), a calibrar
+  // Constantes de dificultad (a calibrar con tools/work_sim.js; WK.K se puede tocar en caliente para probar)
+  const K={PO0:120,PO1:5,PROG0:2.6,PROG1:.5,PCAP:10.5,QUAL0:5,QUAL1:.6,QUAL2:.8,QCAP:150};
   // Condiciones: m = multiplicador de Calidad. Las avanzadas (sólida, pliante…) salen con nivel de oficio >= ADV.
   const ADV=40;
   const CONDS={
@@ -59,6 +60,7 @@ const WK=(()=>{
   // PRNG mulberry32 (sin Math.random).
   function rnd(s){let t=s.seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);s.rn=((t^t>>>14)>>>0)/4294967296;return s.rn}
   function rollCond(s){
+    if(s.plan){s.cond='normal';return}   // el planificador no conoce las condiciones futuras
     const adv=s.lvl>=ADV,r=rnd(s),prev=s.cond;
     if(prev==='excelente'){s.cond='mala';return}
     if(prev==='mala'||prev==='estelar'||prev==='expectante'&&false){s.cond='normal';return}
@@ -150,8 +152,31 @@ const WK=(()=>{
   const hq=s=>Math.max(0,Math.min(100,Math.round(100*s.qual/s.qualMax)));
   /** Síntesis rápida: recetas muy por debajo del nivel; calidad normal, sin rotación. */
   function quick(rec,lvl){return lvl-rec.lvl>=10?{ok:true,hq:0}:{ok:false,why:'Receta demasiado alta'}}
-  /** Siguiente acción recomendada: calidad primero mientras sobre Resistencia, progreso al final (botón «Sugerir» y bot de tools/work_sim.js). */
-  function suggest(s){
+  // ---- PLANIFICADOR (búsqueda en haz): resuelve la hoja suponiendo condición Normal salvo la actual. Es el «jugador experto» de tools/work_sim.js y del botón Sugerir. ----
+  const clone=s=>{const c=Object.assign({},s);c.b=Object.assign({},s.b);c.uses=Object.assign({},s.uses);c.hist=s.hist.slice();return c};
+  const PLAN_SKIP={ht:1,rs:1,te:1};   // acciones con azar o muy situacionales: el planificador no las usa
+  function plan(s0,W,D){
+    if(s0.over)return null;W=W||14;D=D||20;
+    const root=clone(s0);root.plan=true;const ids=list(s0.of,s0.lvl).filter(id=>!PLAN_SKIP[id]&&!(A[id].spec&&id!=='hs'&&id!=='co'));
+    const val=s=>Math.min(1,s.prog/s.progMax)*55+Math.min(1,s.qual/s.qualMax)*40+Math.max(0,s.dur)/s.durMax*3+s.po/s.poMax*2;
+    let beam=[{s:root,first:null,v:0}],best=null;
+    for(let d=0;d<D&&beam.length;d++){
+      const nx=[];
+      for(const n of beam){
+        for(const id of ids){
+          if(can(n.s,id))continue;
+          const c=clone(n.s);if(d>0)c.plan=true;const r=use(c,id);if(!r.ok)continue;
+          const first=n.first||id;
+          if(c.over){if(c.ok){const sc=1e4+WK_HQ(c)*100-c.step;if(!best||sc>best.sc)best={sc,first,hist:c.hist}}continue}
+          nx.push({s:c,first,v:val(c)})}}
+      nx.sort((a,b)=>b.v-a.v);beam=nx.slice(0,W)}
+    if(best)return {first:best.first,seq:best.hist.slice(s0.hist.length),ok:true};
+    return beam.length?{first:beam[0].first,seq:[],ok:false}:null}
+  const WK_HQ=s=>Math.max(0,Math.min(100,Math.round(100*s.qual/s.qualMax)));
+  /** Siguiente acción recomendada: el planificador; si no hay plan, la heurística simple. */
+  function suggest(s){const p=plan(s);return p?p.first:suggestSimple(s)}
+  /** Heurística simple (respaldo): calidad primero mientras sobre Resistencia, progreso al final (botón «Sugerir» y bot de tools/work_sim.js). */
+  function suggestSimple(s){
     if(s.over)return null;
     const ok=id=>!can(s,id),unit=10+s.mana*.1,qu=8+s.pulso*.1;
     const stepCost=a=>dmod(s,a)/DUR_STEP;            // pasos de Resistencia que gasta (0,5 con Sin desperdicio…)
@@ -183,9 +208,11 @@ const WK=(()=>{
   /** Siguiente acción por aprender: {id,lv} o null. */
   const nextUnlock=(of,lvl)=>{const l=list(of).filter(id=>A[id].lv>lvl&&!A[id].spec);return l.length?{id:l[0],lv:A[l[0]].lv}:null};
   /** Atributos del jugador y parámetros de receta (a calibrar con tools/work_sim.js). gear = bonos {mana,pulso,po}. */
-  const mkStats=(lvl,gear)=>{gear=gear||{};return {lvl,mana:60+lvl*2.2+(gear.mana||0),pulso:50+lvl*2+(gear.pulso||0),po:Math.round(100+lvl*2+(gear.po||0))}};
+  const mkStats=(lvl,gear)=>{gear=gear||{};return {lvl,mana:60+lvl*2.2+(gear.mana||0),pulso:50+lvl*2+(gear.pulso||0),po:Math.round(K.PO0+lvl*K.PO1+(gear.po||0))}};
   const mkRecipe=(rl,name)=>{const mana=60+rl*2.2,pulso=50+rl*2,unit=10+mana*.1,qu=8+pulso*.1;
-    return {name:name||'',lvl:rl,prog:Math.round(unit*(PROG0+rl*PROG1)),qual:Math.round(qu*(QUAL0+rl*QUAL1)),dur:rl<30?60:rl<60?70:80}};
-  return {A,IDS,CONDS,start,use,can,cost,avail,hq,quick,suggest,list,nextUnlock,mkStats,mkRecipe,MAXIQ};
+    return {name:name||'',lvl:rl,prog:Math.round(unit*Math.min(K.PCAP,K.PROG0+rl*K.PROG1)),qual:Math.round(qu*Math.min(K.QCAP,K.QUAL0+rl*K.QUAL1+Math.max(0,rl-45)*K.QUAL2)),dur:rl<30?60:rl<60?70:80}};
+  /** Pasos esperados de una pieza de nivel rl con juego experto (de tools/work_sim.js); sirve para igualar la XP por segundo. */
+  const stepsEst=rl=>5+rl*.2;
+  return {A,IDS,CONDS,start,stepsEst,use,can,cost,avail,hq,quick,suggest,plan,list,nextUnlock,mkStats,mkRecipe,MAXIQ,K};
 })();
 if(typeof module!=='undefined')module.exports=WK;

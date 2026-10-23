@@ -132,6 +132,33 @@ for n, ok_, d in [
 ]: (ok if ok_ else bad)(f'RENDIMIENTO: {n}', '' if ok_ else d)
 wm = re.search(r'PR\.warm\((\d+)\)', gj); (ok if wm and int(wm.group(1)) >= 40 else bad)('RENDIMIENTO: props en tramos ≥ 40 ms (PR.warm)', wm.group(0) if wm else 'no encontrado')
 
+
+# 10. CONVENCIONES DE IDS Y DATOS (D0, 23 oct 2026; docs/REGLAS_CREACION.md §13)
+_rc = rd('docs/REGLAS_CREACION.md')
+def _blk(name):
+    m = re.search('```' + name + r'\n(.*?)\n```', _rc, re.S)
+    return set(m.group(1).split()) if m else None
+_sk, _skr, _pf = _blk('ids-skills'), _blk('ids-skills-reservadas'), _blk('ids-prefijos-reservados')
+if _sk is None or _skr is None or _pf is None:
+    bad('CONVENCIONES: §13 de REGLAS_CREACION.md con sus 3 bloques (ids-skills, ids-skills-reservadas, ids-prefijos-reservados)', 'falta un bloque')
+else:
+    ok('CONVENCIONES: §13 y sus bloques de datos presentes', '')
+    _sm = re.search(r'const SK=\{(.*?)\},SKL', rd('src/game.js'))
+    _keys = set(re.findall(r"(\w+):\['", _sm.group(1))) if _sm else set()
+    _extra = _keys - _sk - _skr
+    (ok if not _extra else bad)('CONVENCIONES: toda habilidad de SK está documentada en §13.2', '' if not _extra else 'sin documentar: ' + ', '.join(sorted(_extra)))
+    _dup = _sk & _skr
+    (ok if not _dup else bad)('CONVENCIONES: ninguna clave de habilidad repetida entre existentes y reservadas', ', '.join(sorted(_dup)))
+    _jsw = {'do', 'in', 'if', 'for', 'new', 'var', 'let', 'try'}
+    (ok if not ((_sk | _skr) & _jsw) else bad)('CONVENCIONES: ninguna clave de habilidad es palabra reservada de JS', '')
+    _col = _pf & (_sk | _skr)
+    (ok if not _col else bad)('CONVENCIONES: ningún prefijo de objeto reservado choca con una clave de habilidad', ', '.join(sorted(_col)))
+    _ex = re.search(r'\*\*Prefijos existentes.*?\n', _rc)
+    _used = set(re.findall(r'`(\w+)_`', _ex.group(0))) if _ex else set()
+    _clash = _pf & _used
+    (ok if not _clash else bad)('CONVENCIONES: ningún prefijo reservado coincide con uno ya en uso', ', '.join(sorted(_clash)))
+    (ok if "'og_'+of+'_'+sl+'_'+t[0]" in rd('src/oficios.js') else bad)('CONVENCIONES: ids de equipo de oficio con el id del TIER (no el índice)', 'src/oficios.js')
+
 for lv, r, d in res: print(f'{lv:7} {r}' + (f'  → {d}' if d else ''))
 nf = sum(1 for x in res if x[0] == 'FALLO'); nw = sum(1 for x in res if x[0] in ('AVISO', 'REVISAR'))
 print(f'\nRESULTADO: {"OK" if not nf else "FALLO"} ({nf} fallos, {nw} avisos)'); sys.exit(1 if nf else 0)

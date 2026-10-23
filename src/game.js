@@ -129,7 +129,7 @@ Object.keys(SW).forEach(k=>WSP[k]=4);Object.keys(BOW).forEach(k=>WSP[k]=4);Objec
   else if(STF[id]){STF[v]=bump(STF,'st_',id,q,1);WSP[v]=5;WB[v]=STF[v]}else if(AR[id])AR[v]=bump(AR,'ar_',id,q,1);else if(SHL[id])SHL[v]=bump(SHL,'sh_',id,q,1);else if(LGL[id])LGL[v]=bump(LGL,'lg_',id,q,1);else if(GLL[id])GLL[v]=bump(GLL,'gl_',id,q,1);
   else if(TOOLT[id]){const T=TOOLT[id],P2={wc:['frenzy','gsage'],mi:['precise','lucky'],fi:['lucky','frenzy']}[T.k],pa=q>=2?[{id:P2[0],v:PS[P2[0]].b*(1+.1*T.t)*(q===3?1.5:1)}]:null;if(q===3)pa.push({id:P2[1],v:PS[P2[1]].b*(1+.1*T.t)*.8});TOOLT[v]={k:T.k,t:T.t,bq:FR[q],pa}}}})}
 // lote D8: calidad de lo FABRICADO bajada (antes verde hasta 25 %, azul 7 %, épico 1 %): ahora techo verde 8 %, azul 1,2 %, épico 0,15 % (con la mejora `crf` sube un poco)
-function qv(id,sk){if(LOOT[id]||!(SW[id]||BOW[id]||STF[id]||AR[id]||SHL[id]||LGL[id]||GLL[id]||TOOLT[id]))return id;const l=L(sk),g=Math.min(.08,.015+l*.001),b=l<20?0:Math.min(.012,.002+(l-20)*.0002),e=l<40?0:Math.min(.0015,.0002+(l-40)*.00002),r=Math.random()/(1+.12*S.crf)/QBON,q=r<e?3:r<e+b?2:r<e+b+g?1:0;return q?id+'~'+q:id}
+function qv(id,sk){if(LOOT[id]||!(SW[id]||BOW[id]||STF[id]||AR[id]||SHL[id]||LGL[id]||GLL[id]||TOOLT[id]||(typeof OFGEAR!=='undefined'&&OFGEAR.is(id))))return id;const l=L(sk),g=Math.min(.08,.015+l*.001),b=l<20?0:Math.min(.012,.002+(l-20)*.0002),e=l<40?0:Math.min(.0015,.0002+(l-40)*.00002),r=Math.random()/(1+.12*S.crf)/QBON,q=r<e?3:r<e+b?2:r<e+b+g?1:0;return q?id+'~'+q:id}
 function gs(k){let t=0;for(const sl of EQK){const it=LOOT[S.eq[sl]];if(it&&it.st[k])t+=it.st[k]}for(const sl of['a','s','l','g','m']){const id=S.eq[sl],c=id&&CST[String(id).split('~')[0]];if(c&&c[k])t+=c[k]} // lote C1: bonus de clase de las piezas de cuero (Precisión) y túnica (Maná, Regen.)
  return t}
 function pv(id){let t=0;for(const sl of EQK){const it=LOOT[S.eq[sl]];if(it&&it.pa)it.pa.forEach(p=>{if(p.id===id)t+=p.v})}return t}
@@ -379,7 +379,7 @@ function useAmmo(){if(!ammoOk())return;if(--S.amn<=0){const n=I[S.eq.u][0];S.eq.
 function eqAmmo(id){const n=count(id),o=S.eq.u,on=S.amn||0;if(o&&o!==id&&slotsUsed()-Math.ceil(n/AMN)+Math.ceil(on/AMN)>cap())return log('Inventario lleno: no cabe la munición que llevas puesta.');S.inv=S.inv.filter(x=>x!==id);if(o&&o!==id)for(let k=0;k<on;k++)S.inv.push(o);S.eq.u=id;S.amn=(o===id?on:0)+n;snd('coin');inc('eqammo');dirty=1;save()}
 function unqAmmo(){const id=S.eq.u,n=S.amn||0;if(!id)return;if(slotsUsed()+Math.ceil(n/AMN)>cap())return log('Inventario lleno.');for(let k=0;k<n;k++)S.inv.push(id);S.eq.u=null;S.amn=0;dirty=1;save()}
 // lote D6: mochila APILABLE (S.inv sigue siendo una lista plana, una entrada por unidad; lo que cambia es cuántos HUECOS ocupa). Materiales/comida/pociones apilan hasta STK por hueco; el equipo (armas, armaduras, herramientas, objetos con '~' de calidad) ocupa siempre 1 hueco por pieza.
-const STKN=5,stn=id=>AMS[id]!==undefined?AMN:STKN,stk=id=>!(BAGS[id]||WB[id]||AR[id]||SHL[id]||LGL[id]||GLL[id]||LOOT[id]||TOOLT[id]||QVS[id]||String(id).includes('~')),
+const STKN=5,stn=id=>AMS[id]!==undefined?AMN:STKN,stk=id=>!(BAGS[id]||WB[id]||AR[id]||SHL[id]||LGL[id]||GLL[id]||LOOT[id]||TOOLT[id]||QVS[id]||(typeof OFGEAR!=='undefined'&&OFGEAR.is(id))||String(id).includes('~')),
  slotsUsed=()=>{const c={};let n=0;for(const x of S.inv){if(stk(x))c[x]=(c[x]||0)+1;else n++}for(const k in c)n+=Math.ceil(c[k]/stn(k));return n},
  room=id=>{if(id&&stk(id)){const n=count(id);if(n%stn(id)!==0)return true}return slotsUsed()<cap()},
  have=k=>count(k)+(S.bank[k]||0),
@@ -533,6 +533,9 @@ let QBON=1;   // bono de calidad por precisión (lo usa qv durante el crafteo)
 let FSR_ON=false;try{const q=(location.search.match(/[?&]fsr=(\d)/)||[])[1];FSR_ON=q!=null?q==='1':localStorage.getItem('ns_fsr')==='1'}catch(e){}
 function fsrTxt(){const b=document.getElementById('fsrb');if(b)b.textContent='Reescalado FSR: '+(FSR_ON?'SÍ':'NO')}
 function tgFsr(){FSR_ON=!FSR_ON;try{localStorage.setItem('ns_fsr',FSR_ON?'1':'0')}catch(e){}fsrTxt()}
+// Frondosidad del pasto (opción del jugador, 23 oct 2026): multiplica la densidad de briznas SIN tocar el resto de la calidad (r3d.js la lee cada fotograma; 125 % solo en Máxima/Alta; 0 = sin pasto)
+let GRASSK=1;try{const v=localStorage.getItem('ns_grass');if(v!=null&&!isNaN(+v))GRASSK=Math.max(0,Math.min(1.25,+v))}catch(e){}
+{const r=document.getElementById('grk'),t=document.getElementById('grt');if(r){r.value=Math.round(GRASSK*100);r.oninput=()=>{if(t)t.textContent='Pasto: '+r.value+' %'};r.onchange=()=>{GRASSK=+r.value/100;try{localStorage.setItem('ns_grass',String(GRASSK))}catch(e){}}}if(t)t.textContent='Pasto: '+Math.round(GRASSK*100)+' %'}
 setTimeout(fsrTxt,0);
 let PULSE_ON=true;try{PULSE_ON=localStorage.getItem('ns_pulse')!=='0'}catch(e){}let PLS=0;
 function tgPulse(){PULSE_ON=!PULSE_ON;try{localStorage.setItem('ns_pulse',PULSE_ON?1:0)}catch(e){}const b=document.getElementById('pulb');if(b)b.textContent='Parada de impacto: '+(PULSE_ON?'SÍ':'NO')}
@@ -1570,6 +1573,7 @@ addEventListener('pointerdown',()=>pd=1);addEventListener('pointerup',()=>{if(ai
 const PDS={xp:'+50% de XP durante 3 min.',dmg:'Fuerza +3 (más 10% de tu nivel) durante 3 min.',spd:'+35% de velocidad durante 3 min.'};
 function desc(id){const d=I[id],o=[(rr(id)?'<b style="color:'+RAR[rr(id)][1]+'">'+d[0]+'</b>':d[0])+' · vale '+money(d[2])],ing=[];if(QITEM.has(id))o.push('<span style="color:#e8cf94">Objeto de misión · no se puede tirar ni vender</span>');
  if(id.includes('~')&&!(TOOLT[id]&&TOOLT[id].pa))o.push('<span style="color:'+RAR[rr(id)][1]+'">'+RAR[rr(id)][0]+'</span> · fabricado: mejores estadísticas base, sin habilidades especiales');{const ac=armCls(id);if(ac)o.push('🧥 Armadura de '+ACLS[ac].toLowerCase()+': resiste '+SNAME[ac]+', débil a '+SNAME[AWEAK[ac]])}if(LOOT[id]){const it=LOOT[id],TX={def:'Defensa',str:'Fuerza',acc:'Precisión',mana:'Maná',mreg:'Regen. de maná',hp:'Vitalidad'};o.push('<span style="color:'+RAR[it.r][1]+'">'+RAR[it.r][0]+'</span> · '+LS[it.s][0]+'');for(const k in it.st)o.push('+'+it.st[k]+' '+TX[k]);(it.pa||[]).forEach(p=>o.push('<span style="color:#e8cf94">'+PS[p.id].d(p.v)+'</span>'))}
+ if(typeof OFGEAR!=='undefined'&&OFGEAR.is(id))o.push(OFGEAR.desc(id));
  if(TOOLT[id]){const T=TOOLT[id];o.push('Herramienta de '+({wc:'tala',mi:'minería',fi:'pesca'})[T.k]+' · tier '+T.t+(T.bq?' (+'+Math.round(T.bq*100)+'% hacia el siguiente tier, nunca lo supera)':'')+'');(T.pa||[]).forEach(p=>o.push('<span style="color:#e8cf94">'+PS[p.id].d(p.v)+'</span>'))}
  if(/^rv_/.test(id))o.push('Runa reutilizable: te teletransporta a la plaza de ese bioma. Enfriamiento de 45 s y no se puede usar en combate.');
  if(SCI[id]!==undefined)o.push('Pergamino de un solo uso: lanza '+SPL[SCI[id]].n+' sin gastar maná ni runas. Requiere Magia nv. '+SPL[SCI[id]].lv+'.');
@@ -1657,7 +1661,7 @@ function syncTools(){for(const k of ['wc','mi','fi']){const id=S.eq[k],T=id&&TOO
 function autoEq(id){const T=TOOLT[id];if(T&&!S.eq[T.k]){S.eq[T.k]=id;const j=S.inv.lastIndexOf(id);if(j>=0)S.inv.splice(j,1);syncTools();toast('🔧 ¡Herramienta equipada!<br>'+I[id][0])}}
 const ownT=a=>false,unq=k=>{if(k==='u')return unqAmmo();const id=S.eq[k];if(!id||!room(id))return;S.inv.push(id);S.eq[k]=null;syncTools();dirty=1;save()};
 const twoH=id=>!!id&&!!(BOW[id]||STF[id]||/^lw_\d+[mb]/.test(String(id)));   // arma a dos manos
-function use(i){const id=S.inv[i];if(BAGS[id]){const e=bagsA().findIndex(b=>!b);if(e<0)log('Tus 4 ranuras de mochila están ocupadas: arrastra la nueva sobre una para reemplazarla.');else bagEquip(e,id);return}if(id==='ropa_viajero'){S.inv.splice(i,1);S.app=S.app||{};S.app.under=0;dirty=1;snd('coin');toast('Te vistes con la ropa del baúl.',2200);save();return}   // PLAYA: quita la ropa interior
+function use(i){const id=S.inv[i];if(typeof OFGEAR!=='undefined'&&OFGEAR.is(id)){OFGEAR.equipFrom(i);return}if(BAGS[id]){const e=bagsA().findIndex(b=>!b);if(e<0)log('Tus 4 ranuras de mochila están ocupadas: arrastra la nueva sobre una para reemplazarla.');else bagEquip(e,id);return}if(id==='ropa_viajero'){S.inv.splice(i,1);S.app=S.app||{};S.app.under=0;dirty=1;snd('coin');toast('Te vistes con la ropa del baúl.',2200);save();return}   // PLAYA: quita la ropa interior
  if(BONEXP[id]){bury(i);return}if(AMS[id]!==undefined){eqAmmo(id);return}if(QVS[id]){const o=S.eq.m;S.eq.m=id;S.inv.splice(i,1);if(o)S.inv.push(o);snd('coin');dirty=1;save();return}if(/^rv_/.test(id)){useRV(+id.slice(3));return}
  if(TOOLT[id]){const k=TOOLT[id].k,o=S.eq[k];S.eq[k]=id;S.inv.splice(i,1);if(o)S.inv.push(o);syncTools();snd('coin');dirty=1;save();return}
  if(SCI[id]!==undefined){if(cast(SCI[id],1)){S.inv.splice(S.inv.indexOf(id),1);dirty=1;save()}return}
@@ -1701,7 +1705,7 @@ function panelHTML(TB,win){let h='';
    +'<div class="ch-arms">'+cell('w','Arma',1)+cell('s','Escudo',1)+cell('m','Carcaj',1)+cell('u','Munición',1)+'</div></div>'
    +'<div class="ch-r"><h3>Atributos</h3><div class="ch-stats">'+st('Vida',Math.ceil(Math.max(0,P.hp))+' / '+maxHp())+st('Maná',Math.floor(MN)+' / '+mnMax())+st('Golpe máx.',maxHit())+st('Defensa','+'+ab())
    +st('Resistencia',armInfo(),'Daño que te evitas (o sufres de más) por tu armadura contra cada estilo: malla resiste cuerpo a cuerpo, cuero distancia, túnica magia; cada clase es débil a otra.')+st('Ataque',(atkMs()/1000).toFixed(1)+' s')+'</div>'
-   +'<h3>Herramientas</h3><div class="ch-tools">'+tcell('wc')+tcell('mi')+tcell('fi')+'</div>'
+   +'<h3>Herramientas</h3><div class="ch-tools">'+tcell('wc')+tcell('mi')+tcell('fi')+'</div>'+'<button class="bt ch-out" onclick="OFGEAR.toggle()" data-x="Herramientas y ropa de tus oficios de fabricación: dan Maña, Pulso y puntos de oficio en la Hoja de trabajo.">Equipo de oficio</button>'
    +(window.R3D_ON&&window.R3D&&window.R3D.outfits?'<button class="bt ch-out" onclick="openOutfit()" data-x="Cambia las prendas de tu personaje. El equipo que llevas puesto se superpone.">Atuendo · '+window.R3D.outfits.of(S.app&&S.app.outfit).name+'</button>':'')+'</div></div>'}
  else if(TB==='inv'){h=bagGridHTML(1)}
  else if(TB==='sk'){const dmK=k=>typeof ISLA!=='undefined'&&ISLA.lock()&&!(S.awk&&S.awk[k]),G=[['Combate',['cb','ra','mg','pr']],['Recolección',['wc','mi','fi']],['Oficios',['co','sm','cr','es','ins']]],card=k=>{const dm=dmK(k),l=L(k),x=S.xp[k],pc=dm?0:l>=99?100:(x-XT[l])/(XT[l+1]-XT[l])*100;return `<div class="skc${dm?' lk':''}" data-sk="${k}"><span class="ski"><svg viewBox="0 0 24 24">${SKI[k]||''}</svg></span><div class="skm"><div class="skt"><b>${SK[k][0]}</b><span class="gold">${dm?0:l}/99</span></div><div class="bar"><i style="width:${pc}%"></i></div><span class="hint">${fmt(x)} XP</span></div></div>`},tot=SKL.reduce((n,k)=>n+(dmK(k)?0:L(k)),0);
@@ -1720,7 +1724,7 @@ function panelHTML(TB,win){let h='';
 // (cada ingrediente con lo que tienes/necesitas y dónde conseguirlo, resultado y estadísticas, XP, tiempo, cuántas puedes hacer, cantidad y botón). Los desbloqueos futuros se pueden consultar (grupo «Próximos») aunque no puedas fabricarlos.
 let IWSEL=null,IWCAT='',IWLK=0;
 let IWSCR=0;const iwSel=(sk,i)=>{IWSEL=IWSEL&&IWSEL.sk===sk&&IWSEL.i===i?null:{sk,i};IWSCR=1;dirty=1;panel()},iwCat=c=>{IWCAT=c;dirty=1;panel()},iwLk=()=>{IWLK=IWLK?0:1;dirty=1;panel()};
-const catOf=(sk,a)=>{const o=String(a[2]||'');if(/^(sw_|bw_|st_)/.test(o))return'⚔️ Armas';if(/^(ar_|sh_|lg_|gl_)/.test(o))return'🛡️ Armadura';if(/^(ax_|pk_|rd_|tl:)/.test(o))return'🛠️ Herramientas';if(/^(fl_|vi_|qv_)/.test(o))return'🏹 Munición';if(/^b_/.test(o))return'🟧 Barras';if(/^rn_/.test(o))return'🔮 Runas';
+const catOf=(sk,a)=>{const o=String(a[2]||'');if(/^(sw_|bw_|st_)/.test(o))return'⚔️ Armas';if(/^(ar_|sh_|lg_|gl_)/.test(o))return'🛡️ Armadura';if(/^(ax_|pk_|rd_|og_|tl:)/.test(o))return'🛠️ Herramientas';if(/^(fl_|vi_|qv_)/.test(o))return'🏹 Munición';if(/^b_/.test(o))return'🟧 Barras';if(/^rn_/.test(o))return'🔮 Runas';
  if(sk==='co')return'🍖 Platos';if(sk==='es')return'🪵 Esculpido';if(sk==='ins')return'📜 Pergaminos';return'📦 Otros'};
 const whereOf=k=>desc(k).split('\n').filter(l=>/^(Se obtiene|Se fabrica|Lo suelta|Drop raro)/.test(l)).slice(0,2).join(' · ');
 // lote C1b-1: qué estación muestra cada receta. Herrería (sm): Horno = barras · Armero = armadura de malla/placa (ar_/sh_/lg_/gl_ de barra) · Yunque = armas y herramientas. Artesanía (cr): Banco de curtidor = piezas de cuero (`_cu_`, ar_cuero) · Taller = el resto (hilar, gemas, túnicas hasta que llegue la Sastrería). Una estación de otro tipo (p. ej. un horno suelto antiguo) muestra lo que le tocaba antes.

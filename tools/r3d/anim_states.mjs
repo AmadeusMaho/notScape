@@ -33,6 +33,9 @@ for(const [k,id,f,win] of [['tala','wc',work('wc'),[1.8-.72-.1,1.8+.55]],['miner
  ['cocinar','co',loop('co'),[1,2.3]],['horno','fu',loop('sm','furnace'),[1,3.9]],['artesanía','cr',loop('cr'),[1,2.1]],['inscripción','ins',loop('ins'),[1,2]],
  ['comer','eat',once('eat',1),[0,1.1]],['recoger','pk',once('pk',.42),[0,.5]]])
  for(const k2 of ['fist','sword','great','bow'])SC.push({id:id+'.'+k2,n:k+' ('+k2+')',g:gear(k2),st:tm=>({act:f(tm)}),T:6,win});
+// HERRERÍA · variantes de la Hoja de trabajo (smithV de heroanim3d.js): golpes H/B/t con el protocolo del golpe; gestos c/m/o con línea de tiempo propia
+for(const [v,nm] of [['H','golpe fuerte'],['B','remate Byregot'],['t','toque fino']])SC.push({id:'smv.'+v,n:'yunque · '+nm,g:gear('fist'),st:tm=>({act:Object.assign(work('sm')(tm),{v})}),T:6,win:[1.8-.68-.1,1.8+.6]});
+for(const [v,nm,d] of [['c','concentración',.9],['m','reparación',1],['o','observar',.7],['f','remate: alza la pieza',1.3]])SC.push({id:'smv.'+v,n:'yunque · '+nm,g:gear('fist'),st:tm=>({act:{k:'sm',id:'anvil',n:1,v,ph:tm>=.2&&tm<.2+d?Math.min(.999,(tm-.2)/d):0}}),T:6,win:[.1,.2+d+.7]});
 // DOBLE EMPUÑE (gear.wp2) y ARMAS RECICLADAS (heroanim3d.js WEAPON): mismas animaciones, otro mesh
 for(const dk of ['sword','dagger']){const g={wp:{t:'sword',wk:dk,col:'#cfd4dc'},wp2:{t:'sword',wk:dk,col:'#b8c0c8'}},id='dual'+dk,n='doble '+dk,D=DUR[dk]/1000,DH=DURH[dk]/1000,F=.36,a=hv=>tm=>Object.assign(attack(dk,hv)(tm),{wk:dk});
  SC.push({id:id+'.reposo',n:n+' · reposo',g,st:tm=>({}),win:[1,4.5]},{id:id+'.guardia',n:n+' · guardia',g,st:tm=>({cb:1}),win:[1,4.5]},

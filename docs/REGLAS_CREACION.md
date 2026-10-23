@@ -190,3 +190,59 @@ Se comprueba y se cuenta en la entrega: (1) **ESCALA** vs. héroe (≈1 unidad �
 **Pendientes conocidos de esta sesión (para el siguiente agente)**: probar a mano TODO el combate (bloqueo/perfect dodge/arco/bastón/Gabriel); poses de bloqueo de daga, mandoble y doble empuñe sin revisar; aspecto 3D del cordero y de la bola celeste sin ver; teclas 2–6 y más habilidades; magias de área (`s.area`); coste extra del mandoble; bloqueo y habilidades en táctil; precompilar el haz de la intro; la cámara se inclina hacia el enemigo también con rango (`foK`); árboles verdes semitransparentes sobre el borde de la plataforma (sin identificar).
 
 > **Regla de textos de entrada (22 oct 2026, dueño):** en TODO texto visible (tutorial, ayudas, tiendas, tooltips, diálogos) y en los comentarios se escribe **LMB** (botón izquierdo del ratón) y **RMB** (botón derecho), nunca «clic» / «clic derecho» / «click». Ejemplos: «Mayús+LMB», «mantén RMB para bloquear». No tocar los identificadores de código (`onclick`, `addEventListener('click')`).
+
+## 12 · Reglas rescatadas de los lotes archivados el 23 oct 2026 (SIGUEN VIGENTES; el texto completo de cada lote está en `docs/HISTORIAL.md`)
+**Tiempo y sincronía**
+1. **Reloj real vs virtual:** los campos que escribe `game.js` con `performance.now()` (`m.fl`, `m.at0`, `m.wind`, `m.tel`, `A.h0`, `SWG.t0`, `DSH`, `JMP`…) se comparan SIEMPRE con `performance.now()`, nunca con el `now` virtual de `R3D` (se retrasa con el hit-stop: `vlag`; un crítico llegó a desfasar la pose del golpe 300 ms para siempre). `heroState3D` ignora su parámetro y usa el reloj real. Las mediciones de lag/fps con el panel oculto o limitado NO valen (comprobar `document.visibilityState`).
+2. **Animaciones disparadas por el jugador:** patrón `armPose/armP0` (game.js): espera armada → sube desde la fase actual en `imp` ms (el efecto cae ahí) → recuperación → vuelta suave; un clic nuevo corta la vuelta sin saltos. Cada acción incrementa un contador (`A.hn`/`A.wkn`) que `heroanim3d.js` usa para `forceFade` (mezcla desde la pose actual). **Si una animación llega tarde, mira PRIMERO el limitador de velocidad del IK** (`dt·16`, `dt·80` durante `inStrike`) y los `forceFade`, no los tiempos de `game.js`.
+3. El hit-stop restablece `R3D.tscale=1` con un `setTimeout`: para congelar el tiempo en capturas hay que reasignarlo. `NSTEST.hour()` desplaza el reloj del bucle respecto a `performance.now()` y rompe las comprobaciones de los minijuegos (reiniciar la página).
+**Render y rendimiento**
+4. **NO añadir stencil/depth-stencil ni más attachments al render target MSAA del composer** (costó ≈ 12 ms por fotograma en una 4070 a 1080p ≈ 20 fps): las siluetas se hacen con profundidad (`depthFunc Greater` + adelanto `XR_D`) o en el RT propio del héroe. Mide siempre a 1080p+ y en Máxima tras tocar el pipeline de render.
+5. **Materiales/objetos creados bajo demanda** necesitan su `warmObjs()` en `warmShaders` (compila {con/sin plano de recorte} × {pantalla / `composer.renderTarget1`}). **No reprogrames pasadas completas de `warmShaders` tras la carga** (tirones de 115–220 ms); el vigilante avisa en consola `[R3D] shaders compilados EN JUEGO (+n)` si falta alguno. No uses `compile()` sobre actores desechables con `SkinnedMesh` (error `isReady`). Para medir la carga con el arnés usa `&load` en la URL (sin él `ns.py` salta la pantalla de carga).
+6. **Props con plataforma propia:** se colocan con `TER.baseZ` (terreno) y declaran su fila en `PROPS.ELEV`; los pies quedan `EPS`=.07 niveles sobre la losa y el material `XRAY` lleva `polygonOffset`, o aparece una silueta a ras.
+**Datos y código**
+7. No guardes banderas dentro de `ACT` (rompe los bucles `Object.keys(ACT)`): usa variables aparte.
+8. `HUDSU` es una `const` global (no `window.HUDSU`): compruébala con `typeof`.
+9. **Casteo genérico:** `castStart(etiqueta, ms, fn, {e})` (barra `#cast`, pose agachada `se`; se interrumpe al moverte o ser herido): reutilízalo para cualquier acción con tiempo (cofres, buscar, desollar…).
+10. **Misión nueva del tutorial:** fila en `ISLA.QUESTS` + pasos `QS(q,'a')`/`QS(q,'t')` en `STEPS`; el marcador sale de `questMark()`. Cambiar pasos desplaza índices (`ISLA.reset()`).
+11. **Diálogos:** usa el editor (`tools/dialogos/`), no edites `villagers.js`/`npcs.js` salvo cambio de diseño; nunca asignes `DL.then` a pelo (encadena el existente).
+12. **Servidor de Python sin Range:** un `<audio>` normal no puede saltar a un punto; las pistas de escena se descargan a Blob (`music.js`).
+13. **Combate:** aggro social (los vecinos se unen) solo como propiedad de especie (lobos, goblins), nunca gallinas. Los golpes sin daño son palabras flotantes («Fallo», «Esquiva», «Absorbido»), nunca un «0».
+14. **Ayudas y minijuegos:** patrón `mgBegin/mgHintRows/mgUi/mgKey` (rueda, pesca) y `ctxHint(id, filas)` una vez por partida; si añades un elemento flotante nuevo cerca de las ayudas, agrega su selector a `CTX_OBS`.
+15. **Oficios (crafteo y equipo):** manda `docs/PLAN_OFICIOS_FF14.md` (hoja de trabajo `WK/WKUI`, equipo `OFGEAR`); calibrar con `tools/work_sim.js`.
+
+## 13 · CONVENCIONES DE IDS Y DATOS (paso D0 de la Fase 3·d, 23 oct 2026) — léelo antes de crear UN SOLO objeto, receta o habilidad nueva
+> Objetivo: que los ~10 oficios nuevos, la fauna, los muebles y la economía se construyan sobre nombres y formatos únicos. `tools/rules_check.py` (bloque «CONVENCIONES») comprueba lo que se pueda. Cambiar una convención = actualizar ESTA sección y avisar al dueño.
+### 13.1 Ids de objeto (`I[id]`)
+- **Forma:** `<prefijo>_<variante>[_<subvariante>]` en minúsculas, ASCII, sin tildes ni espacios (`estano`, no `estaño`). Un nombre sin prefijo solo para MATERIAS PRIMAS crudas ya existentes (`logs`, `roble`, `cobre`, `lana`, `pluma`, `grasa`). El nombre visible (español, sin mayúsculas de título: «Martillo de cobre») va en `I[id][0]`.
+- **El sufijo «por tier» es SIEMPRE el id del tier de `TNM`/`TI`** (`cobre, estano, bronce, hierro, acero, plata, mitril, adam, runita, oricalco, celestita`; nunca el índice 0–10): `sw_acero`, `ar_mitril`, `b_hierro`, `og_sm_m_bronce`. Para cosas ligadas a la MADERA el sufijo es el id de la madera de `WON` (`pino, abedul, roble, fresno, sauce, arce, tejo, ebano, caoba, baobab, mundo`): `bw_roble`, `tb_roble`. El eje de tiers, sus niveles (`OFGEAR.TLV` = 1, 10, 19 … 91) y su cultura (`OFGEAR.CULT`) son DATOS; nunca un `if` por tier.
+- **Calidad:** sufijo `~0..3` (`sw_cobre~2`); compara con `String(id).split('~')[0]`; no apila (`stk`).
+- **Prefijos existentes (no los cambies):** `b_` barra · `sw_` espada · `lw_` arma de botín · `bw_` arco · `st_` bastón · `sh_` escudo · `ar_` peto/armadura · `lg_` pantalones · `gl_` guantes de combate · `lt_` sets de cuero de botín (`lt_<cultura><ranura><n>`) · `fl_`/`vi_` flechas/virotes · `qv_` carcaj · `ax_`/`pk_`/`rd_` hacha/pico/caña de recolección · `c_` comida cocinada · `f_` plato frito · `pot_` poción · `carne_`/`hueso_`/`piel_` botín animal · `bag_` mochila · `rn_` runa · `rv_` runa de viaje · `sc_` pergamino · `of_` ofrenda de misión (lleva su id en `QITEM`) · `og_` equipo de oficio (`og_<oficio>_<ranura>_<tier>`) · `gema_`, `sal_`, `maza_`, `ropa_` sueltos.
+- **Prefijos RESERVADOS para lo que viene** (usa estos, no inventes otros): `pc_` piel cruda · `cu_` cuero curtido por tier · `fb_` fibra (lino, cáñamo, algodón, seda… por tier) · `mj_` madeja · `te_` tela por tier · `tb_` madera lisa/tablón por madera · `mn_` mango · `hj_` hoja metálica · `hr_` herraje · `bl_` bloque de piedra · `ld_` ladrillo · `mb_` mueble (`mb_<tipo>_<cultura>`) · `sem_` semilla · `cv_` cultivo · `hb_` hierba · `rc_` reactivo de Alquimia · `tn_` tintura · `gm_` gema tallada · `eg_` engarce · `pv_` polvo · `tt_` tinta arcana · `eng_` engranaje/pieza mecánica · `ml_` miel/cera. Comida y poción con buff siguen `c_`/`f_`/`pot_` y declaran su buff en una tabla (`BUFD`).
+- **A migrar cuando se porte el oficio dueño (NO en D0):** `cuero` y `piel_<tier>` → `cu_<tier>` (Peletería), `tela` → `te_<tier>` (Sastrería); `lana`, `pluma`, `grasa` se quedan como materias primas.
+- **Objeto de misión:** añade su id a `QITEM`. **Objeto con equipo:** debe entrar en `eqKey`/`OFGEAR.is`.
+### 13.2 Claves de habilidad (`SK`, `S.xp`, `SKI`)
+- **Existentes:** `wc` Tala · `mi` Minería · `fi` Pesca · `co` Cocina · `sm` Herrería · `cr` Artesanía · `es` Escultor · `ins` Inscripción (se retira con Encantamiento) · `mg` Magia · `cb` Combate · `ra` Arquería · `pr` Oración.
+- **Reservadas:** `ds` Desollar · `pe` Peletería · `sa` Sastrería · `he` Herbolaria · `al` Alquimia · `en` Encantamiento · `jo` Joyería · `ing` Ingeniería · `dm` Domar · `ag` Agricultura · `ap` Apicultura. **`cr` pasa a ser Artesanía = MADERA** (arcos, flechas, madera lisa, mangos, muebles); sus recetas de cuero se trasladan a `pe` al portar Peletería. No uses `do`/`in`/`if` (palabras reservadas de JS).
+- **Toda habilidad nueva cumple la lista de comprobación de D3** (icono `SKI`, `S.xp.<id>` por defecto, nivel «despierto» del tutorial, fila en `meas_progresion.py` y `craft_balance.py`, aviso `STD` de una línea, grupo en el panel Habilidades).
+### 13.3 Recetas (`ACT[sk]`)
+- **Fabricación** (la detecta `stepAct` por `a.length===6`): `[nombre, {ingrediente:cantidad}, idResultado, nivelMin, xp, tiempoMs]`; **tope 5 ingredientes distintos**; `tiempoMs` es el tiempo base del que sale la XP (`pxp(nivel, ms)`). Resultados especiales: `tl:<oficio>:<tier>` (herramienta de recolección que se equipa) y `rn_<x>:<n>` (runas).
+- **Recolección** (5 campos): `[nombre, idRecurso, nivelMin, xp, ms]`.
+- **Las recetas se GENERAN por datos** (patrón de `TI.forEach` en game.js y `OFGEAR.gen`): una tabla de tiers + una plantilla por familia; nunca copiar 11 filas a mano. No guardes banderas dentro de `ACT` (§12-7).
+- **Ingredientes de un oficio nuevo:** cada oficio de fabricación se sube produciendo un INTERMEDIO que otro oficio necesita (plan §5r); su primera receta (nivel 1) debe poder completarse solo con Síntesis básica (recetas de nivel ≤ 8, ver `docs/CALIBRACION_HOJA_TRABAJO.md`).
+### 13.4 Equipo de oficio (`OFGEAR.OFD`) y hoja de trabajo (`WK`)
+- **`OFD[oficio] = {n:'Herrería', slots:{m,s,h,d,g}, mk:{m:'sm',…}}`:** ranuras fijas `m` principal · `s` secundaria · `h` gorro · `d` delantal/chaqueta · `g` guantes; `mk[ranura]` = oficio que la FABRICA (interconexión: p. ej. el gorro de fragua lo hace Peletería).
+- **Acciones exclusivas:** fila en `WK.A` con `of:'<oficio>'` (4–6 por oficio, repartidas para que haya algo nuevo cada 3–6 niveles); cada acción lleva su descripción en `DESC` de `workui.js`. **Dificultad:** `WK.K` + `node tools/work_sim.js <oficio>`.
+### 13.5 Guardado (`S`)
+- Claves nuevas del sistema de oficios: `S.wkb[oficio]` (barra, macros, acciones vistas) · `S.eqt[oficio][ranura]` (equipo) · `S.wkf[idReceta]` (primera vez). **Reservadas:** `S.casa[bioma]` (casa del jugador) · `S.granja[bioma][parcela]` (cultivos). Toda clave nueva se lee con valor por defecto (`S.x=S.x||{}`); los guardados antiguos son descartables (se puede subir `S.ver`).
+### 13.6 Categorías de icono (para D4, `icons3d.js`)
+Cada prefijo cae en UNA categoría de icono paramétrico con la paleta de su tier: `herramienta` (`og_*_m/s`, `ax_`, `pk_`, `rd_`, cuchillo) · `ropa-oficio` (`og_*_h/d/g`) · `arma` · `armadura` · `munición` · `barra/lingote` (`b_`) · `madera` (`logs…`, `tb_`) · `cuero/piel` (`pc_`, `cu_`, `piel_`) · `tela/fibra` (`fb_`, `mj_`, `te_`) · `piedra` (`bl_`, `ld_`) · `pieza` (`mn_`, `hj_`, `hr_`, `eng_`) · `gema` (`gm_`, `eg_`) · `planta` (`hb_`, `cv_`, `sem_`) · `comida/poción` (`c_`, `f_`, `pot_`, `rc_`) · `mueble` (`mb_`). Un objeto de oficio NUNCA debe caer al icono emoji.
+```ids-skills
+wc mi fi co sm cr es ins mg cb ra pr
+```
+```ids-skills-reservadas
+ds pe sa he al en jo ing dm ag ap
+```
+```ids-prefijos-reservados
+pc cu fb mj te tb mn hj hr bl ld mb sem cv hb rc tn gm eg pv tt eng ml
+```

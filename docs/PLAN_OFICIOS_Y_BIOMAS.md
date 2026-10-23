@@ -52,6 +52,8 @@ Para cada bioma, en este orden y verificando con las herramientas existentes:
 5. **Música y luz** del bioma (`BL`, ambience).
 6. **Verificación:** `props_sheet.py`, `roof_clip_check.py`, `village_check.py`, `coast_check.py`, `perf_check.py`, `rules_check.py`; capturas a zoom normal y máximo; medir en GPU y móvil del dueño.
 
+> **22 oct 2026 (propuesta del dueño): paso extra de cada bioma = casa del jugador (al terminar la cadena principal) con parcelas fijas junto a la puerta y mobiliario por anclas de su cultura.** Detalle en `docs/PLAN_OFICIOS_FF14.md` §5n.
+
 ## 4 · Orden propuesto de trabajo (lotes pequeños, un entregable por mensaje)
 1. **L1 · Herbolaria base:** skill + hoz + nodos genéricos + minijuego «arrancar» + 3 hierbas de la Pradera. *(Ya puedes recolectar en la Pradera.)*
 2. **L2 · Alquimia + Botica:** alambique, sala, pociones y antídotos de los estados. Rework **Pradera** parte 1 (hierbas, Botica, casas nuevas).

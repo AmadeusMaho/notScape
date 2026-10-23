@@ -30,7 +30,7 @@ export class Terrain{
   // Fase 49c · SUELO DE RESPALDO: un plano grande bajo todo el terreno, del color del suelo del bioma, que sigue al héroe. Donde aún no hay chunk (se construyen por trozos, o la vista es más ancha que el radio) se ve él en vez del cielo claro/blanco.
   this.under=new THREE.Mesh(new THREE.PlaneGeometry(900,900).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#3a4a2a'}));this.under.position.y=-1.25;this.under.renderOrder=-10;this.under.frustumCulled=false;this.under.raycast=()=>{};this.underC=new THREE.Color('#3a4a2a');scene.add(this.under);
 this.occ=o.occ||null;this.ogrp=null;   // Fase 49c: this.occ = escena de OCLUSIÓN del héroe (aScene, capa 3): las cumbres de las cordilleras le tapan; se asigna desde r3d.js
-  this.grp=new THREE.Group();this.grp.name='terreno3d';scene.add(this.grp);this.ch=new Map();this.q=o.grass??1;this.tick=0;
+  this.grp=new THREE.Group();this.grp.name='terreno3d';scene.add(this.grp);this.ch=new Map();this.q=o.grass??1;this.gk=1;this.tick=0;
   this.NX=TER.NX;this.NY=TER.NY;this.H=new Float32Array(this.NX*this.NY).fill(-1);const CO=BIOMES.coast;this.pad=CO&&CO.on?CO.PAD:0;this.shelf=CO&&CO.on?CO.SHELF:10;this.coastD=TER.coastD||null;   // Fase 49b: PAD = tiles de MAR que se dibujan más allá del borde del mundo (la lámina de mar sigue hasta el horizonte visible; no hay vacío ni estratos)
   this.F=TER.fields();
   this.matTop=toon('#ffffff',{vc:1,ground:1});this.matWall=toon('#ffffff',{vc:1,side:THREE.DoubleSide,tex:'piedra',texS:9,texB:.7});this.matRock=toon('#ffffff',{vc:1,mossUp:.5,tex:'piedra',texS:7,texB:.6});this.matMtn=toon('#ffffff',{vc:1,tex:'montana',texS:1,texB:.55,texA:.9});this.matDeck=toon('#ffffff',{vc:1,tex:'madera',texS:5,texB:.5});this.matMtnW=toon('#ffffff',{vc:1,side:THREE.DoubleSide,tex:'montana',texS:1,texB:.55,texA:.9});   // matMtn: cumbres de las cordilleras (Fase 44-0 ii), sin musgo en las laderas
@@ -88,7 +88,7 @@ this.occ=o.occ||null;this.ogrp=null;   // Fase 49c: this.occ = escena de OCLUSI�
   for(const[d,i,j]of want){const k=i+','+j;let c=this.ch.get(k);
    if(!c){if(force){c=this.build(i,j);this.ch.set(k,c);built++}else{needs.push({k,kind:0,i,j});if(d<CS*(rTiles0/CS+.5))urgent=true;continue}}
    c.seen=this.tick;
-   if(d<CS*1.6&&!c.grass&&this.q>0){if(force){c.grass=this.meadow(i,j);if(c.grass)c.g.add(c.grass);built++}else needs.push({k,kind:1,i,j})}}
+   if(d<CS*1.6&&!c.grass&&this.q>0&&this.gk>0){if(force){c.grass=this.meadow(i,j);if(c.grass)c.g.add(c.grass);built++}else needs.push({k,kind:1,i,j})}}
   if(!force&&needs.length){let jb=this.job&&needs.some(n=>n.k===this.job.k&&n.kind===this.job.kind)?this.job:null;
    if(!jb){const n=needs[0];jb=this.job={k:n.k,kind:n.kind,it:n.kind?this.meadowG(n.i,n.j):this.buildG(n.i,n.j)}}
    let r;const BUD=urgent?9:3.5;do{r=jb.it.next()}while(!r.done&&performance.now()-T1<BUD);   // más tiempo por fotograma si falta un chunk dentro de lo visible (correr)
@@ -222,7 +222,7 @@ const DKP=[],DKC=[],DKF=this.F&&this.F.DK;
  // R3D-OPT: el pasto del chunk se parte en 4 cuadrantes de 8×8 tiles, cada uno con DOS mallas que COMPARTEN los buffers de instancias: «full» (7 briznas, 35 tris) y «lite» (4 briznas, 12 tris).
  // lod() enseña la completa cerca del héroe y la ligera lejos (allí el óleo/Kuwahara y la viñeta ya funden el detalle) y el recorte por cámara se hace por cuadrante.
  meadow(ci,cj){const it=this.meadowG(ci,cj);let r;while(!(r=it.next()).done);return r.value}
- *meadowG(ci,cj){const x0=ci*CS,z0=cj*CS,per=Math.round(26*this.q),N=CS*CS*per;if(!per)return null;const o=new THREE.Object3D(),B=[0,1,2,3].map(()=>({m:[],c:[]}));let n=0;
+ *meadowG(ci,cj){const x0=ci*CS,z0=cj*CS,per=Math.round(26*this.q*this.gk),N=CS*CS*per;if(!per)return null;const o=new THREE.Object3D(),B=[0,1,2,3].map(()=>({m:[],c:[]}));let n=0;
   const TRY=this.q>.6?2.6:1.6;for(let i=0;i<N*TRY&&n<N;i++){   /* PASTO-FRONDOSO: con la agrupación hacen falta más intentos para llenar el chunk; solo en Máx/Alta (en Media o menos se queda como antes: no sube el coste de las integradas) */if((i&255)===0)yield;const x=x0+hash(i,1,ci*7+cj*131)*CS,z=z0+hash(i,2,ci*13+cj*71)*CS,tx=Math.floor(x),tz=Math.floor(z),h=this.h(tx,tz);if(!this.land(h))continue;
    if(this.F&&this.F.DK&&this.F.DK[tz*this.NX+tx])continue;   // Fase 3: nada de matas creciendo a través de una pasarela
    const f=this.field(x,z);if(f.w>.22)continue;const[pf,pc]=this.pathAt(x,z);if(pf>.35||pc>.2)continue;if(TER.sandAt&&TER.sandAt(tx,tz)>.2)continue;const cl=fb2(x*.33+3,z*.33+11);if(hash(i,7,9)>.3+cl*1.1)continue;   // PASTO-FRONDOSO: las matas se AGRUPAN en manchas (mismo nº total por chunk: se ven macizos llenos en vez de un salpicado uniforme){const nb=this.bnear(x,z);if(nb>.5&&hash(i,6,9)<nb*1.1-.25)continue}
@@ -239,6 +239,7 @@ const DKP=[],DKC=[],DKF=this.F&&this.F.DK;
  // distancia (tiles) a partir de la cual el cuadrante usa la brizna ligera; con histéresis de 1,5 tiles para que no parpadee al cruzar el umbral
  lod(cx,cz){const R=this.lodR;this.ch.forEach(c=>{if(!c.grass)return;c.grass.userData.q.forEach(q=>{const d=Math.hypot(q.cx-cx,q.cz-cz),far=q.far?d>R-1.5:d>R+1.5;if(far!==q.far||q.full.visible===q.lite.visible){q.far=far;q.full.visible=!far;q.lite.visible=far}})})}
  freeGrass(c){if(!c.grass)return;c.g.remove(c.grass);c.grass.userData.q.forEach(q=>{q.full.dispose();q.lite.dispose()});c.grass=null}   // dispose() libera los buffers de instancias en GPU (antes se quedaban para siempre al expulsar un chunk)
+ setDensity(k){if(k===this.gk)return;this.gk=k;this.ch.forEach(c=>this.freeGrass(c))}   // multiplicador del jugador (opción «Pasto»): libera el pasto de los chunks y se reconstruye solo
  setQuality(q){if(q===this.q)return false;const re=(q>.6)!==(this.q>.6);this.q=q;this.ch.forEach(c=>this.freeGrass(c));return re}   // devuelve true si cruza el umbral del adoquín denso (q>.6): r3d.js entonces reconstruye el suelo (OPT-RENDIMIENTO: si no, al BAJAR la calidad en partida el suelo seguía con 288 tris/tile)
  dropAll(){this.ch.forEach(c=>{this.freeGrass(c);this.grp.remove(c.g);if(c.g.userData.og&&this.ogrp)this.ogrp.remove(c.g.userData.og);c.g.traverse(o=>{if(o.geometry)o.geometry.dispose()})});this.ch.clear();this.job=null}
 }

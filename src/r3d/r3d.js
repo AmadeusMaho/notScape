@@ -232,6 +232,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
    const u=Math.min(1,Math.max(0,(dm-1.2)/2.4)),tk=shrMin+(1-shrMin)*u*u*(3-2*u);G.uShrK.value+=(tk-G.uShrK.value)*(1-Math.exp(-dt*6))}
   // calidad del pasto según la calidad del juego (Máxima/Alta/Media/Baja/Mínima)
   const q=GRASS_Q[typeof QL!=='undefined'?QL:2];if(q!==qGrass){qGrass=q;if(terr.setQuality(q)){terr.dropAll();preload()}}
+  {const gk=Math.min(typeof GRASSK!=='undefined'?GRASSK:1,(typeof QL!=='undefined'?QL:2)<=1?1.25:1);if(gk!==terr.gk)terr.setDensity(gk)}   // opción «Pasto» (Opciones → Gráficos): multiplicador de densidad independiente de la calidad
   {const ss=(typeof QL!=='undefined'&&QL>=3)||COARSE?1024:2048;if(sun.shadow.mapSize.x!==ss){sun.shadow.mapSize.set(ss,ss);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}}}   // OPT-RENDIMIENTO: sombra del sol 2048 → 1024 en Baja/Mínima (¼ de píxeles; mismo shader, sin recompilar)
   G.uCloud.value=(typeof QL!=='undefined'&&QL>=4)?0:cloudK;   // F3f·P2: sombras de nubes (apagadas en calidad Mínima)
   if(upd)terr.update(tgt.x,tgt.z,Math.hypot(V.cw,V.ch)/k*.78+6);if(upd){const hp=typeof P!=='undefined'?W3(P.x,P.y,TER.standZ(P.x,P.y)):tgt,S=Math.min(44,Math.max(22,Math.hypot(V.cw/2/k,V.ch/k)*2.2));   // volumen que envuelve la pantalla (tiles)

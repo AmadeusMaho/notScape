@@ -281,6 +281,31 @@ function smith(){const ax=[1,0,0];
  const k3=P(S,{py:-.08,cx:.3,cy:.08,rp:[-.14,.61,.3],rd:[0,.05,1],re:edge(ax,[0,.05,1])});
  const k4=P(S,{rp:[-.15,.66,.29],rd:nrm([0,.35,.94]),re:edge(ax,[0,.35,.94])});
  return full([K(0,S),K(.65,k1),K(.86,k2,'i2'),K(1,k3,'i2'),K(1.15,k4,'o2'),K(2,S)])}
+// HERRERÍA · variantes por acción de la Hoja de trabajo (a.v): H golpe fuerte, B remate (Byregot), t toque fino, c concentración, m reparación, o observar.
+// Mismo protocolo que smith(): u=.65 = pose armada de espera, u=1 = impacto, 1..2 = seguimiento. Los gestos (c, m, o) usan u 0..1 como línea de tiempo y vuelven solos.
+function smithV(v){const ax=[1,0,0],S=P(SM0,{re:edge(ax,SM0.slice(C.rd,C.rd+3))}),E=(d)=>edge(ax,d);
+ if(v==='H'||v==='B'){const big=v==='B';
+  const k1=P(S,{py:big?.0:-.03,cx:big?-.12:-.06,cy:big?-.68:-.5,yaw:big?-.3:0,rp:[-.3,big?1.14:1.02,-.02],rd:nrm([0,.95,-.32]),re:E([0,.95,-.32]),pr:[-.95,.35,.3],lp:[.1,.66,.27]});
+  const k2=P(S,{py:-.05,cx:.12,cy:-.2,rp:[-.22,.96,.2],rd:nrm([0,.9,.4]),re:E([0,.9,.4])});
+  const k3=P(S,{py:big?-.22:-.14,cx:big?.52:.4,cy:big?.3:.22,rp:[-.12,.56,.33],rd:[0,.0,1],re:E([0,0,1]),pr:[-.5,-.8,.2]});
+  const k4=P(k3,{py:-.1,cx:.34});
+  return full([K(0,S),K(.65,k1),K(.86,k2,'i2'),K(1,k3,'i2'),K(1.22,k4,'o2'),K(2,S)])}
+ if(v==='t'){
+  const k1=P(S,{py:-.02,cx:.2,rp:[-.17,.78,.22],rd:nrm([0,.6,.8]),re:E([0,.6,.8])});
+  const k2=P(S,{cx:.22,rp:[-.16,.7,.27],rd:nrm([0,.4,.92]),re:E([0,.4,.92])});
+  const k3=P(S,{py:-.05,cx:.3,cy:.04,rp:[-.14,.62,.3],rd:[0,.1,1],re:E([0,.1,1])});
+  return full([K(0,S),K(.65,k1),K(.86,k2,'i2'),K(1,k3,'i2'),K(1.12,P(k3,{cx:.28}),'o2'),K(2,S)])}
+ if(v==='c'){   // concentración: martillo en vertical ante el pecho, cabeza inclinada sobre la pieza
+  const k=P(S,{py:-.05,cx:.24,hx:.28,cy:.1,rp:[-.1,.84,.2],rd:nrm([0,.92,.4]),re:E([0,.92,.4]),lp:[.07,.7,.31]});
+  return full([K(0,S),K(.4,k,'i2'),K(.85,P(k,{cx:.26,hx:.32}),'l'),K(1,P(k,{cx:.25})),K(2,S)])}
+ if(v==='m'){   // reparación: la mano de las tenazas barre sobre la pieza mientras el martillo descansa
+  const a=P(S,{py:-.04,cx:.2,hx:.2,lp:[-.02,.7,.33],ld:nrm([.3,-.3,.9]),le:[0,1,0],rp:[-.15,.62,.26]}),b=P(a,{lp:[.2,.7,.33],ld:nrm([-.5,-.3,.9])});
+  return full([K(0,S),K(.25,a,'i2'),K(.55,b,'l'),K(.8,a,'l'),K(1,a),K(2,S)])}
+ if(v==='f'){   // remate: se yergue y alza la pieza (mano de las tenazas) a la altura de los ojos para mirarla
+  const k=P(S,{py:.02,cx:-.04,hx:-.05,cy:-.1,lp:[.14,1.0,.3],ld:nrm([0,.7,.7]),le:[0,1,0],rp:[-.15,.66,.26]});
+  return full([K(0,S),K(.45,k,'i2'),K(.9,P(k,{cy:-.15}),'l'),K(1,k),K(2,S)])}
+ const o=P(S,{py:-.09,cx:.36,hx:.38,cy:.08,rp:[-.15,.64,.28],rd:nrm([0,.3,.95]),re:E([0,.3,.95])});   // observar: se inclina a mirar la pieza
+ return full([K(0,S),K(.45,o,'i2'),K(.9,o,'l'),K(1,o),K(2,S)])}
 // PESCA (u = ph del juego, 0→.99 en 2,4 s): echar la caña atrás, latigazo adelante, esperar (los tirones van aparte)
 const FI0=P(DEF,{py:-.03,yaw:-.25,cy:.05,cx:.05,fl:[.11,.08,0,0,.2],fr:[-.11,-.08,0,0,-.35],two:1,lh:.14,rp:[-.08,.7,.22],rd:nrm([0,.55,.83]),re:[1,0,0],pr:[-.7,-.6,-.2],pl:[.6,-.7,.1]});
 function fishC(){const k1=P(FI0,{cy:-.35,cx:-.06,pz:-.02,rp:[-.12,.94,.06],rd:nrm([-.15,.8,-.58])});
@@ -307,9 +332,9 @@ export const LOOPS={
  ins:t=>P(DEF,{hx:.35,cx:.08,lp:[.06,.7,.24],ld:nrm([0,.35,.94]),le:[-1,0,0],rp:[-.02+.015*Math.cos(t*7),.73,.25+.012*Math.sin(t*9)],rd:nrm([.1,.7,-.5]),re:[1,0,0],pl:[.7,-.6,.1]})};
 
 // golpes de trabajo: clave → constructor (se cachean)
-const WORK={wc:chop,mi:mine,sm:smith};
+const WORK={wc:chop,mi:mine,sm:smith,smH:()=>smithV('H'),smB:()=>smithV('B'),smt:()=>smithV('t'),smc:()=>smithV('c'),smm:()=>smithV('m'),smo:()=>smithV('o'),smf:()=>smithV('f')};
 // tiempos del seguimiento (s) tras el impacto: pesado = más largo
-const FOLLOW={dual:.36,fist:.3,sword:.4,dagger:.26,great:.7,scepter:.45,staff:.5,bow:.6,xbow:.85,wc:.45,mi:.5,sm:.35};
+const FOLLOW={dual:.36,fist:.3,sword:.4,dagger:.26,great:.7,scepter:.45,staff:.5,bow:.6,xbow:.85,wc:.45,mi:.5,sm:.35,smH:.45,smB:.55,smt:.3,smc:.4,smm:.4,smo:.4,smf:.5};
 
 // ════════════════════════════ IK ════════════════════════════
 const _d=new V3(),_p=new V3(),_u=new V3(),_f=new V3(),_X=new V3(),_Y=new V3(),_Z=new V3(),_m=new M4(),_q=new QT(),_q2=new QT(),_v=new V3(),_w=new V3(),_sp=new V3();
@@ -465,7 +490,7 @@ export class HeroAnim{
   this.runK+=((st.run?1:0)-this.runK)*(1-Math.exp(-dt*7));
   let key,fd=.16,feetStep=1,LB=null;
   if(sw){this.movePose(cls,sh,true,t,v);LB=Float32Array.from(v)}   // piernas y altura de la marcha, guardadas para devolverlas tras el golpe
-  if(a){const ak=a.k==='sm'&&a.id==='furnace'?'fu':a.k;
+  if(a){const ak=a.k==='sm'&&a.id==='furnace'?'fu':(a.k==='sm'&&a.v&&a.v!=='h'?'sm'+a.v:a.k);
    if(ak==='f'||WORK[ak]){const wkey=ak==='f'?cls:ak;
     // ph>0 = cargando/golpeando; al volver a 0 tras pasar de .5 = IMPACTO → seguimiento con reloj propio
     const ph=a.ph||0;
