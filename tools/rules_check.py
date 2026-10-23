@@ -127,6 +127,7 @@ for n, ok_, d in [
     ('detección de GPU integrada (IGPU)', 'const IGPU=' in gj and 'else if(IGPU)QL=2' in gj, 'src/game.js'),
     ('reflejo del agua solo en Máx/Alta', 'this.q<=1&&this.refNeed' in rd('src/r3d/water3d.js'), 'src/r3d/water3d.js'),
     ('sombra a medio ritmo en Baja/Mínima', 'shF' in rj and 'r.shadowMap.autoUpdate=!lo' in rj, 'src/r3d/r3d.js'),
+    ('reescalado FSR disponible y APAGADO por defecto (decisión del dueño)', 'let FSR_ON=false;' in gj and 'fsr=new ShaderPass' in rj, 'src/game.js / src/r3d/r3d.js'),
     ('servidor local con keep-alive', "protocol_version='HTTP/1.1'" in rd('tools/serve_nocache.py'), 'tools/serve_nocache.py'),
 ]: (ok if ok_ else bad)(f'RENDIMIENTO: {n}', '' if ok_ else d)
 wm = re.search(r'PR\.warm\((\d+)\)', gj); (ok if wm and int(wm.group(1)) >= 40 else bad)('RENDIMIENTO: props en tramos ≥ 40 ms (PR.warm)', wm.group(0) if wm else 'no encontrado')

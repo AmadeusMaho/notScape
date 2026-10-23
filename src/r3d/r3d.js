@@ -191,7 +191,27 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
     c*=uTint;c=oilGrade(c,vUv*uRes/sc,uLift+uTLift,uK);                                                 // receta compartida con el héroe (materials3d.js OIL_GLSL)
     if(uFog>.002){float rr=length((vUv-.5)*vec2(uRes.x/uRes.y,1.))*1.2,fm=smoothstep(mix(.95,.1,uFog),mix(1.45,.62,uFog),rr)*uFog;c=mix(c,uFogC*(.55+.45*olum(c)),fm);}   // Fase B3 · NIEBLA RADIAL SUAVE (poca visibilidad): el centro (el héroe) se ve y los bordes se pierden en la bruma; sin daño ni bloqueo
     c*=oilVig(vUv,uRes,uVig);gl_FragColor=vec4(c,1.);}`});
- composer.addPass(grade);composer.addPass(new OutputPass());let cSize='';
+ composer.addPass(grade);composer.addPass(new OutputPass());
+ // REESCALADO NÍTIDO tipo FSR 1 (22 oct 2026, interruptor «Reescalado FSR» de Opciones → Gráficos, APAGADO por defecto; `FSR_ON` en game.js): el MUNDO 3D se pinta al FSR_S (75 %)
+ // de la resolución del lienzo y esta pasada lo amplía a pantalla completa con un bicúbico Catmull-Rom de 5 lecturas (bordes limpios), sin halos (se limita al mín/máx de los 4
+ // texeles vecinos, como EASU) y con nitidez adaptativa al contraste (CAS/RCAS). El héroe y el HUD van en el lienzo 2D a resolución completa: no se ven afectados.
+ // Coste: ~9 lecturas por píxel de pantalla; ahorro: el 44 % de los píxeles de TODO el pipeline (escena, sombra de contacto, bloom, óleo). En Baja/Mínima (sin post) pasa por el composer solo con RenderPass → Output → esta pasada.
+ const FSR_S=.75,fsr=new ShaderPass({uniforms:{tDiffuse:{value:null},uSrc:{value:new THREE.Vector2(1,1)},uSharp:{value:.6}},
+  vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+  fragmentShader:`uniform sampler2D tDiffuse;uniform vec2 uSrc;uniform float uSharp;varying vec2 vUv;
+   vec3 tx(vec2 p){return texture2D(tDiffuse,p).rgb;}
+   void main(){vec2 iv=1./uSrc,sp=vUv*uSrc,tp=floor(sp-.5)+.5,f=sp-tp,f2=f*f,f3=f2*f;
+    vec2 w0=f2-.5*(f3+f),w1=1.5*f3-2.5*f2+1.,w3=.5*(f3-f2),w2=1.-w0-w1-w3,s1=w1+w2;
+    vec2 t0=(tp-1.)*iv,t1=(tp+w2/s1)*iv,t2=(tp+2.)*iv;
+    float a=s1.x*w0.y,b=w0.x*s1.y,c0=s1.x*s1.y,d=w3.x*s1.y,e=s1.x*w3.y;
+    vec3 c=(tx(vec2(t1.x,t0.y))*a+tx(vec2(t0.x,t1.y))*b+tx(t1)*c0+tx(vec2(t2.x,t1.y))*d+tx(vec2(t1.x,t2.y))*e)/(a+b+c0+d+e);
+    vec2 bq=tp*iv;vec3 q0=tx(bq),q1=tx(bq+vec2(iv.x,0.)),q2=tx(bq+vec2(0.,iv.y)),q3=tx(bq+iv);
+    c=clamp(c,min(min(q0,q1),min(q2,q3)),max(max(q0,q1),max(q2,q3)));
+    vec3 n=tx(vUv-vec2(0.,iv.y)),s=tx(vUv+vec2(0.,iv.y)),w=tx(vUv-vec2(iv.x,0.)),ea=tx(vUv+vec2(iv.x,0.));
+    vec3 mn=min(min(min(n,s),min(w,ea)),c),mx=max(max(max(n,s),max(w,ea)),c);
+    vec3 amp=sqrt(clamp(min(mn,1.-mx)/max(mx,vec3(1e-4)),0.,1.));vec3 wv=-amp/mix(8.,5.,uSharp);
+    c=clamp((c+(n+s+w+ea)*wv)/(1.+4.*wv),0.,1.);gl_FragColor=vec4(c,1.);}`});
+ fsr.enabled=false;composer.addPass(fsr);let cSize='';
  // Tiempo REAL de GPU por pase (EXT_disjoint_timer_query_webgl2, si el navegador lo da): R3D.gpu = {mundo, heroe} en ms (media móvil). Se muestra en el panel F3.
  const mkT=rr=>{const gl=rr.getContext(),ext=gl.getExtension('EXT_disjoint_timer_query_webgl2'),qs=[];return{ok:!!ext,
   begin(n){if(!ext||qs.length>6)return null;const q=gl.createQuery();gl.beginQuery(ext.TIME_ELAPSED_EXT,q);return{q,n}},end(h){if(h){gl.endQuery(ext.TIME_ELAPSED_EXT);qs.push(h)}},
@@ -246,10 +266,10 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   G.uChrB.value.set(0,0);   // el degradado pies→cabeza del material `chr` es del héroe (global): en el pase del mundo se apaga para los actores
   sun.position.copy(tgt).add(new THREE.Vector3(...TOD.dia.sunP).normalize().multiplyScalar(30));sun.target.position.copy(tgt);
   {const lo=typeof QL!=='undefined'&&QL>=3;r.shadowMap.autoUpdate=!lo;if(lo)r.shadowMap.needsUpdate=((shF=(shF+1)&1)===0)}   // OPT-RENDIMIENTO (22 oct 2026): en Baja/Mínima la sombra del sol se redibuja 1 fotograma de cada 2 (su matriz se actualiza con el mapa, así que lo estático no se desliza; lo que se mueve va 1 fotograma tarde)
-  const post=(typeof QL==='undefined'?2:QL)<=2;
+  const FS=typeof FSR_ON!=='undefined'&&!!FSR_ON,fs=FS?FSR_S:1,hq=(typeof QL==='undefined'?2:QL)<=2,post=hq||FS;   // FSR: con el reescalado activo también Baja/Mínima pasan por el composer (sin bloom ni óleo)
   if(water&&upd)water.reflect(r,scene,cam,cssW,cssH);   // reflejo ligero del agua (R3D-AGUA-ARTSTYLE)
-  if(post){const lq=(typeof QL==='undefined'||QL<=1),key=cssW+'x'+cssH+'@'+V.dpr+(lq?'a':'b');{const ms=(typeof QL!=='undefined'&&QL>=2)?2:(COARSE?2:4);if(ms!==curMs){curMs=ms;[composer.renderTarget1,composer.renderTarget2].forEach(t=>{t.samples=ms;t.dispose()})}}   // Lote R3D-OPT-1: MSAA x2 desde calidad Media (el MSAA x4 sobre un RT HalfFloat de 4,5 MP es mucho ancho de banda)
-   if(key!==cSize){cSize=key;composer.setPixelRatio(V.dpr);composer.setSize(cssW,cssH);bloom.resolution.set(cssW/(lq?2:4),cssH/(lq?2:4));grade.uniforms.uRes.value.set(V.cw,V.ch)}
+  if(post){bloom.enabled=grade.enabled=hq;fsr.enabled=FS;const lq=(typeof QL==='undefined'||QL<=1),key=cssW+'x'+cssH+'@'+V.dpr+(lq?'a':'b')+fs;{const ms=(typeof QL!=='undefined'&&QL>=2)?2:(COARSE?2:4);if(ms!==curMs){curMs=ms;[composer.renderTarget1,composer.renderTarget2].forEach(t=>{t.samples=ms;t.dispose()})}}   // Lote R3D-OPT-1: MSAA x2 desde calidad Media (el MSAA x4 sobre un RT HalfFloat de 4,5 MP es mucho ancho de banda)
+   if(key!==cSize){cSize=key;composer.setPixelRatio(1);composer.setSize(Math.round(V.cw*fs),Math.round(V.ch*fs));bloom.resolution.set(cssW*fs/(lq?2:4),cssH*fs/(lq?2:4));grade.uniforms.uRes.value.set(composer.renderTarget1.width,composer.renderTarget1.height);fsr.uniforms.uSrc.value.set(composer.renderTarget1.width,composer.renderTarget1.height)}
    bloom.strength=tp.bloom;grade.uniforms.uLift.value.set(tp.lift);{const f=V.zoom*43/Math.max(240,cssH),q=Math.max(0,Math.min(1,(f-.09)/.05));grade.uniforms.uTS.value=(typeof QL==='undefined'||QL<=1)?TILT_K*q*q*(3-2*q):0}   // 20 oct 2026: la inclinación-desenfoque se apaga al alejar el zoom (a zoom mínimo veía toda la escena borrosa arriba/abajo)
    grade.uniforms.uVig.value=tp.vig;if(typeof BR!=='undefined'){grade.uniforms.uFog.value=1-BR.vis;if(BR.vis<1){grade.uniforms.uFogC.value.set(BR.fog).multiplyScalar(1-tp.night*.8)}}if(frz>.002){grade.uniforms.uFog.value=Math.max(grade.uniforms.uFog.value,frz*.55);grade.uniforms.uFogC.value.set('#3a2c14')}   // CINE-1: viñeta oro oscuro del tiempo detenido
    {let kb=0;try{if(typeof P!=='undefined'&&typeof BIOMES!=='undefined')kb=Math.max(0,BIOMES.at(P.x,P.y))}catch(e){}const row=BT[kb]||BT[0];btT.set(1+(row[0][0]-1)*BT_K,1+(row[0][1]-1)*BT_K,1+(row[0][2]-1)*BT_K);btTL.set(row[1][0]*BT_K,row[1][1]*BT_K,row[1][2]*BT_K);

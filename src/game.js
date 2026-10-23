@@ -529,6 +529,11 @@ const whAng=now=>(((now-A.wm0)/A.wrev)%1+1)%1*TAU2,whDiff=(a,b)=>{let d=Math.abs
 const whHits=(sk,a)=>Math.max(2,Math.min(8,Math.round(1.2*nodeHp(a)/(Math.pow(NODER,S.tool[sk]||0)*(1+L(sk)*.01)*(1+.18*(S.tq[sk]||0))))));
 const whHitsC=a=>Math.max(3,Math.min(8,Math.round(a[a.length-1]/650)));   // crafteo: más tiempo de receta = más golpes
 let QBON=1;   // bono de calidad por precisión (lo usa qv durante el crafteo)
+/* REESCALADO FSR (22 oct 2026, pedido del dueño: interruptor APAGADO por defecto): el mundo 3D se pinta al 75 % y se amplía con nitidez (pasada `fsr` de r3d.js). Más fps en GPU débiles; algo menos nítido de cerca. `?fsr=1|0` lo fuerza para probar. */
+let FSR_ON=false;try{const q=(location.search.match(/[?&]fsr=(\d)/)||[])[1];FSR_ON=q!=null?q==='1':localStorage.getItem('ns_fsr')==='1'}catch(e){}
+function fsrTxt(){const b=document.getElementById('fsrb');if(b)b.textContent='Reescalado FSR: '+(FSR_ON?'SÍ':'NO')}
+function tgFsr(){FSR_ON=!FSR_ON;try{localStorage.setItem('ns_fsr',FSR_ON?'1':'0')}catch(e){}fsrTxt()}
+setTimeout(fsrTxt,0);
 let PULSE_ON=true;try{PULSE_ON=localStorage.getItem('ns_pulse')!=='0'}catch(e){}let PLS=0;
 function tgPulse(){PULSE_ON=!PULSE_ON;try{localStorage.setItem('ns_pulse',PULSE_ON?1:0)}catch(e){}const b=document.getElementById('pulb');if(b)b.textContent='Parada de impacto: '+(PULSE_ON?'SÍ':'NO')}
 setTimeout(()=>{const b=document.getElementById('pulb');if(b)b.textContent='Parada de impacto: '+(PULSE_ON?'SÍ':'NO')},0);
