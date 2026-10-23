@@ -3,11 +3,44 @@
 > **Para qué sirve:** antes esta información estaba repartida por ~90 lotes de `AGENTS.md`. Aquí está TODO lo que hay que respetar al crear contenido, agrupado por tema, con **dónde se hace cumplir** (herramienta o archivo). `AGENTS.md` solo enlaza aquí. **Si descubres una regla nueva, añádela AQUÍ (y una comprobación en `tools/rules_check.py` si se puede automatizar), no en un lote.**
 > Verificación automática: `PYTHONUTF8=1 python tools/rules_check.py` (estática, sin navegador) + las herramientas de `tools/r3d/` citadas en cada sección. Resultado de la auditoría: `docs/AUDITORIA_2026-10-21.md`.
 
+## §P · PRIORIDAD 1: RENDIMIENTO (regla del dueño, 22 oct 2026: «que ningún agente pueda volver a afectar a la optimización»)
+> El juego iba a **20 fps en un PC con gráfica integrada** (y «fatal» a otro jugador) y tardaba ~30 s en cargar; se arregló en el lote OPT-RENDIMIENTO (AGENTS.md). **Esta sección MANDA sobre cualquier otra regla de estilo o contenido**: si algo nuevo se ve mejor pero rompe el presupuesto, NO entra (o entra con versión barata por calidad). **Una entrega que se pasa del presupuesto NO está terminada.** Subir un límite solo lo decide el dueño, y se anota en el lote.
+
+**P1 · Presupuesto (lo vigila el propio juego: `R3D.budget()` y el aviso `[R3D PRESUPUESTO]` en consola, `src/r3d/r3d.js` `BUDGET`).** Medido en la plaza de la Pradera, por fotograma, sombra y reflejo incluidos:
+
+| Calidad (`QL`) | 0 Máxima | 1 Alta | 2 Media | 3 Baja | 4 Mínima |
+|---|---|---|---|---|---|
+| Triángulos máx. | 2,9 M | 2,6 M | **1,35 M** | 1,2 M | 1,05 M |
+| Llamadas de dibujo máx. | 600 | 580 | 460 | 430 | 400 |
+| Medido el 22 oct | 2,42 M / 478 | 2,13 M / 463 | 1,05 M / 369 | 0,95 M / 346 | 0,85 M / 317 |
+| Tras PASTO-FRONDOSO (22 oct) | 2,77 M / 476 | 2,36 M / 464 | 1,08 M / ~360 | = | = |
+
+Además: objetos en la escena ≤ **21 000** (hoy ≈ 19 700), en la escena del héroe ≤ **11 500** (≈ 10 750), programas de shader ≤ **300** (≈ 250). **Media es la calidad de las GPU integradas: es la que más importa.**
+
+**P2 · Antes de entregar CUALQUIER cosa que se vea en 3D** (props, criaturas, efectos, terreno, bioma, HUD 3D): carga el juego en la zona afectada y ejecuta `R3D.budget()` (en el navegador integrado o `python tools/fast/ns.py eval "R3D.budget()"`) en **calidad Media y en Alta**; pega el resultado (tris/llamadas/objetos) en el lote. Si `ok:false`, arréglalo antes de entregar. Y `PYTHONUTF8=1 python tools/rules_check.py` (bloque «RENDIMIENTO», ver P9) sin FALLO.
+
+**P3 · CPU: nada de objetos sueltos.** three recorre TODO el árbol de la escena en cada `render()` aunque esté oculto. Lo estático (props, recursos, decoración) va en `InstancedMesh` agrupados por SECTOR, y el grupo-sector lleva `updateMatrixWorld=NOUMW` (`props3d.js`, `nature3d.js`; las posiciones van en `instanceMatrix`). **Prohibido** crear un `Mesh`/`Group` por prop, por árbol o por partícula. Nada de `new THREE.*` dentro de bucles por fotograma (reutiliza vectores/matrices). Nada de `traverse()` de la escena por fotograma.
+
+**P4 · Triángulos: el detalle mínimo que se lea.** Lo que se repite cientos de veces (matas, nubes, rocas, hojas) usa geometría baja (icosaedro detalle ≤ 1–2, esfera ≤ 16 segmentos, planos ≤ 150 segmentos por lado); las normales suaves ya lo hacen ver redondo. Una malla nueva repetida >100 veces: calcula `tris × copias` y dilo en el lote. `frustumCulled=false` solo con razón escrita en un comentario (no ahorra nada que no se vea). El pasto y el adoquín denso ya escalan con `QL`: respétalo.
+
+**P5 · Todo lo caro escala con la calidad.** Un efecto/sistema nuevo con coste de GPU (pasada extra, reflejo, partículas densas, sombras, postproceso, simulación) DEBE leer `QL` y tener versión barata o apagarse en Media/Baja/Mínima (patrón: `GRASS_Q`, `lodR`, `QCAPS`, sombra 2048/1024 a medio ritmo, reflejo del agua solo en Máx/Alta, héroe sin supermuestreo en Baja/Mín). **Nunca redibujar la escena entera otra vez** (reflejos, mapas de profundidad, retratos) sin limitarlo a Máx/Alta, a baja resolución y quitando el pasto y los contornos.
+
+**P6 · Recursos de GPU escasos (los vigila rules_check como «trinquete»: no pueden SUBIR sin permiso del dueño):** `new THREE.WebGLRenderer` (hoy 5: principal, héroe, retrato, vista previa, iconos), luces `PointLight/SpotLight` (5; añadir luces recompila TODO), `castShadow=true` (28), `frustumCulled=false` (48), `EffectComposer` (1), `preserveDrawingBuffer:true` (2). Para iluminar algo nuevo usa `dynlight3d.js`/`lampglow3d.js` (luces baratas), no luces de three.
+
+**P7 · Carga.** Todo módulo nuevo de `src/r3d/` lleva su `<link rel="modulepreload">` en `index.html` (rules_check avisa). El trabajo pesado de la pantalla de carga va en tramos grandes (`PR.warm(45)`), nunca «poco + esperar fotograma». Lo que se crea bajo demanda tiene su `warmObjs()` (§5). El servidor local es `tools/serve_nocache.py` (no `python -m http.server`: en Windows ~300 ms por archivo). Nada de recursos externos pesados (texturas/modelos/audio grandes) sin decirlo en el lote.
+
+**P8 · No se toca sin medir antes y después:** `QCAPS`, `GRASS_Q` (hoy `[1.15,1,.5,.25,0]`, aprobado por el dueño; **Máxima queda al 95 % del límite en la plaza: NO subirla más**), `lodR`, `BUDGET`, `IGPU`, `NOUMW`, el ritmo de sombra (`shF`), el reflejo del agua (`reflect`, `q<=1`), los puffs del Cielo, el adoquín (`q>.6`). Si los cambias, mide con la receta de P10 y anota antes/después en el lote.
+
+**P9 · Lo comprueba `tools/rules_check.py` (bloque «RENDIMIENTO», FALLO = no se entrega):** trinquetes de P6, `NOUMW` en los sectores, valores de `QCAPS`/`GRASS_Q`/`lodR`/`BUDGET` no más altos que hoy, geometrías densas (planos >150 segmentos, icosaedro detalle ≥3, esfera ≥48 segmentos), `PR.warm` ≥ 40 ms, reflejo solo en Máx/Alta, `modulepreload` completo, servidor con keep-alive.
+
+**P10 · Cómo medir (navegador integrado con GPU real, panel VISIBLE; SwiftShader no vale para fps pero SÍ para triángulos/objetos):** `R3D.budget()`; `R3D.stats()` (tris y llamadas del último fotograma); CPU envolviendo `R3D.frame`, `R3D.renderer.render`, `R3D.dbg.ar.render` y `scene.updateMatrixWorld` con `performance.now()` (hoy ≈ 3,7 ms de `R3D.frame` en un PC rápido); triángulos por pase midiendo `renderer.info.render.triangles` antes/después de cada `render(scene)` y de `shadowMap.render`; carga con el texto de `#bt-msg` cada 50 ms (hoy ≈ 7 s). Panel F4 en el juego. **Los fps reales los da el dueño en su integrada y su móvil.**
+
 ## 0 · Protocolo de entrega (siempre)
 1. Trabaja en segmentos pequeños; un entregable por mensaje; cierra diciendo **qué probar a mano**.
 2. Si cambias algo: **detállalo en `AGENTS.md`** (lote corto: qué, por qué, cómo se verificó, qué NO) — el lote más antiguo pasa a `docs/HISTORIAL.md` cuando haya >14.
 2b. **ACTUALIZA SIEMPRE LA HOJA DE RUTA (regla del dueño, 22 oct 2026):** cada entrega añade una línea al «Registro de avance» de `docs/HOJA_DE_RUTA.md` y marca el estado de la fase que toca (además del lote en `AGENTS.md`), para que otros agentes vean en segundos qué se hizo. Si descubres un error o una decisión nueva, va a `docs/REGLAS_CREACION.md` §11.
 3. Arregla sin preguntar cualquier fallo que veas en tu camino (y cuéntalo). Se pregunta solo lo que es **de gusto** o cambia el diseño acordado; si dudas entre dos aspectos, entrega ambos en captura.
+3b. **RENDIMIENTO = PRIORIDAD 1 (§P):** `R3D.budget()` en Media y Alta en la zona tocada + `rules_check.py` sin FALLO antes de entregar; resultado en el lote.
 4. Comprueba la consola (`ns.py logs` / `read_console_messages`) y ejecuta las herramientas de tu área (tabla del §10) antes de darlo por hecho. Lo que no se pueda verificar aquí (fps en GPU/móvil, tacto del combate, oído) se dice en la entrega.
 5b. **Textos para la futura localización (Fase 17, al final):** hoy en español; frases cortas, completas (sin montarlas a trozos con `+` cuando se pueda) y sin repetir el mismo literal en varios sitios; no traduzcas todavía. Detalle en `docs/HOJA_DE_RUTA.md` (Fase 17).
 5. Cambio de formato de guardado → sube `S.ver` (los guardados NO importan: se pueden descartar). Textos del juego en **español**.
@@ -63,6 +96,7 @@ Se comprueba y se cuenta en la entrega: (1) **ESCALA** vs. héroe (≈1 unidad �
 - **Contexto WebGL escaso** (principal, héroe, muñeco, diálogo, retrato, iconos 3D…): no crear más sin liberar. **No añadir luces en caliente** (recompila todos los materiales; las `PointLight` son fijas). Sin filtros por frame en el lienzo 2D; no crear canvases de 11 500 px.
 - **Precompilar shaders** (`R3D.warmShaders`) tras añadir materiales nuevos: **todo material u objeto creado BAJO DEMANDA (efectos, copias que caen, decals) necesita un `warmObjs()` que `warmShaders` añade a la escena durante la carga**, y se compila contra pantalla Y contra el render target del composer (con/sin plano de recorte); si no, la primera vez que ocurre el juego se congela. Comprobar con `renderer.info.programs.length` antes/después de usar el efecto (debe dar 0 nuevos); vigilar `R3D.dbg.scene` y llamadas/triángulos (F4). Optimización pendiente: recursos 53 % y props 21 % de los triángulos.
 - **SwiftShader NO sirve para medir fps**: la GPU y el móvil del dueño son el árbitro.
+- **Rendimiento = PRIORIDAD 1: reglas completas en §P (al principio de este archivo).**
 
 - **Partículas:** todo efecto nuevo usa `R3D.fx` (`smoke/spark/chips/dust`), NO el `sp()`/`parts` 2D de píxeles; humo y polvo = SOFT, brillos = GLOW, trozos sólidos = CHIPS; sin `Math.random`.
 - **Recursos agotables:** al agotarse deben tener su animación de caída/rotura (`Resources.fell`); un recurso nuevo = su geometría en `parts()` y su caso en `fell`/`updFalls`.

@@ -20,6 +20,12 @@ miss = [s for s in loaded if not (R / s.split('?')[0]).exists()]
 (bad if miss else ok)('index.html: todos los <script> existen', ', '.join(miss))
 orph = [p.name for p in src if 'src/' + p.name not in [l.split('?')[0] for l in loaded]]
 (warn if orph else ok)('src/*.js sin <script> en index.html', ', '.join(orph))
+# 1b. (OPT-RENDIMIENTO, 22 oct 2026) todo módulo 3D tiene su <link rel="modulepreload"> (si falta, se baja en cascada y la carga se alarga) y todo modulepreload existe
+pre = re.findall(r'<link rel="modulepreload" href="([^"]+)"', idx)
+nopre = [p.name for p in r3d if 'src/r3d/' + p.name not in pre]
+(warn if nopre else ok)('src/r3d/* sin modulepreload en index.html', ', '.join(nopre))
+pmiss = [s for s in pre if not (R / s).exists()]
+(bad if pmiss else ok)('index.html: todos los modulepreload existen', ', '.join(pmiss))
 
 # 2. Rutas citadas en AGENTS.md (entre comillas invertidas) que no existen
 paths = set(re.findall(r'`((?:src|docs|tools|assets|css)/[A-Za-z0-9_./\-<>*]+?\.(?:js|mjs|py|md|html|css|json))`', ag))
@@ -75,6 +81,55 @@ sz = len(ag.encode('utf8')); lotes = len(re.findall(r'^### (?:Lote|PROPUESTA)', 
 docs = set(re.findall(r'`(docs/[A-Za-z0-9_\-]+\.md)`', ag))
 m = sorted(d for d in docs if not (R / d).exists()); (bad if m else ok)('docs citados en AGENTS.md existen', ', '.join(m))
 rg = (R / 'docs/REGLAS_CREACION.md').exists(); (ok if rg else bad)('docs/REGLAS_CREACION.md existe', '')
+
+# 9. RENDIMIENTO = PRIORIDAD 1 (docs/REGLAS_CREACION.md §P, lote OPT-RENDIMIENTO 22 oct 2026; el juego iba a 20 fps en una integrada).
+#    TRINQUETES: estos números NO pueden subir sin permiso del dueño. Si el dueño aprueba subir uno, cambia aquí el límite Y anótalo en el lote.
+code = {p: rd(str(p.relative_to(R))) for p in src + r3d}
+allc = '\n'.join(code.values())
+def cnt(rx): return len(re.findall(rx, allc))
+TRINQ = [  # (nombre, regex, límite de hoy)
+    ('renderers WebGL (new THREE.WebGLRenderer)', r'new THREE\.WebGLRenderer\(', 5),
+    ('luces de three (PointLight/SpotLight; recompilan todo)', r'new THREE\.(?:PointLight|SpotLight)\(', 5),
+    ('castShadow=true', r'castShadow\s*=\s*(?:\w+\.receiveShadow\s*=\s*)?true', 28),
+    ('frustumCulled=false', r'frustumCulled\s*[:=]\s*false', 48),
+    ('EffectComposer', r'new EffectComposer\(', 1),
+    ('preserveDrawingBuffer:true', r'preserveDrawingBuffer\s*:\s*true', 2),
+]
+for n, rx, lim in TRINQ:
+    c = cnt(rx); (bad if c > lim else ok)(f'RENDIMIENTO trinquete: {n} ≤ {lim}', f'hoy {c}')
+# geometrías densas
+dense = []
+for p, t in code.items():
+    for m in re.finditer(r'PlaneGeometry\(\s*[^,()]+,\s*[^,()]+,\s*(\d+)\s*,\s*(\d+)', t):
+        if max(int(m.group(1)), int(m.group(2))) > 150: dense.append(f'{p.name}: {m.group(0)}')
+    for m in re.finditer(r'IcosahedronGeometry\(\s*[^,()]+,\s*(\d+)\s*\)', t):
+        if int(m.group(1)) >= 3: dense.append(f'{p.name}: {m.group(0)}')
+    for m in re.finditer(r'SphereGeometry\(\s*[^,()]+,\s*(\d+)', t):
+        if int(m.group(1)) >= 48: dense.append(f'{p.name}: {m.group(0)}')
+(bad if dense else ok)('RENDIMIENTO: sin geometrías densas (plano >150 seg., icosaedro detalle ≥3, esfera ≥48)', '; '.join(dense))
+# sectores estáticos sin updateMatrixWorld
+for f in ('props3d.js', 'nature3d.js'):
+    t = rd('src/r3d/' + f); (ok if 'g.updateMatrixWorld=NOUMW' in t else bad)(f'RENDIMIENTO: sectores estáticos con NOUMW en {f}', '')
+# tablas por calidad: no más caras que hoy
+def nums(rx, t):
+    m = re.search(rx, t); return [float(x) for x in re.findall(r'[\d.]+(?:e\d+)?', m.group(1))] if m else None
+gj = rd('src/game.js'); rj = rd('src/r3d/r3d.js')
+for n, rx, t, lim in [('QCAPS', r'const QCAPS=\[([^\]]+)\]', gj, [4.5e6, 4.5e6, 2.4e6, 1.6e6, .95e6]),
+                      ('GRASS_Q', r'const GRASS_Q=\[([^\]]+)\]', rj, [1.15, 1, .5, .25, 0]),   # 22 oct 2026: Máx/Alta subidas con permiso del dueño (lote PASTO-FRONDOSO)
+                      ('lodR', r'terr\.lodR=\[([^\]]+)\]', rj, [12, 9, 7, 5, 4]),
+                      ('BUDGET.tris', r'tris:\[([^\]]+)\]', rj, [2.9e6, 2.6e6, 1.35e6, 1.2e6, 1.05e6]),
+                      ('BUDGET.calls', r'calls:\[([^\]]+)\]', rj, [600, 580, 460, 430, 400])]:
+    v = nums(rx, t)
+    if v is None or len(v) != len(lim): bad(f'RENDIMIENTO: tabla {n} no encontrada', 'se borró o cambió de forma: revisa §P')
+    else: (bad if any(a > b * 1.0001 for a, b in zip(v, lim)) else ok)(f'RENDIMIENTO: {n} no más caro que el 22 oct', str(v))
+for n, ok_, d in [
+    ('presupuesto en el juego (BUDGET + budgetTick)', 'const BUDGET=' in rj and 'budgetTick(rnow)' in rj, 'src/r3d/r3d.js'),
+    ('detección de GPU integrada (IGPU)', 'const IGPU=' in gj and 'else if(IGPU)QL=2' in gj, 'src/game.js'),
+    ('reflejo del agua solo en Máx/Alta', 'this.q<=1&&this.refNeed' in rd('src/r3d/water3d.js'), 'src/r3d/water3d.js'),
+    ('sombra a medio ritmo en Baja/Mínima', 'shF' in rj and 'r.shadowMap.autoUpdate=!lo' in rj, 'src/r3d/r3d.js'),
+    ('servidor local con keep-alive', "protocol_version='HTTP/1.1'" in rd('tools/serve_nocache.py'), 'tools/serve_nocache.py'),
+]: (ok if ok_ else bad)(f'RENDIMIENTO: {n}', '' if ok_ else d)
+wm = re.search(r'PR\.warm\((\d+)\)', gj); (ok if wm and int(wm.group(1)) >= 40 else bad)('RENDIMIENTO: props en tramos ≥ 40 ms (PR.warm)', wm.group(0) if wm else 'no encontrado')
 
 for lv, r, d in res: print(f'{lv:7} {r}' + (f'  → {d}' if d else ''))
 nf = sum(1 for x in res if x[0] == 'FALLO'); nw = sum(1 for x in res if x[0] in ('AVISO', 'REVISAR'))

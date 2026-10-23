@@ -144,7 +144,7 @@ const DKP=[],DKC=[],DKF=this.F&&this.F.DK;
    return[f.y,col.clone(),f.w>.15?0:pf,f.w>.15?0:pc,Math.min(1,sa),f.w>.15?-Math.min(1,f.w):wet,f.w>.15||pf<.3||pc>.3?9:this.routeD(x,z)]};
   for(let tz=z0;tz<z1;tz++){yield;for(let tx=x0;tx<x1;tx++){if((tx&3)===0)yield;const h=this.h(tx,tz);if(h<=0||h>=2||(h>1&&fal(tx,tz)))continue;const kb=TER.biomeOf?TER.biomeOf(tx,tz):0;   // Fase 4c: bioma del tile → `aBio` (tierra distinta por bioma en el shader)
    if(DKF&&DKF[tz*this.NX+tx])deck(tx,tz,DKF[tz*this.NX+tx]);
-   let cob=0;for(const[u,v]of[[.5,.5],[.1,.1],[.9,.1],[.1,.9],[.9,.9]])cob=Math.max(cob,this.pathAt(tx+u,tz+v)[1]);let S=cob>.05&&this.q>.3?SUBC:SUB;   // adoquín: malla densa para el relieve real
+   let cob=0;for(const[u,v]of[[.5,.5],[.1,.1],[.9,.1],[.1,.9],[.9,.9]])cob=Math.max(cob,this.pathAt(tx+u,tz+v)[1]);let S=cob>.05&&this.q>.6?SUBC:SUB;   /* OPT-RENDIMIENTO (22 oct 2026): adoquín denso (288 tris/tile) solo en Máxima/Alta (pasto ≥ .8); en Media o menos, malla normal (≈ −40 % de triángulos del suelo de las aldeas, también en la sombra). Se decide al construir el chunk. */   // adoquín: malla densa para el relieve real
    if(h===.75&&S===SUB){const out=tx<0||tz<0||tx>=this.NX||tz>=this.NY,d=out||!this.coastD?(out?99:-1):-this.coastD((tx+.5)*32,(tz+.5)*32);S=d>this.shelf+3?1:d>6?2:SUB}   // Fase 49b: mar abierto = fondo casi plano (1–2 divisiones por tile); cerca de la costa se conserva la malla fina de la plataforma
    for(let b=0;b<S;b++)for(let a=0;a<S;a++){const xa=tx+a/S,xb=tx+(a+1)/S,za=tz+b/S,zb=tz+(b+1)/S,q=[[xa,za],[xa,zb],[xb,zb],[xb,za]].map(([x,z])=>{const[y,c,pf,pc,sa,wt,ps]=top(x,z),bp=bnd(x,z);return[bp[0],y,bp[1],c,pf,pc,sa,wt,ps]});
     [0,1,2,0,2,3].forEach(k=>{const v=q[k];P.push(v[0],v[1],v[2]);C.push(v[3].r,v[3].g,v[3].b);PA.push(v[4]);PB.push(v[5]);PS.push(v[6],v[7],v[8]);PBI.push(kb)})}
@@ -223,12 +223,12 @@ const DKP=[],DKC=[],DKF=this.F&&this.F.DK;
  // lod() enseña la completa cerca del héroe y la ligera lejos (allí el óleo/Kuwahara y la viñeta ya funden el detalle) y el recorte por cámara se hace por cuadrante.
  meadow(ci,cj){const it=this.meadowG(ci,cj);let r;while(!(r=it.next()).done);return r.value}
  *meadowG(ci,cj){const x0=ci*CS,z0=cj*CS,per=Math.round(26*this.q),N=CS*CS*per;if(!per)return null;const o=new THREE.Object3D(),B=[0,1,2,3].map(()=>({m:[],c:[]}));let n=0;
-  for(let i=0;i<N*1.6&&n<N;i++){if((i&255)===0)yield;const x=x0+hash(i,1,ci*7+cj*131)*CS,z=z0+hash(i,2,ci*13+cj*71)*CS,tx=Math.floor(x),tz=Math.floor(z),h=this.h(tx,tz);if(!this.land(h))continue;
+  const TRY=this.q>.6?2.6:1.6;for(let i=0;i<N*TRY&&n<N;i++){   /* PASTO-FRONDOSO: con la agrupación hacen falta más intentos para llenar el chunk; solo en Máx/Alta (en Media o menos se queda como antes: no sube el coste de las integradas) */if((i&255)===0)yield;const x=x0+hash(i,1,ci*7+cj*131)*CS,z=z0+hash(i,2,ci*13+cj*71)*CS,tx=Math.floor(x),tz=Math.floor(z),h=this.h(tx,tz);if(!this.land(h))continue;
    if(this.F&&this.F.DK&&this.F.DK[tz*this.NX+tx])continue;   // Fase 3: nada de matas creciendo a través de una pasarela
-   const f=this.field(x,z);if(f.w>.22)continue;const[pf,pc]=this.pathAt(x,z);if(pf>.35||pc>.2)continue;if(TER.sandAt&&TER.sandAt(tx,tz)>.2)continue;{const nb=this.bnear(x,z);if(nb>.5&&hash(i,6,9)<nb*1.1-.25)continue}
-   const tall=(.65+.6*fb2(x*.6+20,z*.6+7))*(1-Math.min(1,pf*2))*(f.w>.05?.6:1),hg=(.17+hash(i,3,9)*.1)*tall;if(hg<.06)continue;
+   const f=this.field(x,z);if(f.w>.22)continue;const[pf,pc]=this.pathAt(x,z);if(pf>.35||pc>.2)continue;if(TER.sandAt&&TER.sandAt(tx,tz)>.2)continue;const cl=fb2(x*.33+3,z*.33+11);if(hash(i,7,9)>.3+cl*1.1)continue;   // PASTO-FRONDOSO: las matas se AGRUPAN en manchas (mismo nº total por chunk: se ven macizos llenos en vez de un salpicado uniforme){const nb=this.bnear(x,z);if(nb>.5&&hash(i,6,9)<nb*1.1-.25)continue}
+   const tall=(.65+.6*fb2(x*.6+20,z*.6+7))*(1-Math.min(1,pf*2))*(f.w>.05?.6:1),hg=(.19+hash(i,3,9)*.11)*tall;if(hg<.06)continue;
    o.position.set(x,f.y,z);o.rotation.set(0,hash(i,4,9)*6.28,0);o.scale.setScalar(hg);o.updateMatrix();
-   const k=TER.biomeOf?TER.biomeOf(tx,tz):0,col=this.gc(x,z,k).offsetHSL(0,0,(hash(i,5,9)-.5)*.04);{const nb=this.bnear(x,z);if(nb>.01)col.lerp(this._u.set('#7a6a3c'),Math.min(.7,nb*(.55+.9*vn2(x*1.7+31,z*1.7+5))*.85))}   // Fase 3: las matas junto a edificios se vuelven paja seca (si no, la hierba viva tapa la tierra pisada)
+   const k=TER.biomeOf?TER.biomeOf(tx,tz):0,col=this.gc(x,z,k).offsetHSL((cl-.5)*.025,(cl-.5)*.06,(hash(i,5,9)-.5)*.05+(cl-.5)*.06);{const nb=this.bnear(x,z);if(nb>.01)col.lerp(this._u.set('#7a6a3c'),Math.min(.7,nb*(.55+.9*vn2(x*1.7+31,z*1.7+5))*.85))}   // Fase 3: las matas junto a edificios se vuelven paja seca (si no, la hierba viva tapa la tierra pisada)
    const b=B[(x>=x0+8?1:0)+(z>=z0+8?2:0)];b.m.push(...o.matrix.elements);b.c.push(col.r,col.g,col.b);n++}
   if(!n)return null;yield;const grp=new THREE.Group();grp.userData.q=[];
   B.forEach((b,qi)=>{const cnt=b.c.length/3;if(!cnt)return;const cx=x0+4+(qi&1)*8,cz=z0+4+(qi>>1)*8,sph=new THREE.Sphere(new THREE.Vector3(cx,0,cz),CS*.3536+1.6);   // radio = media diagonal del cuadrante + alto de la mata + desnivel
@@ -239,11 +239,12 @@ const DKP=[],DKC=[],DKF=this.F&&this.F.DK;
  // distancia (tiles) a partir de la cual el cuadrante usa la brizna ligera; con histéresis de 1,5 tiles para que no parpadee al cruzar el umbral
  lod(cx,cz){const R=this.lodR;this.ch.forEach(c=>{if(!c.grass)return;c.grass.userData.q.forEach(q=>{const d=Math.hypot(q.cx-cx,q.cz-cz),far=q.far?d>R-1.5:d>R+1.5;if(far!==q.far||q.full.visible===q.lite.visible){q.far=far;q.full.visible=!far;q.lite.visible=far}})})}
  freeGrass(c){if(!c.grass)return;c.g.remove(c.grass);c.grass.userData.q.forEach(q=>{q.full.dispose();q.lite.dispose()});c.grass=null}   // dispose() libera los buffers de instancias en GPU (antes se quedaban para siempre al expulsar un chunk)
- setQuality(q){if(q===this.q)return;this.q=q;this.ch.forEach(c=>this.freeGrass(c))}
+ setQuality(q){if(q===this.q)return false;const re=(q>.6)!==(this.q>.6);this.q=q;this.ch.forEach(c=>this.freeGrass(c));return re}   // devuelve true si cruza el umbral del adoquín denso (q>.6): r3d.js entonces reconstruye el suelo (OPT-RENDIMIENTO: si no, al BAJAR la calidad en partida el suelo seguía con 288 tris/tile)
+ dropAll(){this.ch.forEach(c=>{this.freeGrass(c);this.grp.remove(c.g);if(c.g.userData.og&&this.ogrp)this.ogrp.remove(c.g.userData.og);c.g.traverse(o=>{if(o.geometry)o.geometry.dispose()})});this.ch.clear();this.job=null}
 }
 // mata de 7 briznas finas (4 tramos), idéntica a la referencia
 function tuftGeo(NB,SEG,wk){const P=[],Nn=[],up=new THREE.Vector3(0,1,0);
- for(let b=0;b<NB;b++){const a=hash(b,1,71)*6.28,r0=hash(b,2,71)*.09,lean=.25+hash(b,3,71)*.25,hh=.7+hash(b,4,71)*.45,w=(.034+hash(b,5,71)*.014)*wk;
+ for(let b=0;b<NB;b++){const a=hash(b,1,71)*6.28,r0=hash(b,2,71)*.12,lean=.25+hash(b,3,71)*.25,hh=.75+hash(b,4,71)*.5,w=(.046+hash(b,5,71)*.019)*wk;   // PASTO-FRONDOSO (22 oct 2026): briznas ×1,35 más anchas, algo más altas y abiertas (mismos triángulos)
   const base=new THREE.Vector3(Math.cos(a)*r0,0,Math.sin(a)*r0),dir=new THREE.Vector3(Math.cos(a+1.3),0,Math.sin(a+1.3)),side=new THREE.Vector3(-dir.z,0,dir.x);
   const pt=t=>base.clone().addScaledVector(dir,lean*t*t).addScaledVector(up,hh*t),wd=t=>w*(1-t*.92);
   for(let s=0;s<SEG;s++){const t0=s/SEG,t1=(s+1)/SEG,a0=pt(t0),a1=pt(t1);   // R3D-OPT: 3 tramos (2 cuadriláteros + triángulo de punta) = 5 tris/brizna en vez de 8

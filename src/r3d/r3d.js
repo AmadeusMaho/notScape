@@ -45,6 +45,9 @@ const LVY=ISO.LV/(PXU*Math.cos(Math.PI/6));          // unidades por nivel de al
 const EL=Math.PI/6,A45=Math.PI/4;
 const W3=(wx,wy,z)=>new THREE.Vector3(wx/ISO.TILE,(z-1)*LVY,wy/ISO.TILE);
 
+// OPT-RENDIMIENTO (22 oct 2026): el PASTO era ~50 % de los triángulos de la vista (745 000 en Alta). Densidad por calidad (Máx…Mín) y radio de la brizna completa (`lodR`, arriba) más cortos.
+const GRASS_Q=[1.15,1,.5,.25,0];   // PASTO-FRONDOSO (22 oct 2026, APROBADO por el dueño): más densidad SOLO en Máxima/Alta (antes [1,.8,…]); Media/Baja/Mínima (integradas y móvil) sin cambios. Subirlo más = permiso del dueño (rules_check lo vigila)
+let shF=0;
 const COARSE=!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches);   // móvil/tablet: sombra de 1024 y MSAA×2 (guía §8)
 export function createR3D(){
  const host=document.getElementById('cw'),c2d=document.getElementById('c');
@@ -55,7 +58,7 @@ export function createR3D(){
  const scene=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1,1,-1,.1,200);
  const hemi=new THREE.HemisphereLight(),sun=new THREE.DirectionalLight();sun.castShadow=true;sun.shadow.mapSize.set(COARSE?1024:2048,COARSE?1024:2048);sun.shadow.bias=-.0006;sun.shadow.normalBias=.03;
  Object.assign(sun.shadow.camera,{left:-20,right:20,top:20,bottom:-20,near:.5,far:80});sun.shadow.camera.layers.enable(2);scene.add(hemi,sun,sun.target);
- const terr=new Terrain(scene,{grass:[1,1,.6,.35,0][typeof QL!=='undefined'?QL:2]});
+ const terr=new Terrain(scene,{grass:GRASS_Q[typeof QL!=='undefined'?QL:2]});
  // héroe (escena propia) + clon de sombra en la escena principal
  const hero=new Hero(),aScene=new THREE.Scene(),aHemi=new THREE.HemisphereLight(),aSun=new THREE.DirectionalLight();aSun.castShadow=true;aSun.shadow.mapSize.set(1024,1024);aSun.shadow.bias=-.0008;aSun.shadow.normalBias=.01;
  Object.assign(aSun.shadow.camera,{left:-1.6,right:1.6,top:1.6,bottom:-1.6,near:.1,far:30});aScene.add(aHemi,aSun,aSun.target,hero.obj);terr.occ=aScene;   // Fase 49c: las cordilleras entran en el pase de oclusión del héroe
@@ -208,12 +211,13 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   {let dm=99;if(typeof PO!=='undefined'&&typeof P!=='undefined')for(const e of PO)if(e.n==='santuario'){const d=Math.hypot(e.x-P.x,e.y-P.y)/ISO.TILE;if(d<dm)dm=d}
    const u=Math.min(1,Math.max(0,(dm-1.2)/2.4)),tk=shrMin+(1-shrMin)*u*u*(3-2*u);G.uShrK.value+=(tk-G.uShrK.value)*(1-Math.exp(-dt*6))}
   // calidad del pasto según la calidad del juego (Máxima/Alta/Media/Baja/Mínima)
-  const q=[1,1,.6,.35,0][typeof QL!=='undefined'?QL:2];if(q!==qGrass){qGrass=q;terr.setQuality(q)}
+  const q=GRASS_Q[typeof QL!=='undefined'?QL:2];if(q!==qGrass){qGrass=q;if(terr.setQuality(q)){terr.dropAll();preload()}}
+  {const ss=(typeof QL!=='undefined'&&QL>=3)||COARSE?1024:2048;if(sun.shadow.mapSize.x!==ss){sun.shadow.mapSize.set(ss,ss);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}}}   // OPT-RENDIMIENTO: sombra del sol 2048 → 1024 en Baja/Mínima (¼ de píxeles; mismo shader, sin recompilar)
   G.uCloud.value=(typeof QL!=='undefined'&&QL>=4)?0:cloudK;   // F3f·P2: sombras de nubes (apagadas en calidad Mínima)
   if(upd)terr.update(tgt.x,tgt.z,Math.hypot(V.cw,V.ch)/k*.78+6);if(upd){const hp=typeof P!=='undefined'?W3(P.x,P.y,TER.standZ(P.x,P.y)):tgt,S=Math.min(44,Math.max(22,Math.hypot(V.cw/2/k,V.ch/k)*2.2));   // volumen que envuelve la pantalla (tiles)
    parts.update(dt,tgt.x,hp.y,tgt.z,typeof curB!=='undefined'?curB:0,tp.night,typeof WXD!=='undefined'?WXD:0,ISO.scale()*V.dpr/1.9,S,typeof QL!=='undefined'?QL:2);
    blood.update(dt,t,hp,tp.night,typeof QL!=='undefined'?QL:2);rays.update(t,dt,tgt,Math.hypot(V.cw,V.ch)/k*.78+6,1-tp.night,typeof WXD!=='undefined'?WXD:0,typeof QL!=='undefined'?QL:2)}   // Lote R3D-SANGRE: gotas (física) + manchas; hp = posición del héroe en three (linterna de noche)
-  if(upd){terr.lodR=[14,12,10,8,7][typeof QL!=='undefined'?QL:2];terr.lod(tgt.x,tgt.z);props.update();{const cr=Math.hypot(V.cw,V.ch)/k*.78+14;props.cull(tgt.x,tgt.z,cr);res.cull(tgt.x,tgt.z,cr)}sta.update(now,t,typeof HOV!=='undefined'?HOV:null,typeof A!=='undefined'&&A?A.e:null);fac.update(now,t,typeof HOV!=='undefined'?HOV:null);res.update(now,t,typeof HOV!=='undefined'?HOV:null,typeof A!=='undefined'&&A?A.e:null,dt)}
+  if(upd){terr.lodR=[12,9,7,5,4][typeof QL!=='undefined'?QL:2];terr.lod(tgt.x,tgt.z);props.update();{const cr=Math.hypot(V.cw,V.ch)/k*.78+14;props.cull(tgt.x,tgt.z,cr);res.cull(tgt.x,tgt.z,cr)}sta.update(now,t,typeof HOV!=='undefined'?HOV:null,typeof A!=='undefined'&&A?A.e:null);fac.update(now,t,typeof HOV!=='undefined'?HOV:null);res.update(now,t,typeof HOV!=='undefined'?HOV:null,typeof A!=='undefined'&&A?A.e:null,dt)}
   // actores 3D (antes que el héroe: su copia de profundidad en aScene tiene que estar al día cuando se dibuja el héroe)
   if(upd)actors.update(now,t,dt,tgt,Math.hypot(V.cw,V.ch)/k*.78+6,typeof HOV!=='undefined'?HOV:null,typeof P!=='undefined'?P:{x:0,y:0});actors.grp.updateMatrixWorld(true);if(upd)drops.update(now,t,dt,tgt,Math.hypot(V.cw,V.ch)/k*.78+6,typeof HOV!=='undefined'?HOV:null);if(upd)cts.update(props,res,actors,typeof P!=='undefined'?P:null,tp.night,typeof QL!=='undefined'?QL:2);
   // héroe
@@ -228,7 +232,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
    // renderer del héroe: recorte de ±HA unidades alrededor del ancla (a media altura)
    // Lote R3D-HEROE-MAXQ: el héroe SIEMPRE se pinta como en calidad Máxima. `hs` = cuánto más densa que el lienzo del juego es su resolución (dpr de Máxima / dpr actual, ≥1);
    // `px` = tamaño en px del lienzo del juego (posición y copia), `pxr` = tamaño real del render del héroe. En Máxima hs=1 (nada cambia).
-   const dprMax=Math.max(V.dpr,Math.min(window.devicePixelRatio||1,Math.sqrt((typeof QCAPS!=='undefined'?QCAPS[0]:4.5e6)/(cssW*cssH)))),hs=Math.min(2,Math.max(1,dprMax/V.dpr));
+   const dprMax=Math.max(V.dpr,Math.min(window.devicePixelRatio||1,Math.sqrt((typeof QCAPS!=='undefined'?QCAPS[0]:4.5e6)/(cssW*cssH)))),hs=(typeof QL!=='undefined'&&QL>=3)?1:Math.min(2,Math.max(1,dprMax/V.dpr));   /* OPT-RENDIMIENTO (22 oct 2026): en Baja/Mínima el héroe ya NO se supermuestrea (hasta ×4 píxeles con el lienzo reducido) */
    const HA=1.4,anc=new THREE.Vector3(p.x,p.y+.55,p.z),px=Math.ceil(HA*2*k),pxr=Math.ceil(HA*2*k*hs);if(acv.width!==pxr){ar.setPixelRatio(1);ar.setSize(pxr,pxr,false)}
    placeCam(acam,anc,HA,HA);aBack.position.set(anc.x-Math.sin(az)*6,anc.y+4,anc.z-Math.cos(az)*6);aBack.target.position.copy(anc);aBack.intensity=.85-.5*nt;aSun.position.copy(anc).add(new THREE.Vector3(...TOD.dia.sunP).normalize().multiplyScalar(12));aSun.target.position.copy(anc);
    markStencil();ar.shadowMap.needsUpdate=true;ar.shadowMap.autoUpdate=false;const sp=proj(anc),hx0=Math.round(sp.x-px/2),hy0=Math.round(sp.y-px/2);   /* 21 oct 2026: posición ENTERA en píxeles del lienzo: con una posición fraccionaria `drawImage` remuestrea el héroe (1:1) con interpolación bilineal y se ve borroso, sobre todo a zoom mínimo */
@@ -241,6 +245,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   {const pp=st?W3(st.x,st.y,st.z):tgt;water.aim=st?st.aim:null;if(upd){water.viewR=Math.hypot(V.cw,V.ch)/k*.78+6;water.update(dt,now,t,pp,tp,typeof QL!=='undefined'?QL:2,ISO.scale()*V.dpr)}}   // Lote R3D-AGUA-IMPL: sim + peces + flotador (después de animar al héroe: usa rodTip)
   G.uChrB.value.set(0,0);   // el degradado pies→cabeza del material `chr` es del héroe (global): en el pase del mundo se apaga para los actores
   sun.position.copy(tgt).add(new THREE.Vector3(...TOD.dia.sunP).normalize().multiplyScalar(30));sun.target.position.copy(tgt);
+  {const lo=typeof QL!=='undefined'&&QL>=3;r.shadowMap.autoUpdate=!lo;if(lo)r.shadowMap.needsUpdate=((shF=(shF+1)&1)===0)}   // OPT-RENDIMIENTO (22 oct 2026): en Baja/Mínima la sombra del sol se redibuja 1 fotograma de cada 2 (su matriz se actualiza con el mapa, así que lo estático no se desliza; lo que se mueve va 1 fotograma tarde)
   const post=(typeof QL==='undefined'?2:QL)<=2;
   if(water&&upd)water.reflect(r,scene,cam,cssW,cssH);   // reflejo ligero del agua (R3D-AGUA-ARTSTYLE)
   if(post){const lq=(typeof QL==='undefined'||QL<=1),key=cssW+'x'+cssH+'@'+V.dpr+(lq?'a':'b');{const ms=(typeof QL!=='undefined'&&QL>=2)?2:(COARSE?2:4);if(ms!==curMs){curMs=ms;[composer.renderTarget1,composer.renderTarget2].forEach(t=>{t.samples=ms;t.dispose()})}}   // Lote R3D-OPT-1: MSAA x2 desde calidad Media (el MSAA x4 sobre un RT HalfFloat de 4,5 MP es mucho ancho de banda)
@@ -251,7 +256,23 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
     const a=btInit?1-Math.exp(-dt*1.4):1;btInit=true;btC.lerp(btT,a);btL.lerp(btTL,a);grade.uniforms.uTint.value.copy(btC);grade.uniforms.uTLift.value.copy(btL);if(burn>.002)grade.uniforms.uTint.value.multiply(FT.set(1+.14*burn,1-.08*burn,1-.26*burn))}   // ~1,5 s de fundido al cruzar de bioma
    {const ke=oilK(tp.night);grade.uniforms.uK.value=ke;grade.uniforms.uBrush.value=(typeof QL==='undefined'||QL<=1)?.85*Math.pow(ke,1.6):0}   // F3f·P1: óleo según la hora;   // F3d: el pincel baja más rápido que el color; calidad Media o inferior = sin Kuwahara
    const tw=tW.begin('mundo');composer.render(dt);tW.end(tw)}else{const tw=tW.begin('mundo');r.render(scene,cam);tW.end(tw)}
-  tW.poll(GPU);tH.poll(GPU)}
+  tW.poll(GPU);tH.poll(GPU);budgetTick(rnow)}
+ // ══ PRESUPUESTO DE RENDIMIENTO (PRIORIDAD 1, lote OPT-RENDIMIENTO, 22 oct 2026; docs/REGLAS_CREACION.md §P) ══
+ // El juego iba a 20 fps en una GPU integrada. Estos límites salen de medir la Pradera (la aldea más cargada) con ~20–25 % de margen. Cada 10 s se compara el PICO de
+ // triángulos y llamadas de dibujo del fotograma (sombra y reflejo incluidos) y el nº de objetos de las escenas; si algo se pasa, `console.warn('[R3D PRESUPUESTO] …')` UNA vez por motivo.
+ // `R3D.budget()` devuelve el informe al momento (úsalo en `ns.py eval` o en la consola antes de entregar). SUBIR UN LÍMITE = decisión del dueño (anótalo en el lote).
+ const BUDGET={tris:[2.9e6,2.6e6,1.35e6,1.2e6,1.05e6],calls:[600,580,460,430,400],objs:21000,aObjs:11500,progs:300};
+ let bPk={t:0,c:0},bT=0,bQ=-1;const bWarned=new Set();
+ function budget(){const q=typeof QL!=='undefined'?QL:2,cnt=s=>{let n=0;s.traverse(()=>n++);return n},o={ql:q,tris:bPk.t||r.info.render.triangles,calls:bPk.c||r.info.render.calls,objs:cnt(scene),aObjs:cnt(aScene),progs:r.info.programs.length},bad=[];
+  if(o.tris>BUDGET.tris[q])bad.push('triángulos/fotograma '+(o.tris/1e6).toFixed(2)+' M > '+(BUDGET.tris[q]/1e6).toFixed(2)+' M (calidad '+q+')');
+  if(o.calls>BUDGET.calls[q])bad.push('llamadas de dibujo '+o.calls+' > '+BUDGET.calls[q]+' (calidad '+q+')');
+  if(o.objs>BUDGET.objs)bad.push('objetos en la escena '+o.objs+' > '+BUDGET.objs+' (agrupa en InstancedMesh por sector con NOUMW)');
+  if(o.aObjs>BUDGET.aObjs)bad.push('objetos en la escena del héroe '+o.aObjs+' > '+BUDGET.aObjs);
+  if(o.progs>BUDGET.progs)bad.push('programas de shader '+o.progs+' > '+BUDGET.progs+' (reutiliza materiales)');
+  o.ok=!bad.length;o.bad=bad;o.limits=BUDGET;return o}
+ function budgetTick(now){const ri=r.info.render,ql=typeof QL!=='undefined'?QL:2;if(ql!==bQ){bQ=ql;bPk={t:0,c:0};bT=now+8000;return}   // al cambiar de calidad se espera 8 s (el suelo se reconstruye) antes de volver a medir
+ if(ri.triangles>bPk.t)bPk.t=ri.triangles;if(ri.calls>bPk.c)bPk.c=ri.calls;if(!bT)bT=now+15000;if(now<bT)return;bT=now+10000;
+  if(!(typeof CINE!=='undefined'&&CINE.on)&&!rooms.on){const b=budget();b.bad.forEach(m=>{const k=m.split(' ')[0];if(!bWarned.has(k)){bWarned.add(k);console.warn('[R3D PRESUPUESTO] '+m+' · regla de PRIORIDAD 1: docs/REGLAS_CREACION.md §P')}})}bPk={t:0,c:0}}
  // el héroe en su hueco de profundidad del 2D (lo llama draw() de game.js en lugar de dP)
  // IMÁGENES FANTASMA del PERFECT DODGE (21 oct 2026): `R3D.ghost([[x,y,z],…],color)` toma una silueta tintada del héroe (copia del lienzo propio, al dibujarse el héroe) y la deja en esas posiciones del mundo, que se desvanece y sube un poco (≈ 0,75 s).
  let pendG=null;const ghosts=[];
@@ -267,7 +288,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  // F3d · perilla «Óleo» (0–100 %): guardada en localStorage (NO en S: es un ajuste del cliente, no de la partida). Slider #ov del HUD (oculto sin ?r3d=1).
  // 22 oct 2026 (dueño): Opciones ya NO ofrece óleo/inclinación/nubes/viento; el juego usa SIEMPRE los valores por defecto (los parámetros de URL ?oleo= ?tilt= ?cloud= ?wind= siguen valiendo para depurar). Se purgan los valores que otras versiones guardaron.
  try{['ns_oleo','ns_tilt','ns_cloud','ns_wind'].forEach(k=>localStorage.removeItem(k))}catch(e){}
- return{gpu:GPU,dbg:{terr,cts,composer,bloom,grade,sun,pool,lantern,aLantern,aSun,aBack,ar,hgrade,parts,scene,aScene},get water(){return water},outfits:{list:OUTFITS,of:outfitOf,unlocked:outfitUnlocked,resolve:resolveLook},preview:cvs=>new HeroPreview(cvs),talkHead:cvs=>new TalkHead(cvs),get shrineMin(){return shrMin},set shrineMin(v){shrMin=Math.max(0,Math.min(1,+v||0))},get contact(){return cts.k},set contact(v){cts.k=Math.max(0,Math.min(1.5,+v||0))},get clouds(){return cloudK},get tilt(){return TILT_K},set tilt(v){TILT_K=Math.max(0,Math.min(1.5,+v||0))},get wind(){return G.uWindK.value},set wind(v){G.uWindK.value=Math.max(0,Math.min(3,+v||0))},set clouds(v){cloudK=Math.max(0,Math.min(1.5,+v||0))},get oilDay(){return OIL.H},set oilDay(v){OIL.H=Math.max(0,Math.min(1,+v||0));setOil(OIL.K)},get oil(){return OIL.K},set oil(v){setOil(v);const sl=document.getElementById('ov');if(sl)sl.value=Math.round(OIL.K*100)},frame,drawHero,show,preload,get tod(){return TODc},get propsOn(){return props.on},get parts3d(){return parts.on},parts,get resOn(){return res.on},get dropsOn(){return drops.on},drops,rays,glow,lm:dl,rooms,get intOn(){return rooms.on},get stOn(){return sta.on},get facOn(){return fac.on},get poOn(){return sta.poOn},sta,props,res,actors,blood,get az(){return az},set az(v){az=azT=v},get tscale(){return tsT},set tscale(v){tsT=Math.max(0,Math.min(1,+v||0))},get frozen(){return frz},get skyBurn(){return burnT},set skyBurn(v){burnT=Math.max(0,Math.min(1,+v||0))},get skyBurnNow(){return burn},skyBurnReset(){burnT=burn=0},get vclock(){return last},tsync(){tsT=tsK=1;vlag=0;frz=0},renderer:r,scene,W3,get sky(){return sky},get gait(){const a=hero&&hero.anim;return{g:a?a.gph:0,run:!!a&&a.runK>.5,vis:frz<.5}},   // marcha del héroe para los PASOS (footsteps.js): fase de pie `gph` (un pie toca el suelo cada vez que cambia floor(2·gph)), ¿corriendo?, ¿audible? (no en el tiempo detenido)
+ return{gpu:GPU,dbg:{terr,cts,composer,bloom,grade,sun,pool,lantern,aLantern,aSun,aBack,ar,hgrade,parts,scene,aScene},get water(){return water},outfits:{list:OUTFITS,of:outfitOf,unlocked:outfitUnlocked,resolve:resolveLook},preview:cvs=>new HeroPreview(cvs),talkHead:cvs=>new TalkHead(cvs),get shrineMin(){return shrMin},set shrineMin(v){shrMin=Math.max(0,Math.min(1,+v||0))},get contact(){return cts.k},set contact(v){cts.k=Math.max(0,Math.min(1.5,+v||0))},get clouds(){return cloudK},get tilt(){return TILT_K},set tilt(v){TILT_K=Math.max(0,Math.min(1.5,+v||0))},get wind(){return G.uWindK.value},set wind(v){G.uWindK.value=Math.max(0,Math.min(3,+v||0))},set clouds(v){cloudK=Math.max(0,Math.min(1.5,+v||0))},get oilDay(){return OIL.H},set oilDay(v){OIL.H=Math.max(0,Math.min(1,+v||0));setOil(OIL.K)},get oil(){return OIL.K},set oil(v){setOil(v);const sl=document.getElementById('ov');if(sl)sl.value=Math.round(OIL.K*100)},frame,drawHero,show,preload,budget,get tod(){return TODc},get propsOn(){return props.on},get parts3d(){return parts.on},parts,get resOn(){return res.on},get dropsOn(){return drops.on},drops,rays,glow,lm:dl,rooms,get intOn(){return rooms.on},get stOn(){return sta.on},get facOn(){return fac.on},get poOn(){return sta.poOn},sta,props,res,actors,blood,get az(){return az},set az(v){az=azT=v},get tscale(){return tsT},set tscale(v){tsT=Math.max(0,Math.min(1,+v||0))},get frozen(){return frz},get skyBurn(){return burnT},set skyBurn(v){burnT=Math.max(0,Math.min(1,+v||0))},get skyBurnNow(){return burn},skyBurnReset(){burnT=burn=0},get vclock(){return last},tsync(){tsT=tsK=1;vlag=0;frz=0},renderer:r,scene,W3,get sky(){return sky},get gait(){const a=hero&&hero.anim;return{g:a?a.gph:0,run:!!a&&a.runK>.5,vis:frz<.5}},   // marcha del héroe para los PASOS (footsteps.js): fase de pie `gph` (un pie toca el suelo cada vez que cambia floor(2·gph)), ¿corriendo?, ¿audible? (no en el tiempo detenido)
  async warmShaders(maxMs=30000,all=true){actors.bake();   // Lote FREEZE-SHADERS: compila de antemano TODOS los programas del mundo (tras la pantalla de carga) para que no se compilen a mitad de partida (paradas de 8 s o más)
   const hid=[];if(all)scene.traverse(o=>{if(!o.visible){o.visible=true;hid.push(o)}});
   // 22 oct 2026: llamaradas y brasas del cielo en llamas se crean ya (antes nacían al prender el cielo y compilaban sus shaders EN la cinemática = tirón); invisibles se saltan, así que se muestran un momento

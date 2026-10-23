@@ -221,7 +221,8 @@ export class Water{
 
  // ── reflejo planar ligero (R3D-AGUA-ARTSTYLE) ──  r3d.js llama a water.reflect(r,scene,cam,cssW,cssH) justo antes de renderizar el mundo. Técnica de three/Reflector adaptada a cámara ORTOGRÁFICA:
  // cámara virtual espejada respecto a y=WY, plano de corte global (solo lo que está sobre el agua), RT a ~⅓ de resolución, se refresca cada 2.º fotograma y solo con agua cerca y QL ≤ 2.
- reflect(r,scene,cam,cw,ch){const need=this.q<=2&&this.refNeed;WU.uRefOn.value=need&&this.rt?1:0;if(!need)return;
+ reflect(r,scene,cam,cw,ch){const need=this.q<=1&&this.refNeed;   /* OPT-RENDIMIENTO (22 oct 2026): el reflejo redibuja la escena ENTERA (≈ 550 000 tris en la aldea): solo en Máxima/Alta (antes también Media) y sin pasto */
+  WU.uRefOn.value=need&&this.rt?1:0;if(!need)return;
   const w=Math.max(64,Math.round(cw*.34)),h=Math.max(64,Math.round(ch*.34));
   if(!this.rt){this.rt=new THREE.WebGLRenderTarget(w,h,{type:THREE.HalfFloatType,depthBuffer:true});this.rt.texture.minFilter=this.rt.texture.magFilter=THREE.LinearFilter;this.vc=new THREE.OrthographicCamera();this.vplane=new THREE.Plane(new V3(0,1,0),-(WY+.012));WU.uRef.value=this.rt.texture;this.rf=0}
   else if(this.rt.width!==w||this.rt.height!==h)this.rt.setSize(w,h);
@@ -231,10 +232,10 @@ export class Water{
   const m=p=>{p.y=2*WY-p.y;return p};vc.position.copy(m(cp.clone()));const tg=m(cp.clone().add(dir));up.y=-up.y;vc.up.copy(up);vc.lookAt(tg);vc.updateMatrixWorld();vc.projectionMatrix.copy(cam.projectionMatrix);vc.projectionMatrixInverse.copy(cam.projectionMatrixInverse);
   WU.uRefM.value.set(.5,0,0,.5,0,.5,0,.5,0,0,.5,.5,0,0,0,1).multiply(vc.projectionMatrix).multiply(vc.matrixWorldInverse);
   const pr=r.getRenderTarget(),cc=r.getClearColor(new THREE.Color()),ca=r.getClearAlpha(),sa=r.shadowMap.autoUpdate,pcl=r.clippingPlanes;
-  this.root.visible=false;this.terr.water.visible=false;r.shadowMap.autoUpdate=false;r.clippingPlanes=[this.vplane];r.setClearColor(0x000000,0);r.setRenderTarget(this.rt);r.clear();const inks=[INK,...INKS.values()];inks.forEach(m=>m.visible=false);   /* Lote R3D-OPT-1: el reflejo no necesita los contornos (casco de tinta): casi la mitad de las llamadas de dibujo */
+  this.root.visible=false;this.terr.water.visible=false;const gH=[];this.terr.ch.forEach(c=>{if(c.grass&&c.grass.visible){c.grass.visible=false;gH.push(c.grass)}});r.shadowMap.autoUpdate=false;r.clippingPlanes=[this.vplane];r.setClearColor(0x000000,0);r.setRenderTarget(this.rt);r.clear();const inks=[INK,...INKS.values()];inks.forEach(m=>m.visible=false);   /* Lote R3D-OPT-1: el reflejo no necesita los contornos (casco de tinta): casi la mitad de las llamadas de dibujo */
   try{r.render(scene,vc)}catch(e){this.bad=(this.bad||0)+1;if(this.bad===1)console.warn('[R3D agua] el reflejo falló (se sigue sin él si se repite):',e&&e.message);if(this.bad>=3)this.noRef=1}   // R3D-FIX-REFLEJO (20 oct 2026): un TypeError aquí (`i.toArray is not a function`, ocurre con LLUVIA) mataba TODO el bucle de dibujo; ahora se captura, se restaura el estado y tras 3 fallos se apaga el reflejo
   
-  inks.forEach(m=>m.visible=true);r.setRenderTarget(pr);r.setClearColor(cc,ca);r.shadowMap.autoUpdate=sa;r.clippingPlanes=pcl;this.root.visible=true;this.terr.water.visible=true;this.rdone=1}
+  inks.forEach(m=>m.visible=true);gH.forEach(g=>g.visible=true);r.setRenderTarget(pr);r.setClearColor(cc,ca);r.shadowMap.autoUpdate=sa;r.clippingPlanes=pcl;this.root.visible=true;this.terr.water.visible=true;this.rdone=1}
 
  // ── gotas ──
  spawnDrop(x,z,K){const T=this;for(let i=0;i<DN;i++){if(T.dlife[i]>0)continue;const a=Math.random()*TAU,s=rnd(.2,1.1),o=i*3;

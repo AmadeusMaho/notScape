@@ -6,6 +6,9 @@
 > **REGLA DEL DUEÑO (22 oct 2026): CADA ENTREGA ACTUALIZA ESTE ARCHIVO** (sección «Registro de avance» de abajo + la fila de la fase que toques) **y además su lote en `AGENTS.md`**, para que cualquier agente sepa en segundos qué se hizo y qué falta. Una entrega que no actualiza la hoja de ruta no está terminada.
 
 ## REGISTRO DE AVANCE (lo último hecho primero; una línea por entrega, con el lote de AGENTS.md)
+- **22 oct 2026 · PASTO MÁS FRONDOSO · lote PASTO-FRONDOSO:** briznas más anchas y agrupadas en manchas (sin triángulos extra) + densidad 1,15/1,0 solo en Máxima/Alta (aprobado). Presupuesto en la plaza: Máx 2,77 M (95 %, no subir más), Alta 2,36 M, Media 1,08 M (+2 %). Falta verlo en otros biomas y en la integrada.
+- **22 oct 2026 · RENDIMIENTO = PRIORIDAD 1 · lote OPT-RENDIMIENTO-2:** reglas §P en `REGLAS_CREACION.md` (mandan sobre todo), vigilante de presupuesto en el juego (`R3D.budget()`, aviso `[R3D PRESUPUESTO]`), bloque «RENDIMIENTO» con trinquetes en `rules_check.py`; además reflejo del agua solo en Máx/Alta (Media 1,6 M → 1,05 M tris) y el suelo se reconstruye al bajar la calidad en partida. Falta: fps reales en la integrada/móvil del dueño y presupuesto en los demás biomas.
+- **22 oct 2026 · RENDIMIENTO Y CARGA (Fase 1.6) · lote OPT-RENDIMIENTO:** carga 29 s → 7 s (modulepreload, servidor con keep-alive/IPv6, edificios en tramos de 45 ms); CPU del 3D 7,7 → 3,7 ms/fotograma (sectores estáticos sin `updateMatrixWorld`); triángulos ≈ −45 % (nubes del Cielo, pasto y adoquín por calidad); GPU integrada arranca en Media, Baja/Mínima bajan de verdad la resolución, sombra 1024 a medio ritmo. **Falta: que el dueño mida en la integrada y el móvil**; pendiente el 2.º contexto WebGL del héroe y el MSAA del lienzo con post.
 - **22 oct 2026 · Decisiones de oficios (2.ª tanda):** una mascota + una montura a la vez (2 ranuras), **Domar y monturas desde el Bosque (Fase 4)**, Agricultura/Apicultura posible descarte. Ver `docs/PLAN_OFICIOS_Y_BIOMAS.md`.
 - **22 oct 2026 · FIX-FANTASMA-INVISIBLE + PLAN-OFICIOS:** el objeto arrastrado vuelve a verse (hover 3D dejaba `opacity:0`), comando `ns.py mouse` (ratón real); borrador `docs/PLAN_OFICIOS_Y_BIOMAS.md` con Herbolaria, Alquimia, Sastrería y Encantamiento y la plantilla de rework de bioma. **Espera decisiones ★ del dueño (§5 del plan).**
 - **22 oct 2026 · ARRASTRAR-2 (Fase 2/UI):** equipo arrastrable (mochila flotante junto a Personaje), fantasma = solo el objeto, banco apila donde va, objetos de misión intirables/invendibles (`QITEM`), base de 16 ranuras. Pendiente: probar a mano y en táctil; `#bw` en pantallas pequeñas; añadir a `QITEM` los objetos de misión futuros.
@@ -63,6 +66,7 @@
 > Los **sistemas de fondo (Bloque D)** se estrenan en el bioma indicado (propuesta ★; por defecto «a demanda», como decidió el dueño). Si el dueño cambia el primer bioma, se intercambian las fases 4–5 con sus sistemas.
 
 ## SIEMPRE · HIGIENE PERMANENTE (cada entrega)
+- **⛔ RENDIMIENTO = PRIORIDAD 1:** `R3D.budget()` en Media y Alta en la zona tocada + `rules_check.py` sin FALLO (ver `docs/REGLAS_CREACION.md` §P). Cada fase de bioma termina con su presupuesto medido.
 `python tools/rules_check.py` + las herramientas de tu área (`docs/REGLAS_CREACION.md` §10); lote corto en `AGENTS.md`; lotes viejos → `docs/HISTORIAL.md`. Medir fps/memoria en la GPU y el móvil del dueño al cerrar cada fase (F4).
 
 ## FASE 1 · CERRAR LO ABIERTO
@@ -73,7 +77,7 @@
 | 1.3 | **Cinemática:** visión de Nul'ru (líneas ★ por aprobar), objeto «Fragmento del tiempo», oír el audio | CINE-3/4 | Canon: `docs/LORE.md` §1b |
 | 1.4 | **Deuda visual/técnica heredada:** minimapa del Cielo en negro; montañas de la isla color arena; mena estilo roca sin ver en pantalla; props del Cielo sin hoja de contacto; iglesias troncos/palafito/stave PEND en `roof_clip`; `props_check` (herencia 2D) | ISLA-2g/3, MINERIA-SUAVE | Hecho en la auditoría: `NAT_FOOT.mena`, arboledas dentro de la elipse, solape Bosque |
 | 1.5 | **HUD restante:** H9 táctil completo (hojas inferiores, 844×390), Fase 13 menús restantes (habilidades, misiones, magia → solo aviso mientras `MAGIC_ON=false`), Fase 14 resto (editor/carga ya tienen pasada), H3-b cobertura 3D de lo que sigue en 2D + H3-c monedas | R3D-HUD-* | H11 (barra de 6) sigue BLOQUEADA hasta Fase 2 |
-| 1.6 | **Rendimiento:** medir en la GPU/móvil del dueño (F4); si falta: fusionar/LOD de recursos y props (53 %/21 % de los triángulos), LOD del adoquín, reflejo a menor resolución; verificar `warmShaders` y los +10 chunks | R3D-OPT-1, FREEZE-SHADERS, CHUNKS | SwiftShader no sirve |
+| 1.6 | **Rendimiento:** ✅ primera pasada HECHA (lote OPT-RENDIMIENTO, 22 oct: carga 29→7 s, CPU 3D ÷2, triángulos −45 %, integrada en Media). Falta: medir en la integrada/móvil del dueño (F4); si aún falta: héroe dentro del renderer principal (hoy 2.º contexto WebGL, ~2 ms GPU fijos), lienzo sin MSAA cuando hay postproceso, sombra del terreno sin adoquín, LOD de árboles | R3D-OPT-1, FREEZE-SHADERS, CHUNKS | SwiftShader no sirve |
 
 ## FASES 2 y 3 · CIMIENTOS DE JUEGO
 | # | Fase | Qué | Dep. |

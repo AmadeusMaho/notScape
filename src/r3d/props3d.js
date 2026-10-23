@@ -52,6 +52,8 @@ export function propGeo(n,o,th){const key=n+'|'+JSON.stringify(o||{})+'|'+(th?JS
   g.computeBoundingBox();g.computeBoundingSphere()}}catch(e){console.warn('[R3D props]',n,e)}
  GEO.set(key,g?{g,key}:null);return GEO.get(key)}
 
+// OPT-RENDIMIENTO (22 oct 2026): los sectores son ESTÁTICOS (matrices de mundo = identidad, las posiciones van en instanceMatrix): three ya no los recorre en updateMatrixWorld (antes ≈ 62 000 nodos visitados por fotograma entre la escena y la del héroe, ~2–3 ms de CPU).
+const NOUMW=function(){};
 export class Props{
  constructor(scene,occScene,W3){this.scene=scene;this.occ=occScene;this.W3=W3;this.grp=new THREE.Group();this.grp.name='props3d';scene.add(this.grp);this.ogrp=new THREE.Group();occScene.add(this.ogrp);this.grp.matrixAutoUpdate=this.ogrp.matrixAutoUpdate=false;
   this.mat=toon('#ffffff',SOFT?{vc:1,moss:.7,emit:1,tex:'auto',texS:7,texB:.14,texA:.65,soft:1}:{vc:1,moss:.7,emit:1,tex:'auto',texS:7,texB:.45});this.matRock=toon('#ffffff',SOFT?{vc:1,moss:.7,emit:1,soft:1}:{vc:1,moss:.7,emit:1,tex:'auto',texS:7,texB:.45});this.ink=inkFor('#6a5a52');this.dmat=new THREE.MeshBasicMaterial({colorWrite:false});this.sig='';this.on=false;this.boxes=[]}
@@ -59,7 +61,7 @@ export class Props{
  update(){const s=this.sign();if(s!==this.sig){this.sig=s;this.gen=this.buildGen()}if(this.gen&&!Props.DEFER){while(!this.gen.next().done);this.gen=null}}
 
  // Fase 49a (rendimiento): las mallas se reparten en SECTORES de 4×4 celdas; `cull` oculta los sectores lejanos (three salta el subárbol entero: sin cull de frustum ni sombras por malla).
- sec(parent,cx,cy){const M=parent.userData.sec||(parent.userData.sec=new Map()),sx=Math.floor(cx/4),sy=Math.floor(cy/4),k=sx*1000+sy;let g=M.get(k);if(!g){g=new THREE.Group();g.matrixAutoUpdate=false;g.matrixWorldAutoUpdate=false;const S=4*CELL*32;g.userData.c=this.W3((sx+.5)*S,(sy+.5)*S,0);parent.add(g);M.set(k,g)}return g}
+ sec(parent,cx,cy){const M=parent.userData.sec||(parent.userData.sec=new Map()),sx=Math.floor(cx/4),sy=Math.floor(cy/4),k=sx*1000+sy;let g=M.get(k);if(!g){g=new THREE.Group();g.matrixAutoUpdate=false;g.matrixWorldAutoUpdate=false;g.updateMatrixWorld=NOUMW;const S=4*CELL*32;g.userData.c=this.W3((sx+.5)*S,(sy+.5)*S,0);parent.add(g);M.set(k,g)}return g}
  cull(tx,tz,r){const R=r+4*CELL*.72+14;for(const par of [this.grp,this.ogrp]){const M=par.userData.sec;if(!M)continue;M.forEach(g=>{const c=g.userData.c;g.visible=Math.hypot(c.x-tx,c.z-tz)<R})}}
  // R3D-FIX-CARGA (20 oct 2026): construir los 18 000 props de golpe bloqueaba el navegador ~1 s al cargar. `buildGen` es el mismo `build` como GENERADOR (cede cada ~64 props / 32 grupos); `build()` lo agota de golpe (herramientas, editor)
  // y `update()` lo agota también salvo que `Props.DEFER` esté activo: entonces lo reparte `warm(ms)` (lo llama bootRun de game.js entre fotogramas de la pantalla de carga).
