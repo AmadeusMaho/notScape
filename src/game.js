@@ -500,7 +500,7 @@ function sp(x,y,c,n,vx,vy,g){if(window.R3D&&R3D.fx){R3D.fx.sp(x,y,c,n,vx,vy,g);r
 function gain(sk,xp,sil){xp*=(1+.05*S.wis)*(S.buf.xp>Date.now()?1.5:1)*(sk==='cb'||sk==='mg'||sk==='ra'?1+pv('savant')/100:TOOLS[sk]?1+tpv(sk,'gsage')/100:1);const o=L(sk);S.xp[sk]+=xp;if(typeof ISLA!=='undefined'&&ISLA.lock()){S.xp[sk]=Math.min(S.xp[sk],XT[2]-1);if(!S.awk)S.awk={};if(!S.awk[sk]){S.awk[sk]=1;try{banner('Despiertas',SK[sk][1]+' '+SK[sk][0],'#e8cf94',3000);log('✨ <b>'+SK[sk][0]+'</b> despierta: nivel 1.');snd('lvl');dirty=1}catch(e){}}}   /* NIVELES DESPIERTOS (isla del Cielo): todo empieza dormido (nivel 0); el primer éxito de cada oficio lo despierta (nivel 1) y la XP se recorta justo bajo el nivel 2 hasta terminar el tutorial */
  if(!sil)snd('xp');if(TB==='sk')skLive(sk); /* actualiza solo la barra y el texto de esa skill; subir de nivel marca dirty (rebuild) más abajo */const n=L(sk);
  if(!sil){if(typeof HUDSU!=='undefined'&&HUDSU.ok)HUDSU.xp(sk,xp,n>o,n)}
- if(n>o){S.st['lvl:'+sk]=n;S.st.tot=SKL.reduce((s,k)=>s+L(k),0);banner('¡Nivel '+n+'!',SK[sk][1]+' '+SK[sk][0],'#e8cf94',3200);log('¡Nivel '+n+' en '+SK[sk][0]+'!');sp(P.x,P.y-20,'#e8cf94',24,160,120,200);snd('lvl');if(sk==='cb'||sk==='ra'||sk==='mg')P.hp=maxHp();chk();dirty=1}}
+ if(n>o){S.st['lvl:'+sk]=n;S.st.tot=SKL.reduce((s,k)=>s+L(k),0);banner('¡Nivel '+n+'!',SK[sk][1]+' '+SK[sk][0],'#e8cf94',3200);log('¡Nivel '+n+' en '+SK[sk][0]+'!');sp(P.x,P.y-20,'#e8cf94',24,160,120,200);snd('lvl');if(sk==='cb'||sk==='ra'||sk==='mg')P.hp=maxHp();if(typeof WKUI!=='undefined')WKUI.onLevel(sk,o,n);chk();dirty=1}}
 const gOk=a=>{const g=GATE[a[2]];return !g||L(g[0])>=g[1]};   // lote C5: requisito extra de otra skill (munición: Arquería)
 function stepAct(sk,i,sil,at){const a=ACT[sk][i],cr=a.length===6;
  if(L(sk)<rq(a)||!gOk(a))return 0;
@@ -514,7 +514,7 @@ function stepAct(sk,i,sil,at){const a=ACT[sk][i],cr=a.length===6;
  D(a[1]);if(!sil&&room(a[1])&&Math.random()*100<pv('harvest')+4*S.hv){D(a[1]);log('✨ ¡Cosecha doble!')}gain(sk,a[3],sil);if(!sil)log('Obtienes: '+I[a[1]][0]);
  const r=RARE[sk];if(r&&room(r[0])&&Math.random()<(1+.25*S.luck+tpv(sk,'lucky')/100)/r[1]){if(at)dropGround(r[0],at.x,at.y,{au:1,rare:1});else add(r[0]);inc('rare');snd('rare');toast(ic(r[0])+' ¡Drop raro: <b>'+I[r[0]][0]+'</b>!',3000);log('¡Drop raro! '+I[r[0]][0])}
  return 1}
-function stopA(m){A=null;S.cur=null;if(m)log(m);dirty=1}
+function stopA(m){if(A&&A.wk&&typeof WKUI!=='undefined')WKUI.close();A=null;S.cur=null;if(m)log(m);dirty=1}
 /* RUEDA DE RECOLECCIÓN Y CRAFTEO (v2, 21 oct 2026; decisión del dueño: «como New World: una rueda, satisfactorio»): Tala, Minería, Pesca y los oficios de crafteo de estación (Herrería, Artesanía, Escultor, Inscripción). La Cocina conserva su minijuego `CK`.
    Ya NO se pica solo: un anillo con un marcador que gira y un ARCO de acierto (con núcleo «perfecto»); cada pulsación (LMB o E) es un golpe: arco = bueno, núcleo = perfecto (×1,3), fuera = flojo (×0,55). Sin racha. Acertar solo ACELERA un poco.
    · Recolección: golpes por recurso `whHits`; el botín sale como OBJETO 3D que vuela a tu mano (`dropGround{au:1}` con recogida magnética tras 650 ms); el recurso cae/se rompe (`Resources.fell`) con grietas progresivas en la mena; recursos DORADOS (`e.g`, ultra raros, 0,4 %) = arco más estrecho y botín ×4.
@@ -593,9 +593,9 @@ function whDraw(now){if(!(A&&A.wh)||INT||CK){whEl.style.display='none';return}co
    · `mgBegin(key)` al empezar (cuenta las veces en `S.mgh[key]`); `mgHintRows(key)` devuelve las filas [[teclas…],'verbo'] según el estado; `mgUi(now)` (cada fotograma, tras los draw de los minijuegos) coloca/funde el aviso junto a la estación.
    · El aviso sale las primeras `MG_HINTS` veces de cada minijuego y se funde suave (sin bloque ni toast). Para uno nuevo: añade su clave en `mgKey()` y sus filas en `mgHintRows`.
    · Enfoque: mientras hay minijuego `mgK`→1 y la cámara se acerca ×`MG_ZOOM` hacia la estación (suave, sin cine; no actúa dentro de interiores ni durante una escena). */
-const MG_HINTS=5,MG_ZOOM=.42,MG_PULL=.4;let mgK=0;
+const MG_HINTS=5,MG_ZOOM=.42,MG_ZOOM_WK=.85,MG_PULL=.4;let mgK=0,mgZf=MG_ZOOM;   // MG_ZOOM_WK: más cerca al craftear para ver al personaje (Hoja de trabajo)
 const mgEl=(()=>{const d=document.createElement('div');d.id='mgh';document.body.appendChild(d);return d})();let mgTx='';
-const mgKey=()=>A?(A.fm?'fm':A.wh?'wh':A.fg?'fg':null):null;
+const mgKey=()=>A?(A.fm?'fm':A.wh?'wh':A.fg?'fg':A.wk?'wk':null):null;
 /* AYUDAS CONTEXTUALES (21 oct 2026; el dueño: «no pongas todos los controles en la cara al jugador, muéstralos a medida que avanza»): `ctxHint(id, filas, ms)` muestra UNA vez por partida (`S.ctxh[id]`, se guarda) un aviso suave con teclas (`<kbd>`) sobre el marco del jugador;
    si ya hay uno visible, espera en cola. Filas = [[teclas],'texto']. Las dispara el motor del tutorial (isla.js `hintsTick`) en el momento en que cada control importa; úsalo también para enseñar cualquier mecánica nueva. `?hints=0` los apaga. */
 const ctxEl=(()=>{const d=document.createElement('div');d.id='ctxh';document.body.appendChild(d);return d})(),ctxQ=[];let ctxT=0,ctxBusy=0;
@@ -635,9 +635,9 @@ function mgHintRows(key){const g=A&&A.fg;
  if(key==='fg'){if(!g||g.st==='wait')return[[[],'espera la picada…']];if(g.st==='bite')return[[K_('LMB','E'),'¡ahora, clava el anzuelo!']];
   if(g.st==='fight')return[[K_('W','A','S','D'),'muévete en dirección contraria al pez']];if(g.st==='reel')return[[K_('LMB'),'repetido para recogerlo']]}
  return[]}
-function mgUi(now){const key=mgKey(),on=!!key&&!INT&&!CK&&!(typeof CINE!=='undefined'&&CINE.on);
+function mgUi(now){const key=mgKey(),on=!!key&&!INT&&!CK&&!(typeof CINE!=='undefined'&&CINE.on);if(on)mgZf=key==='wk'?MG_ZOOM_WK:MG_ZOOM;
  const dt=Math.min(.1,OCDT||.016);mgK+=((on?1:0)-mgK)*Math.min(1,dt*3.2);if(mgK<.002&&!on&&mgK>0){mgK=0;if(window.R3D_ON)ISO.V.zoom=zoom3(ZMI)}
- const show=on&&((S.mgh&&S.mgh[key])||0)<=MG_HINTS;
+ const show=on&&key!=='wk'&&((S.mgh&&S.mgh[key])||0)<=MG_HINTS;
  if(!show){mgEl.classList.remove('on');return}
  const rows=mgHintRows(key),tx=rows.map(r=>r[0].join('+')+'|'+r[1]).join('/');
  if(tx!==mgTx){mgTx=tx;mgEl.innerHTML=rows.map(r=>'<div>'+r[0].map(k=>'<kbd>'+k+'</kbd>').join('')+'<span>'+r[1]+'</span></div>').join('')}
@@ -733,7 +733,7 @@ function rollAtk(m){const wt=wtype(),hit=sureHit(m)||Math.random()<hitChance(m),
 function startF(e,now){if(!alive(e,now))return;if(aimOn()&&e.d){e.hunt=1;return}   // con el combate dirigido no hay «combate fijado»: se golpea apuntando (swing())
  dfpHint(e);if(manual()&&!S.hintAtk&&!e.lab){S.hintAtk=1;toast('⚔️ Mantén LMB sobre el enemigo (o la tecla <b>E</b>) para golpear. <b>Espacio</b> esquiva.',5200)}if(sealed(e)){const k=MB[e.d.id];toast('🔒 <b>'+e.d.n+'</b> está protegido por un sello. Derrota a <b>'+MD['k'+k].n+'</b> en la '+CAPN[k]+'.',4200);snd('miss');return}A={ty:'f',e,t0:now,ph:Math.max(now+(manual()?0:700),ATKT),sk:'cb',ms:manual()?manMs():atkMs()};A.nx=rollAtk(e);e.hunt=1;e.nt=Math.max(e.nt||0,now+1400);dirty=1}
 function startC(sk,i){const a=ACT[sk][i];if(ownT(a))return log('Ya tienes esa herramienta.');if(L(sk)<rq(a)||!gOk(a)||!hasIn(a[1]))return log('Te faltan materiales o nivel.');
- A={ty:'c',e:S.stn,sk,i,t0:performance.now(),d:dur(sk,a),pr:0,amt:hitAmt(sk,a),per:hitPeriod(sk),left:QTY||1e9};S.cur={sk,i};if(WHEEL_SK[sk])whInit(performance.now());if(sk==='sm'&&S.stn&&S.stn.id!=='furnace')fmInit(performance.now());dirty=1}
+ A={ty:'c',e:S.stn,sk,i,t0:performance.now(),d:dur(sk,a),pr:0,amt:hitAmt(sk,a),per:hitPeriod(sk),left:QTY||1e9};S.cur={sk,i};if(WHEEL_SK[sk])whInit(performance.now());if(sk==='sm'&&S.stn&&S.stn.id!=='furnace')WKUI.start(performance.now());dirty=1}   // herrería en yunque/armero: Hoja de trabajo estilo FF14 (workui.js); el minijuego de calor fm* queda sin uso
 function reseek(e,now){if(e.d&&(!S.auto||(e.d.ag&&(P.hp<maxHp()*.6||M.some(o=>o!==e&&o.hunt&&alive(o,now))))))return stopA();let b=null,bd=1e9;(e.d?M:N).forEach(o=>{if(o===e||!alive(o,now)||(e.d?o.d!==e.d:(o.t!==e.t||o.i!==e.i))||(e.d&&e.d.ag&&M.some(q=>q!==o&&q!==e&&alive(q,now)&&q.d.ag&&Math.hypot(q.x-o.x,q.y-o.y)<100)))return;const d=Math.hypot(o.x-e.x,o.y-e.y);if(d<bd){bd=d;b=o}});
  if(b){A=null;P.g={e:b}}else stopA('No quedan más cerca. Espera a que reaparezcan.')}
 // ---- puntos de interés: cofres (oro + XP + a veces un drop raro; los de campamento están custodiados) y santuarios (bendición permanente de una sola vez)
@@ -1021,7 +1021,7 @@ function swingHud(now){const col=document.getElementById('hs-col');if(!col)retur
   const nn=now-SWG.last<SWG.ms*1.9?SWG.c+1:0;CDR.querySelectorAll('b').forEach((b,i)=>b.classList.toggle('lit',i<nn))}
  if(!on)return;const u=CHG.on?chgK(now):Math.min(1,(now-SWG.t0)/Math.max(1,SWG.ms));el.firstChild.style.width=(u*100).toFixed(0)+'%';el.classList.toggle('rd',u>=1);
  const n=now-SWG.last<SWG.ms*1.9?SWG.c+1:0,ps=el.querySelectorAll('b');ps.forEach((b,i)=>b.classList.toggle('lit',i<n))}   // barra de swing: relleno = enfriamiento del golpe, 3 puntos = combo
-function atkKey(down){const now=performance.now();if(BLK.on&&down)return;if(A&&A.fm){if(down)fmPress(now);return}if(A&&A.wh){if(down)whPress(now);return}if(A&&A.fg){if(down)fishPress(now);return}if(!down){if(aimOn())chargeEnd();ATKIN.held=0;return}ATKIN.t=now;ATKIN.held=1;if(aimOn()){chargeStart(now);return}if(A&&A.ty==='f')return;
+function atkKey(down){const now=performance.now();if(BLK.on&&down)return;if(A&&A.wk)return;if(A&&A.fm){if(down)fmPress(now);return}if(A&&A.wh){if(down)whPress(now);return}if(A&&A.fg){if(down)fishPress(now);return}if(!down){if(aimOn())chargeEnd();ATKIN.held=0;return}ATKIN.t=now;ATKIN.held=1;if(aimOn()){chargeStart(now);return}if(A&&A.ty==='f')return;
  let b=null,bd=150;M.forEach(m=>{if(!alive(m,now)||sealed(m))return;const d=Math.hypot(m.x-P.x,m.y-P.y);if(d<bd){bd=d;b=m}});if(b){if(A)stopA();P.g=null;P.mv=null;engage(b,now)}}
 function act(now){if(!A)return;
  if(A.ty==='f'){const m=A.e,dd=Math.hypot(P.x-m.x,P.y-m.y);if(dd>(wtype()==='m'?75:210)){if(!m.hunt)stopA();return}
@@ -1274,9 +1274,9 @@ function upd(dt,now){swingTick(now,dt);if(typeof AMB!=='undefined')AMB.tick(now,
   if(now>m.wt){m.wt=now+R(2000,5000);m.tx=m.hx+R(-16,16);m.ty=m.hy+R(-12,12)}
   const ex=m.tx-m.x,ey=m.ty-m.y,d=Math.hypot(ex,ey);if(d>2){const sp3=d>60?55:18,nx=m.x+ex/d*sp3*dt,ny=m.y+ey/d*sp3*dt;if(!inVilla(nx,ny)){m.x=nx;m.y=ny;m.mv=now;m.f=ex-ey>=0?1:-1}}});
  if(A&&A.wh)whTick(now);
- if(A&&A.fm)fmTick(now);castTick(now);
+ if(A&&A.fm)fmTick(now);if(A&&A.wk)WKUI.tick(now);castTick(now);
  if(A&&A.fg)fishTick(now,dt);
- if(A&&!A.wh&&!A.fg&&!A.fm){const ph=swPh(now),imp=A.lp!=null&&ph<A.lp-.4;A.lp=ph;if(imp&&A.ty!=='f'){const e=A.e,k=A.sk;snd(k);
+ if(A&&!A.wh&&!A.fg&&!A.fm&&!A.wk){const ph=swPh(now),imp=A.lp!=null&&ph<A.lp-.4;A.lp=ph;if(imp&&A.ty!=='f'){const e=A.e,k=A.sk;snd(k);
   if(k==='wc')sp(e.x,e.y-26,'#5ab04a',2,30,10,60);else if(k==='mi')sp(e.x,e.y-10,'#ffd27a',4,60,40,160);else if(k==='sm')sp(e.x,e.y-8,'#ff9a2a',5,70,50,200);
   else if(k==='fi'){sp(e.x,e.y,'#cfe8ff',3,30,30,100);TER.ripple(e.x,e.y);if(window.R3D&&R3D.water)R3D.water.event('tug',e)}else if(k==='co')sp(e.x,e.y-14,'#aaa',2,10,25,-10);else if(k==='cr'||k==='es')sp(e.x,e.y-10,'#d8c9a3',2,30,20,80);else if(k==='ins')sp(e.x,e.y-18,'#ffe8a0',4,60,60,-20);A.pr+=A.amt*hitMul(now);if(A.pr>=1){A.pr=Math.min(A.pr-1,.99);fin(now)}}}
  parts.forEach(p=>{p.x+=p.vx*DT;p.y+=p.vy*DT;p.vy+=p.g*DT;p.l-=DT*1.1});parts=parts.filter(p=>p.l>0)}
@@ -1363,6 +1363,7 @@ function actState(now){if(CAST&&!INT)return{k:'se',ph:0};
  if(!A){if(P.pk&&now-P.pk<420)return{k:'pk',ph:(now-P.pk)/420};return null}const ph=swPh(now);
  if(A.ty==='f'){const wt=wtype(),hv=A.nx&&A.nx.wt===wt&&A.nx.heavy?1:0,armed=!!wColor(),wk=wKind();return Object.assign({k:'f',wt,wk,wcol:wColor(),orb:ORB[tierOf(S.eq.w||'')],hv},animPh(A.ms,A.ph-now,A.lh!=null?now-A.lh:1e9,wt==='r'?(hv?1150:900):wt==='g'?(hv?900:750):hv?(wk==='great'?880:760):wk==='great'?740:wk==='dagger'?400:armed?560:440))} // hv: el golpe que viene es máximo → animación especial del arma (hero.js)
  if(A.fg){const g=A.fg,tg=g.st==='bite'?.5+.5*Math.sin(now/55):g.st==='fight'?(g.pull?.35+.65*Math.min(1,g.T/80):.1):g.st==='reel'?.7:0;return{k:'fi',ph:Math.min(.99,(now-A.t0)/2400),tug:tg}}   // pesca: la caña tironea con el pez
+ if(A.wk)return WKUI.pose(now);
  if(A.fm){const id=A.e&&A.e.id;if(now<A.rl)return{k:'sm',ph:0,id};return Object.assign({k:'sm',id,n:A.hn||0},armPose(now-A.h0,FM_IMP,FM_IMP+WH_REC,.65,A.p0))}   // herrería: martillo ARRIBA en espera; al pulsar solo baja
  if(A.wh&&A.ty==='g'){const an=whPose(now);return Object.assign({k:A.sk,col:TCOL[TT[S.tool[A.sk]]]||'#aaa'},an)}   // rueda: el héroe solo golpea cuando pulsas; la pose sale de whPose (continua, ver más arriba)
  if(A.ty==='g'){const per=A.per||900;if(A.sk==='fi'){const sg=ph*per;return{k:'fi',ph:Math.min(.99,(now-A.t0)/2400),tug:sg<320&&now-A.t0>per?q4(1-sg/320):0}} // pesca: lanza UNA vez al empezar y espera; en cada «picada» (vuelta del ciclo) la caña da un tirón
@@ -1524,7 +1525,7 @@ function draw(now){const t=now/1000;cx=Math.max(0,Math.min(WW-W,P.x-W/2))|0;cy=M
   const fe=window.R3D_ON?combatFoe(now):null;foK+=((fe&&!mgKey()?1:0)-foK)*Math.min(1,dt*2.2);if(fe)foE={x:fe.x,y:fe.y};
   let fx=P.x,fy=P.y;{const u=(now-CPUNCH.t)/150;if(u>=0&&u<1){const e2=(1-u)*(1-u)*(u<.15?u/.15:1);fx+=CPUNCH.x*CPUNCH.k*8*e2;fy+=CPUNCH.y*CPUNCH.k*8*e2}}   // «puñetazo» de cámara hacia el golpe
  if(foK>.003&&foE){const dx=foE.x-P.x,dy=foE.y-P.y,l=Math.hypot(dx,dy)||1,k=Math.min(.28,120/l)*foK;fx+=dx*k;fy+=dy*k}
-  if(window.R3D_ON&&(mgK>0||mgKey())){const me=mgKey()&&A.e&&!INT?A.e:null;ISO.V.zoom=Math.min(8,zoom3(ZMI)*(1+MG_ZOOM*mgK));   // enfoque de minijuego: acerca la cámara y la inclina hacia la estación
+  if(window.R3D_ON&&(mgK>0||mgKey())){const me=mgKey()&&A.e&&!INT?A.e:null;ISO.V.zoom=Math.min(8,zoom3(ZMI)*(1+mgZf*mgK));   // enfoque de minijuego: acerca la cámara y la inclina hacia la estación
    if(me){fx=P.x+(me.x-P.x)*MG_PULL*mgK;fy=P.y+(me.y-P.y)*MG_PULL*mgK}}
   if(LFT)ISO.follow(fx,fy,TER.standZ(P.x,P.y),dt);else ISO.snap(fx,fy,TER.standZ(P.x,P.y))}LFT=now;OCDT=dt;
  if(typeof FOOT!=='undefined'&&window.R3D&&R3D.gait&&!(typeof CINE!=='undefined'&&CINE.on))FOOT.tick3(R3D.gait,P);   // PASOS por fase del pie (src/footsteps.js): suena en cada apoyo, a cualquier velocidad

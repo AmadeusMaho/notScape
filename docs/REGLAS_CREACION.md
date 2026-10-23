@@ -108,7 +108,7 @@ Se comprueba y se cuenta en la entrega: (1) **ESCALA** vs. héroe (≈1 unidad �
 - **Aldeas = datos** (`village-barrios.js`, `BIOMES`), no código por bioma; los layouts actuales quedan apretados (esperado) hasta la fase de mundo abierto.
 - **Nada de `rnd()`/`R()` del juego para arte** (`rnd` está sembrado y el layout depende de él); el arte usa `hash` por tile.
 - **Iluminación:** luces de noche = `DynLight` (por fragmento, 16 luces) + `LampGlow`; interiores usan sus 4 `PointLight` fijas; nuevas fuentes de luz se registran en `LK` (r3d.js).
-- **Preparar el online (arquitectura, 21 oct 2026):** lógica nueva SIN `Math.random` (PRNG con semilla) y el estado de un jugador en un objeto, no en globales sueltas; así 16a/16b (ver `HOJA_DE_RUTA` Fase 16) no obligan a reescribir.
+- **Preparar el online (arquitectura, 21 oct 2026):** lógica de MOVIMIENTO/COMBATE/POSICIÓN sin `Math.random` (PRNG con semilla); **aclaración del dueño (22 oct 2026): `Math.random` SÍ vale para tiradas de azar como crafteo, calidad, botín y condiciones; no hace falta semilla ahí** y el estado de un jugador en un objeto, no en globales sueltas; así 16a/16b (ver `HOJA_DE_RUTA` Fase 16) no obligan a reescribir.
 - **Zona Cielo:** hora dorada permanente, sin noche; árboles `mundo` azules; todo recurso en `inZone` se dibuja como Árbol del Mundo.
 
 ## 7 · HUD y UI

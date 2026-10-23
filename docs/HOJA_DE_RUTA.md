@@ -5,6 +5,10 @@
 
 > **REGLA DEL DUEÑO (22 oct 2026): CADA ENTREGA ACTUALIZA ESTE ARCHIVO** (sección «Registro de avance» de abajo + la fila de la fase que toques) **y además su lote en `AGENTS.md`**, para que cualquier agente sepa en segundos qué se hizo y qué falta. Una entrega que no actualiza la hoja de ruta no está terminada.
 
+> **PLAN MÓVIL 22 oct 2026 (planificado, sin implementar):** `docs/PLAN_MOVIL.md` — fases M0–M6 (auditoría en emulación → infraestructura → oficios → controles → ventanas → rendimiento → cierre); M3 coincide con la Fase 2·a «33 táctil de combate».
+
+> **PROPUESTA 22 oct 2026 (pendiente de visto bueno del dueño): rework de oficios estilo FF14** → `docs/PLAN_OFICIOS_FF14.md` (esqueleto común de crafteo + capa propia por oficio, habilidades y Puntos de Recolección sobre la rueda, todos los oficios actuales y planeados). **DECIDIDO: el crafteo usa la fórmula FF14 para todos los oficios; los minijuegos propios por oficio quedan cancelados** (sustituye el punto 1 de Fase 3·c). Pendientes ★ en su §6; siguiente: L0 núcleo `WK` + Herrería.
+
 ## REGISTRO DE AVANCE (lo último hecho primero; una línea por entrega, con el lote de AGENTS.md)
 - **22 oct 2026 · REESCALADO FSR (opcional) · lote REESCALADO-FSR:** interruptor en Opciones → Gráficos, apagado por defecto; mundo al 75 % + ampliación con nitidez tipo FSR 1; −19 a −28 % de GPU medido. DLSS descartado (imposible en navegador). Falta que el dueño lo vea en su pantalla e integrada.
 - **22 oct 2026 · PASTO MÁS FRONDOSO · lote PASTO-FRONDOSO:** briznas más anchas y agrupadas en manchas (sin triángulos extra) + densidad 1,15/1,0 solo en Máxima/Alta (aprobado). Presupuesto en la plaza: Máx 2,77 M (95 %, no subir más), Alta 2,36 M, Media 1,08 M (+2 %). Falta verlo en otros biomas y en la integrada.

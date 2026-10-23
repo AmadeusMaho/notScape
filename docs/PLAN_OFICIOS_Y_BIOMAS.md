@@ -7,6 +7,8 @@
 - Recolección activa ya hecha: rueda (tala/minería), pesca simple, minijuego de **Herrería** (calor + ritmo). Pendientes: Artesanía, Escultor, Cocina (decisión del dueño: **un minijuego distinto por oficio, no la rueda**).
 - Recetas entrelazadas v1 (`applyInterlock`), `craft_balance.py`, **mochilas ya soportadas** (`BAGS`: la Sastrería solo tiene que fabricarlas), **estados alterados ya hechos** (los antídotos de Alquimia pueden usarlos), banco/arrastre hechos.
 
+> **22 oct 2026: la columna «Minijuego propuesto» de los oficios de CRAFTEO queda anulada** por `docs/PLAN_OFICIOS_FF14.md` (todos usan la fórmula FF14: Avance/Calidad/Resistencia/PO). Siguen vigentes los minijuegos de RECOLECCIÓN (Herbolaria, Pesca, Domar, Agricultura).
+
 ## 1 · Oficios nuevos (propuesta de alcance y orden)
 | Orden | Oficio | Tipo | Qué entrega | Minijuego propuesto | Depende de |
 |---|---|---|---|---|---|
