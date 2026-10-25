@@ -21,7 +21,8 @@ export class HeroPreview{
   this.hero=new Hero();this.scene.add(this.hero.obj);
   this.blob=new THREE.Mesh(new THREE.CircleGeometry(.42,24).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.32,depthWrite:false}));this.blob.position.y=.01;this.scene.add(this.blob);
   this.cam=new THREE.OrthographicCamera(-1,1,1,-1,.1,60);this.last=0;this.w=0;this.h=0;this.modeKey='';this.stepT=0;this.grade=new HeroGrade()}
- size(){const w=this.cv.clientWidth||this.cv.width,h=this.cv.clientHeight||this.cv.height,dpr=Math.min(2,window.devicePixelRatio||1);
+ size(){if(this._ro===undefined){this._sz=null;try{this._ro=new ResizeObserver(e=>{const q=e[0].contentRect;this._sz=[q.width,q.height]});this._ro.observe(this.cv)}catch(e){this._ro=null}}   // Lote ANTI-TIRONES: tamaño por ResizeObserver (leer clientWidth cada fotograma forzaba un reflow)
+  const z=this._sz,w=(z?z[0]:this.cv.clientWidth)||this.cv.width,h=(z?z[1]:this.cv.clientHeight)||this.cv.height,dpr=Math.min(2,window.devicePixelRatio||1);
   if(w!==this.w||h!==this.h||dpr!==this.dpr){this.w=w;this.h=h;this.dpr=dpr;this.r.setPixelRatio(dpr);this.r.setSize(w,h,false)}}
  // dir 0..7 = vuelta completa en pasos de 45° (como los botones ↺ ↻ del editor); dir 2 = de frente-diagonal, el predeterminado de creator.js
  draw(look,o={}){this.size();const now=performance.now()/1000,dt=this.last?Math.min(.1,now-this.last):1/60;this.last=now;

@@ -129,6 +129,11 @@ for n, ok_, d in [
     ('sombra a medio ritmo en Baja/Mínima', 'shF' in rj and 'r.shadowMap.autoUpdate=!lo' in rj, 'src/r3d/r3d.js'),
     ('reescalado FSR disponible y APAGADO por defecto (decisión del dueño)', 'let FSR_ON=false;' in gj and 'fsr=new ShaderPass' in rj, 'src/game.js / src/r3d/r3d.js'),
     ('servidor local con keep-alive', "protocol_version='HTTP/1.1'" in rd('tools/serve_nocache.py'), 'tools/serve_nocache.py'),
+    # Lote ANTI-TIRONES (25 oct 2026): tirones por compilar shaders en juego
+    ('compuerta de shaders activa (lo nuevo compila en 2.º plano, oculto)', 'new ShaderGate()' in rj and 'gate.tick(' in rj and 'src/r3d/shadergate3d.js' in rd('index.html'), 'src/r3d/r3d.js / index.html'),
+    ('clave de programa del material toon SIN el color (un shader por color = tirones)', "customProgramCacheKey=()=>'t'+k" not in rd('src/r3d/materials3d.js') and "customProgramCacheKey=()=>pk" in rd('src/r3d/materials3d.js'), 'src/r3d/materials3d.js'),
+    ('HUD sin backdrop-filter salvo con «Cristal del HUD» (body.hs-glass)', 'let GLASS=false;' in gj and 'body:not(.hs-glass) #hs .b::before' in rd('css/hud-susurro.css'), 'src/game.js / css/hud-susurro.css'),
+    ('retratos 3D del HUD limitados e intercalados (PRT)', 'const PRT=' in rd('src/hud.js'), 'src/hud.js'),
 ]: (ok if ok_ else bad)(f'RENDIMIENTO: {n}', '' if ok_ else d)
 wm = re.search(r'PR\.warm\((\d+)\)', gj); (ok if wm and int(wm.group(1)) >= 40 else bad)('RENDIMIENTO: props en tramos ≥ 40 ms (PR.warm)', wm.group(0) if wm else 'no encontrado')
 

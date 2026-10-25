@@ -39,6 +39,7 @@ import {Blood} from './blood3d.js';   // Lote R3D-SANGRE: salpicaduras + manchas
 import {OUTFITS,outfitOf,outfitUnlocked,resolveLook} from './outfits3d.js';
 import {HeroPreview} from './preview3d.js';
 import {TalkHead} from './portrait3d.js';
+import {ShaderGate} from './shadergate3d.js';   // Lote ANTI-TIRONES (25 oct 2026): lo que nace en juego compila sus shaders en segundo plano, oculto, en vez de congelar
 
 const PXU=ISO.HW*2/Math.SQRT2/ISO.TILE*ISO.TILE/1;   // px lógicos por unidad = 28/0.7071 = 39.6
 const LVY=ISO.LV/(PXU*Math.cos(Math.PI/6));          // unidades por nivel de altura (0.6415)
@@ -238,6 +239,11 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   poll(o){if(!ext)return;const dis=gl.getParameter(ext.GPU_DISJOINT_EXT);for(let i=0;i<qs.length;){const h=qs[i];if(gl.getQueryParameter(h.q,gl.QUERY_RESULT_AVAILABLE)){const ms=gl.getQueryParameter(h.q,gl.QUERY_RESULT)/1e6;if(!dis)o[h.n]=o[h.n]==null?ms:o[h.n]+(ms-o[h.n])*.08;gl.deleteQuery(h.q);qs.splice(i,1)}else i++}}}};
  const GPU={},tW=mkT(r),tH=mkT(ar);
  let tsT=1,tsK=1,vlag=0,lastR=0,frz=0;   // CINE-1 · reloj virtual: tsT = escala objetivo (1 normal, 0 tiempo detenido), tsK = suavizada, vlag = retraso acumulado respecto al reloj real, frz = 0..1 intensidad del «tiempo detenido»
+ // ══ COMPUERTA DE SHADERS (Lote ANTI-TIRONES, 25 oct 2026; src/r3d/shadergate3d.js) ══ destinos de dibujo POR CALIDAD: con composer (Máx/Alta/Media, o FSR) el mundo se pinta en su
+ // render target; Baja/Mínima sin FSR, en la pantalla (otro espacio de color = otro programa); Máx/Alta además el reflejo del agua (plano de recorte = otro programa).
+ const gate=new ShaderGate(),GCLIP=[new THREE.Plane(new THREE.Vector3(0,1,0),0)],GV={rt:{key:'rt',get rt(){return composer.renderTarget1}},rtc:{key:'rtc',get rt(){return composer.renderTarget1},clip:GCLIP},scr:{key:'scr',rt:null}};
+ const gVars=()=>{const q=typeof QL!=='undefined'?QL:2,FS=typeof FSR_ON!=='undefined'&&!!FSR_ON;return q<=1?[GV.rt,GV.rtc]:(q<=2||FS)?[GV.rt]:[GV.scr]};
+ gate.watch(r,scene,cam,gVars);gate.watch(ar,aScene,acam,()=>[{rt:hgrade.rt}]);let gFr=0,warming=false,gVk='';
  let curMs=aaMs();let cloudK=CLOUD_K,shrMin=.15;let last=0,trail=[],aBox=null,heroScreen=null,qGrass=-1;
  function frame(rnow){const rd=lastR?Math.min(100,Math.max(0,rnow-lastR)):16.7;lastR=rnow;tsK+=(tsT-tsK)*(1-Math.exp(-rd/1000*(tsT<tsK?9:6)));if(Math.abs(tsT-tsK)<.002)tsK=tsT;vlag+=rd*(1-tsK);if(tsT>=1&&tsK>.98&&vlag>0)vlag=Math.max(0,vlag-rd*.25);frz=1-tsK;   /* 21 oct 2026: la parada de impacto (golpes críticos) acumulaba ≈ 75 ms de retraso del reloj virtual PARA SIEMPRE; ahora se recupera poco a poco (×1,25 de velocidad) cuando el tiempo vuelve a ser normal (las cinemáticas hacen tsync() al acabar) */   // tiempo VIRTUAL: con tsK=1 y vlag=0 `now` = reloj real (nada cambia)
   const now=rnow-vlag,t=now/1000,dt=Math.max(1e-5,last?Math.min(.1,(now-last)/1000):1/60);last=now;G.uTime.value=t;r.info.autoReset=false;r.info.reset();
@@ -261,6 +267,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   if(upd){terr.lodR=[12,9,7,5,4][typeof QL!=='undefined'?QL:2];terr.lod(tgt.x,tgt.z);props.update();{const cr=Math.hypot(V.cw,V.ch)/k*.78+14;props.cull(tgt.x,tgt.z,cr);res.cull(tgt.x,tgt.z,cr)}sta.update(now,t,typeof HOV!=='undefined'?HOV:null,typeof A!=='undefined'&&A?A.e:null);fac.update(now,t,typeof HOV!=='undefined'?HOV:null);res.update(now,t,typeof HOV!=='undefined'?HOV:null,typeof A!=='undefined'&&A?A.e:null,dt)}
   // actores 3D (antes que el héroe: su copia de profundidad en aScene tiene que estar al día cuando se dibuja el héroe)
   if(upd)actors.update(now,t,dt,tgt,Math.hypot(V.cw,V.ch)/k*.78+6,typeof HOV!=='undefined'?HOV:null,typeof P!=='undefined'?P:{x:0,y:0});actors.grp.updateMatrixWorld(true);if(upd)drops.update(now,t,dt,tgt,Math.hypot(V.cw,V.ch)/k*.78+6,typeof HOV!=='undefined'?HOV:null);if(upd)cts.update(props,res,actors,typeof P!=='undefined'?P:null,tp.night,typeof QL!=='undefined'?QL:2);
+  if(!gate.on&&!warming&&++gFr>300)gate.on=true;if(gate.on){const vk=gVars().map(v=>v.key).join();if(vk!==gVk){if(gVk)gate.background(0,gVars());gVk=vk}}gate.tick(performance.now());   // al cambiar de calidad, los programas del nuevo destino se piden en segundo plano   // compuerta de shaders: lo añadido este fotograma (actores, objetos del suelo…) se compila antes de dibujarse
   // héroe
   const st=typeof heroState3D==='function'?heroState3D(now):null;
   if(st){hero.setLook(resolveLook(st.look));const p=W3(st.x,st.y,st.z);
@@ -276,7 +283,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
    const dprMax=Math.max(V.dpr,Math.min(window.devicePixelRatio||1,Math.sqrt((typeof QCAPS!=='undefined'?QCAPS[0]:4.5e6)/(cssW*cssH)))),hs=(typeof QL!=='undefined'&&QL>=3)?1:Math.min(2,Math.max(1,dprMax/V.dpr));   /* OPT-RENDIMIENTO (22 oct 2026): en Baja/Mínima el héroe ya NO se supermuestrea (hasta ×4 píxeles con el lienzo reducido) */
    const HA=1.4,anc=new THREE.Vector3(p.x,p.y+.55,p.z),px=Math.ceil(HA*2*k),pxr=Math.ceil(HA*2*k*hs);if(acv.width!==pxr){ar.setPixelRatio(1);ar.setSize(pxr,pxr,false)}
    placeCam(acam,anc,HA,HA);aBack.position.set(anc.x-Math.sin(az)*6,anc.y+4,anc.z-Math.cos(az)*6);aBack.target.position.copy(anc);aBack.intensity=.85-.5*nt;aSun.position.copy(anc).add(new THREE.Vector3(...TOD.dia.sunP).normalize().multiplyScalar(12));aSun.target.position.copy(anc);
-   markStencil();ar.shadowMap.needsUpdate=true;ar.shadowMap.autoUpdate=false;const sp=proj(anc),hx0=Math.round(sp.x-px/2),hy0=Math.round(sp.y-px/2);   /* 21 oct 2026: posición ENTERA en píxeles del lienzo: con una posición fraccionaria `drawImage` remuestrea el héroe (1:1) con interpolación bilineal y se ve borroso, sobre todo a zoom mínimo */
+   gate.tick(performance.now());markStencil();ar.shadowMap.needsUpdate=true;ar.shadowMap.autoUpdate=false;const sp=proj(anc),hx0=Math.round(sp.x-px/2),hy0=Math.round(sp.y-px/2);   /* 21 oct 2026: posición ENTERA en píxeles del lienzo: con una posición fraccionaria `drawImage` remuestrea el héroe (1:1) con interpolación bilineal y se ve borroso, sobre todo a zoom mínimo */
    const th=tH.begin('heroe');hgrade.begin(ar,pxr,pxr);                                                        // Lote R3D-HEROE-NR: los 3 pases van a un render target (MSAA + stencil)…
    acam.layers.set(3);ar.render(aScene,acam);                                     // 1) casas y props 3D: solo profundidad
    acam.layers.set(0);ar.render(aScene,acam);                                     // 2) héroe (lo tapado no se dibuja; marca stencil)
@@ -342,9 +349,11 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   const cp=r.clippingPlanes;
   // El programa de un material depende del DESTINO de render (pantalla o render target del composer: espacio de color/tone mapping distinto) y del plano de recorte global del reflejo del agua:
   // se compila para cada combinación (21 oct 2026: antes solo se compilaba contra la pantalla, y la primera tala/telegrafía/estela aún congelaba el juego).
-  const rt0=r.getRenderTarget(),rts=[null];try{if(composer&&composer.renderTarget1)rts.push(composer.renderTarget1)}catch(e){}
-  try{for(const clip of [false,true]){r.clippingPlanes=clip?[new THREE.Plane(new THREE.Vector3(0,1,0),0)]:cp;   // con plano: el REFLEJO del agua genera otro programa por material
-    for(const rt of rts){r.setRenderTarget(rt);await Promise.race([r.compileAsync(scene,cam),new Promise(ok=>setTimeout(ok,maxMs))])}}}catch(e){console.warn('[R3D warmShaders]',e)}
-  r.setRenderTarget(rt0);r.clippingPlanes=cp;
+  // 25 oct 2026 (ANTI-TIRONES): antes se compilaban las 4 combinaciones (pantalla/RT × con/sin recorte) = carga de ~17 s; ahora solo los destinos de la calidad ACTUAL (gVars)
+  // y el resto se precalienta en segundo plano tras la carga (gate.background), por si la calidad cambia en partida.
+  const rt0=r.getRenderTarget(),cur=gVars();warming=true;
+  const G0=gate.G[0]||{r,cam};try{for(const v of cur){gate.prime(G0,v,cp);await Promise.race([r.compileAsync(scene,cam),new Promise(ok=>setTimeout(ok,maxMs))])}}catch(e){console.warn('[R3D warmShaders]',e)}
+  r.setRenderTarget(rt0);r.clippingPlanes=cp;warming=false;
+  if(!all){gate.on=true;gVk=cur.map(v=>v.key).join();if(typeof QA!=='undefined'&&QA&&QL===2)gate.background(0,[GV.scr])}   // solo la calidad AUTOMÁTICA en Media puede bajar sola a Baja (pantalla sin composer); el resto de destinos se piden al cambiar de calidad (gVk en frame)
   tmp.forEach(o=>{scene.remove(o);if(o.isSprite||(o.material&&o.material.isShaderMaterial))o.material.dispose()});hid.forEach(o=>{o.visible=false});console.info('[R3D shaders]',{programas:r.info.programs.length,nuevos:r.info.programs.length-n0,ms:Math.round(performance.now()-t0)})},
- ghost:(a,c)=>{pendG={a,c}},get wu(){return WU},get spell(){return spell},get fx(){return fx},get res(){return res},fragment:()=>new Fragment(scene),debris:n=>new Debris(scene,n),embers:n=>new Embers(scene,n),gabriel:(x,y,z)=>new Gabriel(scene,W3,x,y,z==null?TER.standZ(x,y):z),hero,terr,stats:()=>({calls:r.info.render.calls,tris:r.info.render.triangles,chunks:terr.ch.size})}}
+ gate,ghost:(a,c)=>{pendG={a,c}},get wu(){return WU},get spell(){return spell},get fx(){return fx},get res(){return res},fragment:()=>new Fragment(scene),debris:n=>new Debris(scene,n),embers:n=>new Embers(scene,n),gabriel:(x,y,z)=>new Gabriel(scene,W3,x,y,z==null?TER.standZ(x,y):z),hero,terr,stats:()=>({calls:r.info.render.calls,tris:r.info.render.triangles,chunks:terr.ch.size})}}

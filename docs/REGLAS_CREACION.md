@@ -37,6 +37,10 @@ Además: objetos en la escena ≤ **21 000** (hoy ≈ 19 700), en la escena del 
 
 - **Opción del jugador «Pasto» (23 oct 2026):** el deslizador de Opciones → Gráficos (`GRASSK`) solo MULTIPLICA la densidad de briznas (`Terrain.gk`), nunca sube `GRASS_Q`; por encima de 100 % solo actúa en Máxima/Alta. No reutilices `GRASS_Q`/`terr.q` para eso (`q` también decide el adoquín denso).
 
+**P11 · Tirones (lote ANTI-TIRONES, 25 oct 2026): nada puede compilar un shader en mitad de la partida.** (a) Un material cuyo CÓDIGO no cambia NO debe dar un programa nuevo: en `customProgramCacheKey` va solo lo que cambia el GLSL, nunca el color ni valores de uniforms (`toon()` usa `pk`). (b) Lo que se añade con `add()` a la escena lo cubre la compuerta (`src/r3d/shadergate3d.js`, `R3D.gate`); lo que cambia de material SIN añadirse (destellos, resaltes, materiales temporales) necesita un `warmObjs()` que lo compile en la carga. (c) Si en la consola sale `[R3D] shaders compilados EN JUEGO`, es un fallo a arreglar. (d) Contextos WebGL nuevos (retratos, iconos, vistas previas) se crean y compilan en la pantalla de carga, no al abrir un menú.
+
+**P12 · HUD DOM barato (lote ANTI-TIRONES): el HUD costaba ~20 % de fps en combate.** (a) Nada de `backdrop-filter` en lo que se ve mientras se juega (solo con la opción «Cristal del HUD», `body.hs-glass`); (b) en código que corre cada fotograma NO leas layout (`getBoundingClientRect`, `offsetWidth`, `clientWidth`, `getComputedStyle`) después de escribir estilos: usa `cvRect()` (game.js) o un `ResizeObserver`; (c) escribe un estilo solo si cambió; (d) lienzos animados del HUD a ≤ 30 fps y contextos WebGL del HUD (retratos) a ≤ 24 fps, nunca dos en el mismo fotograma.
+
 ## 0 · Protocolo de entrega (siempre)
 1. Trabaja en segmentos pequeños; un entregable por mensaje; cierra diciendo **qué probar a mano**.
 2. Si cambias algo: **detállalo en `AGENTS.md`** (lote corto: qué, por qué, cómo se verificó, qué NO) — el lote más antiguo pasa a `docs/HISTORIAL.md` cuando haya >14.

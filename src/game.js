@@ -533,6 +533,13 @@ let QBON=1;   // bono de calidad por precisión (lo usa qv durante el crafteo)
 let FSR_ON=false;try{const q=(location.search.match(/[?&]fsr=(\d)/)||[])[1];FSR_ON=q!=null?q==='1':localStorage.getItem('ns_fsr')==='1'}catch(e){}
 function fsrTxt(){const b=document.getElementById('fsrb');if(b)b.textContent='Reescalado FSR: '+(FSR_ON?'SÍ':'NO')}
 function tgFsr(){FSR_ON=!FSR_ON;try{localStorage.setItem('ns_fsr',FSR_ON?'1':'0')}catch(e){}fsrTxt()}
+/* CRISTAL DEL HUD (Lote ANTI-TIRONES, 25 oct 2026): `backdrop-filter: blur()` sobre el lienzo 3D obliga al navegador a volver a desenfocar el fondo de CADA barra, botón, panel y aviso de XP
+   en CADA fotograma (el mundo cambia siempre); en combate hay más (barra del objetivo, avisos de XP por golpe). Medido: ~10 % de fps en combate con la mochila abierta. Apagado por defecto
+   (css/hud-susurro.css, bloque «Cristal del HUD»: más opacidad en su lugar); Opciones → Gráficos → «Cristal del HUD» lo vuelve a encender (clase body.hs-glass). */
+let GLASS=false;try{GLASS=localStorage.getItem('ns_glass')==='1'}catch(e){}
+function glassTxt(){document.body.classList.toggle('hs-glass',GLASS);const b=document.getElementById('glb');if(b)b.textContent='Cristal del HUD: '+(GLASS?'SÍ':'NO')}
+function tgGlass(){GLASS=!GLASS;try{localStorage.setItem('ns_glass',GLASS?'1':'0')}catch(e){}glassTxt()}
+glassTxt();
 // Frondosidad del pasto (opción del jugador, 23 oct 2026): multiplica la densidad de briznas SIN tocar el resto de la calidad (r3d.js la lee cada fotograma; 125 % solo en Máxima/Alta; 0 = sin pasto)
 let GRASSK=1;try{const v=localStorage.getItem('ns_grass');if(v!=null&&!isNaN(+v))GRASSK=Math.max(0,Math.min(1.25,+v))}catch(e){}
 {const r=document.getElementById('grk'),t=document.getElementById('grt');if(r){r.value=Math.round(GRASSK*100);r.oninput=()=>{if(t)t.textContent='Pasto: '+r.value+' %'};r.onchange=()=>{GRASSK=+r.value/100;try{localStorage.setItem('ns_grass',String(GRASSK))}catch(e){}}}if(t)t.textContent='Pasto: '+Math.round(GRASSK*100)+' %'}
@@ -582,7 +589,7 @@ function whTick(now){if(now-A.wl>15000)return stopA();
  if(A.hq&&now>=A.h0+whImp()){const q=A.hq-1,e=A.e,k=A.sk;A.hq=0;whFx(k,e,q);if(q===2)whPulse(now);
   A.pr+=A.amt*(q===2?1.3:q===1?1:.55);if(A.pr>=1){A.pr=.99;fin(now)}}}
 const whEl=(()=>{const c=document.createElement('canvas');c.id='whl';c.width=c.height=192;c.style.display='none';document.body.appendChild(c);return c})(),whX=whEl.getContext('2d');
-function whDraw(now){if(!(A&&A.wh)||INT||CK){whEl.style.display='none';return}const e=A.e,c0=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y)),r=cv.getBoundingClientRect(),k=r.width/cv.width,hh={wc:16,mi:10,fi:8}[A.sk]||14;
+function whDraw(now){if(!(A&&A.wh)||INT||CK){whEl.style.display='none';return}const e=A.e,c0=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y)),r=cvRect(),k=r.width/cv.width,hh={wc:16,mi:10,fi:8}[A.sk]||14;
  whEl.style.display='block';whEl.style.transform='translate('+(r.left+c0.x*k).toFixed(1)+'px,'+(r.top+(c0.y-hh*SPR*ISO.scale())*k).toFixed(1)+'px) translate(-50%,-50%)';
  const g=whX,C=96,R=70,o=-Math.PI/2,th=whAng(now),GC=A.gold?'255,216,97':'232,207,148';g.clearRect(0,0,192,192);g.lineCap='butt';
  g.lineWidth=15;g.strokeStyle='rgba(14,12,10,.72)';g.beginPath();g.arc(C,C,R,0,TAU2);g.stroke();g.lineWidth=1.2;g.strokeStyle='rgba('+GC+',.6)';[R-7.5,R+7.5].forEach(rr=>{g.beginPath();g.arc(C,C,rr,0,TAU2);g.stroke()});
@@ -625,7 +632,7 @@ const questMark=e=>{if(!e||!e.npc)return null;try{if(typeof ISLA!=='undefined')r
 const qmBox=(()=>{const d=document.createElement('div');d.id='qms';document.body.appendChild(d);return d})(),qmEl=new Map();
 function castDraw(now){if(CAST&&(typeof CINE!=='undefined'&&CINE.on))castCancel()}
 function qmUi(now){if(typeof ISLA==='undefined'||INT||(typeof CINE!=='undefined'&&CINE.on)||!ISLA.on()){if(qmEl.size){qmEl.forEach(e=>e.style.display='none')}return}
- const r=cv.getBoundingClientRect(),k=r.width/cv.width,seen=new Set();
+ const r=cvRect(),k=r.width/cv.width,seen=new Set();
  for(let i=0;i<ST.length;i++){const e=ST[i];if(!e.npc||e.k!==9)continue;const m=questMark(e);if(!m||!(window.R3D&&R3D.actors.has(e)))continue;seen.add(e.id);
   let d=qmEl.get(e.id);if(!d){d=document.createElement('div');d.className='qm';d.innerHTML='<b></b>';qmBox.appendChild(d);qmEl.set(e.id,d)}
   if(d.dataset.k!==m.k){d.dataset.k=m.k;d.firstChild.textContent=m.c}
@@ -645,7 +652,7 @@ function mgUi(now){const key=mgKey(),on=!!key&&!INT&&!CK&&!(typeof CINE!=='undef
  if(!show){mgEl.classList.remove('on');return}
  const rows=mgHintRows(key),tx=rows.map(r=>r[0].join('+')+'|'+r[1]).join('/');
  if(tx!==mgTx){mgTx=tx;mgEl.innerHTML=rows.map(r=>'<div>'+r[0].map(k=>'<kbd>'+k+'</kbd>').join('')+'<span>'+r[1]+'</span></div>').join('')}
- const e=A.e,r=cv.getBoundingClientRect(),k=r.width/cv.width,c0=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y));
+ const e=A.e,r=cvRect(),k=r.width/cv.width,c0=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y));
  mgEl.style.transform='translate('+(r.left+c0.x*k).toFixed(1)+'px,'+(r.top+(c0.y+8*SPR*ISO.scale())*k).toFixed(1)+'px) translate(-50%,0)';mgEl.classList.add('on')}
 const FM_IMP=30;   // ms entre pulsar y el impacto del martillo (lo usa la Hoja de trabajo, workui.js). El minijuego de calor `fm*` se RETIRÓ el 23 oct 2026 (D1).
 /* MINIJUEGO DE PESCA v2 (21 oct 2026; el dueño: «que se vea visualmente, sin ruedas ni tan gráfico: el pez que se mueva y el jugador va en la dirección contraria con la caña, como Sea of Thieves»). TODO SE LEE EN EL MUNDO:
@@ -698,7 +705,7 @@ function fishDraw(now,dt){const g=A&&A.fg;
  // pez 3D enganchado (solo en lucha y recogida)
  try{if(g.st==='fight'||g.st==='reel'){const tired=g.st==='reel'?1:Math.max(0,1-g.E/60)*.6;R3D.water.hook(true,g.fx/ISO.TILE,g.fy/ISO.TILE,g.hd,tired,g.len,g.col,now/1000,dt||.016)}else R3D.water.hook(false)}catch(e){}
  // icono de picada: cristal con trazo dorado, «!» en Cinzel y un anillo que se vacía con el tiempo para clavar el anzuelo
- if(g.st==='bite'){const e=A.e,c0=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y)),r=cv.getBoundingClientRect(),k=r.width/cv.width,u=Math.max(0,Math.min(1,(g.b2-now)/1300));fsEl.style.display='grid';fsEl.style.transform='translate('+(r.left+c0.x*k).toFixed(1)+'px,'+(r.top+(c0.y-30*SPR*ISO.scale())*k).toFixed(1)+'px) translate(-50%,-50%)';fsEl.style.setProperty('--u',(u*360).toFixed(0)+'deg')}
+ if(g.st==='bite'){const e=A.e,c0=ISO.toCanvas(e.x,e.y,TER.standZ(e.x,e.y)),r=cvRect(),k=r.width/cv.width,u=Math.max(0,Math.min(1,(g.b2-now)/1300));fsEl.style.display='grid';fsEl.style.transform='translate('+(r.left+c0.x*k).toFixed(1)+'px,'+(r.top+(c0.y-30*SPR*ISO.scale())*k).toFixed(1)+'px) translate(-50%,-50%)';fsEl.style.setProperty('--u',(u*360).toFixed(0)+'deg')}
  else fsEl.style.display='none'}
 function startG(e,now){if(!alive(e,now))return;const a=ACT[e.t][e.i];
  if(L(e.t)<rq(a))return log('Necesitas nivel '+rq(a)+' en '+SK[e.t][0]+'.');
@@ -859,7 +866,7 @@ function sgTick(dt,now){for(const m of M){if(!m.sgM)continue;if(m.stun&&now>=m.s
 const sureHit=m=>{const n=performance.now();if(m.stun>n&&!m.stSure){m.stSure=1;return true}if(m.rip>n&&!m.ripSure){m.ripSure=1;return true}return false};
 // TEXTO FLOTANTE de feedback (parada, esquiva, mitigado, aturdido…): DOM sobre un punto del mundo, sube y se desvanece (≈ 1 s)
 function fText(tx,c,wx,wy,hpx){if(!npRoot){npRoot=document.createElement('div');npRoot.id='nps';document.body.appendChild(npRoot)}
- const el=document.createElement('div');el.className='ftx';el.textContent=tx;el.style.color=c;const cc=ISO.toCanvas(wx,wy,TER.standZ(wx,wy)),r=cv.getBoundingClientRect(),k=r.width/cv.width;FTI=(FTI+1)%3;
+ const el=document.createElement('div');el.className='ftx';el.textContent=tx;el.style.color=c;const cc=ISO.toCanvas(wx,wy,TER.standZ(wx,wy)),r=cvRect(),k=r.width/cv.width;FTI=(FTI+1)%3;
  el.style.left=(r.left+cc.x*k)+'px';el.style.top=(r.top+(cc.y-(hpx||40)*SPR*ISO.scale())*k-FTI*15)+'px';npRoot.appendChild(el);setTimeout(()=>el.remove(),1150)}
 // IMÁN de dirección del golpe cuerpo a cuerpo (22 oct 2026): el swing se corrige hasta ≈ 17° hacia el enemigo más cercano a donde apuntas (el fijado con Tab pesa el doble); con un CONTRAATAQUE activo apunta solo al enemigo parado. Solo cuerpo a cuerpo.
 function magnetAng(a,now){if(wtype()!=='m'||(wKind()==='staff'&&skl().sel))return a;const reach=(wKind()==='dagger'?66:wKind()==='great'?92:80)+10;
@@ -1265,7 +1272,9 @@ function upd(dt,now){swingTick(now,dt);if(typeof AMB!=='undefined')AMB.tick(now,
  parts.forEach(p=>{p.x+=p.vx*DT;p.y+=p.vy*DT;p.vy+=p.g*DT;p.l-=DT*1.1});parts=parts.filter(p=>p.l>0)}
 
 // ---------- dibujo ----------
-const cv=$('#c');let ctx=cv.getContext('2d'); // F2-C4: canvas WebGL del agua bajo el 2D + capa de grano (?nogl fuerza el agua 2D)
+const cv=$('#c');let ctx=cv.getContext('2d');
+// RECTÁNGULO DEL LIENZO EN CACHÉ (Lote ANTI-TIRONES, 25 oct 2026): leer getBoundingClientRect() DESPUÉS de escribir estilos fuerza un reflow; las etiquetas de enemigos (dMo), la mira, los textos flotantes… lo hacían una vez POR ENEMIGO y fotograma (medido: 0,5–4,7 ms en combate). El lienzo solo cambia al redimensionar: usa SIEMPRE cvRect() en código que corre cada fotograma.
+let CVR=null;const cvRect=()=>CVR||(CVR=cv.getBoundingClientRect());addEventListener('resize',()=>{CVR=null});try{new ResizeObserver(()=>{CVR=null}).observe(cv)}catch(e){}setInterval(()=>{CVR=null},2000); // F2-C4: canvas WebGL del agua bajo el 2D + capa de grano (?nogl fuerza el agua 2D)
 let W=640,H=400; // unidades del HUD (1 unidad = hs px CSS, ver fitCv): W y H salen del tamaño de la ventana (pantalla completa)
 const GR=null,RD=null,WT=null,VG=null,SX=null,CH=null,SP=null; // TEMPORAL: módulos cenitales borrados; las ramas antiguas de sprites siguen vivas hasta F3–F5 (ver AGENTS.md)
 const lc=document.createElement('canvas');lc.width=W;lc.height=H;const lx=lc.getContext('2d'),DAYLEN=360,dayP=t=>(t/DAYLEN+.33)%1,sunS=t=>Math.sin(2*Math.PI*(dayP(t)-.25));
@@ -1324,14 +1333,14 @@ const ISLA_B=()=>typeof ISLA!=='undefined'?ISLA.boss:null;
 function npSweep(){for(const [m,e] of NPS)if(!e.seen){e.el.remove();NPS.delete(m)}else e.seen=0}
 function dMo(m,t,now){if(!alive(m,now)||m===BBM)return;const d=m.d,h=(window.R3D&&R3D.actors.topPx(m))||d.h;
  const dmg=m.hp<m.mh;if(!d.boss&&!d.ag&&!dmg&&Math.hypot(m.x-P.x,m.y-P.y)>300)return;   // «Lv» solo cerca (<300 px), en combate o si el enemigo es jefe/agresivo
- const c=ISO.toCanvas(m.x,m.y,TER.standZ(m.x,m.y)),r=cv.getBoundingClientRect(),k=r.width/cv.width,sy=c.y-(h+4)*SPR*ISO.scale();
+ const c=ISO.toCanvas(m.x,m.y,TER.standZ(m.x,m.y)),r=cvRect(),k=r.width/cv.width,sy=c.y-(h+4)*SPR*ISO.scale();
  const e=npGet(m);e.seen=1;const gap=m.lv-CBL(),dif=gap>10?'hard':gap>4?'mid':gap<-6?'easy':'';
  const key=d.n+'|'+m.lv+'|'+(d.boss||0)+'|'+(d.ag?1:0)+'|'+(sealed(m)?1:0)+'|'+dif;
  if(e.key!==key){e.key=key;e.el.className='np'+(d.boss?' boss b'+d.boss:'')+(sealed(m)?' seal':'')+(d.ag?' ag':'')+(dif?' '+dif:'');e.l.textContent=m.lv;e.t.textContent=(d.boss===1?'◆ ':d.boss===2?'◇ ':d.ag?'⚔ ':'')+d.n}
  e.el.classList.toggle('dmg',dmg);if(!e.p.textContent)e.p.textContent=Math.ceil(m.hp/m.mh*100)+'%';const pct=Math.max(0,Math.min(1,m.hp/m.mh));
  if(pct!==e.hp){if(pct<e.hp)e.g.style.width=(e.hp*100)+'%';e.hp=pct;e.f.style.width=(pct*100)+'%';e.p.textContent=Math.ceil(pct*100)+'%';clearTimeout(e.gt);e.gt=setTimeout(()=>{e.g.style.width=(pct*100)+'%'},320)}
  {const q=m.sgM?Math.max(0,m.sg/m.sgM):1,st=m.stun>now;e.sg.classList.toggle('full',q>=.999&&!st);e.sg.classList.toggle('stn',st);e.sgi.style.width=(st?100:q*100)+'%'}   // barrita de stagger bajo la vida (solo si has empezado a bajarla)
- e.el.style.transform='translate('+(r.left+c.x*k).toFixed(1)+'px,'+(r.top+sy*k).toFixed(1)+'px) translate(-50%,-100%)'}
+ {const tf='translate('+(r.left+c.x*k).toFixed(1)+'px,'+(r.top+sy*k).toFixed(1)+'px) translate(-50%,-100%)';if(tf!==e.tf){e.tf=tf;e.el.style.transform=tf}}}
 
 
 
@@ -1439,7 +1448,7 @@ const qBtn=()=>{const b=$('#qb');if(b)b.textContent='Calidad: '+(QA?'Auto ('+QNA
 let QFW=[],QC=0;function qmon(now,fdt){if(!QA||document.hidden||QL>=4)return;if(fdt<250)QFW.push(fdt);if(QFW.length<150)return;const s=QFW.slice().sort((x,y)=>x-y),med=s[75];QFW=[];if(now<QC||now<6000)return;if(med>25){QL=Math.min(4,QL+(med>45?2:1));QC=now+10000;fitCv();qBtn()}} // mediana de 150 frames > 25 ms (menos de 40 fps sostenidos): baja un nivel. La mediana ignora los tirones sueltos (esos no se arreglan bajando resolución)
 const curBtn=()=>{const b=$('#curb');if(b)b.textContent='▱ Cursor: '+(CURON?'SÍ':'NO')+' (G)'},tgCur=()=>{CURON=CURON?0:1;try{localStorage.setItem('ns_cursor',CURON)}catch(e){}curBtn()};curBtn();qBtn();curHideBtn();
 cv.addEventListener('contextmenu',e=>e.preventDefault());
-cv.addEventListener('pointermove',ev=>{if(ev.pointerType==='touch')return;CUR.touch=false;const r=cv.getBoundingClientRect();CUR.cx=ev.clientX;CUR.cy=ev.clientY;CUR.px=(ev.clientX-r.left)*cv.width/r.width;CUR.py=(ev.clientY-r.top)*cv.height/r.height;CUR.on=1});
+cv.addEventListener('pointermove',ev=>{if(ev.pointerType==='touch')return;CUR.touch=false;const r=cvRect();CUR.cx=ev.clientX;CUR.cy=ev.clientY;CUR.px=(ev.clientX-r.left)*cv.width/r.width;CUR.py=(ev.clientY-r.top)*cv.height/r.height;CUR.on=1});
 cv.addEventListener('pointerleave',()=>{CUR.on=0;cv.style.cursor=''});
 // Forma del rombo del cursor de tile (provisional, opcional). NO es el helper de formas de F2 (que será `facet`, ver AGENTS.md): no lo reutilices para sprites.
 function cursorPoly(pts,k){const n=pts.length;ctx.beginPath();for(let i=0;i<n;i++){const a=pts[(i+n-1)%n],b=pts[i],c=pts[(i+1)%n],p1={x:b.x+(a.x-b.x)*k,y:b.y+(a.y-b.y)*k},p2={x:b.x+(c.x-b.x)*k,y:b.y+(c.y-b.y)*k};if(i)ctx.lineTo(p1.x,p1.y);else ctx.moveTo(p1.x,p1.y);ctx.quadraticCurveTo(b.x,b.y,p2.x,p2.y)}ctx.closePath()}
@@ -1453,18 +1462,18 @@ let HOV=null;
 let RTD=null,RTK='';
 function resTip(){const e=HOV;if(!RTD){RTD=document.createElement('div');RTD.className='rtip';document.body.appendChild(RTD)}   // estilo UI «Susurro» (css/hud-susurro.css `.rtip`; 21 oct 2026: antes un recuadro 2D de papel con borde grueso de tinta)
  if(e&&e.dropG&&I[e.it]){const k='d'+e.it,rc=RAR[e.q][1];if(k!==RTK){RTK=k;RTD.innerHTML='<b class="rt-n" style="color:'+rc+'">'+I[e.it][0]+'</b>'+(e.q>=1?'<span class="rt-s" style="color:'+rc+'">'+RAR[e.q][0]+'</span>':'')}
-  const r=cv.getBoundingClientRect();RTD.style.left=Math.round(r.left+CUR.px*r.width/cv.width+16)+'px';RTD.style.top=Math.round(r.top+CUR.py*r.height/cv.height+14)+'px';RTD.style.display='block';return}
+  const r=cvRect();RTD.style.left=Math.round(r.left+CUR.px*r.width/cv.width+16)+'px';RTD.style.top=Math.round(r.top+CUR.py*r.height/cv.height+14)+'px';RTD.style.display='block';return}
  if(!e||!e.t||!ACT[e.t]||!ACT[e.t][e.i]){RTD.style.display='none';return}
  const a=ACT[e.t][e.i],lv=rq(a),tl=TLV(lv),tk=TOOLS[e.t],badL=L(e.t)<lv,badT=tk&&(S.tool[e.t]||0)<tl-1,R='#d86a5a',k=e.t+e.i+'|'+badL+badT+'|'+S.tool[e.t]+'|'+L(e.t);
  if(k!==RTK){RTK=k;RTD.innerHTML='<b class="rt-n">'+a[0]+'</b><span class="rt-s"><i style="'+(badL?'color:'+R:'')+'">Nivel '+lv+'</i>'+(tk?' <u>·</u> <i style="'+(badT?'color:'+R:'')+'">'+tk[0]+' '+tn(e.t,tl)+'</i>':'')+'</span>'}
- const r=cv.getBoundingClientRect();RTD.style.left=Math.round(r.left+CUR.px*r.width/cv.width+16)+'px';RTD.style.top=Math.round(r.top+CUR.py*r.height/cv.height+14)+'px';RTD.style.display='block'}
+ const r=cvRect();RTD.style.left=Math.round(r.left+CUR.px*r.width/cv.width+16)+'px';RTD.style.top=Math.round(r.top+CUR.py*r.height/cv.height+14)+'px';RTD.style.display='block'}
 const AIMR=(()=>{const e=document.createElement('div');e.id='aimr';e.innerHTML='<i></i>';document.body.appendChild(e);return e})();let aimShow=0,aimEn=0;
 // RETÍCULA DE DISTANCIA (arco y hechizo seleccionado, 22 oct 2026): línea desde el héroe hasta donde LLEGA el tiro (alcance máx. 330 px), marca de fin de alcance y la distancia en metros junto a la mira; roja y tenue si el cursor queda fuera de alcance.
 let AIML=null,AIME=null,CDRE=null;
 function cdrEl(){if(!CDRE){CDRE=document.createElement('div');CDRE.id='cdr';CDRE.innerHTML='<s class="rg"></s><b></b><b></b><b></b>';document.body.appendChild(CDRE)}return CDRE}
 function aimRange(w){if(!AIML){AIML=document.createElement('div');AIML.id='aiml';AIME=document.createElement('div');AIME.id='aime';document.body.append(AIML,AIME)}
  const CD=cdrEl();if(!freeAim()||!(nowCombat()||CHG.on||ATKIN.held)){AIML.style.display=AIME.style.display='none';CD.classList.remove('far');CD.removeAttribute('data-d');return}
- const RG=330,dx=w.x-P.x,dy=w.y-P.y,d=Math.hypot(dx,dy),L=Math.min(d,RG),ux=dx/(d||1),uy=dy/(d||1),ex=P.x+ux*L,ey=P.y+uy*L,r=cv.getBoundingClientRect(),k=r.width/cv.width,
+ const RG=330,dx=w.x-P.x,dy=w.y-P.y,d=Math.hypot(dx,dy),L=Math.min(d,RG),ux=dx/(d||1),uy=dy/(d||1),ex=P.x+ux*L,ey=P.y+uy*L,r=cvRect(),k=r.width/cv.width,
   a=ISO.toCanvas(P.x,P.y,TER.standZ(P.x,P.y)+.5),b=ISO.toCanvas(ex,ey,TER.standZ(ex,ey)),ax=r.left+a.x*k,ay=r.top+a.y*k,bx=r.left+b.x*k,by=r.top+b.y*k,len=Math.hypot(bx-ax,by-ay);
  AIML.style.display='block';AIML.style.width=len+'px';AIML.style.transform='translate('+ax+'px,'+ay+'px) rotate('+Math.atan2(by-ay,bx-ax)+'rad)';
  const far=d>RG;AIME.style.display=far?'block':'none';AIME.style.transform='translate('+bx+'px,'+by+'px)';CD.classList.toggle('far',far);AIML.classList.toggle('far',far);CD.dataset.d=Math.round(d/32*1.75)+' m'}
@@ -1533,7 +1542,7 @@ if(hsOn())HUDSU.frame(now);;hudPlate(now)}if(!(typeof CINE!=="undefined"&&CINE.o
 let RPEND=null;   // RMB: «ir a» se decide al SOLTAR (si arrastraste, era un giro de cámara); la rueda solo gira la cámara y no mueve al personaje
 cv.addEventListener('pointerup',ev=>{if(ev.button===2){blockEnd();return}if(ev.button!==2||!RPEND)return;const q=RPEND;RPEND=null;if(Math.abs(ev.clientX-q.cx)>6)return;/* arrastraste con el RMB: fue un giro de cámara (r3d.js) */if(CK||ZMP)return;const now=performance.now(),b=curHid()?null:pickEnt(q.px,q.py,now);if(A)stopA();if(b){P.g={e:b};P.mv=null}else{const w=ISO.toWorld(q.px,q.py,TER.heightAt);P.mv={x:w.x,y:w.y};P.g=null}});
 cv.addEventListener('pointerdown',ev=>{if(ev.button===1)return;if(ev.button===2){MSB.r=1;if(!CK&&!ZMP&&!(MSB.l&&MSB.atk&&aimOn()))blockStart();return}   /* 22 oct 2026: RMB mantenido = BLOQUEAR (ya no «ir a ese punto»); la cámara gira SOLO con el botón del medio (r3d.js); el medio no mueve al personaje */
- if(ev.button===2&&!CK&&!ZMP){const r=cv.getBoundingClientRect();RPEND={px:(ev.clientX-r.left)*cv.width/r.width,py:(ev.clientY-r.top)*cv.height/r.height,cx:ev.clientX};return}if(CK){cookHit();return}if(ZMP)return;const r=cv.getBoundingClientRect(),px=(ev.clientX-r.left)*cv.width/r.width,py=(ev.clientY-r.top)*cv.height/r.height,now=performance.now(),sc=ISO.scale(),k=SPR*sc;
+ if(ev.button===2&&!CK&&!ZMP){const r=cvRect();RPEND={px:(ev.clientX-r.left)*cv.width/r.width,py:(ev.clientY-r.top)*cv.height/r.height,cx:ev.clientX};return}if(CK){cookHit();return}if(ZMP)return;const r=cvRect(),px=(ev.clientX-r.left)*cv.width/r.width,py=(ev.clientY-r.top)*cv.height/r.height,now=performance.now(),sc=ISO.scale(),k=SPR*sc;
  const b=curHid()?null:pickEnt(px,py,now);   // cursor oculto: el LMB nunca elige entidades (golpe / moverse)
  if(A&&A.wh&&ev.button!==2&&(!b||b===A.e)){whPress(now);return}   // rueda de recolección: el LMB es el golpe
  if(A&&A.fg&&ev.button!==2&&(!b||b===A.e)){fishPress(now);return}   // pesca: el LMB clava el anzuelo / recoge
@@ -1789,8 +1798,9 @@ async function bootRun(){
  }catch(e){if(window.console)console.warn('[BOOT]',e)}
  if(window.R3D&&R3D.props)R3D.props.constructor.DEFER=false;
  try{if(window.HUDSU&&HUDSU.warm)HUDSU.warm()}catch(e){}
+ try{if(window.ITEMICON&&ITEMICON.url)['sw_bronce','ar_bronce','sh_bronce','lg_bronce','gl_bronce','ar_cu_bronce','ar_tu_bronce','ax_bronce','pk_bronce','b_bronce','fl_bronce','qv_bronce','cobre','pot_xp','carne','hueso'].forEach(i=>{if(I[i])ITEMICON.url(i)})}catch(e){}   // Lote ANTI-TIRONES (25 oct 2026): el renderer de ICONOS 3D (icons3d.js) se crea y compila sus shaders con el 1.er icono de cada tipo (armadura = un Mini entero): 215 ms medidos al abrir la mochila; ahora durante la carga
  if(window.R3D&&R3D.warmShaders&&!/[?&]nowarm/.test(location.search)){try{pct(.98,'Preparando los shaders…');startLoop();await new Promise(r=>setTimeout(r,1500));await R3D.warmShaders(20000,false)}catch(e){}}   // 21 oct 2026: lo que crea el bucle en los primeros segundos (actores, bosque cercano: ≈200 programas) se compilaba a los 2,5 s DE JUEGO y congelaba el primer movimiento: ahora el juego corre ya DETRÁS de la pantalla de carga y se compila antes de mostrarlo
- if(window.R3D&&R3D.warmShaders&&!/[?&]nowarm/.test(location.search)){const PI=R3D.renderer.info,base=PI.programs.length;let warned=0;setInterval(()=>{if(PI.programs.length>base+warned){warned=PI.programs.length-base;console.info('[R3D] shaders compilados EN JUEGO (+'+warned+'): falta un material en warmShaders/warmObjs',PI.programs.slice(base).map(p=>p.name))}},4000)}   /* 21 oct 2026: las 3 pasadas tardías de warmShaders (2,5/9/20 s) NO añadían ningún programa (medido: nuevos 0) pero cada una recorría 4 veces los 17k objetos y congelaba ≈3 fotogramas de 115–220 ms: eliminadas; ahora solo se VIGILA si algo se compila en juego */   // FREEZE-SHADERS: lo que se crea tras la carga (recursos, actores…) también se compila de antemano, sin forzar visibilidad
+ if(window.R3D&&R3D.warmShaders&&!/[?&]nowarm/.test(location.search)){const PI=R3D.renderer.info,base=PI.programs.length;let warned=0;const g0=R3D.gate?R3D.gate.stats.hechos:0;setInterval(()=>{const gm=R3D.gate?R3D.gate.stats.hechos-g0:0;if(PI.programs.length-gm>base+warned){warned=PI.programs.length-gm-base;console.info('[R3D] shaders compilados EN JUEGO (+'+warned+'): falta un material en warmShaders/warmObjs',PI.programs.slice(base).map(p=>p.name))}},4000)}   /* 21 oct 2026: las 3 pasadas tardías de warmShaders (2,5/9/20 s) NO añadían ningún programa (medido: nuevos 0) pero cada una recorría 4 veces los 17k objetos y congelaba ≈3 fotogramas de 115–220 ms: eliminadas; ahora solo se VIGILA si algo se compila en juego */   // FREEZE-SHADERS: lo que se crea tras la carga (recursos, actores…) también se compila de antemano, sin forzar visibilidad
  pct(1);startLoop();
  el.classList.add('out');setTimeout(()=>el.classList.add('off'),520)}
 {const el=$('#boot'),skip=/[?&]noload\b/.test(location.search)||(navigator.webdriver&&!/[?&]load\b/.test(location.search));

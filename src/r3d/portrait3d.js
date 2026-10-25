@@ -26,7 +26,8 @@ export class TalkHead{
   if(A.b.head&&!mob){A.b.head.add(m);this.mm=m}
   return true}
  warm(key,mob){try{if(this.setNpc(key,mob))this.r.compile(this.scene,this.cam)}catch(e){console.warn('[TalkHead warm]',e)}}   // precarga: crea el contexto, hornea el modelo y compila sus shaders antes de la 1.ª conversación
- size(){const w=this.cv.clientWidth||this.cv.width,h=this.cv.clientHeight||this.cv.height,dpr=Math.min(2,window.devicePixelRatio||1);
+ size(){if(this._ro===undefined){this._sz=null;try{this._ro=new ResizeObserver(e=>{const q=e[0].contentRect;this._sz=[q.width,q.height]});this._ro.observe(this.cv)}catch(e){this._ro=null}}   // Lote ANTI-TIRONES: tamaño por ResizeObserver (leer clientWidth cada fotograma forzaba un reflow)
+  const z=this._sz,w=(z?z[0]:this.cv.clientWidth)||this.cv.width,h=(z?z[1]:this.cv.clientHeight)||this.cv.height,dpr=Math.min(2,window.devicePixelRatio||1);
   if(w!==this.w||h!==this.h||dpr!==this.dpr){this.w=w;this.h=h;this.dpr=dpr;this.r.setPixelRatio(dpr);this.r.setSize(w,h,false)}}
  draw(o={}){if(!this.A)return;this.size();const A=this.A,now=performance.now()/1000,dt=this.last?Math.min(.1,now-this.last):1/60;this.last=now;const t=now-this.t0;
   // envolvente de habla: sílabas ~6 Hz moduladas por frases (pausas cortas); suavizada para que la boca no «parpadee»

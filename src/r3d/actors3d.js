@@ -416,7 +416,7 @@ export class Actors{
  // PRECARGA (21 oct 2026): hornea TODAS las plantillas durante la carga (antes se horneaba la 1.ª vez que aparecía cada criatura = tirón)
  bake(){try{ACTOR_IDS.concat(['ru'],Object.keys(NPC_DEF)).forEach(k=>tplFor(k))}catch(e){console.warn('[R3D actors bake]',e)}}
  // objetos desechables para precompilar el programa de la silueta (R3D.warmShaders): un PNJ con su malla de rayos X
- warmObjs(){try{const A=makeActor('ru');if(!A)return[];A.addXray();A.setHover(true);if(!this.lockM)this.lockM=new THREE.MeshBasicMaterial({color:'#ffd98a',transparent:true,opacity:.7,depthWrite:false,blending:THREE.AdditiveBlending});A.grp.add(new THREE.Mesh(this.ringG,this.lockM));return[A.grp]}catch(e){return[]}}
+ warmObjs(){try{const A=makeActor('ru');if(!A)return[];A.addXray();A.setHover(true);if(!this.lockM)this.lockM=new THREE.MeshBasicMaterial({color:'#ffd98a',transparent:true,opacity:.7,depthWrite:false,blending:THREE.AdditiveBlending});A.grp.add(new THREE.Mesh(this.ringG,this.lockM));const F=makeActor('goblin');if(F){F.setFlash(true);return[A.grp,F.grp]}return[A.grp]}catch(e){return[]}}   // 25 oct 2026: + el DESTELLO de daño (setFlash cambia el material sin añadir nada: la compuerta de shaders no lo ve) — su programa se compilaba en el primer golpe
  lock(e){this.lockE=e||null}   // objetivo fijado (Tab): anillo dorado bajo sus pies
  has(e){const a=this.map.get(e);return !!(a&&a.vis&&a.state!=='gone')}
  // Altura de la cabeza en «px de mundo» del sprite (1 unidad 3D = 34,3 px de pantalla a escala 1 = 22,9 px de mundo con SPR=1,5): game.js cuelga de ahí la barra de vida y la etiqueta

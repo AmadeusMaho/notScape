@@ -25,13 +25,16 @@ const HUDSU=(()=>{
   `<div class="hs-wh" id="hs-wh" title="Resistencia"><svg viewBox="0 0 36 36"><circle class="bg" cx="18" cy="18" r="14"/><circle class="fg" cx="18" cy="18" r="14" pathLength="100" stroke-dasharray="100 100"/></svg></div>`;
  host.appendChild(root);
  const $=s=>root.querySelector(s),pl=$('#hs-pl'),tg=$('#hs-tg'),act=$('#hs-act'),fxr=$('#hs-fx'),wh=$('#hs-wh'),whf=wh.querySelector('.fg');
- const mk=el=>({el,g:el.querySelector('i.g'),f:el.querySelector('i.f'),c:el.querySelector('canvas'),t:el.querySelector('.t'),p:-1,gp:1,k:el.classList.contains('mp')?'mp':el.classList.contains('th')?'th':el.classList.contains('ac')?'ac':'hp',ps:[],tx:''});
+ // Lote ANTI-TIRONES (25 oct 2026): el tamaño de cada lienzo de barra se guarda con un ResizeObserver; antes fx() leía offsetParent/clientWidth en CADA fotograma, y tras las escrituras
+ // de estilo del mismo fotograma (nameplates, barras) eso forzaba un reflow por barra.
+ const RO=typeof ResizeObserver!=='undefined'?new ResizeObserver(es=>{for(const e of es){const b=e.target._b;if(b){b.W=e.contentRect.width;b.H=e.contentRect.height}}}):null;
+ const mk=el=>{const o={el,g:el.querySelector('i.g'),f:el.querySelector('i.f'),c:el.querySelector('canvas'),t:el.querySelector('.t'),p:-1,gp:1,k:el.classList.contains('mp')?'mp':el.classList.contains('th')?'th':el.classList.contains('ac')?'ac':'hp',ps:[],tx:'',W:-1,H:-1};if(o.c&&RO){o.c._b=o;RO.observe(o.c)}return o};
  const B={hp:mk(pl.querySelector('.b.hp')),mp:mk(pl.querySelector('.b.mp')),th:mk(tg.querySelector('.b')),ac:mk(act.querySelector('.b'))};
  const setBar=(b,p,txt)=>{p=Math.max(0,Math.min(1,p||0));const q=Math.round(p*1000)/10;
   if(q!==b.p){if(q>b.p){b.g.style.transition='none';b.f.style.transition='none';b.g.style.width=q+'%';void b.g.offsetWidth;b.g.style.transition='';}else{b.f.style.transition='';b.g.style.width=q+'%'}b.f.style.width=q+'%';b.p=q}   // al SUBIR, relleno y estela van a la vez (antes el relleno iba .18 s por detrás y la estela clara asomaba como un rectángulo en la punta)
   if(txt!=null&&txt!==b.tx){b.t.textContent=txt;b.tx=txt}};
  // ── animación de barras (canvas por barra, desde el bucle del juego) ──
- function fx(b,tt,dt,low){const c=b.c;if(!c||!c.offsetParent||b.p<=0)return;const dpr=Math.min(2,window.devicePixelRatio||1),W=c.clientWidth,H=c.clientHeight;if(!W||!H)return;
+ function fx(b,tt,dt,low){const c=b.c;if(!c||b.p<=0)return;let W,H;if(RO&&b.W>=0){W=b.W;H=b.H}else{if(!c.offsetParent)return;W=c.clientWidth;H=c.clientHeight}const dpr=Math.min(2,window.devicePixelRatio||1);if(!W||!H)return;
   if(c.width!==Math.round(W*dpr)||c.height!==Math.round(H*dpr)){c.width=Math.round(W*dpr);c.height=Math.round(H*dpr)}
   const x=c.getContext('2d'),k=b.k,w=W*b.p/100,mir=k==='th';x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);if(mir){x.translate(W,0);x.scale(-1,1)}
   const sl=H*.575,tip=()=>{x.beginPath();x.moveTo(0,0);x.lineTo(Math.max(0,w-sl),0);x.lineTo(w,H);x.lineTo(0,H);x.closePath()};   // la luz se recorta con la MISMA punta oblicua del relleno (antes un rectángulo: bloque en la punta)
@@ -64,16 +67,19 @@ const HUDSU=(()=>{
  // Retrato VIVO (estilo WC3): en 3D el busto se renderiza en un canvas propio a ~30 fps con el estado REAL del héroe (equipo, caminar/correr, talar, pelear, comer, hechizos, golpe recibido).
  // Solo se recalcula el «look» (equipo/apariencia) cuando cambia; la animación va por `o.st` (ver HeroPreview.draw). En 2D queda la imagen estática del panel de personaje.
  let plook=null,lkNext=0,pnx=0;
+ // Lote ANTI-TIRONES (25 oct 2026): cada retrato vivo es OTRO contexto WebGL (render + grado + copia al compositor). Medido: con el del enemigo, el combate perdía ~20 % de fps.
+ // Ahora van a 24 fps (12 en Baja/Mínima) y NUNCA los dos en el mismo fotograma (el del enemigo tiene prioridad; el del héroe dibuja en el siguiente).
+ const PRT=()=>(typeof QL!=='undefined'&&QL>=3)?83:42;
  const lookNow=now=>{if(!plook||now>lkNext){lkNext=now+500;plook=R3D.outfits.resolve({app:S.app,ar:S.eq.a?ARC(S.eq.a):null,helm:S.eq.h?ARC(S.eq.h):null,boot:S.eq.f?ARC(S.eq.f):null,gear:gearOpts(),hood:'down',arm:armorInfo()})}return plook};
  function liveSt(now){return{mv:!!(P.mvg||P.anm),run:!!RUN,act:P.mvg?null:actState(now),hurt:Math.max(0,1-(now-HURT)/320),cb:!!(A&&A.ty==='f')||now-(P.cbT||-1e9)<2500||now-HURT<2500,t:now/1000}}
  function heroPortrait(now){
   try{
    if(window.R3D&&R3D.outfits&&R3D.preview&&typeof heroState3D==='function'){
-    if(now<pnx)return;pnx=now+(document.hasFocus()?33:200);
+    if(now<pnx)return false;pnx=now+(document.hasFocus()?PRT():200);
     lookNow(now);
     if(!pcv){pcv=document.createElement('canvas');pcv.width=pcv.height=192;pcv.className='live';pimg.style.display='none';pimg.parentNode.appendChild(pcv)}
     if(!pv)pv=R3D.preview(pcv);
-    pv.draw(plook,{dir:2,H:.4,cy:.73,st:liveSt(now),t:now/1000});ptry=0
+    pv.draw(plook,{dir:2,H:.4,cy:.73,st:liveSt(now),t:now/1000});ptry=0;return true
    }
   }catch(e){psig='';if(++ptry>3)pnx=pnext=now+60000;if(window.console&&ptry<3)console.warn('[HUD] retrato',e)}}
  function mobPortrait(m){return''}   // Fase 18: sin retrato 2D de reserva (CRE.M ya no existe); el retrato es 3D (tpMob)
@@ -81,7 +87,7 @@ const HUDSU=(()=>{
  let tth=null,tthFail=0,tthOk=0,tthNext=0;const tCv=root.querySelector('#hs-tc'),tImg=root.querySelector('#hs-tp');
  function tpMob(m){tthOk=0;try{if(!tthFail&&window.R3D&&R3D.talkHead){if(!tth)tth=R3D.talkHead(tCv);tthOk=tth.setNpc(m.d.id,true)?1:0}}catch(e){tthFail=1;if(window.console)console.warn('[HUD] retrato 3D enemigo',e)}
   tCv.style.display=tthOk?'block':'none';tImg.style.display=tthOk?'none':''}
- function tpFrame(now){if(!tthOk||now<tthNext)return;tthNext=now+33;try{tth.draw({talk:false})}catch(e){tthOk=0;tthFail=1;tCv.style.display='none';tImg.style.display=''}}
+ function tpFrame(now){if(!tthOk||now<tthNext)return false;tthNext=now+PRT();try{tth.draw({talk:false});return true}catch(e){tthOk=0;tthFail=1;tCv.style.display='none';tImg.style.display=''}}
  // ── buffs (E5/H6): fichas con anillo de tiempo. S.buf[k] = instante de fin (Date.now()); estados (P.dot) = debuff ──
  const BF={xp:['Sabiduría','pot_xp'],dmg:['Fuerza','pot_dmg'],spd:['Rapidez','pot_spd'],def:['Piel de piedra','sh_hierro'],mreg:['Maná veloz','pot_xp']},tot={},chips={};
  const fmt=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return s>=60?Math.floor(s/60)+':'+String(s%60).padStart(2,'0'):s+'s'};
@@ -157,13 +163,13 @@ const HUDSU=(()=>{
   if(pwEl&&sideEl2&&!sideEl2.classList.contains('closed')){const r=pwEl.getBoundingClientRect(),cw=colEl.offsetWidth*1;if(r.width>0&&cw){sh=Math.max(0,Math.min(innerWidth/2+cw/2-(r.left-14),innerWidth/2-cw/2-8))}}
   sh=Math.round(sh);if(sh!==shV){shV=sh;root.style.setProperty('--shift',sh+'px')}}
  // ── bucle ──
- let last=0,lvT=-1,nmT='',tgM=null,tgOff=0,hideT=0;
+ let last=0,lvT=-1,nmT='',tgM=null,tgOff=0,hideT=0,fxN=0,fxL=0;
  function frame(now){if(document.hidden)return;const dt=Math.min(.05,last?(now-last)/1000:.016),tt=now/1000;last=now;
   const mh=maxHp(),hpv=Math.max(0,P.hp),low=hpv/mh<.3&&hpv>0;
   setBar(B.hp,hpv/mh,Math.ceil(hpv)+' / '+mh);const mm=mnMax();setBar(B.mp,MN/Math.max(1,mm),Math.floor(MN)+' / '+mm);B.hp.el.classList.toggle('low',low);skFrame();{const dd=typeof STS!=='undefined'&&STS.list(P).find(s=>s.d.st),st=dd?dd.d.st:'';if(B.hp.el.dataset.st!==st){if(st)B.hp.el.dataset.st=st;else delete B.hp.el.dataset.st}}   /* estado alterado del jugador (P.dot.k: veneno/quemadura/sangrado) tiñe la barra de vida; ver css «Vida con estado» */
   const lv=SKL.reduce((s,k)=>s+L(k),0);if(lv!==lvT){lvT=lv;$('#hs-lv').textContent=lv}
   const nm=(S.app&&S.app.name)||'Aventurero';if(nm!==nmT){nmT=nm;$('#hs-nm').textContent=nm}
-  heroPortrait(now);buffs(now);
+  buffs(now);
   // objetivo (E2): el enemigo en combate (A.ty==='f') o al que el héroe se dirige
   const m=A&&A.ty==='f'&&A.e?A.e:(P.g&&P.g.e&&P.g.e.d?P.g.e:(typeof aimTarget==='function'?aimTarget(now):null));
   if(m&&m.hp>0){tgM=m;hideT=0;if(!tg.classList.contains('on')||tg._m!==m){tg._m=m;tg.classList.add('on');tg.classList.toggle('boss',!!(m.d.boss||m.boss));$('#hs-tn').innerHTML=m.d.n+'<small>Nv. '+m.lv+'</small>';tpMob(m);B.th.p=-1;B.th.g.style.transition=B.th.f.style.transition='none';B.th.g.style.width=B.th.f.style.width=(m.hp/m.mh*100)+'%';void B.th.g.offsetWidth;B.th.g.style.transition=B.th.f.style.transition=''}
@@ -173,7 +179,8 @@ const HUDSU=(()=>{
   const ac=A&&A.ty!=='f'&&!A.wh&&!A.wk&&!A.fg;   /* con la rueda de recolección no hay barra de acción (la rueda lleva el progreso) */act.classList.toggle('on',!!ac);if(ac){$('#hs-al').textContent=actLabel();setBar(B.ac,Math.min(1,A.pr||0),null)}
   // resistencia (E7/H7): el juego guarda S.sta (0–100) y S.exh; la rueda se ve solo si no está llena o se está corriendo
   if(typeof S.sta==='number'){const st=S.sta/100;wh.classList.toggle('show',S.sta<99.5||!!RUN);wh.classList.toggle('exh',!!S.exh);wh.classList.toggle('low',!S.exh&&st<.15);wh.classList.toggle('warn',!S.exh&&st>=.15&&st<.35);whf.setAttribute('stroke-dasharray',(st*100).toFixed(1)+' 100')}
-  dlgFrame(now);dollFrame(now);if(tg.classList.contains('on'))tpFrame(now);fx(B.hp,tt,dt,low);fx(B.mp,tt,dt,0);if(tg.classList.contains('on'))fx(B.th,tt,dt,0);if(ac)fx(B.ac,tt,dt,0)}
+  dlgFrame(now);dollFrame(now);if(!(tg.classList.contains('on')&&tpFrame(now)))heroPortrait(now);
+  if(now>=fxN){const fd=Math.min(.1,fxL?(now-fxL)/1000:.033);fxL=now;fxN=now+33;fx(B.hp,tt,fd,low);fx(B.mp,tt,fd,0);if(tg.classList.contains('on'))fx(B.th,tt,fd,0);if(ac)fx(B.ac,tt,fd,0)}}   // barras animadas a ~30 fps (antes cada fotograma: 3–4 lienzos subidos al compositor por fotograma)
  function warm(){if(thFail||!window.R3D||!R3D.talkHead)return;try{if(!th)th=R3D.talkHead(dCv);th.warm('guardia');th.key=''}catch(e){thFail=1}
  if(!tth&&!tthFail){try{tth=R3D.talkHead(tCv);tth.warm('goblin',true);tth.warm('lobo',true);tth.key=''}catch(e){tthFail=1}}}   // 21 oct 2026: el contexto WebGL del retrato del enemigo se creaba al 1.er objetivo (tirón de 100–200 ms medido): ahora en la carga, con un humanoide y una bestia compilados   // contexto WebGL de la cabeza de diálogo creado en la carga (antes: en la 1.ª conversación = tirón)
  // REEMBOLSO de resistencia (esquiva perfecta): el anillo de resistencia destella y sale «+N» (22 oct 2026)

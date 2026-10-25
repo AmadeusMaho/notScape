@@ -254,7 +254,11 @@ export function toon(c,o={}){const k=c+JSON.stringify(o);if(MC.has(k))return MC.
     #include <opaque_fragment>`);
   // uMossBase: altura del suelo bajo el objeto (en el juego el suelo no está siempre en y=0; la referencia sí lo tenía en 0)
   s.fragmentShader=s.fragmentShader.replace('uniform vec3 uMossC;','uniform vec3 uMossC;uniform float uMossBase;');s.uniforms.uMossBase=G.uMossBase||(G.uMossBase={value:0})};
- m.customProgramCacheKey=()=>'t'+k;MC.set(k,m);return m}
+ // Lote ANTI-TIRONES (25 oct 2026): la clave de programa ya NO lleva el color ni los valores de las opciones (antes 't'+color+JSON = UN PROGRAMA DE SHADER POR COLOR: ~150 al cargar y uno
+ // nuevo, con congelón, por cada objeto/enemigo de un color no visto). El color y uMoss/uRim/uAO/uWet/uTex* son UNIFORMS: el código GLSL solo cambia con gv/ground/emit/tex/fol
+ // (los defines, la cara y vertexColors ya entran solos en la clave de three). onBeforeCompile se sigue llamando por material, así que cada uno conserva sus uniforms.
+ // REGLA: si añades una opción que cambia el CÓDIGO del shader (no solo un valor), añádela a esta clave.
+ const pk='t'+(o.gv?'g':'')+(o.ground?'G':'')+(o.emit?'e':'')+(o.tex!=null?'x':'')+(o.fol?'f':'');m.customProgramCacheKey=()=>pk;MC.set(k,m);return m}
 
 // contorno irregular (casco invertido), color por hora del día
 export const INK=new THREE.MeshBasicMaterial({color:0x2a1c1a,side:THREE.BackSide});
