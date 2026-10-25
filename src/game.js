@@ -536,6 +536,12 @@ function tgFsr(){FSR_ON=!FSR_ON;try{localStorage.setItem('ns_fsr',FSR_ON?'1':'0'
 // Frondosidad del pasto (opción del jugador, 23 oct 2026): multiplica la densidad de briznas SIN tocar el resto de la calidad (r3d.js la lee cada fotograma; 125 % solo en Máxima/Alta; 0 = sin pasto)
 let GRASSK=1;try{const v=localStorage.getItem('ns_grass');if(v!=null&&!isNaN(+v))GRASSK=Math.max(0,Math.min(1.25,+v))}catch(e){}
 {const r=document.getElementById('grk'),t=document.getElementById('grt');if(r){r.value=Math.round(GRASSK*100);r.oninput=()=>{if(t)t.textContent='Pasto: '+r.value+' %'};r.onchange=()=>{GRASSK=+r.value/100;try{localStorage.setItem('ns_grass',String(GRASSK))}catch(e){}}}if(t)t.textContent='Pasto: '+Math.round(GRASSK*100)+' %'}
+/* SUAVIZADO DE BORDES (24 oct 2026): 'fxaa' (por defecto) · 'smaa' · 'msaa2' · 'msaa4'. r3d.js lo lee cada fotograma (pases fxaa/smaa o `samples` del composer). `?aa=fxaa|smaa|msaa2|msaa4` lo fuerza para probar. */
+const AA_LIST=[['fxaa','FXAA'],['smaa','SMAA'],['msaa2','MSAA x2'],['msaa4','MSAA x4']];
+let AA_MODE='fxaa';try{const q=(location.search.match(/[?&]aa=(\w+)/)||[])[1],v=q||localStorage.getItem('ns_aa');if(AA_LIST.some(a=>a[0]===v))AA_MODE=v}catch(e){}
+function aaTxt(){const b=document.getElementById('aab');if(b)b.textContent='Suavizado: '+AA_LIST.find(a=>a[0]===AA_MODE)[1]}
+function tgAa(){AA_MODE=AA_LIST[(AA_LIST.findIndex(a=>a[0]===AA_MODE)+1)%AA_LIST.length][0];try{localStorage.setItem('ns_aa',AA_MODE)}catch(e){}aaTxt()}
+setTimeout(aaTxt,0);
 setTimeout(fsrTxt,0);
 let PULSE_ON=true;try{PULSE_ON=localStorage.getItem('ns_pulse')!=='0'}catch(e){}let PLS=0;
 function tgPulse(){PULSE_ON=!PULSE_ON;try{localStorage.setItem('ns_pulse',PULSE_ON?1:0)}catch(e){}const b=document.getElementById('pulb');if(b)b.textContent='Parada de impacto: '+(PULSE_ON?'SÍ':'NO')}

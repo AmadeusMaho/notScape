@@ -169,7 +169,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
    const d=LK[o.s.k],ph=o.s.ph;l.position.copy(o.s.p);l.color.set(d[0]);l.distance=d[2];l.intensity=d[1]*o.v*(d[4]==='fire'?p.fire*(1+Math.sin(t*1.7+ph)*.05+Math.sin(t*3.1+ph*1.9)*.035):p.win)});
   dl.update(t,dt,tgt,sources(),LK,p,heroL,rooms.on,props,typeof N!=='undefined'?N:null,typeof ST!=='undefined'?ST:null);glow.update(t,dt,tgt,R,sources(),LK,p,cam,typeof QL!=='undefined'?QL:2,dl.on?dl.act:null)}
  // ── postproceso (guía §4.7): RenderPass → bloom → grado (sombras levantadas, viñeta) → salida. Sin grano. Calidad Baja/Mínima = sin post ──
- const composer=new EffectComposer(r,new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:COARSE?2:4}));composer.addPass(new RenderPass(scene,cam));
+ const composer=new EffectComposer(r,new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:({msaa2:2,msaa4:4})[typeof AA_MODE!=='undefined'?AA_MODE:'fxaa']||0}));composer.addPass(new RenderPass(scene,cam));
  // 17 oct 2026 (pedido del dueño): SIN NIEBLA. Se quitó el pase de niebla a ras de suelo (fogPass): invadía la pantalla de día. Ver «Lote R3D-NONIEBLA» en AGENTS.md.
  const bloom=new UnrealBloomPass(new THREE.Vector2(256,256),.35,.6,.85);composer.addPass(bloom);
  // F3d · grado «óleo oscuro» (guía §4.9). uK = intensidad del grado de color (tono dividido, desaturar, contraste, manchas); uBrush = mezcla del Kuwahara (el pincel, lo PRIMERO que se baja
@@ -192,6 +192,26 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
     if(uFog>.002){float rr=length((vUv-.5)*vec2(uRes.x/uRes.y,1.))*1.2,fm=smoothstep(mix(.95,.1,uFog),mix(1.45,.62,uFog),rr)*uFog;c=mix(c,uFogC*(.55+.45*olum(c)),fm);}   // Fase B3 · NIEBLA RADIAL SUAVE (poca visibilidad): el centro (el héroe) se ve y los bordes se pierden en la bruma; sin daño ni bloqueo
     c*=oilVig(vUv,uRes,uVig);gl_FragColor=vec4(c,1.);}`});
  composer.addPass(grade);composer.addPass(new OutputPass());
+ // SUAVIZADO DE BORDES (24 oct 2026, Opciones → Gráficos → «Suavizado»; global `AA_MODE` de game.js: 'fxaa' POR DEFECTO · 'smaa' · 'msaa2' · 'msaa4').
+ // FXAA y SMAA son pases POSTERIORES a OutputPass (trabajan sobre color sRGB, como deben) y el render target del composer va SIN muestras (más barato que el MSAA x4 antiguo sobre HalfFloat).
+ // MSAA x2/x4 = `samples` del render target del composer y los dos pases desactivados. SMAAPass se importa PEREZOSAMENTE solo la primera vez que se elige SMAA (si el archivo falta, cae a FXAA).
+ // Baja/Mínima sin FSR no pasan por el composer: siguen con el MSAA nativo del lienzo (antialias:true), sea cual sea el modo.
+ const aaM=()=>typeof AA_MODE!=='undefined'?AA_MODE:'fxaa',aaMs=()=>({msaa2:2,msaa4:4})[aaM()]||0;
+ const fxaa=new ShaderPass({uniforms:{tDiffuse:{value:null},uRes:{value:new THREE.Vector2(1,1)}},
+  vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+  fragmentShader:`uniform sampler2D tDiffuse;uniform vec2 uRes;varying vec2 vUv;
+   // FXAA clásico (Lottes/NVIDIA, 9 lecturas): dirección del borde por la luma de las 4 diagonales, dos muestras a lo largo y dos más anchas; si la ancha se sale del rango de luma local se usa la corta.
+   void main(){vec2 px=1./uRes;vec3 lm=vec3(.299,.587,.114);
+    vec3 cNW=texture2D(tDiffuse,vUv+vec2(-1.,-1.)*px).rgb,cNE=texture2D(tDiffuse,vUv+vec2(1.,-1.)*px).rgb,cSW=texture2D(tDiffuse,vUv+vec2(-1.,1.)*px).rgb,cSE=texture2D(tDiffuse,vUv+vec2(1.,1.)*px).rgb,cM=texture2D(tDiffuse,vUv).rgb;
+    float lNW=dot(cNW,lm),lNE=dot(cNE,lm),lSW=dot(cSW,lm),lSE=dot(cSE,lm),lM=dot(cM,lm);
+    float lMin=min(lM,min(min(lNW,lNE),min(lSW,lSE))),lMax=max(lM,max(max(lNW,lNE),max(lSW,lSE)));
+    vec2 dir=vec2(-((lNW+lNE)-(lSW+lSE)),(lNW+lSW)-(lNE+lSE));
+    float dr=max((lNW+lNE+lSW+lSE)*.25*.125,1./128.),rc=1./(min(abs(dir.x),abs(dir.y))+dr);
+    dir=clamp(dir*rc,vec2(-8.),vec2(8.))*px;
+    vec3 a=.5*(texture2D(tDiffuse,vUv+dir*(1./3.-.5)).rgb+texture2D(tDiffuse,vUv+dir*(2./3.-.5)).rgb);
+    vec3 b=a*.5+.25*(texture2D(tDiffuse,vUv+dir*-.5).rgb+texture2D(tDiffuse,vUv+dir*.5).rgb);
+    float lB=dot(b,lm);gl_FragColor=vec4((lB<lMin||lB>lMax)?a:b,1.);}`});
+ fxaa.enabled=false;composer.addPass(fxaa);let smaa=null,smaaTry=0;
  // REESCALADO NÍTIDO tipo FSR 1 (22 oct 2026, interruptor «Reescalado FSR» de Opciones → Gráficos, APAGADO por defecto; `FSR_ON` en game.js): el MUNDO 3D se pinta al FSR_S (75 %)
  // de la resolución del lienzo y esta pasada lo amplía a pantalla completa con un bicúbico Catmull-Rom de 5 lecturas (bordes limpios), sin halos (se limita al mín/máx de los 4
  // texeles vecinos, como EASU) y con nitidez adaptativa al contraste (CAS/RCAS). El héroe y el HUD van en el lienzo 2D a resolución completa: no se ven afectados.
@@ -218,7 +238,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   poll(o){if(!ext)return;const dis=gl.getParameter(ext.GPU_DISJOINT_EXT);for(let i=0;i<qs.length;){const h=qs[i];if(gl.getQueryParameter(h.q,gl.QUERY_RESULT_AVAILABLE)){const ms=gl.getQueryParameter(h.q,gl.QUERY_RESULT)/1e6;if(!dis)o[h.n]=o[h.n]==null?ms:o[h.n]+(ms-o[h.n])*.08;gl.deleteQuery(h.q);qs.splice(i,1)}else i++}}}};
  const GPU={},tW=mkT(r),tH=mkT(ar);
  let tsT=1,tsK=1,vlag=0,lastR=0,frz=0;   // CINE-1 · reloj virtual: tsT = escala objetivo (1 normal, 0 tiempo detenido), tsK = suavizada, vlag = retraso acumulado respecto al reloj real, frz = 0..1 intensidad del «tiempo detenido»
- let curMs=COARSE?2:4;let cloudK=CLOUD_K,shrMin=.15;let last=0,trail=[],aBox=null,heroScreen=null,qGrass=-1;
+ let curMs=aaMs();let cloudK=CLOUD_K,shrMin=.15;let last=0,trail=[],aBox=null,heroScreen=null,qGrass=-1;
  function frame(rnow){const rd=lastR?Math.min(100,Math.max(0,rnow-lastR)):16.7;lastR=rnow;tsK+=(tsT-tsK)*(1-Math.exp(-rd/1000*(tsT<tsK?9:6)));if(Math.abs(tsT-tsK)<.002)tsK=tsT;vlag+=rd*(1-tsK);if(tsT>=1&&tsK>.98&&vlag>0)vlag=Math.max(0,vlag-rd*.25);frz=1-tsK;   /* 21 oct 2026: la parada de impacto (golpes críticos) acumulaba ≈ 75 ms de retraso del reloj virtual PARA SIEMPRE; ahora se recupera poco a poco (×1,25 de velocidad) cuando el tiempo vuelve a ser normal (las cinemáticas hacen tsync() al acabar) */   // tiempo VIRTUAL: con tsK=1 y vlag=0 `now` = reloj real (nada cambia)
   const now=rnow-vlag,t=now/1000,dt=Math.max(1e-5,last?Math.min(.1,(now-last)/1000):1/60);last=now;G.uTime.value=t;r.info.autoReset=false;r.info.reset();
   if(keyRot)azT+=keyRot*dt*1.6;az+=(azT-az)*(1-Math.exp(-dt*12));if(Math.abs(az-azT)<1e-4)az=azT;
@@ -269,8 +289,10 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   {const lo=typeof QL!=='undefined'&&QL>=3;r.shadowMap.autoUpdate=!lo;if(lo)r.shadowMap.needsUpdate=((shF=(shF+1)&1)===0)}   // OPT-RENDIMIENTO (22 oct 2026): en Baja/Mínima la sombra del sol se redibuja 1 fotograma de cada 2 (su matriz se actualiza con el mapa, así que lo estático no se desliza; lo que se mueve va 1 fotograma tarde)
   const FS=typeof FSR_ON!=='undefined'&&!!FSR_ON,fs=FS?FSR_S:1,hq=(typeof QL==='undefined'?2:QL)<=2,post=hq||FS;   // FSR: con el reescalado activo también Baja/Mínima pasan por el composer (sin bloom ni óleo)
   if(water&&upd)water.reflect(r,scene,cam,cssW,cssH);   // reflejo ligero del agua (R3D-AGUA-ARTSTYLE)
-  if(post){bloom.enabled=grade.enabled=hq;fsr.enabled=FS;const lq=(typeof QL==='undefined'||QL<=1),key=cssW+'x'+cssH+'@'+V.dpr+(lq?'a':'b')+fs;{const ms=(typeof QL!=='undefined'&&QL>=2)?2:(COARSE?2:4);if(ms!==curMs){curMs=ms;[composer.renderTarget1,composer.renderTarget2].forEach(t=>{t.samples=ms;t.dispose()})}}   // Lote R3D-OPT-1: MSAA x2 desde calidad Media (el MSAA x4 sobre un RT HalfFloat de 4,5 MP es mucho ancho de banda)
-   if(key!==cSize){cSize=key;composer.setPixelRatio(1);composer.setSize(Math.round(V.cw*fs),Math.round(V.ch*fs));bloom.resolution.set(cssW*fs/(lq?2:4),cssH*fs/(lq?2:4));grade.uniforms.uRes.value.set(composer.renderTarget1.width,composer.renderTarget1.height);fsr.uniforms.uSrc.value.set(composer.renderTarget1.width,composer.renderTarget1.height)}
+  if(post){bloom.enabled=grade.enabled=hq;fsr.enabled=FS;const lq=(typeof QL==='undefined'||QL<=1),key=cssW+'x'+cssH+'@'+V.dpr+(lq?'a':'b')+fs;{const am=aaM(),ms=aaMs();if(ms!==curMs){curMs=ms;[composer.renderTarget1,composer.renderTarget2].forEach(t=>{t.samples=ms;t.dispose()})}   // el MSAA lo elige el jugador (Opciones → Suavizado); FXAA/SMAA = 0 muestras
+    if(am==='smaa'&&!smaa&&!smaaTry){smaaTry=1;import('three/addons/postprocessing/SMAAPass.js').then(m=>{smaa=new m.SMAAPass(composer.renderTarget1.width,composer.renderTarget1.height);composer.insertPass(smaa,composer.passes.indexOf(fsr));cSize=''}).catch(e=>{smaaTry=2;console.warn('[R3D] SMAA no disponible (falta SMAAPass.js en vendor/three/examples/jsm/postprocessing): se usa FXAA',e)})}
+    fxaa.enabled=am==='fxaa'||(am==='smaa'&&!smaa);if(smaa)smaa.enabled=am==='smaa'}
+   if(key!==cSize){cSize=key;composer.setPixelRatio(1);composer.setSize(Math.round(V.cw*fs),Math.round(V.ch*fs));bloom.resolution.set(cssW*fs/(lq?2:4),cssH*fs/(lq?2:4));grade.uniforms.uRes.value.set(composer.renderTarget1.width,composer.renderTarget1.height);fsr.uniforms.uSrc.value.set(composer.renderTarget1.width,composer.renderTarget1.height);fxaa.uniforms.uRes.value.set(composer.renderTarget1.width,composer.renderTarget1.height)}
    bloom.strength=tp.bloom;grade.uniforms.uLift.value.set(tp.lift);{const f=V.zoom*43/Math.max(240,cssH),q=Math.max(0,Math.min(1,(f-.09)/.05));grade.uniforms.uTS.value=(typeof QL==='undefined'||QL<=1)?TILT_K*q*q*(3-2*q):0}   // 20 oct 2026: la inclinación-desenfoque se apaga al alejar el zoom (a zoom mínimo veía toda la escena borrosa arriba/abajo)
    grade.uniforms.uVig.value=tp.vig;if(typeof BR!=='undefined'){grade.uniforms.uFog.value=1-BR.vis;if(BR.vis<1){grade.uniforms.uFogC.value.set(BR.fog).multiplyScalar(1-tp.night*.8)}}if(frz>.002){grade.uniforms.uFog.value=Math.max(grade.uniforms.uFog.value,frz*.55);grade.uniforms.uFogC.value.set('#3a2c14')}   // CINE-1: viñeta oro oscuro del tiempo detenido
    {let kb=0;try{if(typeof P!=='undefined'&&typeof BIOMES!=='undefined')kb=Math.max(0,BIOMES.at(P.x,P.y))}catch(e){}const row=BT[kb]||BT[0];btT.set(1+(row[0][0]-1)*BT_K,1+(row[0][1]-1)*BT_K,1+(row[0][2]-1)*BT_K);btTL.set(row[1][0]*BT_K,row[1][1]*BT_K,row[1][2]*BT_K);
