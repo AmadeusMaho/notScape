@@ -1448,6 +1448,7 @@ const GFX_DEF=[
  ['fps','Límite de fps',[[0,'Sin límite'],[120,'120'],[60,'60'],[30,'30']],q=>0,'Limitar los fps da fotogramas más REGULARES (menos tirones percibidos) y menos calor/batería en portátiles. 60 o 30 en gráficas integradas.'],
  ['res','Resolución',[['dyn','Dinámica'],[1,'100 %'],[.85,'85 %'],[.75,'75 %'],[.67,'67 %'],[.5,'50 %']],q=>0,'Resolución del dibujo respecto a la pantalla. Auto = según la calidad. Es lo que más fps da en gráficas integradas.'],
  ['shadow','Sombras',[[2,'Altas'],[1.5,'Medias'],[1,'Bajas'],[0,'No']],q=>q>=3||COARSE_?1:2,'Sombras del sol. Medias = mapa grande redibujado a medio ritmo; Bajas = mapa pequeño a medio ritmo; No = sin sombras (gran ahorro de GPU).'],
+ ['shcache','Sombra en caché',[[1,'Sí'],[0,'No']],q=>1,'La sombra de lo que no se mueve (suelo, casas, árboles) se reutiliza y solo se redibuja lo que se mueve: mucho menos trabajo de GPU con el mismo aspecto. «No» = la sombra entera cada fotograma (para comparar).'],
  ['ink','Contornos',[[1,'Sí'],[0,'No']],q=>1,'Contorno oscuro de casas, props y personajes: casi la mitad de las llamadas de dibujo. Sin él, más fps en gráficas débiles (cambia el estilo).'],
  ['post','Óleo (color)',[[1,'Sí'],[0,'No']],q=>q<=2?1:0,'Grado de color «óleo oscuro» a pantalla completa.'],
  ['brush','Pincelada',[[1,'Sí'],[0,'No']],q=>q<=1?1:0,'Filtro de pincel del óleo (Kuwahara): caro a pantalla completa.'],

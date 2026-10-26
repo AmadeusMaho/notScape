@@ -77,7 +77,7 @@ La **Calidad** sigue siendo el *preset* (y el modo Auto la baja sola si no sosti
 | F6 | ✅ | `Skeleton.update` una vez por fotograma (`SKF`); `DEPTH_I`/`depthI()` para la sombra de los `InstancedMesh` de props y naturaleza. Re-evaluaciones **1 000 → 335/s**. |
 | F7 | 🟡 | Opción **«Contornos»** (No = −25 % llamadas y −24 % triángulos medidos). **Falta** contorno en shader / `BatchedMesh`. |
 | F8 | ❌ | LOD de árboles y casas: requiere modelos simplificados (trabajo de arte por especie/edificio). Con cámara ortográfica el «lejos» es el zoom alejado: hacerlo por nivel de zoom. |
-| F9 | 🟡 | Nivel **«Sombras: Medias»** (2048 a medio ritmo). **Falta** la separación estático/dinámico (necesita una 2.ª luz con sombra = trinquete de §P6, o un shader propio que combine dos mapas). |
+| F9 | ✅ (FLUIDEZ-4) | Sombra del sol en caché: lo fijo en `sRT` (por casilla de luz / cambio / 1,2 s), copia nativa `blitFramebuffer` + lo que se mueve encima, sin luz nueva. Mapa idéntico (0 texels distintos); Media 1,09 M / 372 → 0,71 M / 251; noche igual. También «Sombras: Medias». |
 | F10 | ✅ | El modo Auto **sube** un nivel tras ~15–20 s con mediana < 9 ms (no sube por encima de un nivel del que bajó en los últimos 3 min; no actúa con límite de fps). |
 | F11 | 🟡 | `LOWDEV`: ≤ 4 núcleos o ≤ 4 GB declarados → arranca en Media (y F10 sube si va sobrado). Sin prueba de rendimiento sintética. |
 | F12 | ✅ | «Resolución: Dinámica» (pasos de 0,1 entre 50 y 100 %, mínimo 4 s entre cambios, objetivo = límite de fps o 60). |

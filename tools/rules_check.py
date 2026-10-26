@@ -142,6 +142,7 @@ for n, ok_, d in [
     ('sombras de InstancedMesh con material de profundidad propio (depthI)', 'depthI(new THREE.InstancedMesh' in rd('src/r3d/props3d.js') and 'depthI(new THREE.InstancedMesh' in rd('src/r3d/nature3d.js'), 'props3d.js / nature3d.js'),
     ('terreno: vértices de la rejilla calculados una vez (GV)', 'GV[b*N1+a]=' in rd('src/r3d/terrain3d.js'), 'src/r3d/terrain3d.js'),
     ('medidor de tirones presente (tools/r3d/stutter_check.py, con &load)', '&load' in rd('tools/r3d/stutter_check.py'), 'tools/r3d/stutter_check.py'),
+    ('sombra del sol en caché (F9): lo fijo se reutiliza y solo se redibuja lo que se mueve', 'function shadowWork(' in rj and 'blitFramebuffer' in rj and "['shcache'," in gj, 'src/r3d/r3d.js / GFX_DEF'),
     ('héroe pintado por el renderer principal y compuesto en el lienzo 3D (F4)', 'const ar=r;' in rj and 'hgrade.composite(' in rj and 'hOcc' in rj, 'src/r3d/r3d.js'),
     ('calidad Auto que también sube, resolución dinámica y presets', 'QUP' in gj and 'function dynRes' in gj and 'const GFX_PRE=' in gj, 'src/game.js'),
     ('sombra a medio ritmo en Baja/Mínima', 'shF' in rj and 'r.shadowMap.autoUpdate=!lo' in rj, 'src/r3d/r3d.js'),
