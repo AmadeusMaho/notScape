@@ -14,7 +14,7 @@
 // TRAMPAS: (1) el material `chr` lee G.uChrB (pies→cabeza del héroe): r3d.js lo pone a (0,0) antes del pase del mundo; (2) los SkinnedMesh no se recortan solos
 // (frustumCulled=false): Actors.update() descarta por distancia; (3) el casco (hull) comparte esqueleto con el cuerpo: ambos deben vivir en el mismo grupo.
 import * as THREE from 'three';
-import {toon,hull,hash,glow,INK} from './materials3d.js';
+import {toon,hull,hash,glow,INK,INK_SK} from './materials3d.js';
 import {Mini,MINI,sword,shieldMesh} from './mini3d.js';
 import {hairFn} from './herom3d.js';
 import {angelWings} from './wings3d.js';   // alas de ángel reutilizables (Lote CINE-2b)
@@ -335,7 +335,7 @@ export class Actor{
  constructor(tpl,key,e,W3){this.tpl=tpl;this.key=key;this.e=e;this.W3=W3;this.grp=new THREE.Group();this.grp.name='actor:'+key;
   const bones=tpl.local.map(l=>{const b=new THREE.Bone();b.position.copy(l.p);b.quaternion.copy(l.q);b.scale.copy(l.s);return b});tpl.parent.forEach((p,i)=>p>=0&&bones[p].add(bones[i]));this.grp.add(bones[0]);
   this.b={};tpl.names.forEach((n,i)=>this.b[n]=bones[i]);this.rest={};tpl.names.forEach((n,i)=>this.rest[n]=bones[i].quaternion.clone());this.restP={};tpl.names.forEach((n,i)=>this.restP[n]=bones[i].position.clone());
-  const sk=new THREE.Skeleton(bones,tpl.inv);this.mesh=new THREE.SkinnedMesh(tpl.geo,MATS);this.mesh.bind(sk,new M4());this.hull=new THREE.SkinnedMesh(tpl.hgeo,INK);this.hull.bind(sk,new M4());
+  const sk=new THREE.Skeleton(bones,tpl.inv);this.mesh=new THREE.SkinnedMesh(tpl.geo,MATS);this.mesh.bind(sk,new M4());this.hull=new THREE.SkinnedMesh(tpl.hgeo,INK_SK);this.hull.bind(sk,new M4());
   this.mesh.frustumCulled=this.hull.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.hull.castShadow=false;this.grp.add(this.mesh,this.hull);
   this.sc=tpl.k;this.grp.scale.setScalar(this.sc);this.face=0;this.faceT=0;this.ph=hash(e.x,e.y,3)*6.28;this.mv=0;this.last=null;this.state='live';this.td=0;this.hov=false;this.fl=false;this.vis=true;
   this.E=new Euler0();this.aw=0;this.seed=hash(e.x*.01,e.y*.01,7)*6.28;this.breath=0;this.peck=0}

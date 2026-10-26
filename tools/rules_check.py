@@ -88,12 +88,12 @@ code = {p: rd(str(p.relative_to(R))) for p in src + r3d}
 allc = '\n'.join(code.values())
 def cnt(rx): return len(re.findall(rx, allc))
 TRINQ = [  # (nombre, regex, límite de hoy)
-    ('renderers WebGL (new THREE.WebGLRenderer)', r'new THREE\.WebGLRenderer\(', 5),
+    ('renderers WebGL (new THREE.WebGLRenderer)', r'new THREE\.WebGLRenderer\(', 4),   # F4 (26 oct 2026): el héroe ya no tiene renderer propio (5 → 4)
     ('luces de three (PointLight/SpotLight; recompilan todo)', r'new THREE\.(?:PointLight|SpotLight)\(', 5),
     ('castShadow=true', r'castShadow\s*=\s*(?:\w+\.receiveShadow\s*=\s*)?true', 28),
     ('frustumCulled=false', r'frustumCulled\s*[:=]\s*false', 48),
     ('EffectComposer', r'new EffectComposer\(', 1),
-    ('preserveDrawingBuffer:true', r'preserveDrawingBuffer\s*:\s*true', 2),
+    ('preserveDrawingBuffer:true', r'preserveDrawingBuffer\s*:\s*true', 1),
 ]
 for n, rx, lim in TRINQ:
     c = cnt(rx); (bad if c > lim else ok)(f'RENDIMIENTO trinquete: {n} ≤ {lim}', f'hoy {c}')
@@ -142,6 +142,7 @@ for n, ok_, d in [
     ('sombras de InstancedMesh con material de profundidad propio (depthI)', 'depthI(new THREE.InstancedMesh' in rd('src/r3d/props3d.js') and 'depthI(new THREE.InstancedMesh' in rd('src/r3d/nature3d.js'), 'props3d.js / nature3d.js'),
     ('terreno: vértices de la rejilla calculados una vez (GV)', 'GV[b*N1+a]=' in rd('src/r3d/terrain3d.js'), 'src/r3d/terrain3d.js'),
     ('medidor de tirones presente (tools/r3d/stutter_check.py, con &load)', '&load' in rd('tools/r3d/stutter_check.py'), 'tools/r3d/stutter_check.py'),
+    ('héroe pintado por el renderer principal y compuesto en el lienzo 3D (F4)', 'const ar=r;' in rj and 'hgrade.composite(' in rj and 'hOcc' in rj, 'src/r3d/r3d.js'),
     ('calidad Auto que también sube, resolución dinámica y presets', 'QUP' in gj and 'function dynRes' in gj and 'const GFX_PRE=' in gj, 'src/game.js'),
     ('sombra a medio ritmo en Baja/Mínima', 'shF' in rj and 'r.shadowMap.autoUpdate=!lo' in rj, 'src/r3d/r3d.js'),
     ('reescalado FSR disponible y APAGADO por defecto (decisión del dueño)', 'let FSR_ON=false;' in gj and 'fsr=new ShaderPass' in rj, 'src/game.js / src/r3d/r3d.js'),

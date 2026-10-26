@@ -29,7 +29,7 @@ export class SunRays{
  weight(cx,cz){let w=0,n=0;for(const[u,v]of[[.15,.15],[.85,.15],[.15,.85],[.85,.85],[.5,.5]]){const tx=Math.floor((cx+u)*CELL),tz=Math.floor((cz+v)*CELL);let b=-1;try{b=TER.biomeOf?TER.biomeOf(tx,tz):-1}catch(e){}w+=(BIOMA_K[b]||0);n++}return w/n}
  // no hay rayos sobre la aldea (los haces cruzaban las casas): radio de 24 tiles alrededor de la plaza de cada bioma con rayos
  inVillage(ci,cj){const x=(ci+.5)*CELL*32,y=(cj+.5)*CELL*32;try{for(const k in BIOMA_K){const B=BIOMES.list[k],p=B&&B.village&&B.village.plaza&&B.village.plaza[0];if(p&&Math.hypot(B.ox+p[0]-x,B.oy+p[1]-y)<24*32)return true}}catch(e){}return false}
- update(t,dt,tgt,R,day,rain,QLv){const m=this.mesh;if(!this.on||day<.04||QLv>=4){m.count=0;return}
+ update(t,dt,tgt,R,day,rain,QLv){const m=this.mesh;if(!this.on||day<.04||QLv>=4){m.count=0;m.visible=false;return}   // FLUIDEZ: sin haces = invisible (con count 0 three seguía preparando su programa en cada pase)
   const cx0=Math.floor((tgt.x-R)/CELL),cx1=Math.floor((tgt.x+R)/CELL),cz0=Math.floor((tgt.z-R)/CELL),cz1=Math.floor((tgt.z+R)/CELL),key=cx0+','+cz0+','+cx1+','+cz1;
   if(key!==this.ck){this.ck=key;const L=[];for(let j=cz0;j<=cz1;j++)for(let i=cx0;i<=cx1;i++){const w=this.weight(i,j);if(w<.2||this.inVillage(i,j))continue;const h=hash(i,j,7);if(h>.3*w+.04)continue;   // ~15–35 % de las celdas del bosque llevan un rayo
     const x=(i+.2+.6*hash(i,j,1))*CELL,z=(j+.2+.6*hash(i,j,2))*CELL;L.push({x,z,w,ph:hash(i,j,3)*TAU,len:3.6+2.6*hash(i,j,4),wd:.5+.65*hash(i,j,5),d:Math.hypot(x-tgt.x,z-tgt.z)})}
@@ -41,5 +41,5 @@ export class SunRays{
    this.p.set(c.x-d.x*L,y0-d.y*L,c.z-d.z*L);   // el pie del haz toca el suelo en (x,y0,z); la punta superior queda L·|dy| más alta y desplazada hacia el sol
    this.s.set(c.wd,L,c.wd);this.mt.compose(this.p,this.q,this.s);m.setMatrixAt(n,this.mt);
    const br=base*c.w*(.62+.38*Math.sin(t*.45+c.ph)*Math.sin(t*.23+c.ph*1.7));m.instanceColor.setXYZ(n,br,br,br);n++}
-  m.count=n;m.instanceMatrix.needsUpdate=true;m.instanceColor.needsUpdate=true}
+  m.count=n;m.visible=n>0;m.instanceMatrix.needsUpdate=true;m.instanceColor.needsUpdate=true}
 }

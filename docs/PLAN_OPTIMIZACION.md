@@ -85,7 +85,7 @@ La **Calidad** sigue siendo el *preset* (y el modo Auto la baja sola si no sosti
 | F14 | ✅ | Preset «Ahorro de batería» (Mínima, 30 fps, retratos lentos, 75 %, sin partículas). |
 | F15 | ✅ | **Carga en un PC sin caché de shaders 30–37 s → 17,5–21,5 s** y **0 bloqueos tras la carga** (5/5 ejecuciones): dibujos de la carga «en seco» (`R3D.dry`: el primer dibujo compilaba los shaders de uno en uno, 13 s), compuerta encendida detrás de la pantalla de carga, 2.ª pasada de `warmShaders` sustituida por esperar a la compuerta (−4,6 s), compuerta que oculta también los objetos que comparten un material aún en compilación (causaba esperas de 3–5 s justo al terminar la carga), plazo de la compuerta 4 → 8 s, `blobD` sin trigonometría (−1 s de generación, mundo idéntico comprobado). |
 | F16 | ✅ | La 2.ª copia de cada pista (cruce) se descarga 30 s antes del final, no al entrar en el bioma. |
-| F4 | ❌ | Héroe en el renderer principal: es el mayor ahorro de CPU que queda (2,5–4 ms/fotograma) pero obliga a rehacer la silueta tras paredes (stencil) y el grado óleo propio del héroe; lote propio con capturas de antes/después. |
+| F4 | ✅ (FLUIDEZ-3) | Héroe pintado por el renderer principal en su render target y compuesto en el lienzo 3D; oclusores ocultos en los pases 2–3; `INK_SK`/`INK_H`. CPU de dibujo −10 %, 149–161 → 183–185 fps, máx. 15 ms corriendo, héroe idéntico al píxel. |
 
 **Medido tras FLUIDEZ-2 (Pradera, RTX 4070, `stutter_check.py`):** reposo 0 fotogramas > 50 ms; corriendo 0 > 50 ms (máx. 45; antes 55); re-evaluaciones 335/s; presupuesto Alta 2,46 M / 504 llamadas, Media 1,11 M / 382 → `ok`; `RESULTADO: OK`.
 

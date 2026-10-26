@@ -49,5 +49,24 @@ export class HeroGrade{
   u.uK.value=o.K||0;u.uThick.value=o.thick||0;u.uHs.value=o.hs||1;u.uBrush.value=o.brush||0;u.uVig.value=o.vig||0;u.uSc.value=o.sc||1;if(o.lift!=null)u.uLift.value.set(o.lift);else u.uLift.value.setRGB(0,0,0);
   const off=o.off||[0,0],scr=o.scr||[rt.width,rt.height];u.uOff.value.set(off[0],off[1]);u.uScr.value.set(scr[0],scr[1]);
   const ac=r.autoClear;r.autoClear=false;r.clear(true,true,true);r.render(this.scene,this.cam);r.autoClear=ac}
- dispose(){if(this.rt)this.rt.dispose();this.mat.dispose();this.quad.geometry.dispose()}
+ // FLUIDEZ F4 (26 oct 2026): el héroe ya no tiene renderer propio. endRT = lo mismo que end() pero el resultado (sRGB premultiplicado) va a un render target `out`
+ // del MISMO contexto; composite() lo dibuja en la pantalla del renderer principal, tras el mundo, en el rectángulo del héroe (px del lienzo, origen arriba-izquierda).
+ endRT(r,o={}){const rt=this.rt;if(!this.out||this.out.width!==rt.width||this.out.height!==rt.height){if(this.out)this.out.dispose();this.out=new THREE.WebGLRenderTarget(rt.width,rt.height,{depthBuffer:false,type:THREE.UnsignedByteType});this.out.texture.minFilter=this.out.texture.magFilter=THREE.LinearFilter;this.out.texture.generateMipmaps=false}
+  const u=this.mat.uniforms;u.tDiffuse.value=rt.texture;u.uRes.value.set(rt.width,rt.height);
+  u.uK.value=o.K||0;u.uThick.value=o.thick||0;u.uHs.value=o.hs||1;u.uBrush.value=o.brush||0;u.uVig.value=o.vig||0;u.uSc.value=o.sc||1;if(o.lift!=null)u.uLift.value.set(o.lift);else u.uLift.value.setRGB(0,0,0);
+  const off=o.off||[0,0],scr=o.scr||[rt.width,rt.height];u.uOff.value.set(off[0],off[1]);u.uScr.value.set(scr[0],scr[1]);
+  r.setRenderTarget(this.out);const ac=r.autoClear;r.autoClear=false;r.clear(true,false,false);r.render(this.scene,this.cam);r.autoClear=ac;r.setRenderTarget(null)}
+ composite(r,x,y,w,h,cw,ch){if(!this.out)return;if(!this.cmat){this.cmat=new THREE.ShaderMaterial({uniforms:{t:{value:null},uRect:{value:new THREE.Vector4()},uScr:{value:new THREE.Vector2(1,1)}},
+   vertexShader:'uniform vec4 uRect;uniform vec2 uScr;varying vec2 vUv;void main(){vUv=uv;vec2 p=uRect.xy+vec2(uv.x,1.-uv.y)*uRect.zw;gl_Position=vec4(p.x/uScr.x*2.-1.,1.-p.y/uScr.y*2.,0.,1.);}',
+   fragmentShader:'uniform sampler2D t;varying vec2 vUv;void main(){gl_FragColor=texture2D(t,vUv);}',
+   depthTest:false,depthWrite:false,transparent:true,blending:THREE.CustomBlending,blendSrc:THREE.OneFactor,blendDst:THREE.OneMinusSrcAlphaFactor,blendSrcAlpha:THREE.OneFactor,blendDstAlpha:THREE.OneMinusSrcAlphaFactor,toneMapped:false});
+   this.cq=new THREE.Mesh(new THREE.PlaneGeometry(1,1),this.cmat);this.cq.position.z=-.5;this.cs=new THREE.Scene();this.cs.add(this.cq)}   // quad de pantalla: su posición real la calcula el shader; z=-.5 = dentro de la cámara ortográfica (no se recorta y no hace falta desactivar el recorte por frustum)
+  const u=this.cmat.uniforms;u.t.value=this.out.texture;u.uRect.value.set(x,y,w,h);u.uScr.value.set(cw,ch);
+  r.setRenderTarget(null);const ac=r.autoClear;r.autoClear=false;r.render(this.cs,this.cam);r.autoClear=ac}
+ // copia el héroe a un lienzo 2D (solo cuando hace falta: imágenes fantasma del perfect dodge). Lectura síncrona de la GPU: NO llamarla cada fotograma.
+ toCanvas(r){const o=this.out;if(!o)return null;const w=o.width,h=o.height,px=new Uint8Array(w*h*4);r.readRenderTargetPixels(o,0,0,w,h,px);
+  const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d'),id=g.createImageData(w,h);
+  for(let y=0;y<h;y++){const s=(h-1-y)*w*4;for(let i=0;i<w*4;i+=4){const a=px[s+i+3];id.data[y*w*4+i]=a?Math.min(255,px[s+i]*255/a):0;id.data[y*w*4+i+1]=a?Math.min(255,px[s+i+1]*255/a):0;id.data[y*w*4+i+2]=a?Math.min(255,px[s+i+2]*255/a):0;id.data[y*w*4+i+3]=a}}
+  g.putImageData(id,0,0);return c}
+ dispose(){if(this.rt)this.rt.dispose();if(this.out)this.out.dispose();this.mat.dispose();this.quad.geometry.dispose()}
 }

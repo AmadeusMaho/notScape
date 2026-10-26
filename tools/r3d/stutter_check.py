@@ -6,7 +6,7 @@ Abre el juego en Chromium CON VENTANA (GPU real; SwiftShader no sirve), espera a
   · fotogramas > 34 ms en reposo y CORRIENDO (Mayús+WASD), con desglose por función.
 Uso (con el servidor en 8811: python tools/serve_nocache.py 8811):
   python tools/r3d/stutter_check.py [--q 1] [--secs 20] [--no-walk] [--no-heap] [--json salida.json]
-Acaba en `RESULTADO: OK` si: basura en reposo ≤ 60 MB/s, re-evaluaciones ≤ 2500/s y ≤ 3 fotogramas > 50 ms en reposo (umbrales para un PC rápido;
+Acaba en `RESULTADO: OK` si: basura en reposo ≤ 600 KB por fotograma, re-evaluaciones ≤ 2500/s y ≤ 3 fotogramas > 50 ms en reposo (umbrales para un PC rápido;
 en una integrada mira las cifras, no el veredicto)."""
 import asyncio, json, sys, os, argparse, collections
 from playwright.async_api import async_playwright
@@ -42,11 +42,15 @@ async def main(a):
         await pg.wait_for_function("(()=>{const b=document.querySelector('#boot');return b&&getComputedStyle(b).display==='none'})()", timeout=300000, polling=250)
         out['carga_s'] = round(asyncio.get_event_loop().time() - t0, 1)
         await pg.evaluate(TP); await pg.wait_for_timeout(12000)
+        # estado estable: los aldeanos de otros biomas se hornean en segundo plano con el jugador quieto (F5); se terminan aquí para que no cuenten como basura
+        await pg.evaluate("import('/src/r3d/actors3d.js').then(m=>{if(typeof NPCLK!=='undefined')Object.keys(NPCLK).forEach(k=>m.tplFor(k))})"); await pg.wait_for_timeout(1500)
         out['programas'] = await pg.evaluate('R3D.renderer.info.programs.length')
         if not a.no_heap:
             c = await ctx.new_cdp_session(pg); await c.send('HeapProfiler.enable'); await c.send('HeapProfiler.collectGarbage')
             await c.send('HeapProfiler.startSampling', {'samplingInterval': 4096, 'includeObjectsCollectedByMajorGC': True, 'includeObjectsCollectedByMinorGC': True})
+            f0 = await pg.evaluate('window.__nsF=0,(function f(){window.__nsF++;requestAnimationFrame(f)})(),0')
             await pg.wait_for_timeout(8000)
+            nf = max(1, await pg.evaluate('window.__nsF'))
             prof = (await c.send('HeapProfiler.stopSampling'))['profile']; agg = collections.Counter(); tot = 0
             def walk(n):
                 nonlocal tot
@@ -54,7 +58,8 @@ async def main(a):
                 agg[f"{cf['functionName'] or '(anon)'} {cf['url'].split('/')[-1]}:{cf['lineNumber']+1}"] += s
                 for ch in n.get('children', []): walk(ch)
             walk(prof['head'])
-            out['basura_MBs'] = round(tot / 1e6 / 8, 1); out['basura_top'] = [f'{v/8e6:.2f} MB/s {k}' for k, v in agg.most_common(10)]
+            out['basura_MBs'] = round(tot / 1e6 / 8, 1); out['basura_KB_fotograma'] = round(tot / 1e3 / nf); out['fps_muestra'] = round(nf / 8)
+            out['basura_top'] = [f'{v/8e6:.2f} MB/s {k}' for k, v in agg.most_common(10)]
         out['programas_reevaluados'] = await pg.evaluate(PROGS)
         out['reposo'] = await pg.evaluate(SPIKES + f'({a.secs},false)')
         if not a.no_walk: out['corriendo'] = await pg.evaluate(SPIKES + f'({a.secs},true)')
@@ -64,7 +69,7 @@ async def main(a):
     print(json.dumps(out, indent=1, ensure_ascii=False))
     if a.json: open(a.json, 'w', encoding='utf8').write(json.dumps(out, indent=1, ensure_ascii=False))
     bad = []
-    if out.get('basura_MBs', 0) > 60: bad.append('basura en reposo > 60 MB/s')
+    if out.get('basura_KB_fotograma', 0) > 600: bad.append('basura en reposo > 600 KB por fotograma')   # por FOTOGRAMA: en MB/s dependía de los fps (a 180 fps el doble que a 90)
     if out['programas_reevaluados']['porSegundo'] > 2500: bad.append('re-evaluaciones de programa > 2500/s')
     if out['reposo']['mas50'] > 3: bad.append('más de 3 fotogramas > 50 ms en reposo')
     if any(l.startswith('ERR') or l.startswith('error') and '404' not in l for l in out['consola']): bad.append('errores en consola')

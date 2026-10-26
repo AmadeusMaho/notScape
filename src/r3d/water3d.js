@@ -13,7 +13,7 @@
 // CALIDAD (QL de r3d.js): 0–2 simulación + peces + gotas completos · 3–4 sin simulación ni peces (solo el color D y las gotas de pesca).
 // COLORES: la demo trabajaba en sRGB con ColorManagement apagado; aquí el shader trabaja en LINEAL (como el resto del juego) y termina con `colorspace_fragment`.
 import * as THREE from 'three';
-import {G,INK,INKS} from './materials3d.js';
+import {G,INK,INKS,INKX} from './materials3d.js';
 
 const V3=THREE.Vector3,TAU=Math.PI*2;
 const cl=(v,a,b)=>v<a?a:v>b?b:v,rnd=(a,b)=>a+Math.random()*(b-a),lerp=(a,b,k)=>a+(b-a)*Math.min(1,Math.max(0,k)),sstep=(a,b,x)=>{const t=cl((x-a)/(b-a),0,1);return t*t*(3-2*t)};
@@ -233,7 +233,7 @@ export class Water{
   WU.uRefM.value.set(.5,0,0,.5,0,.5,0,.5,0,0,.5,.5,0,0,0,1).multiply(vc.projectionMatrix).multiply(vc.matrixWorldInverse);
   this.oblique(vc);   // FLUIDEZ (26 oct 2026): recorte por PLANO CERCANO OBLICUO en vez de `r.clippingPlanes` (ver oblique())
   const pr=r.getRenderTarget(),cc=r.getClearColor(this.cc||(this.cc=new THREE.Color())),ca=r.getClearAlpha(),sa=r.shadowMap.autoUpdate;
-  this.root.visible=false;this.terr.water.visible=false;const gH=[];this.terr.ch.forEach(c=>{if(c.grass&&c.grass.visible){c.grass.visible=false;gH.push(c.grass)}});r.shadowMap.autoUpdate=false;r.setClearColor(0x000000,0);r.setRenderTarget(this.rt);r.clear();const inks=[INK,...INKS.values()],ivis=INK.visible;inks.forEach(m=>m.visible=false);   /* Lote R3D-OPT-1: el reflejo no necesita los contornos (casco de tinta): casi la mitad de las llamadas de dibujo */
+  this.root.visible=false;this.terr.water.visible=false;const gH=[];this.terr.ch.forEach(c=>{if(c.grass&&c.grass.visible){c.grass.visible=false;gH.push(c.grass)}});r.shadowMap.autoUpdate=false;r.setClearColor(0x000000,0);r.setRenderTarget(this.rt);r.clear();const inks=[INK,...INKX,...INKS.values()],ivis=INK.visible;inks.forEach(m=>m.visible=false);   /* Lote R3D-OPT-1: el reflejo no necesita los contornos (casco de tinta): casi la mitad de las llamadas de dibujo */
   try{r.render(scene,vc)}catch(e){this.bad=(this.bad||0)+1;if(this.bad===1)console.warn('[R3D agua] el reflejo falló (se sigue sin él si se repite):',e&&e.message);if(this.bad>=3)this.noRef=1}   // R3D-FIX-REFLEJO (20 oct 2026): un TypeError aquí (`i.toArray is not a function`, ocurre con LLUVIA) mataba TODO el bucle de dibujo; ahora se captura, se restaura el estado y tras 3 fallos se apaga el reflejo
   
   inks.forEach(m=>m.visible=ivis);gH.forEach(g=>g.visible=true);r.setRenderTarget(pr);r.setClearColor(cc,ca);r.shadowMap.autoUpdate=sa;this.root.visible=true;this.terr.water.visible=true;this.rdone=1}

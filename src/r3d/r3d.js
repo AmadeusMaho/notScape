@@ -7,7 +7,7 @@
 // · Giro de cámara (rueda pulsada y arrastrar, o teclas , . — Inicio vuelve a 45°): se parchean ISO.toCanvas/toWorld/depth/keyDir, así los sprites 2D
 //   se recolocan como billboards, los LMB van por rayo y las flechas siguen los ejes de pantalla. Al soltar cerca de 45° se encaja exacto.
 import * as THREE from 'three';
-import {G,TOD,TODH,OIL,OIL_GLSL,setOil,setInk,mixTod,oilK,twin,INK,INKS} from './materials3d.js';
+import {G,TOD,TODH,OIL,OIL_GLSL,setOil,setInk,mixTod,oilK,twin,INK,INKS,INKX,INK_H} from './materials3d.js';
 import {HeroGrade} from './herograde3d.js';
 import {WU} from './terrain3d.js';
 import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
@@ -64,10 +64,11 @@ export function createR3D(){
  const hero=new Hero(),aScene=new THREE.Scene(),aHemi=new THREE.HemisphereLight(),aSun=new THREE.DirectionalLight();aSun.castShadow=true;aSun.shadow.mapSize.set(1024,1024);aSun.shadow.bias=-.0008;aSun.shadow.normalBias=.01;
  Object.assign(aSun.shadow.camera,{left:-1.6,right:1.6,top:1.6,bottom:-1.6,near:.1,far:30});aScene.add(aHemi,aSun,aSun.target,hero.obj);terr.occ=aScene;   // Fase 49c: las cordilleras entran en el pase de oclusión del héroe
 
- const acv=document.createElement('canvas'),ar=new THREE.WebGLRenderer({canvas:acv,alpha:true,antialias:true,premultipliedAlpha:true,preserveDrawingBuffer:true,stencil:true});   // stencil: desde r163 viene apagado por defecto
- ar.setClearColor(0,0);   // (Lote R3D-HEROE-NR: antes esta línea iba pegada al comentario de arriba y NO se ejecutaba: el héroe no tenía sombras propias)
- ar.shadowMap.enabled=true;ar.shadowMap.type=THREE.PCFSoftShadowMap;ar.toneMapping=THREE.NoToneMapping;
- const acam=new THREE.OrthographicCamera(-1,1,1,-1,.1,200);let proxy=null,pA=[],pB=[];ar.autoClear=false;
+ // FLUIDEZ F4 (26 oct 2026): el héroe YA NO tiene un 2.º renderer/contexto WebGL (`ar` + lienzo `acv` copiado a la capa 2D con drawImage = 2,5–4 ms de CPU fijos por fotograma).
+ // Sus 3 pases (oclusión, héroe con stencil, rayos X) los pinta el renderer PRINCIPAL en el render target de HeroGrade, el grado óleo va a `hgrade.out` y se COMPONE en el
+ // propio lienzo 3D tras el mundo (hgrade.composite, mezcla premultiplicada). Mismo aspecto: mismas luces (las de aScene), mismo grado, misma sombra propia (aSun).
+ const ar=r;aScene.matrixWorldAutoUpdate=false;   // `ar` queda como alias del renderer principal (código antiguo); la escena del héroe se actualiza UNA vez por fotograma, no en cada uno de sus 3 pases
+ const acam=new THREE.OrthographicCamera(-1,1,1,-1,.1,200);let proxy=null,pA=[],pB=[];
  const hgrade=new HeroGrade(),HERO_BRUSH=.45,HERO_K=.85;   // HERO_K: el héroe recibe el grado al 85 % del mundo (legibilidad manda: no se funde con el fondo)
 const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.target);   // contraluz frío detrás del héroe (luz dividida cálido/frío de NRftW; igual que en preview3d.js)
    // Lote R3D-HEROE-NR: grado óleo del héroe; el pincel (Kuwahara) va al 45 % del del mundo para no emborronar la cara
@@ -87,7 +88,8 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  // RAYOS X (legibilidad tipo Diablo/PoE): lo que el héroe tiene detrás de una casa 3D se dibuja como silueta clara. El stencil marca los píxeles donde el
  // héroe SÍ se ve, para que su propio brazo de detrás no se pinte como silueta sobre su torso.
  const XRAY=new THREE.MeshBasicMaterial({color:'#ffe6b8',transparent:true,opacity:.42,depthWrite:false,depthFunc:THREE.GreaterDepth,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4,stencilWrite:true,stencilRef:1,stencilFunc:THREE.NotEqualStencilFunc,stencilZPass:THREE.KeepStencilOp,stencilFail:THREE.KeepStencilOp,stencilZFail:THREE.KeepStencilOp});
- let stKey='';const markStencil=()=>{if(stKey===hero.lookKey+hero.cloth.length)return;stKey=hero.lookKey+hero.cloth.length;hero.obj.traverse(o=>{if(!o.material)return;[].concat(o.material).forEach(m=>{m.stencilWrite=true;m.stencilRef=1;m.stencilFunc=THREE.AlwaysStencilFunc;m.stencilZPass=THREE.ReplaceStencilOp})})};
+ let stKey='';const markStencil=()=>{if(stKey===hero.lookKey+hero.cloth.length)return;stKey=hero.lookKey+hero.cloth.length;hero.obj.traverse(o=>{if(!o.material)return;if(o.material===INK)o.material=INK_H;   /* F4: el héroe usa su propia copia del contorno */
+ [].concat(o.material).forEach(m=>{m.stencilWrite=true;m.stencilRef=1;m.stencilFunc=THREE.AlwaysStencilFunc;m.stencilZPass=THREE.ReplaceStencilOp})})};
  const blob=new THREE.Mesh(new THREE.CircleGeometry(.3,20).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.28,depthWrite:false}));blob.renderOrder=1;scene.add(blob);
  function syncProxy(){if(!proxy||proxy.userData.key!==hero.lookKey+'|'+hero.cloth.length){if(proxy)scene.remove(proxy);proxy=hero.obj.clone(true);proxy.userData.key=hero.lookKey+'|'+hero.cloth.length;
    pA=[];pB=[];hero.obj.traverse(o=>pA.push(o));proxy.traverse(o=>{pB.push(o);o.layers.set(2);if(o.userData.hull)o.visible=false});scene.add(proxy)}
@@ -242,16 +244,16 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  const mkT=rr=>{const gl=rr.getContext(),ext=gl.getExtension('EXT_disjoint_timer_query_webgl2'),qs=[];return{ok:!!ext,
   begin(n){if(!ext||qs.length>6)return null;const q=gl.createQuery();gl.beginQuery(ext.TIME_ELAPSED_EXT,q);return{q,n}},end(h){if(h){gl.endQuery(ext.TIME_ELAPSED_EXT);qs.push(h)}},
   poll(o){if(!ext)return;const dis=gl.getParameter(ext.GPU_DISJOINT_EXT);for(let i=0;i<qs.length;){const h=qs[i];if(gl.getQueryParameter(h.q,gl.QUERY_RESULT_AVAILABLE)){const ms=gl.getQueryParameter(h.q,gl.QUERY_RESULT)/1e6;if(!dis)o[h.n]=o[h.n]==null?ms:o[h.n]+(ms-o[h.n])*.08;gl.deleteQuery(h.q);qs.splice(i,1)}else i++}}}};
- const GPU={},tW=mkT(r),tH=mkT(ar);
+ const GPU={},tW=mkT(r),tH=tW;   // F4: un solo contexto = un solo medidor (el pase del héroe se mide aparte con su etiqueta)
  let tsT=1,tsK=1,vlag=0,lastR=0,frz=0;   // CINE-1 · reloj virtual: tsT = escala objetivo (1 normal, 0 tiempo detenido), tsK = suavizada, vlag = retraso acumulado respecto al reloj real, frz = 0..1 intensidad del «tiempo detenido»
  // ══ COMPUERTA DE SHADERS (Lote ANTI-TIRONES, 25 oct 2026; src/r3d/shadergate3d.js) ══ destinos de dibujo POR CALIDAD: con composer (Máx/Alta/Media, o FSR) el mundo se pinta en su
  // render target; Baja/Mínima sin FSR, en la pantalla (otro espacio de color = otro programa); Máx/Alta además el reflejo del agua (plano de recorte = otro programa).
  const gate=new ShaderGate(),GCLIP=[new THREE.Plane(new THREE.Vector3(0,1,0),0)],GV={rt:{key:'rt',get rt(){return composer.renderTarget1}},rtc:{key:'rtc',get rt(){return composer.renderTarget1},clip:GCLIP},scr:{key:'scr',rt:null}};
  const gVars=()=>{const q=typeof QL!=='undefined'?QL:2,FS=typeof FSR_ON!=='undefined'&&!!FSR_ON,po=typeof gfx==='function'?(gfx('post')||gfx('bloom')):q<=2;return (po||FS)?[GV.rt]:[GV.scr]};   // FLUIDEZ (26 oct 2026): el reflejo del agua ya no usa planos de recorte (plano cercano oblicuo, water3d.js oblique): sin la variante «rtc» de cada shader
- gate.watch(r,scene,cam,gVars);gate.watch(ar,aScene,acam,()=>[{rt:hgrade.rt}]);let gFr=0,warming=false,gVk='';
+ gate.watch(r,scene,cam,gVars);gate.watch(r,aScene,acam,()=>[{rt:hgrade.rt}]);let gFr=0,warming=false,gVk='';
  // FLUIDEZ F15 (26 oct 2026): `dry` = fotograma «en seco» (todo se actualiza y se crea, pero NADA se dibuja en la GPU). Lo usa la pantalla de carga ANTES de warmShaders:
  // el primer dibujo compilaba todos los shaders de uno en uno y bloqueando (13 s medidos en un PC sin caché, dentro del pase del reflejo); en seco, warmShaders los compila en paralelo.
- let inkOn=true,dry=false,tlx=0,tlz=0,tvx=0,tvz=0;
+ const hCC=new THREE.Color(),hOcc=[],HST={calls:0,tris:0,ms:0};let hDone=false,inkOn=true,dry=false,tlx=0,tlz=0,tvx=0,tvz=0;
  let curMs=aaMs();let cloudK=CLOUD_K,shrMin=.15;let last=0,trail=[],aBox=null,heroScreen=null,qGrass=-1,heroTap=null;
  // FLUIDEZ F6: un esqueleto se actualiza (y su textura de huesos se sube a la GPU) UNA vez por fotograma de juego, no en cada render() (mundo, reflejo, 3 pases del héroe…)
  let SKF=0;{const su=THREE.Skeleton.prototype.update;THREE.Skeleton.prototype.update=function(){if(this._skf===SKF)return;this._skf=SKF;su.call(this)}}
@@ -293,17 +295,20 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
    // Lote R3D-HEROE-MAXQ: el héroe SIEMPRE se pinta como en calidad Máxima. `hs` = cuánto más densa que el lienzo del juego es su resolución (dpr de Máxima / dpr actual, ≥1);
    // `px` = tamaño en px del lienzo del juego (posición y copia), `pxr` = tamaño real del render del héroe. En Máxima hs=1 (nada cambia).
    const dprMax=Math.max(V.dpr,Math.min(window.devicePixelRatio||1,Math.sqrt((typeof QCAPS!=='undefined'?QCAPS[0]:4.5e6)/(cssW*cssH)))),hs=(typeof gfx==='function'?!gfx('hero'):(typeof QL!=='undefined'&&QL>=3))?1:Math.min(2,Math.max(1,dprMax/V.dpr));   /* OPT-RENDIMIENTO (22 oct 2026): en Baja/Mínima el héroe ya NO se supermuestrea (hasta ×4 píxeles con el lienzo reducido) */
-   const HA=1.4,anc=new THREE.Vector3(p.x,p.y+.55,p.z),px=Math.ceil(HA*2*k),pxr=Math.ceil(HA*2*k*hs);if(acv.width!==pxr){ar.setPixelRatio(1);ar.setSize(pxr,pxr,false)}
+   const HA=1.4,anc=new THREE.Vector3(p.x,p.y+.55,p.z),px=Math.ceil(HA*2*k),pxr=Math.ceil(HA*2*k*hs);
    placeCam(acam,anc,HA,HA);aBack.position.set(anc.x-Math.sin(az)*6,anc.y+4,anc.z-Math.cos(az)*6);aBack.target.position.copy(anc);aBack.intensity=.85-.5*nt;aSun.position.copy(anc).add(new THREE.Vector3(...TOD.dia.sunP).normalize().multiplyScalar(12));aSun.target.position.copy(anc);
-   gate.tick(performance.now());markStencil();ar.shadowMap.needsUpdate=true;ar.shadowMap.autoUpdate=false;const sp=proj(anc),hx0=Math.round(sp.x-px/2),hy0=Math.round(sp.y-px/2);   /* 21 oct 2026: posición ENTERA en píxeles del lienzo: con una posición fraccionaria `drawImage` remuestrea el héroe (1:1) con interpolación bilineal y se ve borroso, sobre todo a zoom mínimo */
-   if(!dry){const th=tH.begin('heroe');hgrade.begin(ar,pxr,pxr);                                                        // Lote R3D-HEROE-NR: los 3 pases van a un render target (MSAA + stencil)…
-   acam.layers.set(3);{const nu=ar.shadowMap.needsUpdate;ar.shadowMap.needsUpdate=false;ar.render(aScene,acam);ar.shadowMap.needsUpdate=nu}                                     // 1) casas y props 3D: solo profundidad
-   acam.layers.set(0);ar.render(aScene,acam);                                     // 2) héroe (lo tapado no se dibuja; marca stencil)
-   aScene.overrideMaterial=XRAY;ar.render(aScene,acam);aScene.overrideMaterial=null;   // 3) silueta donde está detrás de algo
-   hgrade.end(ar,{thick:0,hs,K:oilK(tp.night)*HERO_K,brush:.85*Math.pow(oilK(tp.night),1.6)*HERO_BRUSH,lift:tp.lift,vig:tp.vig,sc:Math.max(1,V.ch/620),off:[hx0,hy0],scr:[V.cw,V.ch]})   // …y se copian al canvas del héroe con el MISMO grado óleo que el mundo EN MÁXIMA (Lote R3D-HEROE-MAXQ: ya NO depende de QL ni del dpr)
+   gate.tick(performance.now());markStencil();const sp=proj(anc),hx0=Math.round(sp.x-px/2),hy0=Math.round(sp.y-px/2);   /* 21 oct 2026: posición ENTERA en píxeles del lienzo: con una posición fraccionaria `drawImage` remuestrea el héroe (1:1) con interpolación bilineal y se ve borroso, sobre todo a zoom mínimo */
+   if(!dry){const hc0=r.info.render.calls,ht0=r.info.render.triangles,hT0=performance.now(),th=tH.begin('heroe'),ac=r.autoClear,sa=r.shadowMap.autoUpdate,cc0=r.getClearColor(hCC),ca0=r.getClearAlpha();r.autoClear=false;r.shadowMap.autoUpdate=false;
+   hgrade.begin(r,pxr,pxr);aScene.updateMatrixWorld();                                                       // Lote R3D-HEROE-NR: los 3 pases van a un render target (MSAA + stencil)…
+   acam.layers.set(3);r.shadowMap.needsUpdate=false;r.render(aScene,acam);                                   // 1) casas y props 3D: solo profundidad
+   hOcc.length=0;for(const c of aScene.children)if(c!==hero.obj&&!c.isLight&&c.visible){c.visible=false;hOcc.push(c)}   // F4: en los pases 2 y 3 la oclusión ya está en el búfer de profundidad: sus ~10 700 objetos no se recorren otra vez
+   acam.layers.set(0);r.shadowMap.needsUpdate=true;r.render(aScene,acam);                                    // 2) héroe (lo tapado no se dibuja; marca stencil) + su sombra propia (aSun)
+   aScene.overrideMaterial=XRAY;r.render(aScene,acam);aScene.overrideMaterial=null;                          // 3) silueta donde está detrás de algo
+   for(const c of hOcc)c.visible=true;r.shadowMap.needsUpdate=false;r.shadowMap.autoUpdate=sa;r.autoClear=ac;
+   hgrade.endRT(r,{thick:0,hs,K:oilK(tp.night)*HERO_K,brush:.85*Math.pow(oilK(tp.night),1.6)*HERO_BRUSH,lift:tp.lift,vig:tp.vig,sc:Math.max(1,V.ch/620),off:[hx0,hy0],scr:[V.cw,V.ch]});r.setClearColor(cc0,ca0);hDone=true;HST.calls=r.info.render.calls-hc0;HST.tris=r.info.render.triangles-ht0;r.info.render.calls=hc0;r.info.render.triangles=ht0;HST.ms+=(performance.now()-hT0-HST.ms)*.05   // F4: lo del héroe NO cuenta en el presupuesto del mundo (antes lo dibujaba otro contexto; mismos límites); se ve aparte en R3D.stats().heroe   // …con el MISMO grado óleo que el mundo EN MÁXIMA (Lote R3D-HEROE-MAXQ: no depende de QL ni del dpr); se compone al final del fotograma
    tH.end(th)}heroScreen={x:hx0,y:hy0,w:px,h:px,rod:hero.rodTip?proj(hero.rodTip):null,hand:hero.handR?proj(hero.handR):null,aim:st.aim}}
   {const pp=st?W3(st.x,st.y,st.z):tgt;water.aim=st?st.aim:null;if(upd){water.viewR=Math.hypot(V.cw,V.ch)/k*.78+6;water.refl=typeof gfx==='function'?!!gfx('refl'):(typeof QL!=='undefined'?QL<=1:true);water.update(dt,now,t,pp,tp,typeof gfx==='function'?(gfx('water')?Math.min(2,QL):3):(typeof QL!=='undefined'?QL:2),ISO.scale()*V.dpr)}}   // Lote R3D-AGUA-IMPL: sim + peces + flotador (después de animar al héroe: usa rodTip)
-  {const ik=typeof gfx==='function'?!!gfx('ink'):true;if(ik!==inkOn){inkOn=ik;[INK,...INKS.values()].forEach(m=>m.visible=ik)}}   // FLUIDEZ F7: opción «Contornos» (los cascos de tinta son ~½ de las llamadas de dibujo); el reflejo del agua sigue ocultándolos y luego vuelve a este estado
+  {const ik=typeof gfx==='function'?!!gfx('ink'):true;if(ik!==inkOn){inkOn=ik;[INK,...INKX,...INKS.values()].forEach(m=>m.visible=ik)}}   // FLUIDEZ F7: opción «Contornos» (los cascos de tinta son ~½ de las llamadas de dibujo); el reflejo del agua sigue ocultándolos y luego vuelve a este estado
   G.uChrB.value.set(0,0);   // el degradado pies→cabeza del material `chr` es del héroe (global): en el pase del mundo se apaga para los actores
   sun.position.copy(tgt).add(new THREE.Vector3(...TOD.dia.sunP).normalize().multiplyScalar(30));sun.target.position.copy(tgt);
   {const shQ=typeof gfx==='function'?gfx('shadow'):(typeof QL!=='undefined'&&QL>=3?1:2),lo=shQ<2;r.shadowMap.autoUpdate=!lo;if(lo)r.shadowMap.needsUpdate=shQ>=1&&((shF=(shF+1)&1)===0)}   // FLUIDEZ: «Sombras: No» = el mapa ya no se redibuja (intensidad 0 arriba)   // OPT-RENDIMIENTO (22 oct 2026): en Baja/Mínima la sombra del sol se redibuja 1 fotograma de cada 2 (su matriz se actualiza con el mapa, así que lo estático no se desliza; lo que se mueve va 1 fotograma tarde)
@@ -319,6 +324,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
     const a=btInit?1-Math.exp(-dt*1.4):1;btInit=true;btC.lerp(btT,a);btL.lerp(btTL,a);grade.uniforms.uTint.value.copy(btC);grade.uniforms.uTLift.value.copy(btL);if(burn>.002)grade.uniforms.uTint.value.multiply(FT.set(1+.14*burn,1-.08*burn,1-.26*burn))}   // ~1,5 s de fundido al cruzar de bioma
    {const ke=oilK(tp.night);grade.uniforms.uK.value=ke;grade.uniforms.uBrush.value=(typeof gfx==='function'?gfx('brush'):(typeof QL==='undefined'||QL<=1))?.85*Math.pow(ke,1.6):0}   // F3f·P1: óleo según la hora;   // F3d: el pincel baja más rápido que el color; calidad Media o inferior = sin Kuwahara
    const tw=tW.begin('mundo');if(!dry)composer.render(dt);tW.end(tw)}else{const tw=tW.begin('mundo');if(!dry)r.render(scene,cam);tW.end(tw)}
+  if(hDone&&heroScreen){hgrade.composite(r,heroScreen.x,heroScreen.y,heroScreen.w,heroScreen.h,V.cw,V.ch)}hDone=false   // F4: el héroe se compone en el lienzo 3D, encima del mundo (antes en la capa 2D)
   tW.poll(GPU);tH.poll(GPU);budgetTick(rnow)}
  // ══ PRESUPUESTO DE RENDIMIENTO (PRIORIDAD 1, lote OPT-RENDIMIENTO, 22 oct 2026; docs/REGLAS_CREACION.md §P) ══
  // El juego iba a 20 fps en una GPU integrada. Estos límites salen de medir la Pradera (la aldea más cargada) con ~20–25 % de margen. Cada 10 s se compara el PICO de
@@ -339,10 +345,11 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  // el héroe en su hueco de profundidad del 2D (lo llama draw() de game.js en lugar de dP)
  // IMÁGENES FANTASMA del PERFECT DODGE (21 oct 2026): `R3D.ghost([[x,y,z],…],color)` toma una silueta tintada del héroe (copia del lienzo propio, al dibujarse el héroe) y la deja en esas posiciones del mundo, que se desvanece y sube un poco (≈ 0,75 s).
  let pendG=null;const ghosts=[];
- function ghostDraw(ctx,now){if(pendG&&heroScreen){const gc=document.createElement('canvas');gc.width=acv.width;gc.height=acv.height;const g=gc.getContext('2d');g.drawImage(acv,0,0);g.globalCompositeOperation='source-in';g.fillStyle=pendG.c||'#bfe6ff';g.fillRect(0,0,gc.width,gc.height);
+ function ghostDraw(ctx,now){if(pendG&&heroScreen){const hc=hgrade.toCanvas(r);if(!hc){pendG=null;return}const gc=hc,g=gc.getContext('2d');g.globalCompositeOperation='source-in';   /* F4: la silueta sale de leer el render del héroe (solo al hacer un perfect dodge) */
+  g.fillStyle=pendG.c||'#bfe6ff';g.fillRect(0,0,gc.width,gc.height);
   pendG.a.forEach((q,i)=>ghosts.push({c:gc,a:W3(q[0],q[1],q[2]).add(new THREE.Vector3(0,.55,0)),t0:now+i*70,k:1-i*.18}));pendG=null;if(ghosts.length>12)ghosts.splice(0,ghosts.length-12)}
   for(let i=ghosts.length-1;i>=0;i--){const g=ghosts[i],u=(now-g.t0)/750;if(u>=1){ghosts.splice(i,1);continue}if(u<0||!heroScreen)continue;const sp=proj(g.a),w=heroScreen.w*(1+.07*u),h=heroScreen.h*(1+.07*u);ctx.globalAlpha=.6*g.k*Math.pow(1-u,1.6);ctx.globalCompositeOperation='lighter';ctx.drawImage(g.c,sp.x-w/2,sp.y-h/2-u*16,w,h)}ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}
- function drawHero(ctx){if(!heroScreen)return;ctx.save();ctx.setTransform(1,0,0,1,0,0);ghostDraw(ctx,performance.now());ctx.globalAlpha=1;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(acv,heroScreen.x,heroScreen.y,heroScreen.w,heroScreen.h);if(heroTap)heroTap(acv,heroScreen);
+ function drawHero(ctx){if(!heroScreen)return;ctx.save();ctx.setTransform(1,0,0,1,0,0);ghostDraw(ctx,performance.now());ctx.globalAlpha=1;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';if(heroTap){const hc=hgrade.toCanvas(r);if(hc)heroTap(hc,heroScreen)}   /* F4: el héroe ya está compuesto en el lienzo 3D; aquí solo fantasmas, sedal y el gancho opcional de la forja (lee la GPU: solo con USE_HERO) */
   const h=heroScreen;if(h.rod&&h.aim&&water){const bs=water.bobberScreen();if(bs){const bx=bs.x,by=bs.y,u=Math.min(1,(h.aim.ph||0)/.26);   // el flotador es 3D (water3d.js); aquí solo el sedal 2D hasta su posición proyectada
    ctx.lineWidth=Math.max(1,ISO.scale()*.6);ctx.strokeStyle='rgba(255,255,255,.8)';ctx.beginPath();ctx.moveTo(h.rod.x,h.rod.y);ctx.quadraticCurveTo((h.rod.x+bx)/2,Math.max(h.rod.y,by)+(u<1?2:6)*ISO.scale()/2,bx,by);ctx.stroke()}}ctx.restore()}
  function show(on){cv.style.display=on?'block':'none'}
@@ -366,7 +373,8 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   // y el resto se precalienta en segundo plano tras la carga (gate.background), por si la calidad cambia en partida.
   const rt0=r.getRenderTarget(),cur=gVars();warming=true;
   const G0=gate.G[0]||{r,cam};try{for(const v of cur){gate.prime(G0,v,cp);await Promise.race([r.compileAsync(scene,cam),new Promise(ok=>setTimeout(ok,maxMs))])}}catch(e){console.warn('[R3D warmShaders]',e)}
+  try{const cc=r.getClearColor(new THREE.Color()),ca=r.getClearAlpha();const hrt=hgrade.begin(r,8,8);aScene.updateMatrixWorld();const hid2=[];aScene.traverse(o=>{if(!o.visible){o.visible=true;hid2.push(o)}});await Promise.race([r.compileAsync(aScene,acam),new Promise(ok=>setTimeout(ok,maxMs))]);hid2.forEach(o=>o.visible=false);r.setClearColor(cc,ca)}catch(e){console.warn('[R3D warmShaders héroe]',e)}   // F4: la escena del héroe ahora la pinta el renderer principal (su render target)
   r.setRenderTarget(rt0);r.clippingPlanes=cp;warming=false;
   if(!all){gate.on=true;gVk=cur.map(v=>v.key).join();if(typeof QA!=='undefined'&&QA&&QL===2)gate.background(0,[GV.scr])}   // solo la calidad AUTOMÁTICA en Media puede bajar sola a Baja (pantalla sin composer); el resto de destinos se piden al cambiar de calidad (gVk en frame)
   tmp.forEach(o=>{scene.remove(o);if(o.isSprite||(o.material&&o.material.isShaderMaterial))o.material.dispose()});hid.forEach(o=>{o.visible=false});console.info('[R3D shaders]',{programas:r.info.programs.length,nuevos:r.info.programs.length-n0,ms:Math.round(performance.now()-t0)})},
- gate,ghost:(a,c)=>{pendG={a,c}},get wu(){return WU},get spell(){return spell},get fx(){return fx},get res(){return res},fragment:()=>new Fragment(scene),debris:n=>new Debris(scene,n),embers:n=>new Embers(scene,n),gabriel:(x,y,z)=>new Gabriel(scene,W3,x,y,z==null?TER.standZ(x,y):z),hero,terr,stats:()=>({calls:r.info.render.calls,tris:r.info.render.triangles,chunks:terr.ch.size})}}
+ gate,ghost:(a,c)=>{pendG={a,c}},get wu(){return WU},get spell(){return spell},get fx(){return fx},get res(){return res},fragment:()=>new Fragment(scene),debris:n=>new Debris(scene,n),embers:n=>new Embers(scene,n),gabriel:(x,y,z)=>new Gabriel(scene,W3,x,y,z==null?TER.standZ(x,y):z),hero,terr,stats:()=>({calls:r.info.render.calls,tris:r.info.render.triangles,chunks:terr.ch.size,heroe:{calls:HST.calls,tris:HST.tris,cpuMs:+HST.ms.toFixed(2)}})}}

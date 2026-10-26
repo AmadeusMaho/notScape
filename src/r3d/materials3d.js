@@ -262,6 +262,9 @@ export function toon(c,o={}){const k=c+JSON.stringify(o);if(MC.has(k))return MC.
 
 // contorno irregular (casco invertido), color por hora del día
 export const INK=new THREE.MeshBasicMaterial({color:0x2a1c1a,side:THREE.BackSide});
+// FLUIDEZ F4 (26 oct 2026): copias del contorno global para los cascos CON HUESOS (actores) y para el HÉROE: así INK no alterna entre mallas normales/instanciadas/con huesos
+// ni entre la escena del mundo y la del héroe en el mismo renderer (cada cambio = three re-evalúa el programa). setInk y la opción «Contornos» las mantienen iguales a INK.
+export const INK_SK=INK.clone(),INK_H=INK.clone(),INKX=[INK_SK,INK_H];
 // clave numérica de posición (cuantizada a 1/500): una Map de números es ~5× más rápida que las claves de texto de antes (el casco de ~585 modelos era la mitad del coste de construir los props al cargar)
 const key=(a,i)=>(Math.round(a.getX(i)*500)+4096)*67108864+(Math.round(a.getY(i)*500)+4096)*8192+(Math.round(a.getZ(i)*500)+4096);
 export function hull(geo,t,mat){const g=(geo.index?geo.toNonIndexed():geo).clone();g.computeVertexNormals();const p=g.attributes.position,n=g.attributes.normal,s=new Map(),N=p.count,ks=new Array(N);
@@ -282,7 +285,7 @@ export function inkMat(t){if(INKD.has(t))return INKD.get(t);const m=new THREE.Me
 export const DEPTH_I=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking});
 export function depthI(m){const mt=m.material;if(mt&&!mt.map&&!(mt.alphaTest>0)&&!mt.alphaMap)m.customDepthMaterial=DEPTH_I;return m}
 export function twin(m){const c=m.clone();c.onBeforeCompile=m.onBeforeCompile;c.customProgramCacheKey=m.customProgramCacheKey;c.userData=m.userData;for(const [k,v] of INKS)if(v===m){INKS.set(k+'#twin'+c.id,c);break}return c}
-export function setInk(ink,k){INK.color.set(ink);INKS.forEach(m=>m.color.copy(m.userData.base).multiplyScalar(k))}
+export function setInk(ink,k){INK.color.set(ink);INKX.forEach(m=>m.color.copy(INK.color));INKS.forEach(m=>m.color.copy(m.userData.base).multiplyScalar(k))}
 
 export function mk(geo,c,ink,o){o=o||{};const m=new THREE.Mesh(geo,Array.isArray(c)?c.map(x=>toon(x,o)):toon(c,o));m.castShadow=m.receiveShadow=true;
  if(ink!==0)m.add(o.hero?hull(geo,ink||.045):hull(geo,(ink||.045)*.55,inkFor(c)));return m}
