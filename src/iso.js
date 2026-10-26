@@ -17,7 +17,7 @@ const ISO=(()=>{
  function resize(cssW,cssH,dpr){V.dpr=Math.min(2,Math.max(.5,dpr||1));V.w=cssW/V.zoom;V.h=cssH/V.zoom;V.cw=Math.round(cssW*V.dpr);V.ch=Math.round(cssH*V.dpr);return V}
  const scale=()=>V.zoom*V.dpr;                          // px reales por px lógico
  // cámara: sigue al objetivo con suavizado y se redondea al píxel real (sin vibraciones)
- function follow(wx,wy,z,dt){const p=proj(wx,wy,z),k=cam.init?1-Math.exp(-(dt||1/60)*9):1;cam.init=true;cam.x+=(p.x-cam.x)*k;cam.y+=(p.y-cam.y)*k;const s=scale();cam.x=Math.round(cam.x*s)/s;cam.y=Math.round(cam.y*s)/s}
+ function follow(wx,wy,z,dt){const p=proj(wx,wy,z),k=cam.init?1-Math.exp(-(dt||1/60)*9):1;cam.init=true;cam.x+=(p.x-cam.x)*k;cam.y+=(p.y-cam.y)*k;if(!cam.ns){const s=scale();cam.x=Math.round(cam.x*s)/s;cam.y=Math.round(cam.y*s)/s}}   // D8: sin redondeo al píxel mientras dura el zoom del minijuego (cam.ns): el redondeo con el zoom cambiando hacía vibrar la imagen
  function snap(wx,wy,z){cam.init=false;follow(wx,wy,z,1)}
  // mundo -> píxel real del canvas
  function toCanvas(wx,wy,z=0){const p=proj(wx,wy,z),s=scale();return{x:Math.round((p.x-cam.x)*s+V.cw/2),y:Math.round((p.y-cam.y)*s+V.ch/2)}}

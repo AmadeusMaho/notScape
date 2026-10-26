@@ -55,15 +55,15 @@ this.occ=o.occ||null;this.ogrp=null;   // Fase 49c: this.occ = escena de OCLUSI�
  bAny(x0,z0,x1,z1){this.bnear(x0,z0);const M=this._bx;if(!M||!M.size)return false;for(let j=Math.floor(z0/8);j<=Math.floor(z1/8);j++)for(let i=Math.floor(x0/8);i<=Math.floor(x1/8);i++)if(M.has(i+','+j))return true;return false}
  // altura de la tapa en un punto continuo (coordenadas de tile): llano bilineal entre centros pisables + cuenca del agua
  // máscara de agua suavizada (5 muestras): la orilla deja de seguir la escalera de tiles
- field(x,z){const f0=this.field1(x,z),o=.42;let w=f0.w*2;for(const[dx,dz]of[[o,0],[-o,0],[0,o],[0,-o]])w+=this.field1(x+dx,z+dz).w;w/=6;
+ field(x,z){const f0=this.field1(x,z),o=.42;let w=f0.w*2+this.field1(x+o,z).w+this.field1(x-o,z).w+this.field1(x,z+o).w+this.field1(x,z-o).w;w/=6;
   // R3D-AGUA-ORILLA (20 oct 2026): la bajada de la orilla es UNA rampa monótona y más larga (antes: caída casi vertical de .22 y luego el fondo SUBÍA a la plataforma → surco en V = «ranura oscura» y filo turquesa).
   // e va de 0 (w=.1, tierra) a 1 (w=.8) y el destino `tgt` es el fondo del lago (BED) o, junto al mar exterior, la plataforma somera (Fase 49b) ya con su pendiente, sin max() ni saltos.
   const s=Math.min(1,Math.max(0,(w-.1)/.7)),e=s*s*(3-2*s);let tgt=BED;
   if(this.coastD&&e>0){const d=-this.coastD(x*32,z*32),kc=SSTEP(1+d/64);if(kc>0)tgt=BED+(BED+(WY-.025-BED)*(1-SSTEP(Math.max(0,d)/this.shelf))-BED)*kc}
   let y=f0.yl+(tgt-f0.yl)*e;if(w<.02&&BIOMES.ranges.length){const my=mY(x,z);if(my!==null)y=my}
   return{y,w}}
- field1(x,z){const u=x-.5,v=z-.5,i=Math.floor(u),j=Math.floor(v),a=u-i,b=v-j;let hl=0,wl=0,ww=0,hw=0;
-  for(const[di,dj,w]of[[0,0,(1-a)*(1-b)],[1,0,a*(1-b)],[0,1,(1-a)*b],[1,1,a*b]]){const h=this.h(i+di,j+dj);if(this.land(h)){hl+=h*w;wl+=w}else if(h===.75){ww+=w}}
+ field1(x,z){const u=x-.5,v=z-.5,i=Math.floor(u),j=Math.floor(v),a=u-i,b=v-j;let hl=0,wl=0,ww=0;   // FLUIDEZ: sin arrays por llamada (se llama 5 veces por vértice: era ~10 MB/s de basura al construir)
+  const acc=(h,w)=>{if(this.land(h)){hl+=h*w;wl+=w}else if(h===.75){ww+=w}};acc(this.h(i,j),(1-a)*(1-b));acc(this.h(i+1,j),a*(1-b));acc(this.h(i,j+1),(1-a)*b);acc(this.h(i+1,j+1),a*b);
   const yl=wl>1e-4?(hl/wl-1)*LVY:0;return{yl,w:ww}}
  // Fase 3 · RODERAS: distancia (en TILES) al EJE real del camino más cercano (los `routes` de cada bioma, incluidos los tramos de las uniones), con un índice de celdas de 256 px. 9 = no hay camino cerca.
  // El campo de camino de TER (PF) no sirve para esto: es una meseta ancha (6+ tiles donde se cruzan rutas) sin curvas de nivel limpias; el eje sí da dos surcos paralelos a distancia fija.
@@ -142,12 +142,16 @@ const DKP=[],DKC=[],DKF=this.F&&this.F.DK;
    if(f.w>0)col.lerp(c2.set(f.y<BED*.6?'#5a4430':'#4e3a2a'),Math.min(1,f.w*1.6));
    let wet=0;if(f.y<WY+.12&&(this.h(tx,tz)===.75||this.near(tx,tz,.75))){wet=Math.min(1,(WY+.12-f.y)/.12);col.lerp(c2.set('#4a3826'),Math.min(.55,wet*.55)*(sa>.2?.55:1))}   // R3D-AGUA-ARTSTYLE: banda MOJADA junto a la línea de agua (sobre arena la remata el shader)
    return[f.y,col.clone(),f.w>.15?0:pf,f.w>.15?0:pc,Math.min(1,sa),f.w>.15?-Math.min(1,f.w):wet,f.w>.15||pf<.3||pc>.3?9:this.routeD(x,z)]};
+  const GV=[];   // rejilla de vértices del tile (reutilizada)
   for(let tz=z0;tz<z1;tz++){yield;for(let tx=x0;tx<x1;tx++){if((tx&3)===0)yield;const h=this.h(tx,tz);if(h<=0||h>=2||(h>1&&fal(tx,tz)))continue;const kb=TER.biomeOf?TER.biomeOf(tx,tz):0;   // Fase 4c: bioma del tile → `aBio` (tierra distinta por bioma en el shader)
    if(DKF&&DKF[tz*this.NX+tx])deck(tx,tz,DKF[tz*this.NX+tx]);
    let cob=0;for(const[u,v]of[[.5,.5],[.1,.1],[.9,.1],[.1,.9],[.9,.9]])cob=Math.max(cob,this.pathAt(tx+u,tz+v)[1]);let S=cob>.05&&this.q>.6?SUBC:SUB;   /* OPT-RENDIMIENTO (22 oct 2026): adoquín denso (288 tris/tile) solo en Máxima/Alta (pasto ≥ .8); en Media o menos, malla normal (≈ −40 % de triángulos del suelo de las aldeas, también en la sombra). Se decide al construir el chunk. */   // adoquín: malla densa para el relieve real
    if(h===.75&&S===SUB){const out=tx<0||tz<0||tx>=this.NX||tz>=this.NY,d=out||!this.coastD?(out?99:-1):-this.coastD((tx+.5)*32,(tz+.5)*32);S=d>this.shelf+3?1:d>6?2:SUB}   // Fase 49b: mar abierto = fondo casi plano (1–2 divisiones por tile); cerca de la costa se conserva la malla fina de la plataforma
-   for(let b=0;b<S;b++)for(let a=0;a<S;a++){const xa=tx+a/S,xb=tx+(a+1)/S,za=tz+b/S,zb=tz+(b+1)/S,q=[[xa,za],[xa,zb],[xb,zb],[xb,za]].map(([x,z])=>{const[y,c,pf,pc,sa,wt,ps]=top(x,z),bp=bnd(x,z);return[bp[0],y,bp[1],c,pf,pc,sa,wt,ps]});
-    [0,1,2,0,2,3].forEach(k=>{const v=q[k];P.push(v[0],v[1],v[2]);C.push(v[3].r,v[3].g,v[3].b);PA.push(v[4]);PB.push(v[5]);PS.push(v[6],v[7],v[8]);PBI.push(kb)})}
+   // FLUIDEZ F2/F3 (26 oct 2026): cada vértice de la rejilla S×S del tile se calcula UNA vez ((S+1)² llamadas a top/bnd) y los 4 cuadrados que lo comparten lo reutilizan
+   // (antes 4·S² llamadas: ×2,5 con S=4, ×3,4 con el adoquín S=12). Mismos valores exactos (mismas x/z), así que la malla es idéntica.
+   {const N1=S+1;for(let b=0;b<=S;b++)for(let a=0;a<=S;a++){const x=tx+a/S,z=tz+b/S,t=top(x,z),bp=bnd(x,z);GV[b*N1+a]=[bp[0],t[0],bp[1],t[1],t[2],t[3],t[4],t[5],t[6]]}
+    for(let b=0;b<S;b++)for(let a=0;a<S;a++){const v0=GV[b*N1+a],v1=GV[(b+1)*N1+a],v2=GV[(b+1)*N1+a+1],v3=GV[b*N1+a+1];
+     for(const v of [v0,v1,v2,v0,v2,v3]){P.push(v[0],v[1],v[2]);C.push(v[3].r,v[3].g,v[3].b);PA.push(v[4]);PB.push(v[5]);PS.push(v[6],v[7],v[8]);PBI.push(kb)}}}
    if(h===.75||this.near(tx,tz,.75)){const sea=TER.seaAt?TER.seaAt(tx,tz):0;let N=sea?((tx<0||tz<0||tx>=this.NX||tz>=this.NY||(this.coastD&&this.coastD((tx+.5)*32,(tz+.5)*32)<-24))?2:3):1;   // mar: rejilla 3×3 para el oleaje en vértices; estanque/lago: 1 quad
     // R3D-AGUA-ORILLA (20 oct 2026): cerca de la tierra la lámina de agua usa la MISMA rejilla (SUB=4) y las MISMAS alturas que la tapa del terreno. Antes llevaba 1 quad (lago) o 3×3 (mar) y la profundidad se interpolaba entre esquinas lejanas:
     // la línea de orilla caía donde no era (ranuras oscuras = fondo a la vista, agua que se cortaba en escalones, filo turquesa sobre la arena). Con vértices coincidentes la intersección agua/terreno es exacta. Radio 2: en la costura con la malla gruesa el agua ya es profunda (la ola es la misma).

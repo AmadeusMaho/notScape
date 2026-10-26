@@ -54,7 +54,25 @@ const WK=(()=>{
     es_:{of:'sm',n:'Estirar',lv:23,po:20,t:'p',e:150,fn:s=>{s.iq=Math.min(MAXIQ,s.iq+1)}},
     fc:{of:'sm',n:'Forja en caliente',lv:30,po:36,t:'b',fn:s=>{s.b.ve=4;s.iq=Math.min(MAXIQ,s.iq+1)}},
     tm:{of:'sm',n:'Templar',lv:36,po:60,t:'r',fn:s=>{s.dur=Math.min(s.durMax,s.dur+20);s.b.wn=3;s.b.wn2=0}},
-    rm:{of:'sm',n:'Remachar',lv:45,po:32,t:'q',e:160,ok:s=>s.iq>=3}
+    rm:{of:'sm',n:'Remachar',lv:45,po:32,t:'q',e:160,ok:s=>s.iq>=3},
+    // ---- exclusivas de ARTESANÍA (of:'cr', madera; D6, 26 oct 2026) ----
+    lj:{of:'cr',n:'Lijar',lv:10,po:14,t:'q',e:130,d:.5},
+    ec:{of:'cr',n:'Encolar',lv:20,po:24,t:'b',fn:s=>{s.b.ve=3;s.iq=Math.min(MAXIQ,s.iq+1)}},
+    ce:{of:'cr',n:'Cepillar',lv:30,po:20,t:'p',e:190},
+    as_:{of:'cr',n:'Ensamblar',lv:42,po:40,t:'q',e:170,ok:s=>s.iq>=2},
+    bz:{of:'cr',n:'Barnizar',lv:55,po:50,t:'b',fn:s=>{s.b.inn=4;s.iq=Math.min(MAXIQ,s.iq+1)}},
+    // ---- exclusivas de SASTRERÍA (of:'sa', tela; 26 oct) ----
+    cd:{of:'sa',n:'Cardar',lv:10,po:14,t:'q',e:130,d:.5},
+    hl:{of:'sa',n:'Hilvanar',lv:20,po:24,t:'b',fn:s=>{s.b.ve=3;s.iq=Math.min(MAXIQ,s.iq+1)}},
+    rb:{of:'sa',n:'Ribetear',lv:30,po:20,t:'p',e:190},
+    bo:{of:'sa',n:'Bordar',lv:42,po:40,t:'q',e:170,ok:s=>s.iq>=2},
+    tj:{of:'sa',n:'Tejido fino',lv:55,po:50,t:'b',fn:s=>{s.b.inn=4;s.iq=Math.min(MAXIQ,s.iq+1)}},
+    // ---- exclusivas de PELETERÍA (of:'pe', cuero; D6) ----
+    rj:{of:'pe',n:'Remojar',lv:12,po:20,t:'b',fn:s=>{s.cond='buena'}},
+    cf:{of:'pe',n:'Costura fina',lv:22,po:18,t:'q',e:140,d:.5},
+    ct:{of:'pe',n:'Curtir a fondo',lv:32,po:30,t:'r',fn:s=>{s.dur=Math.min(s.durMax,s.dur+15);s.b.wn=2;s.b.wn2=0}},
+    gr:{of:'pe',n:'Grabar',lv:44,po:36,t:'q',e:170,ok:s=>s.iq>=2},
+    tz:{of:'pe',n:'Tensar',lv:56,po:28,t:'p',e:200,fn:s=>{s.iq=Math.min(MAXIQ,s.iq+1)}}
   };
   const IDS=Object.keys(A);
   // PRNG mulberry32 (sin Math.random).
@@ -212,7 +230,10 @@ const WK=(()=>{
   const mkRecipe=(rl,name)=>{const mana=60+rl*2.2,pulso=50+rl*2,unit=10+mana*.1,qu=8+pulso*.1;
     return {name:name||'',lvl:rl,prog:Math.round(unit*Math.min(K.PCAP,K.PROG0+rl*K.PROG1)),qual:Math.round(qu*Math.min(K.QCAP,K.QUAL0+rl*K.QUAL1+Math.max(0,rl-45)*K.QUAL2)),dur:rl<30?60:rl<60?70:80}};
   /** Pasos esperados de una pieza de nivel rl con juego experto (de tools/work_sim.js); sirve para igualar la XP por segundo. */
-  const stepsEst=rl=>5+rl*.2;
-  return {A,IDS,CONDS,start,stepsEst,use,can,cost,avail,hq,quick,suggest,plan,list,nextUnlock,mkStats,mkRecipe,MAXIQ,K};
+  // D7 (26 oct 2026): pasos que da una pieza al jugador «experto» (planificador) cuando su nivel ≈ el de la receta; medidos con tools/work_sim.js. Con STEP_T/OVH dan el tiempo real de una pieza.
+  const PT=[[1,3],[5,6],[10,10],[20,11],[30,17.6],[40,21],[50,21.6],[60,19],[70,21.5],[80,20],[90,24.6],[99,27]],STEP_T=.7,OVH=1.8,QUICK_XP=.3;
+  const stepsEst=rl=>{for(let i=1;i<PT.length;i++)if(rl<=PT[i][0]){const a=PT[i-1],b=PT[i];return a[1]+(b[1]-a[1])*(rl-a[0])/(b[0]-a[0])}return 27};
+  const pieceSec=rl=>stepsEst(rl)*STEP_T+OVH;   // segundos por pieza (con reabrir)
+  return {A,IDS,CONDS,start,stepsEst,pieceSec,STEP_T,OVH,QUICK_XP,use,can,cost,avail,hq,quick,suggest,plan,list,nextUnlock,mkStats,mkRecipe,MAXIQ,K};
 })();
 if(typeof module!=='undefined')module.exports=WK;

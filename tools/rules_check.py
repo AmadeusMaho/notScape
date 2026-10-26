@@ -116,7 +116,9 @@ def nums(rx, t):
 gj = rd('src/game.js'); rj = rd('src/r3d/r3d.js')
 for n, rx, t, lim in [('QCAPS', r'const QCAPS=\[([^\]]+)\]', gj, [4.5e6, 4.5e6, 2.4e6, 1.6e6, .95e6]),
                       ('GRASS_Q', r'const GRASS_Q=\[([^\]]+)\]', rj, [1.15, 1, .5, .25, 0]),   # 22 oct 2026: Máx/Alta subidas con permiso del dueño (lote PASTO-FRONDOSO)
-                      ('lodR', r'terr\.lodR=\[([^\]]+)\]', rj, [12, 9, 7, 5, 4]),
+                      ('lodR', r'terr\.lodR=[^;\[]*\[([^\]]+)\]', rj, [12, 9, 7, 5, 4]),
+                      ('GFX view (auto = lodR)', r"\['view',[^\n]*?q=>\[([^\]]+)\]\[q\]", gj, [12, 9, 7, 5, 4]),   # FLUIDEZ (26 oct 2026): «Detalle a distancia» en Auto = lodR
+                      ('GFX GRASS_Q_ (copia de GRASS_Q)', r'GRASS_Q_=\[([^\]]+)\]', gj, [1.15, 1, .5, .25, 0]),
                       ('BUDGET.tris', r'tris:\[([^\]]+)\]', rj, [2.9e6, 2.6e6, 1.35e6, 1.2e6, 1.05e6]),
                       ('BUDGET.calls', r'calls:\[([^\]]+)\]', rj, [600, 580, 460, 430, 400])]:
     v = nums(rx, t)
@@ -124,8 +126,23 @@ for n, rx, t, lim in [('QCAPS', r'const QCAPS=\[([^\]]+)\]', gj, [4.5e6, 4.5e6, 
     else: (bad if any(a > b * 1.0001 for a, b in zip(v, lim)) else ok)(f'RENDIMIENTO: {n} no más caro que el 22 oct', str(v))
 for n, ok_, d in [
     ('presupuesto en el juego (BUDGET + budgetTick)', 'const BUDGET=' in rj and 'budgetTick(rnow)' in rj, 'src/r3d/r3d.js'),
-    ('detección de GPU integrada (IGPU)', 'const IGPU=' in gj and 'else if(IGPU)QL=2' in gj, 'src/game.js'),
-    ('reflejo del agua solo en Máx/Alta', 'this.q<=1&&this.refNeed' in rd('src/r3d/water3d.js'), 'src/r3d/water3d.js'),
+    ('detección de GPU integrada (IGPU)', 'const IGPU=' in gj and ('else if(IGPU)QL=2' in gj or 'else if(IGPU||LOWDEV)QL=2' in gj), 'src/game.js'),
+    ('reflejo del agua solo en Máx/Alta', 'this.q<=1)&&this.refNeed' in rd('src/r3d/water3d.js') and "['refl','Reflejos del agua',[[1,'Sí'],[0,'No']],q=>q<=1?1:0" in gj, 'src/r3d/water3d.js / GFX_DEF refl'),
+    # Lote FLUIDEZ (26 oct 2026): basura por fotograma y re-evaluación de programas (tirones del recolector)
+    ('reflejo del agua SIN planos de recorte globales (plano cercano oblicuo)', 'this.oblique(vc)' in rd('src/r3d/water3d.js') and 'clippingPlanes=[this.vplane]' not in rd('src/r3d/water3d.js'), 'src/r3d/water3d.js'),
+    ('luces del héroe también en la capa 3 (sin cambio de estado de luces por pase)', '.forEach(l=>l.layers.enable(3))' in rj, 'src/r3d/r3d.js'),
+    ('estaciones con material propio (twin), no el de los InstancedMesh', 'new Stations(scene,aScene,W3,twin(props.mat),twin(props.ink))' in rj, 'src/r3d/r3d.js'),
+    ('three SIN minificar (el .min crea una función por llamada de dibujo = basura)', 'three/build/three.module.js"' in rd('index.html') and 'three.module.min.js' not in rd('index.html'), 'index.html'),
+    ('opciones gráficas por aspecto (GFX_DEF/gfx) y límite de fps', 'const GFX_DEF=[' in gj and "gfx('fps')" in gj, 'src/game.js'),
+    ('mapa con niebla: presupuesto pequeño con el minimapa', 'WMAP.paint(MM===2?8:1.5)' in gj, 'src/game.js'),
+    # Lote FLUIDEZ-2 (26 oct 2026): propuestas F1–F16
+    ('carga: dibujos «en seco» antes de precompilar (sin compilar shaders uno a uno)', 'R3D.dry=true' in gj and 'if(!dry)composer.render(dt)' in rj, 'src/game.js / src/r3d/r3d.js'),
+    ('compuerta: objetos con un material que aún compila también se ocultan', 'this.pm.get(mt)' in rd('src/r3d/shadergate3d.js'), 'src/r3d/shadergate3d.js'),
+    ('esqueletos actualizados una vez por fotograma (SKF)', 'THREE.Skeleton.prototype.update=function(){if(this._skf===SKF)return' in rj, 'src/r3d/r3d.js'),
+    ('sombras de InstancedMesh con material de profundidad propio (depthI)', 'depthI(new THREE.InstancedMesh' in rd('src/r3d/props3d.js') and 'depthI(new THREE.InstancedMesh' in rd('src/r3d/nature3d.js'), 'props3d.js / nature3d.js'),
+    ('terreno: vértices de la rejilla calculados una vez (GV)', 'GV[b*N1+a]=' in rd('src/r3d/terrain3d.js'), 'src/r3d/terrain3d.js'),
+    ('medidor de tirones presente (tools/r3d/stutter_check.py, con &load)', '&load' in rd('tools/r3d/stutter_check.py'), 'tools/r3d/stutter_check.py'),
+    ('calidad Auto que también sube, resolución dinámica y presets', 'QUP' in gj and 'function dynRes' in gj and 'const GFX_PRE=' in gj, 'src/game.js'),
     ('sombra a medio ritmo en Baja/Mínima', 'shF' in rj and 'r.shadowMap.autoUpdate=!lo' in rj, 'src/r3d/r3d.js'),
     ('reescalado FSR disponible y APAGADO por defecto (decisión del dueño)', 'let FSR_ON=false;' in gj and 'fsr=new ShaderPass' in rj, 'src/game.js / src/r3d/r3d.js'),
     ('servidor local con keep-alive', "protocol_version='HTTP/1.1'" in rd('tools/serve_nocache.py'), 'tools/serve_nocache.py'),

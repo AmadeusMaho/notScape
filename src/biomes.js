@@ -125,7 +125,7 @@ const BIOMES=(()=>{
  const HSTEP=.3,hsh=(i,j,s)=>{const v=Math.sin(i*127.1+j*311.7+s*74.7)*43758.5453;return v-Math.floor(v)};
  const vn=(x,y,s)=>{const i=Math.floor(x),j=Math.floor(y),u=x-i,v=y-j,a=u*u*(3-2*u),b=v*v*(3-2*v),A=hsh(i,j,s),B=hsh(i+1,j,s),C=hsh(i,j+1,s),D=hsh(i+1,j+1,s);return A+(B-A)*a+(C-A)*b+(A-B-C+D)*a*b};
  // distancia normalizada al contorno ondulado de un óvalo (<1 dentro)
- const blobD=(c,r,seed,amp,lx,ly)=>{const dx=(lx-c[0])/r[0],dy=(ly-c[1])/r[1],d=Math.hypot(dx,dy);if(d>2.2)return d;const a=Math.atan2(dy,dx),ca=Math.cos(a),sa=Math.sin(a);
+ const blobD=(c,r,seed,amp,lx,ly)=>{const dx=(lx-c[0])/r[0],dy=(ly-c[1])/r[1],d=Math.hypot(dx,dy);if(d>2.2)return d;const ca=d>0?dx/d:1,sa=d>0?dy/d:0;   /* FLUIDEZ (26 oct 2026): = cos/sin(atan2(dy,dx)) sin trigonometría (1 s de la carga en generar el agua) */
   return d/(1+amp*((vn(ca*1.7+seed,sa*1.7,3)-.5)*2+.5*(vn(ca*4.3,sa*4.3+seed,9)-.5)*2))};
  const seaY=(S,lx)=>{const f=S.f||1;return S.y+S.amp*((vn(lx*.0042*f,S.seed,5)-.5)*2+.5*(vn(lx*.013*f,S.seed+3,8)-.5)*2)};   // S.f = escala de frecuencia (Fase 44-0: world-scale.js lo baja al agrandar el mundo; 1 = igual que antes)
  const geo={HSTEP,vn,blobD,seaY,

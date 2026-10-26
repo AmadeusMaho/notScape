@@ -3,7 +3,7 @@
 // (medido: un enemigo nuevo, su primer reflejo en el agua, una pieza de equipo…). `R3D.warmShaders` precompila lo que existe al cargar, pero no lo que nace DESPUÉS.
 // SOLUCIÓN: todo objeto que se añade (Object3D.add) a una escena vigilada pasa por aquí ANTES de dibujarse: se piden sus programas con `renderer.compile` para cada destino
 // que se va a usar (render target del composer o pantalla, y el plano de recorte del reflejo del agua) y, mientras la GPU los compila EN SEGUNDO PLANO
-// (KHR_parallel_shader_compile, lo da Chrome/Edge/Firefox), sus mallas se ocultan con `layers.mask=0` (no las ve ni la cámara ni la sombra). Cuando todos sus programas
+// (KHR_parallel_shader_compile, lo da Chrome/Edge/Firefox), sus mallas se ocultan con `layers.mask=0` (no las ve ni la cámara ni la sombra) como mucho 8 s (FLUIDEZ: antes 4 s; en un PC sin caché de shaders una tanda tarda 3–5 s y al agotarse se dibujaba con espera síncrona). Cuando todos sus programas
 // dicen `isReady()`, se devuelven sus capas. Resultado: lo nuevo aparece 1–6 fotogramas más tarde en vez de congelar el juego.
 // Sin la extensión, `isReady()` es siempre cierto: la compilación ocurre en el momento de añadir (igual que antes, sin ocultar nada).
 // Coste: un objeto cuyo material ya está compilado para su tipo de malla se descarta con una búsqueda en un WeakMap (sin recompilar). `?gate=0` lo apaga.
@@ -17,7 +17,8 @@ const drawable=o=>o.isMesh||o.isPoints||o.isLine||o.isSprite;
 
 export class ShaderGate{
  // prime(G,v) también lo usa R3D.warmShaders (compileAsync de la escena entera para cada destino)
- constructor(){this.G=[];this.q=new Set();this.on=false;this.wait=[];this.stats={objetos:0,compilados:0,ocultos:0,esperaMax:0,hechos:0};   // hechos = programas creados por la compuerta (game.js los descuenta de su aviso «compilados EN JUEGO»)
+ constructor(){this.G=[];this.q=new Set();this.on=false;this.wait=[];this.pm=new Map();   // pm: material → tanda que aún compila su programa (FLUIDEZ)
+  this.stats={objetos:0,compilados:0,ocultos:0,esperaMax:0,hechos:0};   // hechos = programas creados por la compuerta (game.js los descuenta de su aviso «compilados EN JUEGO»)
   if(OFF)return;
   const self=this,add=THREE.Object3D.prototype.add;
   THREE.Object3D.prototype.add=function(...a){const res=add.apply(this,a);if(self.on)for(const o of a)if(o&&o.isObject3D&&o!==this)self.q.add(o);return res}}
@@ -28,13 +29,13 @@ export class ShaderGate{
   if(this.q.size){const by=new Map();
    for(const o of this.q){let root=o;while(root.parent)root=root.parent;const G=this.G.find(x=>x.scene===root);if(!G)continue;
     let L=by.get(G);if(!L)by.set(G,L=[]);o.traverse(m=>{if(!drawable(m)||!m.material)return;const k=sig(m);let need=false;
-     for(const mt of Array.isArray(m.material)?m.material:[m.material]){let s=G.seen.get(mt);if(!s)G.seen.set(mt,s=new Set());if(!s.has(k)){s.add(k);need=true}}
-     if(need)L.push(m)})}
+     let late=null;for(const mt of Array.isArray(m.material)?m.material:[m.material]){let s=G.seen.get(mt);if(!s)G.seen.set(mt,s=new Set());if(!s.has(k)){s.add(k);need=true}else if(!late)late=this.pm.get(mt)}
+     if(need)L.push(m);else if(late&&m.layers.mask!==0){late.objs.push([m,m.layers.mask]);m.layers.mask=0;this.stats.ocultos++}})}   // FLUIDEZ (26 oct 2026): mismo material que una tanda que AÚN compila → también se oculta hasta que acabe (antes se dibujaba y esperaba 3–5 s a la GPU)
    this.q.clear();
    for(const [G,L] of by)if(L.length)this.compile(G,L,now)}
   if(this.bgq&&!this.wait.length)this.bgStep();
   if(this.wait.length){for(let i=this.wait.length-1;i>=0;i--){const w=this.wait[i];
-    if(now-w.t0>4000||w.progs.every(p=>!p||p.isReady())){w.objs.forEach(([m,mask])=>{if(m.layers.mask===0)m.layers.mask=mask});this.stats.esperaMax=Math.max(this.stats.esperaMax,Math.round(now-w.t0));this.wait.splice(i,1)}}}}
+    if(now-w.t0>8000||w.progs.every(p=>!p||p.isReady())){w.objs.forEach(([m,mask])=>{if(m.layers.mask===0)m.layers.mask=mask});if(w.mats)w.mats.forEach(mt=>{if(this.pm.get(mt)===w)this.pm.delete(mt)});this.stats.esperaMax=Math.max(this.stats.esperaMax,Math.round(now-w.t0));this.wait.splice(i,1)}}}}
  compile(G,L,now){const r=G.r,rt0=r.getRenderTarget(),cp0=r.clippingPlanes,P=r.properties,progs=new Set(),n0=r.info.programs.length;
   const fake={traverse(f){for(const m of L)f(m)},traverseVisible(){}};   // compile() solo recorre esta lista (no la escena entera); las luces salen de G.scene
   try{for(const v of G.variants()){this.prime(G,v,cp0);r.compile(fake,G.cam,G.scene);
@@ -43,7 +44,7 @@ export class ShaderGate{
   r.setRenderTarget(rt0);r.clippingPlanes=cp0;this.stats.objetos+=L.length;if(G.r===this.G[0].r)this.stats.hechos+=r.info.programs.length-n0;
   const pend=[...progs].filter(p=>!p.isReady());if(!pend.length)return;this.stats.compilados+=pend.length;
   const objs=[];for(const m of L)if(m.layers.mask!==0){objs.push([m,m.layers.mask]);m.layers.mask=0}
-  this.stats.ocultos+=objs.length;this.wait.push({t0:now,progs:pend,objs})}
+  this.stats.ocultos+=objs.length;const w={t0:now,progs:pend,objs,mats:[]};for(const m of L)for(const mt of Array.isArray(m.material)?m.material:[m.material]){this.pm.set(mt,w);w.mats.push(mt)}this.wait.push(w)}
  // OJO (three r170): compile() NO aplica r.clippingPlanes (el nº de planos lo fija render() con clipping.init); sin esto el programa del REFLEJO del agua no salía igual y
  // se volvía a compilar en Water.reflect (medido). Un render vacío a un RT de 1×1 deja el estado de recorte del destino `v` y luego se apunta a su render target.
  prime(G,v,cp0){const r=G.r;if(!G.tiny){G.tiny=new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType});G.empty=new THREE.Scene()}

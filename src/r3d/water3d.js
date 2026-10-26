@@ -221,7 +221,7 @@ export class Water{
 
  // ── reflejo planar ligero (R3D-AGUA-ARTSTYLE) ──  r3d.js llama a water.reflect(r,scene,cam,cssW,cssH) justo antes de renderizar el mundo. Técnica de three/Reflector adaptada a cámara ORTOGRÁFICA:
  // cámara virtual espejada respecto a y=WY, plano de corte global (solo lo que está sobre el agua), RT a ~⅓ de resolución, se refresca cada 2.º fotograma y solo con agua cerca y QL ≤ 2.
- reflect(r,scene,cam,cw,ch){const need=this.q<=1&&this.refNeed;   /* OPT-RENDIMIENTO (22 oct 2026): el reflejo redibuja la escena ENTERA (≈ 550 000 tris en la aldea): solo en Máxima/Alta (antes también Media) y sin pasto */
+ reflect(r,scene,cam,cw,ch){const need=(this.refl!=null?this.refl:this.q<=1)&&this.refNeed;   /* FLUIDEZ (26 oct 2026): `refl` = opción «Reflejos del agua» (r3d.js; Auto = Máxima/Alta) */   /* OPT-RENDIMIENTO (22 oct 2026): el reflejo redibuja la escena ENTERA (≈ 550 000 tris en la aldea): solo en Máxima/Alta (antes también Media) y sin pasto */
   WU.uRefOn.value=need&&this.rt?1:0;if(!need)return;
   const w=Math.max(64,Math.round(cw*.34)),h=Math.max(64,Math.round(ch*.34));
   if(!this.rt){this.rt=new THREE.WebGLRenderTarget(w,h,{type:THREE.HalfFloatType,depthBuffer:true});this.rt.texture.minFilter=this.rt.texture.magFilter=THREE.LinearFilter;this.vc=new THREE.OrthographicCamera();this.vplane=new THREE.Plane(new V3(0,1,0),-(WY+.012));WU.uRef.value=this.rt.texture;this.rf=0}
@@ -231,11 +231,22 @@ export class Water{
   const vc=this.vc;vc.copy(cam);cam.updateMatrixWorld();const cp=new V3().setFromMatrixPosition(cam.matrixWorld),dir=new V3(0,0,-1).transformDirection(cam.matrixWorld),up=new V3(0,1,0).transformDirection(cam.matrixWorld);
   const m=p=>{p.y=2*WY-p.y;return p};vc.position.copy(m(cp.clone()));const tg=m(cp.clone().add(dir));up.y=-up.y;vc.up.copy(up);vc.lookAt(tg);vc.updateMatrixWorld();vc.projectionMatrix.copy(cam.projectionMatrix);vc.projectionMatrixInverse.copy(cam.projectionMatrixInverse);
   WU.uRefM.value.set(.5,0,0,.5,0,.5,0,.5,0,0,.5,.5,0,0,0,1).multiply(vc.projectionMatrix).multiply(vc.matrixWorldInverse);
-  const pr=r.getRenderTarget(),cc=r.getClearColor(new THREE.Color()),ca=r.getClearAlpha(),sa=r.shadowMap.autoUpdate,pcl=r.clippingPlanes;
-  this.root.visible=false;this.terr.water.visible=false;const gH=[];this.terr.ch.forEach(c=>{if(c.grass&&c.grass.visible){c.grass.visible=false;gH.push(c.grass)}});r.shadowMap.autoUpdate=false;r.clippingPlanes=[this.vplane];r.setClearColor(0x000000,0);r.setRenderTarget(this.rt);r.clear();const inks=[INK,...INKS.values()];inks.forEach(m=>m.visible=false);   /* Lote R3D-OPT-1: el reflejo no necesita los contornos (casco de tinta): casi la mitad de las llamadas de dibujo */
+  this.oblique(vc);   // FLUIDEZ (26 oct 2026): recorte por PLANO CERCANO OBLICUO en vez de `r.clippingPlanes` (ver oblique())
+  const pr=r.getRenderTarget(),cc=r.getClearColor(this.cc||(this.cc=new THREE.Color())),ca=r.getClearAlpha(),sa=r.shadowMap.autoUpdate;
+  this.root.visible=false;this.terr.water.visible=false;const gH=[];this.terr.ch.forEach(c=>{if(c.grass&&c.grass.visible){c.grass.visible=false;gH.push(c.grass)}});r.shadowMap.autoUpdate=false;r.setClearColor(0x000000,0);r.setRenderTarget(this.rt);r.clear();const inks=[INK,...INKS.values()],ivis=INK.visible;inks.forEach(m=>m.visible=false);   /* Lote R3D-OPT-1: el reflejo no necesita los contornos (casco de tinta): casi la mitad de las llamadas de dibujo */
   try{r.render(scene,vc)}catch(e){this.bad=(this.bad||0)+1;if(this.bad===1)console.warn('[R3D agua] el reflejo falló (se sigue sin él si se repite):',e&&e.message);if(this.bad>=3)this.noRef=1}   // R3D-FIX-REFLEJO (20 oct 2026): un TypeError aquí (`i.toArray is not a function`, ocurre con LLUVIA) mataba TODO el bucle de dibujo; ahora se captura, se restaura el estado y tras 3 fallos se apaga el reflejo
   
-  inks.forEach(m=>m.visible=true);gH.forEach(g=>g.visible=true);r.setRenderTarget(pr);r.setClearColor(cc,ca);r.shadowMap.autoUpdate=sa;r.clippingPlanes=pcl;this.root.visible=true;this.terr.water.visible=true;this.rdone=1}
+  inks.forEach(m=>m.visible=ivis);gH.forEach(g=>g.visible=true);r.setRenderTarget(pr);r.setClearColor(cc,ca);r.shadowMap.autoUpdate=sa;this.root.visible=true;this.terr.water.visible=true;this.rdone=1}
+
+ // FLUIDEZ (26 oct 2026) · PLANO CERCANO OBLICUO (E. Lengyel, como three/Reflector, válido también para la cámara ORTOGRÁFICA): la fila z de la proyección de la cámara del reflejo
+ // se sustituye para que el plano cercano SEA la superficie del agua (lo que queda debajo no se dibuja). Antes se usaba `r.clippingPlanes=[plano]`: three trataba cada
+ // material como «otro programa» al pasar del pase normal al del reflejo y volvía a evaluar getParameters de CADA objeto dos veces por fotograma (~7000 veces/s medido,
+ // ≈ 20 MB/s de basura → pausas del recolector = tirones), y además obligaba a compilar una variante «con recorte» de todos los shaders. Sin asignaciones por fotograma.
+ oblique(vc){const T=this.ob||(this.ob={pl:new THREE.Plane(),c:new THREE.Vector4(),q:new THREE.Vector4(),inv:new THREE.Matrix4()});
+  T.pl.copy(this.vplane).applyMatrix4(vc.matrixWorldInverse);const C=T.c.set(T.pl.normal.x,T.pl.normal.y,T.pl.normal.z,T.pl.constant),pm=vc.projectionMatrix,e=pm.elements,ie=T.inv.copy(pm).invert().elements;
+  const cx=ie[0]*C.x+ie[1]*C.y+ie[2]*C.z+ie[3]*C.w,cy=ie[4]*C.x+ie[5]*C.y+ie[6]*C.z+ie[7]*C.w;   // el plano en espacio de recorte (M^-T·C): solo importa el signo
+  const q=T.q.set(Math.sign(cx)||1,Math.sign(cy)||1,1,1).applyMatrix4(T.inv),d=C.dot(q);if(Math.abs(d)<1e-9)return;
+  const u=2*(e[3]*q.x+e[7]*q.y+e[11]*q.z+e[15]*q.w)/d;e[2]=u*C.x-e[3];e[6]=u*C.y-e[7];e[10]=u*C.z-e[11];e[14]=u*C.w-e[15];vc.projectionMatrixInverse.copy(pm).invert()}
 
  // ── gotas ──
  spawnDrop(x,z,K){const T=this;for(let i=0;i<DN;i++){if(T.dlife[i]>0)continue;const a=Math.random()*TAU,s=rnd(.2,1.1),o=i*3;

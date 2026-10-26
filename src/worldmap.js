@@ -34,7 +34,13 @@ const WMAP=(()=>{
  const revealed=(x,y)=>{if(!fog)return false;const cx=Math.floor(x/T/CELL),cy=Math.floor(y/T/CELL);return cx>=0&&cy>=0&&cx<CX&&cy<CY&&!!fog[cy*CX+cx]};
  function trees(){treeB=new Map();E.N().forEach(e=>{if(!e.fix)return;const cx=Math.floor(e.x/T/CELL),cy=Math.floor(e.y/T/CELL),k=cy*CX+cx;let a=treeB.get(k);if(!a)treeB.set(k,a=[]);a.push(e.x,e.y)})}
  // -------- pintado de una celda (terreno + árboles + caminos + aldea) --------
+ let cbuf=null,cb32=null;const PXC=new Map();let pxc=null;
+ function px32(c){let v=PXC.get(c);if(v!==undefined)return v;let r=0,g=0,b=0;if(/^#[0-9a-f]{6}$/i.test(c)){const n=parseInt(c.slice(1),16);r=n>>16&255;g=n>>8&255;b=n&255}else{if(!pxc){pxc=document.createElement('canvas').getContext('2d',{willReadFrequently:true})}pxc.clearRect(0,0,1,1);pxc.fillStyle=c;pxc.fillRect(0,0,1,1);[r,g,b]=pxc.getImageData(0,0,1,1).data}
+  v=(255<<24|b<<16|g<<8|r)>>>0;if(PXC.size>4096)PXC.clear();PXC.set(c,v);return v}   // píxel ABGR (little-endian) de un color CSS
  function paintCell(i){const cx=i%CX,cy=(i/CX)|0,tx0=cx*CELL,ty0=cy*CELL,tx1=Math.min(NX,tx0+CELL),ty1=Math.min(NY,ty0+CELL),TER=E.TER,mix=E.mix,BI=E.BI;
+  // FLUIDEZ (26 oct 2026): el suelo de la celda va a un BÚFER DE PÍXELES y se sube con un putImageData (antes 256 fillRect con un fillStyle distinto cada uno ≈ 9 ms por celda,
+  // y al explorar se pintaba una celda en CADA fotograma = tirones al caminar). Mismos colores; la conversión hex→píxel se cachea.
+  const gw=(tx1-tx0)*PX,gh=(ty1-ty0)*PX;if(!cbuf||cbuf.width!==gw||cbuf.height!==gh){cbuf=q.createImageData(gw,gh);cb32=new Uint32Array(cbuf.data.buffer)}
   q.save();q.beginPath();q.rect(tx0*PX,ty0*PX,(tx1-tx0)*PX,(ty1-ty0)*PX);q.clip();
   let lk=-2,Pk=null;
   for(let ty=ty0;ty<ty1;ty++)for(let tx=tx0;tx<tx1;tx++){const wx=(tx+.5)*T,wy=(ty+.5)*T,k=E.biomeAt(wx,wy);let col;
@@ -44,7 +50,8 @@ const WMAP=(()=>{
     else if(h>=2){const m=TER.mtnAt(wx,wy);col=m>0?mix('#6c675f','#d9d4c8',Math.min(1,m/5.5)):'#8f8a80'}   // cordillera: gris más claro cuanto más alta
     else if(TER.rk(tx,ty))col=mix('#a8a398','#ece8dc',(h-1)*.8);
     else{const sd=TER.sandAt(tx,ty);col=sd>.45?'#e3d199':h>1?mix(Pk.g,'#f2f6c8',Math.min(.6,(h-1)*.9)):Pk.g}}
-   q.fillStyle=col;q.fillRect(tx*PX,ty*PX,PX,PX)}
+   const pv=px32(col),bx=(tx-tx0)*PX,by=(ty-ty0)*PX;for(let yy=0;yy<PX;yy++){const o=(by+yy)*gw+bx;for(let xx=0;xx<PX;xx++)cb32[o+xx]=pv}}
+  q.putImageData(cbuf,tx0*PX,ty0*PX);
   // bosques (árboles fijos)
   if(!treeB)trees();const tb=treeB.get(i);if(tb){q.fillStyle='#244a24';for(let j=0;j<tb.length;j+=2)q.fillRect(tb[j]/T*PX-1,tb[j+1]/T*PX-1,2.2,2.2)}
   const X0=tx0*T,Y0=ty0*T,X1=tx1*T,Y1=ty1*T,sc=PX/T,hit=(a,b,c,d)=>!(b<X0||a>X1||d<Y0||c>Y1);   // (xmin,xmax,ymin,ymax) corta la celda

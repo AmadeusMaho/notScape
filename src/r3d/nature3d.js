@@ -5,7 +5,7 @@
 //    · baobab = tronco grueso y copa plana. h = altura en tiles (el héroe mide 1,25), r = radio de copa.
 // ── Un árbol = 2-3 geometrías (tronco con musgo + contorno, follaje con textura recortada) → se INSTANCIAN por especie/variante/zona (pocas llamadas).
 import * as THREE from 'three';
-import {toon,hull,inkFor,hash,jit} from './materials3d.js';
+import {toon,hull,inkFor,hash,jit,depthI} from './materials3d.js';
 import {propGeo} from './props3d.js';
 
 export const FOL={
@@ -133,7 +133,7 @@ export class Resources{
   for(const e of N){if(e.t!=='wc'&&e.t!=='mi')continue;[0,1].forEach(dead=>{const kind=this.kindOf(e,dead),ck=kind+'@'+Math.floor(e.x/(32*CELL))+','+Math.floor(e.y/(32*CELL));let a=groups.get(ck);if(!a)groups.set(ck,a={kind,list:[],cx:Math.floor(e.x/(32*CELL)),cy:Math.floor(e.y/(32*CELL))});a.list.push(e)})}
   const o3=new THREE.Object3D();
   groups.forEach(({kind,list,cx,cy})=>{const P=this.parts(kind);if(!P.length)return;const ms=[];
-   P.forEach(pt=>{const m=new THREE.InstancedMesh(pt.g,pt.mat,list.length);m.castShadow=m.receiveShadow=true;ms.push(m);this.sec(this.grp,cx,cy).add(m);
+   P.forEach(pt=>{const m=depthI(new THREE.InstancedMesh(pt.g,pt.mat,list.length));m.castShadow=m.receiveShadow=true;ms.push(m);this.sec(this.grp,cx,cy).add(m);
     if(pt.ink){const h=new THREE.InstancedMesh(pt.ink,pt.inkM,list.length);ms.push(h);this.sec(this.grp,cx,cy).add(h)}
     const d=new THREE.InstancedMesh(pt.g,pt.fol?folDepth(pt.fol):this.dmat,list.length);d.layers.set(3);ms.push(d);this.sec(this.ogrp,cx,cy).add(d)});
    list.forEach((e,i)=>{const dead=kind==='tocon'||kind.endsWith('d');let r=this.idx.get(e);if(!r)this.idx.set(e,r={});r[dead?'d':'a']={ms,i};

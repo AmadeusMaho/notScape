@@ -6,7 +6,7 @@ const OFGEAR=(()=>{
   // Un tier cada 9 niveles de oficio (X = 9, decidido 22 oct). Aspecto por cultura (solo estético): CULT[i] = cultura del bioma del tier (0 Pradera … ; el resto se rellena con cada bioma).
   const TLV=[1,10,19,28,37,46,55,64,73,82,91],CULT=[0,0,0,1,1,2,3,3,4,5,5];
   const OFD={
-    sm:{n:'Herrería',slots:{m:'Martillo',s:'Tenazas',h:'Gorro de fragua',d:'Delantal de herrero',g:'Guantes de herrero'},mk:{m:'sm',s:'sm',h:'cr',d:'cr',g:'cr'}}
+    sm:{n:'Herrería',slots:{m:'Martillo',s:'Tenazas',h:'Gorro de fragua',d:'Delantal de herrero',g:'Guantes de herrero'},mk:{m:'sm',s:'sm',h:'pe',d:'pe',g:'pe'}}
   };
   const SLOT_ORD=['m','s','h','d','g'];
   // reparto de atributos por ranura (× unidad del tier): mana = Maña (avance), pulso = Pulso (calidad), po = Puntos de oficio
@@ -27,7 +27,7 @@ const OFGEAR=(()=>{
           const id='og_'+of+'_'+sl+'_'+t[0],name=d.slots[sl]+' de '+tn;   // el sufijo es el ID DEL TIER (cobre, estano…), como sw_/ar_/ax_ (REGLAS_CREACION §13)
           G[id]={of,slot:sl,t:i,lv};
           I[id]=[name,sl==='m'?'🔨':sl==='s'?'🥢':sl==='h'?'🎩':sl==='d'?'🧥':'🧤',30+i*60];
-          const mk=d.mk[sl],ing=(sl==='m'||sl==='s')?{[b]:2,[WO[i][2]]:1}:{cuero:2+Math.ceil(i/2),[b]:1};
+          const mk=d.mk[sl],ing=(sl==='m'||sl==='s')?{[b]:2,[WO[i][2]]:1}:{['cu_'+t[0]]:2+Math.ceil(i/2),[b]:1};
           if(ACT[mk]&&!ACT[mk].some(a=>a[2]===id)){const ms=2800+lv*40;ACT[mk].push([name,ing,id,lv,pxp(lv,ms),ms])}
         }}
     });

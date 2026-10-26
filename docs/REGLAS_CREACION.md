@@ -41,6 +41,16 @@ Además: objetos en la escena ≤ **21 000** (hoy ≈ 19 700), en la escena del 
 
 **P12 · HUD DOM barato (lote ANTI-TIRONES): el HUD costaba ~20 % de fps en combate.** (a) Nada de `backdrop-filter` en lo que se ve mientras se juega (solo con la opción «Cristal del HUD», `body.hs-glass`); (b) en código que corre cada fotograma NO leas layout (`getBoundingClientRect`, `offsetWidth`, `clientWidth`, `getComputedStyle`) después de escribir estilos: usa `cvRect()` (game.js) o un `ResizeObserver`; (c) escribe un estilo solo si cambió; (d) lienzos animados del HUD a ≤ 30 fps y contextos WebGL del HUD (retratos) a ≤ 24 fps, nunca dos en el mismo fotograma.
 
+**P13 · Sin basura por fotograma (lote FLUIDEZ, 26 oct 2026): el recolector de basura de JS es la causa n.º 1 de tirones periódicos.** Medido antes del lote: 80 MB/s de basura en reposo. En todo lo que corre cada fotograma: nada de `map/filter/sort/slice/concat/spread` sobre listas grandes, nada de `new THREE.Vector3/Matrix4/Color` (reutiliza objetos del módulo), nada de claves de cadena construidas (`i+','+j`) en bucles, nada de `Object.entries`. Si necesitas «las N más cercanas», selección en el sitio (ver `lights()` en r3d.js). Mide con la receta de `docs/PLAN_OPTIMIZACION.md` §5.
+
+**P14 · three no debe «cambiar de programa» en cada fotograma.** three r170 re-evalúa el programa (getParameters + clave = CPU y basura) cada vez que un MISMO material se dibuja en otro contexto: (a) **un material lo usan o `InstancedMesh` o mallas normales, nunca ambos** → `twin(m)` de `materials3d.js` para la malla normal (comparte shader compilado); (b) **prohibido `renderer.clippingPlanes`** (el reflejo usa plano cercano oblicuo, `water3d.js oblique()`); (c) si un renderer pinta en varias pasadas con capas de cámara distintas, **las luces deben estar en TODAS esas capas** (si no, «cambian las luces» en cada pase); (d) no alternes `material.map`/`defines` de un material compartido. Comprobación: envolver `customProgramCacheKey` (§5 del plan) → en reposo debe quedar ≈ 1 000/s o menos (hoy lo que queda es la sombra).
+
+**P15 · Todo efecto nuevo con coste es una OPCIÓN.** Fila en `GFX_DEF` (`src/game.js`: clave, etiqueta, valores, `auto(QL)` = comportamiento por calidad, ayuda) y se lee con `gfx('clave')` cada fotograma. «Auto» debe reproducir EXACTAMENTE lo que hacía la calidad (rules_check vigila `view` y `GRASS_Q_`). Nada de leer `QL` directamente en código nuevo de r3d (salvo para el presupuesto).
+
+**P17 · Medir de verdad (FLUIDEZ-2):** `python tools/r3d/stutter_check.py` (GPU real, carga real) debe dar `RESULTADO: OK` antes de entregar algo que toque render, carga o bucle. **Con Playwright el juego se SALTA la pantalla de carga y la precompilación salvo que la URL lleve `&load`**: sin eso, cualquier medida de carga o de tirones es falsa. Nada nuevo puede dibujarse durante la carga antes de `warmShaders` (usa `R3D.dry`).
+
+**P16 · Trabajo pesado que aparece al moverse = repartido o en la carga.** Construir mallas, hornear plantillas, pintar el mapa: presupuesto en ms por fotograma (terreno 3,5 ms, mapa 1,5 ms con minimapa), **máx. 1 plantilla de actor nueva por fotograma** (`actors3d.js nb`), y lo que se sabe que va a hacer falta (aldeanos del bioma actual) se hornea en la pantalla de carga. Lo que cueste > 10 ms de una vez y no pueda partirse va a un Web Worker (propuestas F2/F5 del plan).
+
 ## 0 · Protocolo de entrega (siempre)
 1. Trabaja en segmentos pequeños; un entregable por mensaje; cierra diciendo **qué probar a mano**.
 2. Si cambias algo: **detállalo en `AGENTS.md`** (lote corto: qué, por qué, cómo se verificó, qué NO) — el lote más antiguo pasa a `docs/HISTORIAL.md` cuando haya >14.
@@ -151,6 +161,7 @@ Se comprueba y se cuenta en la entrega: (1) **ESCALA** vs. héroe (≈1 unidad �
 |---|---|---|
 | Reglas estáticas | `tools/rules_check.py` | `RESULTADO: OK` (avisos revisables) |
 | Sintaxis | `node --check` (copias `.mjs` para `src/r3d`) | sin salida |
+| Tirones, basura y carga (GPU real) | `tools/r3d/stutter_check.py [--q 2] [--secs 20]` (servidor en 8811) | `RESULTADO: OK` |
 | Tejados | `tools/r3d/roof_clip_check.py` | `TODO OK` |
 | Props | `tools/r3d/props_sheet.py --medir`, `pradera_sheet.py --medir`, `bosque_sheet.py --medir`, `nat_sheet.py --medir`, `cielo_check.py` | `RESULTADO: OK` |
 | Personajes | `node tools/r3d/body_lint.js`, `tools/r3d/actors_lint.py`, `tools/r3d/outfit_check.py` | OK |
@@ -225,7 +236,7 @@ Se comprueba y se cuenta en la entrega: (1) **ESCALA** vs. héroe (≈1 unidad �
 - **Calidad:** sufijo `~0..3` (`sw_cobre~2`); compara con `String(id).split('~')[0]`; no apila (`stk`).
 - **Prefijos existentes (no los cambies):** `b_` barra · `sw_` espada · `lw_` arma de botín · `bw_` arco · `st_` bastón · `sh_` escudo · `ar_` peto/armadura · `lg_` pantalones · `gl_` guantes de combate · `lt_` sets de cuero de botín (`lt_<cultura><ranura><n>`) · `fl_`/`vi_` flechas/virotes · `qv_` carcaj · `ax_`/`pk_`/`rd_` hacha/pico/caña de recolección · `c_` comida cocinada · `f_` plato frito · `pot_` poción · `carne_`/`hueso_`/`piel_` botín animal · `bag_` mochila · `rn_` runa · `rv_` runa de viaje · `sc_` pergamino · `of_` ofrenda de misión (lleva su id en `QITEM`) · `og_` equipo de oficio (`og_<oficio>_<ranura>_<tier>`) · `gema_`, `sal_`, `maza_`, `ropa_` sueltos.
 - **Prefijos RESERVADOS para lo que viene** (usa estos, no inventes otros): `pc_` piel cruda · `cu_` cuero curtido por tier · `fb_` fibra (lino, cáñamo, algodón, seda… por tier) · `mj_` madeja · `te_` tela por tier · `tb_` madera lisa/tablón por madera · `mn_` mango · `hj_` hoja metálica · `hr_` herraje · `bl_` bloque de piedra · `ld_` ladrillo · `mb_` mueble (`mb_<tipo>_<cultura>`) · `sem_` semilla · `cv_` cultivo · `hb_` hierba · `rc_` reactivo de Alquimia · `tn_` tintura · `gm_` gema tallada · `eg_` engarce · `pv_` polvo · `tt_` tinta arcana · `eng_` engranaje/pieza mecánica · `ml_` miel/cera. Comida y poción con buff siguen `c_`/`f_`/`pot_` y declaran su buff en una tabla (`BUFD`).
-- **A migrar cuando se porte el oficio dueño (NO en D0):** `cuero` y `piel_<tier>` → `cu_<tier>` (Peletería), `tela` → `te_<tier>` (Sastrería); `lana`, `pluma`, `grasa` se quedan como materias primas.
+- **Cuero (D6, 26 oct):** `HID[i]` (`cuero`, `piel_<tier>`) son ahora la PIEL CRUDA que sueltan las criaturas (ids sin cambiar; el prefijo `pc_` queda reservado para un renombrado futuro) y Peletería la CURTE (`Curtir …`) en `cu_<tier>`, el cuero que usan armaduras de cuero, carcajes, arcos y cañas. Madera: `tb_<madera>` (tablón, Artesanía) y `mn_<madera>` (mango). **A migrar cuando se porte el oficio dueño:** `tela` → `te_<tier>` (Sastrería); `lana`, `pluma`, `grasa` se quedan como materias primas.
 - **Objeto de misión:** añade su id a `QITEM`. **Objeto con equipo:** debe entrar en `eqKey`/`OFGEAR.is`.
 ### 13.2 Claves de habilidad (`SK`, `S.xp`, `SKI`)
 - **Existentes:** `wc` Tala · `mi` Minería · `fi` Pesca · `co` Cocina · `sm` Herrería · `cr` Artesanía · `es` Escultor · `ins` Inscripción (se retira con Encantamiento) · `mg` Magia · `cb` Combate · `ra` Arquería · `pr` Oración.
@@ -248,10 +259,10 @@ Cada prefijo cae en UNA categoría de icono paramétrico con la paleta de su tie
 - Todo drop de una criatura (`MD[id].dr` = `[[idObjeto, prob],…]` y `MD[id].rare` = `[idObjeto, valor]`) usa ids EXISTENTES de `I` y respeta las convenciones de 13.1. Un id con una errata no suelta nada y no avisa.
 - **`python tools/ids_check.py`** (con la sesión rápida en marcha: `python tools/fast/ns.py start --no3d`) comprueba que existan en `I` los ids de: drops y raros de `MD`, ingredientes y resultados de TODAS las recetas `ACT`, `OFGEAR.G` y `QITEM`; y que ningún id rompa la forma (`[a-z0-9_]` + `~calidad`). Falla (código 1) si hay inexistentes. Correrlo al añadir objetos, recetas o criaturas.
 ```ids-skills
-wc mi fi co sm cr es ins mg cb ra pr
+wc mi fi ds co sm pe sa cr es ins mg cb ra pr
 ```
 ```ids-skills-reservadas
-ds pe sa he al en jo ing dm ag ap
+he al en jo ing dm ag ap
 ```
 ```ids-prefijos-reservados
 pc cu fb mj te tb mn hj hr bl ld mb sem cv hb rc tn gm eg pv tt eng ml

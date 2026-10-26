@@ -22,7 +22,7 @@ const MUSIC=(()=>{
  const SCD={wakeup:{i:3.5,o:4.5,start:0},all_i_had_to_do:{i:4.5,o:3,start:25}},SCN={};
  const T={},cl=(v,a,b)=>Math.max(a,Math.min(b,v));
  let dbg=null;
- function mk(k,kind){const id=k+'_'+kind;if(T[id])return T[id];const t=T[id]={id,k,kind,v:0,cur:0,dead:false,a:[0,1].map(()=>{const a=new Audio((DIRS[k]||DIR)+DEF[k][kind]+'.mp3');a.preload='auto';a.loop=false;a.volume=0;a.addEventListener('error',()=>{t.dead=true});return a})};return t}
+ function mk(k,kind){const id=k+'_'+kind;if(T[id])return T[id];const t=T[id]={id,k,kind,v:0,cur:0,dead:false,a:[0,1].map(i=>{const a=new Audio((DIRS[k]||DIR)+DEF[k][kind]+'.mp3');a.preload=i?'none':'auto';   /* FLUIDEZ F16 (26 oct 2026): la 2.ª copia (la del cruce al repetirse) ya no se descarga al entrar en el bioma: se pide 30 s antes del final (step) */a.loop=false;a.volume=0;a.addEventListener('error',()=>{t.dead=true});return a})};return t}
  const play=a=>{const p=a.play();if(p&&p.catch)p.catch(()=>{})};
  function step(t,tgt,dt,mv,live){const K=KIND[t.kind];
   // v: 0..1 lineal en el tiempo; la ganancia real es sin(v·π/2) → potencia igual entre dos fundidos complementarios
@@ -32,7 +32,7 @@ const MUSIC=(()=>{
   if(t.dead)return;
   if(A.paused&&!A.ended)play(A);
   const d=A.duration;let fa=1,fb=0;
-  if(isFinite(d)&&d>LOOPX*3){const rem=d-A.currentTime;
+  if(isFinite(d)&&d>LOOPX*3){const rem=d-A.currentTime;if(rem<30&&B.preload==='none'){B.preload='auto';try{B.load()}catch(e){}}
    if(rem<LOOPX){if(B.paused){B.currentTime=0;play(B)}const x=cl(1-rem/LOOPX,0,1);fa=Math.cos(x*Math.PI/2);fb=Math.sin(x*Math.PI/2);if(rem<.06||A.ended){A.pause();A.currentTime=0;t.cur=1-t.cur}}
    else if(!B.paused){B.pause();B.currentTime=0}}
   const base=Math.sin(t.v*Math.PI/2)*K.g*mv*(TG[DEF[t.k][t.kind]]||1);A.volume=cl(base*fa,0,1);B.volume=cl(base*fb,0,1)}

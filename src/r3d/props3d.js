@@ -5,7 +5,7 @@
 // Para el héroe (que se dibuja aparte, ver r3d.js) se exporta una copia «solo profundidad» de todo (capa 3): así una casa delante lo tapa y se ve
 // su silueta en rayos X. Si PROPS.list cambia (editor de aldea), se reconstruye solo.
 import * as THREE from 'three';
-import {toon,hull,inkFor} from './materials3d.js';
+import {toon,hull,inkFor,depthI} from './materials3d.js';
 import {orgGeometry,EMIT} from '../../tools/r3d/org3d_adapter.mjs';
 import {deadTreeGeo,treeGeo,cardGeo,folMat} from './nature3d.js';
 import {darkGeo} from './propsdark3d.js';   // Q03 (F2-C): props de aldea en el lenguaje oscuro (casa, taberna, granero, cabaña, pozo, farola, barril, caja, heno, valla); el resto sigue con ORG. `?props=old` los desactiva (comparar)
@@ -72,7 +72,7 @@ export class Props{
   let nn=0;const NL=Math.max(1,PROPS.list.length);
   for(const e of PROPS.list){if((++nn&63)===0){this.prog=nn/NL*.5;yield}const T1=performance.now(),k=e.k!=null?e.k:Math.max(0,BIOMES.at(e.x,e.y)),th=BIOMES.list[k]&&BIOMES.list[k].village.theme||null,G=propGeo(e.n,NAT_ON&&NATS.has(e.n)?Object.assign({bk:k,v:NAT_VAR[e.n]?Math.floor(nhash(e.x,e.y,5)*NAT_VAR[e.n]):0},e.o):PR_ON&&PR_BK.has(e.n)||OF_ON&&OF_BK.has(e.n)||BO_ON&&BO_BK.has(e.n)?Object.assign({bk:k},e.o):e.o,th);TG+=performance.now()-T1;if(!G){fail++;continue}
    const ck=G.key+'@'+Math.floor(e.x/(32*CELL))+','+Math.floor(e.y/(32*CELL));let a=groups.get(ck);if(!a)groups.set(ck,a={G,list:[],s:scaleOf(e.n,G),cx:Math.floor(e.x/(32*CELL)),cy:Math.floor(e.y/(32*CELL))});a.list.push(e);ok++}   // por modelo Y por zona de CELL×CELL tiles: así se descartan las zonas fuera de cámara
-  let gg=0;const NG=Math.max(1,groups.size);for(const {G,list,s:PS,cx,cy} of groups.values()){if((++gg&31)===0){this.prog=.5+gg/NG*.5;yield}const n=list.length,isRock=NAT_ON&&(list[0].n==='roca'||list[0].n==='piedra')||CI_ON&&CI_ROCK.has(list[0].n),m=new THREE.InstancedMesh(G.g,isRock?this.matRock:this.mat,n);m.castShadow=m.receiveShadow=true;
+  let gg=0;const NG=Math.max(1,groups.size);for(const {G,list,s:PS,cx,cy} of groups.values()){if((++gg&31)===0){this.prog=.5+gg/NG*.5;yield}const n=list.length,isRock=NAT_ON&&(list[0].n==='roca'||list[0].n==='piedra')||CI_ON&&CI_ROCK.has(list[0].n),m=depthI(new THREE.InstancedMesh(G.g,isRock?this.matRock:this.mat,n));m.castShadow=m.receiveShadow=true;
    const T2=performance.now();if(!G.hull)G.hull=hull(G.g,isRock?.012:.016).geometry;TH+=performance.now()-T2;const h=new THREE.InstancedMesh(G.hull,this.ink,n);const d=new THREE.InstancedMesh(G.g,this.dmat,n);d.layers.set(3);
    {const bb=G.g.boundingBox;if(bb&&bb.max.y>.25){const sx=Math.max(.3,(bb.max.x-bb.min.x)*.5*1.35*PS),sz=Math.max(.3,(bb.max.z-bb.min.z)*.5*1.35*PS),cx=(bb.max.x+bb.min.x)*.5*PS,cz=(bb.max.z+bb.min.z)*.5*PS;list.forEach(e=>this.fp.push({x:e.x,y:e.y,cx,cz,sx:Math.min(sx,4),sz:Math.min(sz,4),h:bb.max.y*PS,n:e.n}))}}   // F3f·P3A: huella de la malla para la sombra de contacto (contact3d.js)
    const fo=G.cards?new THREE.InstancedMesh(G.cards.g,folMat(G.cards.tex),n):null;if(fo){fo.castShadow=true;fo.receiveShadow=false}   // follaje de láminas (Fase 4b): mismas matrices, sin contorno

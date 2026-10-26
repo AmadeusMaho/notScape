@@ -6,10 +6,15 @@ import sys, os, subprocess, time, json
 from playwright.sync_api import sync_playwright
 srv=subprocess.Popen([sys.executable,'-m','http.server','8803','--bind','127.0.0.1'],cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
 JS=r"""()=>{const out={};const save=JSON.stringify(S);
+ // D7: tiempos y pasos del modelo vivo (work.js: stepsEst/pieceSec/QUICK_XP); síntesis rápida = 0,9 s y XP×QUICK_XP
  const marks=[30,50,60,70,80,90,99];out.skills={};
- const sks=['wc','mi','fi','co','sm','cr','es','ins'];
+ const sks=['wc','mi','fi','ds','co','sm','pe','sa','cr','es','ins'];
  for(const sk of sks){let t=0;const res={};let l=1;
-  while(l<99){S.xp[sk]=XT[l];S.tool[sk]=TOOLS[sk]?TLV(l):0;S.tq[sk]=0;let best=0;for(const a of ACT[sk]){if(l<rq(a))continue;const d=dur(sk,a)/1000;const r=xv(a)/d;if(r>best)best=r}
+  const SH=typeof WKUI!=='undefined'&&WKUI.REG[sk];   // D7 (26 oct 2026): los oficios con hoja de trabajo se miden con el modelo NUEVO (pasos del planificador + síntesis rápida + XP extra), no con dur()
+  while(l<99){S.xp[sk]=XT[l];S.tool[sk]=TOOLS[sk]?TLV(l):0;S.tq[sk]=0;let best=0;for(const a of ACT[sk]){if(l<rq(a))continue;let d,x=xv(a);
+    if(SH&&a.length===6){const rl=rq(a);if(l-rl>=15&&WK.quick(WK.mkRecipe(rl,a[0]),l).ok){d=0.9;x=a[4]*WK.QUICK_XP}   // síntesis rápida: 1 pulsación + reabrir
+     else{d=WK.pieceSec(rl);x=a[4]*Math.max(1,Math.min(4.5,d/(a[5]/1000)))}}   // finish() de workui.js: XP extra para sostener la XP/s
+    else d=dur(sk,a)/1000;const r=x/d;if(r>best)best=r}
    if(!best)best=.5;t+=(XT[l+1]-XT[l])/best;l++;if(marks.includes(l))res[l]=+(t/3600).toFixed(1)}
   out.skills[sk]=res}
  const IL=TI.map(t=>t[4]),AL=[1,7,12,18,28,38,50,64,76,86,95];

@@ -78,7 +78,7 @@ const HERO=(()=>{
    else if(k==='eat'){const u=es(cl(ph/.25,0,1));aN=lerp(10,128,u)+(ph>.25?Math.sin((ph-.25)*Math.PI*8)*7:0);aF=lerp(8,30,u);R.item={t:'food',col:'#d2782c'};mouth=ph>.25&&Math.sin((ph-.25)*Math.PI*8)>0?1:0;dip=.5;lean=side?2:0} // comer: lleva la comida a la boca y mastica
    else if(k==='pk'){const u=Math.sin(ph*Math.PI);aN=lerp(8,64,u);aF=lerp(8,26,u);dip=u*1.8;lean=side?u*5:0} // recoger del suelo: se agacha y estira el brazo
    else if(k==='co'||(k==='sm'&&a.id==='furnace')){aN=62+Math.sin(t*7)*12;aF=18;R.item={t:'spoon',col:'#a8a8b0',col2:'#6a4a2a'};dip=.9;lean=side?3:0}
-   else if(k==='cr'||k==='es'){aN=68+Math.sin(ph*Math.PI*6)*14;aF=34;R.item={t:'saw',col:'#b8bec8',col2:'#8a5a2a'};dip=.8;lean=side?4:0;mouth=0}
+   else if(k==='cr'||k==='pe'||k==='sa'||k==='es'){aN=68+Math.sin(ph*Math.PI*6)*14;aF=34;R.item={t:'saw',col:'#b8bec8',col2:'#8a5a2a'};dip=.8;lean=side?4:0;mouth=0}
    else if(k==='ins'){aN=40+Math.sin(t*9)*6;aF=14;R.item={t:'quill'};dip=1.1;lean=side?3:0}
    else{aN=45;aF=14}
    if(!side&&!(k==='f'&&a.wt==='r'&&a.wk!=='xbow'))P.fw=1; /* el ARCO se ve de lado en frente/espalda; la ballesta apunta adelante (fw) */ // vistas frente/espalda: el brazo va adelante (plano sagital), no hacia los lados

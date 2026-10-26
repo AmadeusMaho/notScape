@@ -274,6 +274,14 @@ export const inkFor=c=>{const k=Array.isArray(c)?c[2]||c[0]:c;if(INKS.has(k))ret
 const INKD=new Map();
 export function inkMat(t){if(INKD.has(t))return INKD.get(t);const m=new THREE.MeshBasicMaterial({color:INK.color,side:THREE.BackSide});
  m.onBeforeCompile=s=>{s.vertexShader=s.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>\ntransformed+=normalize(normal)*${t.toFixed(4)};`)};m.customProgramCacheKey=()=>'ink'+t;m.color=INK.color;INKD.set(t,m);return m}
+// FLUIDEZ (26 oct 2026) · twin(m): copia de un material para mallas NORMALES cuando el original lo usan InstancedMesh. three r170 decide «otro programa» cada vez que el MISMO
+// material pasa de una malla instanciada a una normal (y vuelve): re-evalúa getParameters (CPU + basura) por cada cambio, en cada pase. La copia comparte onBeforeCompile,
+// clave de programa (mismo shader compilado: 0 programas nuevos) y userData; si el original es una tinta de `INKS`, la copia se registra también (noche y reflejo la tratan igual).
+// FLUIDEZ F6: material de PROFUNDIDAD propio para las sombras de los InstancedMesh (three usa uno compartido para todo y re-evalúa su programa al alternar instanciado/normal/
+// con huesos). Solo para materiales sin textura con recorte (el follaje con alphaTest usa la variante que three cachea por material).
+export const DEPTH_I=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking});
+export function depthI(m){const mt=m.material;if(mt&&!mt.map&&!(mt.alphaTest>0)&&!mt.alphaMap)m.customDepthMaterial=DEPTH_I;return m}
+export function twin(m){const c=m.clone();c.onBeforeCompile=m.onBeforeCompile;c.customProgramCacheKey=m.customProgramCacheKey;c.userData=m.userData;for(const [k,v] of INKS)if(v===m){INKS.set(k+'#twin'+c.id,c);break}return c}
 export function setInk(ink,k){INK.color.set(ink);INKS.forEach(m=>m.color.copy(m.userData.base).multiplyScalar(k))}
 
 export function mk(geo,c,ink,o){o=o||{};const m=new THREE.Mesh(geo,Array.isArray(c)?c.map(x=>toon(x,o)):toon(c,o));m.castShadow=m.receiveShadow=true;

@@ -725,6 +725,7 @@ export class HeroAnim{
   this.orbL.visible=freeL&&gL>.04;if(this.orbL.visible){const s=.4+gL*.55;this.orbL.scale.setScalar(s);this.haloM.opacity=cl(gL*.35,0,.8)}
   if(M&&M.orb){const g=cl(v[C.glow],0,2.5);M.orbMat.color.copy(M.orbBase).multiplyScalar(1+g*.9);M.orb.scale.setScalar(1+g*.3);M.haloM.opacity=cl(g*.32,0,.75)}
   const rod=this.it.rod;if(rod&&rod.g.visible&&rod.tip){rod.g.updateWorldMatrix(true,false);this.rodTip=rod.g.localToWorld(this.tip.copy(rod.tip))}else this.rodTip=null;
+  {const g0=this.m&&this.m.grips&&this.m.grips[0];if(g0){g0.updateWorldMatrix(true,false);(this.handR||(this.handR=new V3())).setFromMatrixPosition(g0.matrixWorld)}}   // D8: mano derecha en mundo (la interfaz de oficios le pone la pieza en la mano)
   this.track()}
  // ── Lote R3D-SANGRE · PUNTO DE GOLPE ──────────────────────────────────────────────────────────────────────────────────────────────────────
  // Cada fotograma se anota dónde está la PUNTA/CABEZA del arma que golpea (espada, maza, hacha…) o la mano derecha (puños) en coordenadas de mundo three.

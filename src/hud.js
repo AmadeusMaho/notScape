@@ -69,7 +69,7 @@ const HUDSU=(()=>{
  let plook=null,lkNext=0,pnx=0;
  // Lote ANTI-TIRONES (25 oct 2026): cada retrato vivo es OTRO contexto WebGL (render + grado + copia al compositor). Medido: con el del enemigo, el combate perdía ~20 % de fps.
  // Ahora van a 24 fps (12 en Baja/Mínima) y NUNCA los dos en el mismo fotograma (el del enemigo tiene prioridad; el del héroe dibuja en el siguiente).
- const PRT=()=>(typeof QL!=='undefined'&&QL>=3)?83:42;
+ const PRT=()=>typeof gfx==='function'?gfx('prt'):(typeof QL!=='undefined'&&QL>=3)?83:42;   // FLUIDEZ: opción «Retratos 3D»
  const lookNow=now=>{if(!plook||now>lkNext){lkNext=now+500;plook=R3D.outfits.resolve({app:S.app,ar:S.eq.a?ARC(S.eq.a):null,helm:S.eq.h?ARC(S.eq.h):null,boot:S.eq.f?ARC(S.eq.f):null,gear:gearOpts(),hood:'down',arm:armorInfo()})}return plook};
  function liveSt(now){return{mv:!!(P.mvg||P.anm),run:!!RUN,act:P.mvg?null:actState(now),hurt:Math.max(0,1-(now-HURT)/320),cb:!!(A&&A.ty==='f')||now-(P.cbT||-1e9)<2500||now-HURT<2500,t:now/1000}}
  function heroPortrait(now){

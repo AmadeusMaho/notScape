@@ -414,7 +414,10 @@ export class Actors{
  keyOf(e,isNpc){if(isNpc)return e.id==='ru'||(e.npc&&(NPC_DEF[e.id]||(typeof NPCLK!=='undefined'&&NPCLK[e.id])))?e.id:null;return e.d&&e.d.id}
  // ¿hay un actor 3D dibujándose para esta entidad? (game.js: si sí, omite el sprite 2D y dibuja solo barra de vida y etiqueta)
  // PRECARGA (21 oct 2026): hornea TODAS las plantillas durante la carga (antes se horneaba la 1.ª vez que aparecía cada criatura = tirón)
- bake(){try{ACTOR_IDS.concat(['ru'],Object.keys(NPC_DEF)).forEach(k=>tplFor(k))}catch(e){console.warn('[R3D actors bake]',e)}}
+ bake(){try{ACTOR_IDS.concat(['ru'],Object.keys(NPC_DEF)).forEach(k=>tplFor(k))}catch(e){console.warn('[R3D actors bake]',e)}
+  // FLUIDEZ (26 oct 2026): también los ALDEANOS del bioma donde está el jugador (claves 'v:<bioma>:…'; hornear uno ≈ 27 ms en un PC rápido, ~60 ms en un portátil: al llegar a la
+  // aldea se horneaban en pleno juego = tirón). Los de otros biomas se hornean al acercarse, como mucho uno por fotograma (update, `nb`).
+  try{if(typeof NPCLK!=='undefined'&&typeof P!=='undefined'){const k=typeof biomeAt==='function'?biomeAt(P.x,P.y):(typeof curB!=='undefined'?curB:0);Object.keys(NPCLK).filter(x=>x.startsWith('v:'+k+':')).forEach(x=>tplFor(x))}}catch(e){console.warn('[R3D actors bake aldeanos]',e)}}
  // objetos desechables para precompilar el programa de la silueta (R3D.warmShaders): un PNJ con su malla de rayos X
  warmObjs(){try{const A=makeActor('ru');if(!A)return[];A.addXray();A.setHover(true);if(!this.lockM)this.lockM=new THREE.MeshBasicMaterial({color:'#ffd98a',transparent:true,opacity:.7,depthWrite:false,blending:THREE.AdditiveBlending});A.grp.add(new THREE.Mesh(this.ringG,this.lockM));const F=makeActor('goblin');if(F){F.setFlash(true);return[A.grp,F.grp]}return[A.grp]}catch(e){return[]}}   // 25 oct 2026: + el DESTELLO de daño (setFlash cambia el material sin añadir nada: la compuerta de shaders no lo ve) — su programa se compilaba en el primer golpe
  lock(e){this.lockE=e||null}   // objetivo fijado (Tab): anillo dorado bajo sus pies
@@ -423,12 +426,15 @@ export class Actors{
  topPx(e){const A=this.map.get(e);if(!A)return 0;return A.tpl.h*(ISO.HW*2/Math.SQRT2)*Math.cos(Math.PI/6)/(typeof SPR!=='undefined'?SPR:1.5)+4}
  // Ru: su etiqueta usa «lh» (px de pantalla a escala 1; game.js divide por SPR)
  labelH(e){return this.topPx(e)*(typeof SPR!=='undefined'?SPR:1.5)}
- update(now,t,dt,tgt,R,hov,P_){if(!this.on)return;const TW=ISO.TILE,R2=R*R;let live=0;const seen=new Set();this.nw=0;   /* nw: actores nuevos este fotograma (tope 3: cada plantilla se hornea la 1.ª vez y un pueblo entero de golpe daba un tirón) */
+ update(now,t,dt,tgt,R,hov,P_){if(!this.on)return;const TW=ISO.TILE,R2=R*R;let live=0;const seen=this.seen||(this.seen=new Set());seen.clear();this.nw=0;this.nb=0;   /* FLUIDEZ (26 oct 2026): nb = como mucho UNA plantilla nueva horneada por fotograma (hornear un modelo nuevo ≈ 20–30 ms: medido 33 ms al llegar a una aldea); seen reutilizado (sin basura) */   /* nw: actores nuevos este fotograma (tope 3: cada plantilla se hornea la 1.ª vez y un pueblo entero de golpe daba un tirón) */
   const consider=(e,isNpc)=>{const key=this.keyOf(e,isNpc);if(!key)return;const px=e.x/TW,pz=e.y/TW,dx=px-tgt.x,dz=pz-tgt.z;if(dx*dx+dz*dz>R2)return;seen.add(e);let A=this.map.get(e);
    const alive_=isNpc||alive(e,now);
-   if(!A){if(!alive_)return;if(this.nw>=3)return;const tpl=tplFor(key);if(!tpl)return;this.nw++;A=new Actor(tpl,key,e,this.W3);A.isNpc=isNpc;if(isNpc&&A.tpl.kind==='human')A.addXray();this.map.set(e,A);this.grp.add(A.grp);A.last=null;
+   if(!A){if(!alive_)return;if(this.nw>=3)return;if(!TPL.has(key)){if(this.nb)return;this.nb=1}const tpl=tplFor(key);if(!tpl)return;this.nw++;A=new Actor(tpl,key,e,this.W3);A.isNpc=isNpc;if(isNpc&&A.tpl.kind==='human')A.addXray();this.map.set(e,A);this.grp.add(A.grp);A.last=null;
     if(this.occ){A.proxy=new THREE.SkinnedMesh(tpl.geo,DEPTHM);A.proxy.bind(A.mesh.skeleton,new M4());A.proxy.layers.set(3);A.proxy.frustumCulled=false;this.occ.add(A.proxy)}}   // copia de solo profundidad para el renderer del héroe (capa 3)
    this.step(A,e,isNpc,alive_,now,t,dt,hov,P_);if(A.vis)live++};
+  // FLUIDEZ F5 (26 oct 2026): aldeanos de OTROS biomas horneados en segundo plano SOLO con el jugador quieto ≥ 1,5 s (1 cada 0,4 s; si nada se ha hecho en este fotograma):
+  // así, al llegar a otra aldea, sus plantillas ya existen y no hay tirón. Quieto = posición igual (el que esté de pie no nota un fotograma algo más largo).
+  if(P_&&typeof NPCLK!=='undefined'){if(P_.x!==this.px||P_.y!==this.py){this.px=P_.x;this.py=P_.y;this.still=now}else if(now-this.still>1500&&now>(this.bkT||0)&&!this.nb&&!this.nw){if(!this.bkQ)this.bkQ=Object.keys(NPCLK);while(this.bkQ.length&&TPL.has(this.bkQ[this.bkQ.length-1]))this.bkQ.pop();if(this.bkQ.length){tplFor(this.bkQ.pop());this.bkT=now+400}}}
   for(let i=0;i<M.length;i++)consider(M[i],false);for(let i=0;i<ST.length;i++)if(ST[i].id==='ru'||ST[i].npc)consider(ST[i],true);
   // fuera de rango → fuera
   for(const [e,A] of this.map)if(!seen.has(e)){A.dispose();this.map.delete(e)}
@@ -466,7 +472,8 @@ export class Actors{
   if(!isNpc&&fl){const u=Math.min(1,(e.fl-rn)/120);A.pz=-.05*u;A.b.root.position.z+=A.pz}
   // muerte: cae hacia atrás y se hunde/encoge ~0,9 s
   if(A.state==='dying'){const u=(now-A.td)/900;if(A.hdx!=null&&e.hit){const ff=ss(0,.45,u);A.grp.position.x+=A.hdx*.45*ff*e.hit.k*A.sc;A.grp.position.z+=A.hdz*.45*ff*e.hit.k*A.sc}   /* la muerte conserva el impulso del último golpe */
-   if(u>=1){A.state='gone';A.vis=false;A.grp.visible=false;if(A.proxy)A.proxy.visible=false;return}const f=ss(0,.45,u),h=ss(.45,1,u);A.b.root.rotation.x=-1.45*f;A.b.root.position.y=A.restP.root.y-.1*f*A.sc;A.grp.scale.setScalar(A.sc*(1-h*.85));A.grp.position.y-=.25*h*A.sc}
+   const keep=e.skin&&!e.skin.done;   // cadáver desollable: se queda tumbado hasta que se desuella o reaparece
+   if(u>=1&&!keep){A.state='gone';A.vis=false;A.grp.visible=false;if(A.proxy)A.proxy.visible=false;return}const f=ss(0,.45,Math.min(1,u)),h=keep?0:ss(.45,1,u);A.b.root.rotation.x=-1.45*f;A.b.root.position.y=A.restP.root.y-.1*f*A.sc;A.grp.scale.setScalar(A.sc*(1-h*.85));A.grp.position.y-=.25*h*A.sc}
   // copia de profundidad: solo si el héroe está cerca (no se dibuja el resto)
   if(A.proxy){const near=Math.hypot(P_.x-e.x,P_.y-e.y)<ISO.TILE*3.5&&A.vis;A.proxy.visible=near;if(near){A.proxy.position.copy(A.grp.position);A.proxy.quaternion.copy(A.grp.quaternion);A.proxy.scale.copy(A.grp.scale)}}
   // aro de jefe

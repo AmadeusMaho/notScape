@@ -973,3 +973,40 @@ body.hs-on:not(.hs-glass) #fp{backdrop-filter:none;background:rgba(16,13,10,.86)
 body:not(.hs-glass) .shw{backdrop-filter:none}
 body:not(.hs-glass) #isla-tip{backdrop-filter:none;background:rgba(14,12,10,.92)}
 body:not(.hs-glass) .hs-fx .chip img,body:not(.hs-glass) .hs-fx .chip s,body:not(.hs-glass) #bw,body:not(.hs-glass) #wk{backdrop-filter:none}
+
+/* ───── D8 (26 oct 2026): interfaz ÚNICA de la HERRERÍA (src/forge.js). Solo CSS + canvas 2D; sin backdrop-filter. Los demás oficios siguen con el panel de lista. ───── */
+#wk .wk-stage{display:none}
+#wk.wk-forge .wk-stage{display:block;grid-area:stage;border:1px solid #6b4a2a;border-radius:.5em;overflow:hidden;background:#0c0806;box-shadow:inset 0 0 1.2em rgba(0,0,0,.8),0 0 1.4em rgba(255,120,30,.16)}
+#wk .wk-stage canvas{display:block;width:100%;aspect-ratio:8/3;height:auto;max-width:calc(31vh*8/3);margin:0 auto}
+#wk.wk-forge:not([style*="none"]){display:grid!important;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-areas:"h h" "meta meta" "stage stage" "ac g" "mc mc" "f f" "m m";grid-template-rows:auto auto auto minmax(0,1fr) auto auto auto;column-gap:.9em;width:min(54vw,56em);left:auto;right:1.2vw;top:3vh;max-height:94vh;background:linear-gradient(#1c130d,#120c08);border-color:#8a5a2a;padding:.7em .9em}
+#wk.wk-forge .wk-h{grid-area:h;margin-bottom:.3em}#wk.wk-forge .wk-h b{color:#ffd36b;text-shadow:0 0 .6em rgba(255,140,40,.55);font-size:1.3em;letter-spacing:.04em}
+#wk.wk-forge .wk-meta{grid-area:meta;margin-bottom:.4em}
+#wk.wk-forge .wk-ac{grid-area:ac;min-height:0;margin-top:.5em;padding-right:.3em;overflow-y:auto}
+#wk.wk-forge .wk-g{grid-area:g;grid-template-columns:1fr;margin-top:.5em;align-content:start;gap:.5em}
+#wk.wk-forge .wk-mc{grid-area:mc}#wk.wk-forge .wk-f{grid-area:f;background:linear-gradient(#2a1c10,#1a110a);border:1px solid #6b4a2a;border-radius:.5em;padding:.5em .6em}#wk.wk-forge .wk-m{grid-area:m;text-align:center}
+#wk.wk-forge .wk-gr{display:flex;align-items:center;gap:.4em;color:#e8b878;font-size:.78em;border-bottom:1px solid #4a3220;padding-bottom:.2em}#wk.wk-forge .wk-gr svg{width:1.5em;height:1.5em;color:#ffb347}#wk.wk-forge .wk-gr small{color:#8a7254;text-transform:none;letter-spacing:0}
+#wk.wk-forge .wk-gd{grid-template-columns:repeat(auto-fill,minmax(9em,1fr))}
+#wk.wk-forge .wk-a{background:linear-gradient(#2a1d12,#1c130b);border-color:#5a3d22;transition:transform .12s,border-color .15s,box-shadow .15s}#wk.wk-forge .wk-a:hover,#wk.wk-forge .wk-sl:hover{border-color:#ffb347;box-shadow:0 0 .8em rgba(255,150,50,.35);transform:translateY(-1px)}
+#wk.wk-forge .wk-sl{background:linear-gradient(#2a1d12,#1c130b);border-color:#5a3d22;transition:transform .12s,box-shadow .15s}
+#wk.wk-forge .wk-b{height:1.1em;border-color:#6b4a2a;background:#0a0604;box-shadow:inset 0 0 .4em #000}
+#wk.wk-forge .wk-b .p{background:linear-gradient(90deg,#8a2a0a,#ff7a22,#ffd36b);box-shadow:0 0 .8em rgba(255,140,40,.8)}#wk.wk-forge .wk-b .q{background:linear-gradient(90deg,#2a4a7a,#7fb4e8,#e8f4ff);box-shadow:0 0 .8em rgba(127,180,232,.6)}
+#wk.wk-forge .wk-side{border-left:0;padding-left:0;display:grid;grid-template-columns:1fr 1fr;gap:.4em}#wk.wk-forge .wk-side>div{background:#1a110a;border:1px solid #4a3220;border-radius:.4em;padding:.3em .5em}
+#wk.wk-forge .wk-side>div:first-child b{color:#e8a050}#wk.wk-forge .wk-side>div:nth-child(3) b{color:#ff9a3a}
+#wk.wk-forge .wk-cd{grid-column:1/-1;text-align:center;border-color:#8a5a2a}#wk.wk-forge .wk-cd[data-c="buena"]{box-shadow:0 0 .8em rgba(255,179,71,.6)}#wk.wk-forge .wk-cd[data-c="excelente"]{box-shadow:0 0 1.2em rgba(255,226,138,.9);animation:wkhl .6s infinite alternate}
+#wk.wk-forge .wk-st{min-height:1.4em}
+#wk .pop{animation:wkpop .32s cubic-bezier(.2,1.6,.4,1)}@keyframes wkpop{0%{transform:scale(1)}35%{transform:scale(1.18);box-shadow:0 0 1.1em rgba(255,200,100,.9)}100%{transform:scale(1)}}
+@media (max-width:760px){#wk.wk-forge:not([style*="none"]){grid-template-columns:1fr;grid-template-areas:"h" "meta" "stage" "g" "ac" "mc" "f" "m";grid-template-rows:auto auto auto auto minmax(0,1fr) auto auto auto;top:1vh;max-height:98vh}}
+/* D8: tarjeta de éxito de los oficios sin interfaz propia */
+#wk-ok{position:fixed;left:50%;top:14vh;z-index:12;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.2em;pointer-events:none;opacity:0;font-family:Cinzel,serif;color:#ffd36b;text-shadow:0 0 .6em rgba(255,150,40,.6),0 2px 4px #000}
+#wk-ok img{width:5.5em;height:5.5em;filter:drop-shadow(0 0 .8em rgba(255,200,100,.8))}#wk-ok b{font-size:1.5em;font-weight:500}#wk-ok i{font-style:normal;color:#ffe9a0;letter-spacing:.2em}
+#wk-ok.on{animation:wkok 2.8s ease-out forwards}@keyframes wkok{0%{opacity:0;transform:translate(-50%,24px) scale(.7)}12%{opacity:1;transform:translate(-50%,0) scale(1.12)}22%{transform:translate(-50%,0) scale(1)}80%{opacity:1;transform:translate(-50%,-14px)}100%{opacity:0;transform:translate(-50%,-30px)}}
+#wk.wk-forge .wk-ac{margin-bottom:.4em}#wk.wk-forge .wk-mc{background:#17100a;position:relative;z-index:1;padding-top:.2em}
+
+/* ══ Ajustes gráficos avanzados (Lote FLUIDEZ, 26 oct 2026): una fila por aspecto; «Auto» = lo decide la Calidad; las fijadas llevan borde dorado ══ */
+body.hs-on #ctl{max-height:calc(100vh - 7em);overflow-y:auto;overscroll-behavior:contain}
+body.hs-on #gfxadv{flex-basis:100%;display:flex;flex-wrap:wrap;gap:.25em;padding:.15em 0 .3em .6em;border-left:1px solid rgba(232,207,148,.25)}
+body.hs-on #gfxadv[hidden]{display:none}
+body.hs-on #gfxadv button.bt{font-size:.76em;padding:.34em .7em}
+body.hs-on #gfxadv button.bt.gfx.on{border-color:rgba(232,207,148,.85);color:#e8cf94}
+body.hs-on #gfxadv .gfxpre{flex-basis:100%;display:flex;flex-wrap:wrap;gap:.25em;margin-bottom:.2em}
+body.hs-on #gfxadv .gfxpre button.bt{flex:1 1 45%;text-align:center;font-size:.72em}
