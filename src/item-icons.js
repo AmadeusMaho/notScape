@@ -105,11 +105,21 @@ const ITEMICON=(()=>{
  // ───────── especificación por id ─────────
  const FISH={camaron:['shrimp','#f08a6a'],trucha:['fish','#8aa8b8',{stripe:'#e8a0a0'}],salmon:['fish','#f0866a',{belly:'#ffd0c0'}],atun:['fish','#4a6a9a',{belly:'#c8d8e8'}],pmagma:['fish','#e8602a',{stripe:'#ffc040'}],pezespada:['fish','#6a8ab0',{belly:'#dde8f0'}],manta:['fish','#5a7a9a'],kraken:['squid','#8a4aa0'],sardina:['fish','#a8b8c8',{stripe:'#6a8aaa'}],arenque:['fish','#8a9ab0',{belly:'#e8eef4'}],lucio:['fish','#5a8a4a',{stripe:'#a8c870'}]};
  const BIO=['#d8a84a','#4f9a4a','#8a9a3a','#6aa8e0','#c8382e','#e0601a'];
+ // OFICIOS-D4 (25 oct 2026): id de oficio → [kind 3D, color]. Sufijo = id del tier (TC) o de la madera (WCOL); og_<oficio>_<ranura>_<tier>. Añadir un prefijo = una fila aquí + su kind en src/r3d/craftgen3d.js.
+ const CRK={m:'hammer',s:'tongs',h:'cap',d:'apron',g:'oglove'},OGK={sm:CRK,cr:{m:'saw',s:'needle',h:'cap',d:'apron',g:'oglove'},es:{m:'chisel',s:'hammer',h:'cap',d:'apron',g:'oglove'},ins:{m:'needle',s:'chisel',h:'cap',d:'apron',g:'oglove'}};
+ const CRP={tb:['plank','w'],mn:['handle','w'],pc:['hide','l'],cu:['leather','l'],fb:['fiber','t'],mj:['thread','t'],te:['cloth','t'],bl:['stoneblk','t'],ld:['brick','t'],hj:['blade','t'],hr:['fitting','t'],eng:['gear','t'],hb:['herb','g'],cv:['herb','g']};
+ const WCOL={pino:'#a0703a',abedul:'#d8d0b0',roble:'#7a4a22',fresno:'#b09a6a',sauce:'#7a9a4a',arce:'#c8652a',tejo:'#8a4aaa',ebano:'#4a4a4a',caoba:'#8a3a2a',baobab:'#b08a52',mundo:'#6ad08a'},LCOL=['#9a6a34','#8a5a2a','#7a4a22','#6a4a3a','#8a8a9a','#6b4a32','#4a3a2a','#8a3a3a','#5a3a6a','#c8742a','#e8e0c8'],GRN='#5aa048';
+ function CRAFT(id,tb){const b=id.split('~')[0],p=b.split('_');let m;
+  if(p[0]==='og'&&p.length>=4){const k=(OGK[p[1]]||CRK)[p[2]];return k?[k,TC[p[3]]||'#aaaaaa']:null}
+  const r=CRP[p[0]];if(!r||p.length<2)return null;const last=p[p.length-1],ti=['cobre','estano','bronce','hierro','acero','plata','mitril','adam','runita','oricalco','celestita'].indexOf(last);
+  const col=r[1]==='w'?(WCOL[last]||'#a0703a'):r[1]==='l'?(LCOL[Math.max(0,ti)]):r[1]==='g'?GRN:(ti>=0?TC[last]:'#cdbfe8');
+  return[r[0],col]}
  function spec(id){let m,t;
   const tr=ITEMICON.tier?ITEMICON.tier(id):null,cm0=/^(?:ar|sh|lg|gl)_(cu|tu)_/.exec(id),tb=TC[tr]||'#aaaaaa',tc=cm0?(cm0[1]==='cu'?mix('#8a5a2a',tb,.3):mix('#cfc8e8',tb,.5)):(TC[tr]||'#aaa'); // lote C1: cuero = marrón teñido · túnica = tela clara teñida por el tier
   if(id.startsWith('sw_'))return['sword',tc];if(id.startsWith('ar_'))return['chest',tc];if(id.startsWith('sh_'))return['shield',tc];if(id.startsWith('lg_'))return['legs',tc];if(id.startsWith('gl_'))return['gloves',tc];
   if(id.startsWith('ax_'))return['axe',tc];if(id.startsWith('pk_'))return['pick',tc];if(id.startsWith('rd_'))return['rod',tc];if(id.startsWith('bw_'))return['bow',tc];if(id.startsWith('st_'))return['staff',tc,{orb:ORB[tr]||'#9cf'}];
   if(id.startsWith('fl_'))return['arrows',tc];if(id.startsWith('vi_'))return['bolts',tc];if(id.startsWith('qv_'))return['quiver',mix('#8a5a2a',tb,.3)]; // lote C5
+  {const cr=CRAFT(id,tb);if(cr)return cr}   // OFICIOS-D4: herramientas, ropa e intermedios de oficio (convenciones: REGLAS_CREACION §13)
   if(id.startsWith('b_'))return['bar',tc];
   if(TC[id]&&['plata','cobre','estano','hierro','carbon','mitril','adam','runita','oricalco','celestita'].includes(id))return['ore',TC[id]];
   if(TC[id]&&['abedul','fresno','ebano','logs','roble','sauce','arce','tejo','caoba','baobab','mundo'].includes(id))return['log',TC[id]];

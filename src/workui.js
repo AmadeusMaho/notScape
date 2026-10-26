@@ -1,11 +1,16 @@
 // WKUI — Hoja de trabajo (crafteo estilo FF14) conectada al juego. L0b–L1b, 22 oct 2026. Lógica pura en work.js (WK).
 // Hoy solo la usa la HERRERÍA en yunque/armero (el horno sigue automático). Plan: docs/PLAN_OFICIOS_FF14.md.
+// D2 (25 oct 2026): GENERALIZADO. El oficio activo es `OF` (se fija en start() desde A.sk); un oficio nuevo se registra con WKUI.reg('cr',{n:'Artesanía',stn:['bench'],clip:'sm'}) y listo
+// (barra/macros por oficio en S.wkb[of], acciones exclusivas por `of:` en WK.A, estación→oficio con WKUI.on(sk,stn), animación: `clip` = clip del héroe, por defecto el de herrería).
 // Se carga DESPUÉS de game.js: usa sus globales (A, S, L, XT, ACT, stepAct, hasIn, log, banner, tone, noise, whSnd, whFx, armPose, armP0, FM_IMP, WH_REC, stopA…).
 // Barra de 20 casillas (teclas 1–0 y Mayús+1–0) asignable arrastrando desde el libro; 3 macros de hasta 6 acciones (nv ≥ 30). Guardado en S.wkb[oficio].
 const WKUI=(()=>{
-  const OF='sm',GRP={p:'Avance',pq:'Avance',q:'Calidad',b:'Estados',r:'Reparación',u:'Utilidad'},ORD=['p','q','b','r','u'];
+  let OF='sm';
+  const REG={sm:{n:'Herrería',stn:['anvil','armero'],clip:'sm'}};   // oficios con hoja de trabajo: nombre, estaciones donde se abre, clip de animación del héroe (respaldo genérico = 'sm')
+  const GRP={p:'Avance',pq:'Avance',q:'Calidad',b:'Estados',r:'Reparación',u:'Utilidad'},ORD=['p','q','b','r','u'];
   const DESC={sb:'Avance 120 %.',tb:'Calidad 100 %. +1 Concentración.',mm_:'Recupera 30 de Resistencia.',ht:'Calidad 100 %, 60 % de acierto, gratis.',rs:'Avance 500 %, 50 % de acierto, gratis.',ob:'No hace nada; enlaza otras acciones.',tt:'Solo con pieza Buena o Excelente: +20 PO.',wn:'4 acciones con la mitad de gasto de Resistencia.',ve:'+50 % de Avance durante 4 acciones.',ts:'Calidad 125 %. Cuesta 18 tras Toque básico.',gs:'El siguiente toque rinde el doble.',inn:'+50 % de Calidad durante 4 acciones.',fa:'El Avance no pasa de 99 % durante 5 acciones.',wn2:'8 acciones con la mitad de gasto.',by:'Calidad 100 % +20 % por Concentración. La consume.',pt:'Solo Buena o Excelente. Calidad 150 %, +2 Concentración.',mu:'Solo en el 1.er paso. Avance 300 % y bono de Avance.',co:'Vuelve a tirar la condición (3 usos).',cs:'Avance 180 %.',ma:'+5 Resistencia por acción durante 8 acciones.',pdt:'Calidad 100 %, mitad de gasto. No con Sin desperdicio.',rf:'Solo en el 1.er paso. Calidad 100 %, +2 Concentración.',pp:'Calidad 200 %, doble gasto, +2 Concentración.',gw:'Avance 360 %, doble gasto.',de:'Avance 100 % y Calidad 100 %.',is:'Solo Buena o Excelente. Avance 400 %.',at:'Calidad 150 %. Cuesta 18 tras Toque estándar.',ps:'Avance 180 %, mitad de gasto. No con Sin desperdicio.',te:'1.er paso, receta muy inferior a tu nivel: Calidad al máximo.',tf:'Con Concentración 10: Calidad 100 % sin gasto.',rt:'Calidad 100 % tras Toque básico.',qi:'Innovación al instante (1 vez).',im:'Restaura toda la Resistencia (1 vez).',tp_:'La siguiente acción no gasta Resistencia (1 vez).',hs:'Fuerza una acción como si la pieza fuera Excelente (1 vez).',
     gd:'Dos martillazos: Avance 220 %, doble gasto.',es_:'Avance 150 % y +1 Concentración.',fc:'Veneración y +1 Concentración.',tm:'+20 Resistencia y 3 acciones a mitad de gasto.',rm:'Calidad 160 %. Pide Concentración 3 o más.'};
+  const OFN=()=>(REG[OF]&&REG[OF].n)||SK[OF][0];
   const DEFBAR=['sb','gd','tb','ts','pp','by','ve','inn','wn','mm_'];
   const SVG={p:'<path d="M4 20l6-6M9 7l8 8-3 3-8-8z"/>',q:'<path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"/>',b:'<path d="M12 4v16M6 10l6-6 6 6"/>',r:'<path d="M12 5v14M5 12h14"/>',u:'<circle cx="12" cy="12" r="4"/><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/>',m:'<path d="M5 6h14M5 12h14M5 18h9"/>'};
   const ico=t=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+SVG[t==='pq'?'p':t]+'</svg>';
@@ -19,7 +24,7 @@ const WKUI=(()=>{
   function wb(){S.wkb=S.wkb||{};return S.wkb[OF]=S.wkb[OF]||{bar:new Array(20).fill(null),mac:[[],[],[]],seen:{}}}
   function syncBar(lvl){ // las acciones nuevas entran solas en la primera casilla libre (una vez); lo que quitas no vuelve
     const b=wb(),first=!Object.keys(b.seen).length;
-    if(first)DEFBAR.forEach((id,i)=>{if(WK.A[id]&&WK.A[id].lv<=lvl)b.bar[i]=id});
+    if(first)DEFBAR.forEach((id,i)=>{if(WK.A[id]&&WK.A[id].lv<=lvl&&(!WK.A[id].of||WK.A[id].of===OF))b.bar[i]=id});
     for(const id of WK.list(OF,lvl)){if(WK.A[id].spec||b.seen[id])continue;b.seen[id]=1;if(!b.bar.includes(id)){const k=b.bar.indexOf(null);if(k>=0)b.bar[k]=id}}
     b.bar=b.bar.map(x=>x&&!isMac(x)&&!WK.avail(x,lvl)?null:x)}
   // ---------- DOM ----------
@@ -79,7 +84,7 @@ const WKUI=(()=>{
     $('#wk-nx').innerHTML=t+' <span class="mu">· '+Math.round(f*100)+' % al nv '+(lvl+1)+'</span>'}
   function render(){
     if(!el||!A||!A.wk)return;const w=A.wk,s=w.s,rec=w.rec,lvl=s.lvl;
-    $('#wk-n').textContent=rec.name;$('#wk-s').textContent='Herrería nv '+lvl+' · Maña '+Math.round(s.mana)+' · Pulso '+Math.round(s.pulso)+' · receta nv '+rec.lvl+(A.left<1e8&&A.left>1?' · quedan '+A.left:'');
+    $('#wk-n').textContent=rec.name;$('#wk-s').textContent=OFN()+' nv '+lvl+' · Maña '+Math.round(s.mana)+' · Pulso '+Math.round(s.pulso)+' · receta nv '+rec.lvl+(A.left<1e8&&A.left>1?' · quedan '+A.left:'');
     metaHTML(lvl);
     $('#wk-qk').hidden=!(lvl-rec.lvl>=15&&!s.over&&!s.hist.length);   // síntesis rápida: recetas ≥ 15 niveles por debajo de las tuyas
     const hq=WK.hq(s);
@@ -114,7 +119,7 @@ const WKUI=(()=>{
   function gear(){try{return typeof OFGEAR!=='undefined'?OFGEAR.bonus(OF):null}catch(e){return null}}
   function start(now){
     if(!el)build();
-    const a=ACT[A.sk][A.i],lvl=L(OF),st=Object.assign(WK.mkStats(lvl,gear()),{of:OF}),rec=WK.mkRecipe(a[3],a[0]);
+    OF=A.sk;const a=ACT[A.sk][A.i],lvl=L(OF),st=Object.assign(WK.mkStats(lvl,gear()),{of:OF}),rec=WK.mkRecipe(a[3],a[0]);
     A.wk={s:WK.start(rec,st),rec,a};
     Object.assign(A,{wl:now,h0:-1e9,hn:0,p0:0,wkv:null});lock=0;pend=null;endAt=0;hl=null;runQ=[];edit=-1;
     syncBar(lvl);el.style.display='flex';render();msg('Elige una acción (teclas 1–0; Mayús+1–0 la 2.ª fila).');
@@ -154,7 +159,7 @@ const WKUI=(()=>{
     if(!A||!A.wk)return;
     if(now-A.wl>60000)return stopA();
     if(pend&&now>=pend.t){const p=pend,e=A.e;pend=null;
-      if(p.miss){noise(.05,.1,420,'lowpass');tone(105,.12,'square',.05,-20)}else{whSnd('sm',p.q);whFx('sm',e,p.q);if(p.q===2&&typeof whPulse==='function')whPulse(now)}}
+      if(p.miss){noise(.05,.1,420,'lowpass');tone(105,.12,'square',.05,-20)}else{whSnd(OF,p.q);whFx(OF,e,p.q);if(p.q===2&&typeof whPulse==='function')whPulse(now)}}
     if(endAt&&now>=endAt){endAt=0;finish(now)}
     // macro en marcha: una acción cada vez que se libera el bloqueo; se detiene si la pieza sale Excelente
     if(A.wk&&runQ.length&&now>=lock&&!A.wk.s.over){const s=A.wk.s;if(s.cond==='excelente'&&!['pt','is','tt','by','rm'].includes(runQ[0])){msg('Macro detenida: la pieza está Excelente.');runQ=[]}else{const id=runQ.shift();if(!use(id))runQ=[]}}
@@ -184,15 +189,19 @@ const WKUI=(()=>{
     setTimeout(()=>{if(!A||!A.wk)return;if(A.left<=0||!hasIn(a[1]))return stopA();start(performance.now())},ms)}
   // aviso de nivel: acciones nuevas desbloqueadas (lo llama gain() de game.js)
   function onLevel(sk,o,n){
-    if(sk!==OF)return;const nw=WK.list(OF,n).filter(id=>WK.A[id].lv>o&&!WK.A[id].spec);if(!nw.length)return;
-    const names=nw.map(id=>WK.A[id].n).join(', ');log('🔨 <b>Nueva acción de Herrería:</b> '+names);
+    if(!REG[sk])return;const of=sk,nw=WK.list(of,n).filter(id=>WK.A[id].lv>o&&!WK.A[id].spec);if(!nw.length)return;
+    const names=nw.map(id=>WK.A[id].n).join(', ');log('🔨 <b>Nueva acción de '+REG[of].n+':</b> '+names);
     setTimeout(()=>{try{banner('Nueva acción',names,'#7fb4e8',3200)}catch(e){}},1800)}
   function close(){if(el)el.style.display='none';runQ=[]}
   function pose(now){
-    const id=A.e&&A.e.id,v=A.wkv;if(!A.hn&&!v)return{k:'sm',ph:0,id};
-    if(v&&GEST[v]){const u=(now-A.wkv0)/GEST[v];return{k:'sm',id,n:A.wkn||0,v,ph:u<1?Math.max(.001,Math.min(.999,u)):0}}   // gestos (concentración, reparación, observar): línea de tiempo propia
-    return Object.assign({k:'sm',id,n:A.wkn||0,v},armPose(now-A.h0,FM_IMP,FM_IMP+WH_REC,.65,A.p0));
+    const id=A.e&&A.e.id,v=A.wkv,k=(REG[OF]&&REG[OF].clip)||'sm';
+    if(!A.hn&&!v)return{k,ph:0,id};
+    if(v&&GEST[v]){const u=(now-A.wkv0)/GEST[v];return{k,id,n:A.wkn||0,v,ph:u<1?Math.max(.001,Math.min(.999,u)):0}}   // gestos (concentración, reparación, observar): línea de tiempo propia
+    return Object.assign({k,id,n:A.wkn||0,v},armPose(now-A.h0,FM_IMP,FM_IMP+WH_REC,.65,A.p0));
   }
+  // ¿este oficio usa la hoja de trabajo en esta estación? (lo llama el arranque de la acción en game.js)
+  const on=(sk,stn)=>{const r=REG[sk];return !!r&&!!stn&&r.stn.includes(stn.id)};
+  const reg=(sk,o)=>{REG[sk]=Object.assign({n:SK[sk]&&SK[sk][0]||sk,stn:[],clip:'sm'},o)};
   // teclas 1..0 y Mayús+1..0 → casillas (en captura para que el '1' no seleccione habilidad de combate)
   addEventListener('keydown',ev=>{
     if(!A||!A.wk||ev.repeat||ev.ctrlKey||ev.metaKey||ev.altKey)return;
@@ -202,5 +211,5 @@ const WKUI=(()=>{
       if(v){if(isMac(v)){const mc=wb().mac[+v.slice(1)];if(mc&&mc.length)runQ=mc.slice()}else use(v)}}
     else if(ev.key==='Escape'){stopA('Dejas la pieza.')}
   },true);
-  return {start,tick,pose,close,use,render,onLevel};
+  return {start,tick,pose,close,use,render,onLevel,on,reg,REG};
 })();

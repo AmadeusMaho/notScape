@@ -16,6 +16,7 @@
 // AÑADIR: kind nuevo → modelo en itemgen3d.js (+ POSE2/DPOSE2) y una fila en SIZE si no mide el defecto (.3).
 import * as THREE from 'three';
 import {build} from './icons3d.js';
+import {SIZE3} from './craftgen3d.js';
 
 const PI=Math.PI,TAU=PI*2,clamp=(v,a,b)=>v<a?a:v>b?b:v;
 // tamaño (dimensión mayor, en unidades; 1 unidad ≈ 1,75 m)
@@ -23,6 +24,7 @@ const SIZE={sword:.62,dagger:.4,greatsword:.8,staff:.9,scepter:.55,mace:.55,axe:
  ore:.3,bar:.28,log:.55,potion:.26,gem:.2,ring:.16,amulet:.2,coins:.22,arrows:.4,bolts:.4,quiver:.4,
  hide:.5,wool:.3,cloth:.36,bone:.36,tooth:.24,skull:.28,club:.5,horn:.3,nest:.32,pearl:.14,feather:.34,butter:.22,steak:.3,drum:.32,egg:.16,mush:.24,rice:.26,salt:.2,bread:.34,burger:.28,
  fish:.4,shrimp:.28,squid:.4,plate:.36,bowl:.3,crown:.3,mask:.28,hat:.4,shuriken:.24,core:.22,rune:.26,scroll:.3,swirl:.24,bag:.32};
+Object.assign(SIZE,SIZE3);   // OFICIOS-D4
 const SZK=1.35;   // sobredimensión para que se vea y se pueda pulsar (a zoom normal 1 unidad ≈ 60 px)
 const BEAM_H=[0,1.1,2.6,3.6,4.8],BEAM_W=[0,.05,.1,.13,.16],GLOW_R=[0,.5,.7,.85,1];   // por rareza (rr: 0 común … 4 legendario)
 

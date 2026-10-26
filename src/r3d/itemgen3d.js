@@ -6,6 +6,7 @@
 // Estilo: toon + contorno (mkPart), formas facetadas pocas (flat/jit), colores ensuciados, brillo (glow) solo en lo mágico (runas, núcleos, perlas, remolinos).
 import * as THREE from 'three';
 import {glow,jit} from './materials3d.js';
+import {GEN3,POSE3,DPOSE3} from './craftgen3d.js';   // OFICIOS-D4: herramientas, ropa e intermedios de oficio
 
 const PI=Math.PI,TAU=PI*2;
 const shade=(c,k)=>'#'+new THREE.Color(c).multiplyScalar(k).getHexString(),mixc=(a,b,t)=>'#'+new THREE.Color(a).lerp(new THREE.Color(b),t).getHexString();
@@ -96,3 +97,4 @@ export const POSE2={hide:[.5,-.4,0],wool:[0,0,0],cloth:[.25,-.5,0],bone:[0,-.4,.
  crown:[.35,-.3,0],mask:[0,-.35,0],hat:[.2,-.4,0],shuriken:[.9,-.2,0],core:[0,.5,0],rune:[0,-.35,0],scroll:[0,-.4,.6],swirl:[0,.3,0],bag:[0,-.4,0]};
 // pose en el SUELO (drops3d): lo largo se tumba; lo plano queda plano
 export const DPOSE2={hide:[0,0,0],cloth:[0,0,0],bone:[0,0,0],tooth:[0,0,PI/2],club:[0,0,PI/2],horn:[0,0,PI/2],feather:[0,0,PI/2],scroll:[0,0,0],plate:[0,0,0],bowl:[0,0,0],steak:[0,0,0],fish:[0,0,0],shrimp:[0,0,0],squid:[0,0,PI/2],mask:[-PI/2+.4,0,0],shuriken:[0,0,0],drum:[0,0,.5],rune:[-.5,0,0],nest:[0,0,0],burger:[0,0,0],bread:[0,0,0],butter:[0,0,0],wool:[0,0,0],bag:[0,0,0]};
+Object.assign(GEN2,GEN3);Object.assign(POSE2,POSE3);Object.assign(DPOSE2,DPOSE3);   // los kinds de oficio usan la misma firma y las mismas tablas

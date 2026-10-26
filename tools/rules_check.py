@@ -164,6 +164,37 @@ else:
     (ok if not _clash else bad)('CONVENCIONES: ningún prefijo reservado coincide con uno ya en uso', ', '.join(sorted(_clash)))
     (ok if "'og_'+of+'_'+sl+'_'+t[0]" in rd('src/oficios.js') else bad)('CONVENCIONES: ids de equipo de oficio con el id del TIER (no el índice)', 'src/oficios.js')
 
+# 11. LISTA DE COMPROBACIÓN DE SKILL NUEVA (D3, 25 oct 2026; docs/REGLAS_CREACION.md §13.8)
+# Toda clave de SK necesita: icono SVG en SKI, tarjeta en el panel de Habilidades (grupo G) y, si es de recolección u oficio, fila en tools/meas_progresion.py.
+_g = rd('src/game.js')
+_sm2 = re.search(r'const SK=\{(.*?)\},SKL', _g)
+_sks = set(re.findall(r"(\w+):\['", _sm2.group(1))) if _sm2 else set()
+_ski = re.search(r'const SKI=\{(.*?)\n', _g)
+_skik = set(re.findall(r"(\w+):'<", _ski.group(1))) if _ski else set()
+_gm = re.search(r"G=\[\['Combate',\[(.*?)\]\],\['Recolección',\[(.*?)\]\],\['Oficios',\[(.*?)\]\]\]", _g)
+_grp = [set(re.findall(r"'(\w+)'", x)) for x in _gm.groups()] if _gm else [set(), set(), set()]
+_mp = re.search(r"const sks=\[(.*?)\]", rd('tools/meas_progresion.py'))
+_mps = set(re.findall(r"'(\w+)'", _mp.group(1))) if _mp else set()
+_m1 = _sks - _skik
+(ok if not _m1 and _sks else bad)('SKILL NUEVA: toda habilidad de SK tiene icono en SKI', 'sin icono: ' + ', '.join(sorted(_m1)))
+_m2 = _sks - (_grp[0] | _grp[1] | _grp[2])
+(ok if not _m2 else bad)('SKILL NUEVA: toda habilidad de SK sale en el panel de Habilidades (grupo G)', 'sin tarjeta: ' + ', '.join(sorted(_m2)))
+_m3 = (_grp[1] | _grp[2]) - _mps
+(ok if not _m3 else bad)('SKILL NUEVA: recolección y oficios con fila en tools/meas_progresion.py', 'sin fila: ' + ', '.join(sorted(_m3)))
+
+# 12. ICONOS 3D DE OFICIO (D4, 25 oct 2026): todo kind que item-icons.js asigna a un objeto de oficio existe en craftgen3d.js (GEN3) con tamaño en SIZE3 y modulepreload
+_cg = rd('src/r3d/craftgen3d.js'); _ii = rd('src/item-icons.js')
+_g3 = set(re.findall(r'^ (\w+)\(p,g', _cg, re.M))
+_crp = ' '.join(re.findall(r'const (?:CRK|OGK|CRP)=.*', _ii))
+_used = set(re.findall(r"'(\w+)'", _crp)) & set(re.findall(r"(?:^|[\s,{])\w+:\s*\[?'(\w+)'", _crp)) if False else set(re.findall(r"'(\w+)'", _crp))
+_old = {'hide', 'cloth'}
+_missing = {k for k in re.findall(r":\['(\w+)','[twlg]'\]", _crp)} - _g3 - _old
+(ok if _g3 and not _missing else bad)('ICONOS DE OFICIO: todo kind de CRP existe en craftgen3d.js', ', '.join(sorted(_missing)))
+_sz3 = _cg.split('export const SIZE3=')[1] if 'export const SIZE3=' in _cg else ''
+_sz = set(re.findall(r'(\w+):[.\d]+', _sz3))
+(ok if _g3 <= _sz else bad)('ICONOS DE OFICIO: todo kind de GEN3 tiene tamaño en SIZE3', ', '.join(sorted(_g3 - _sz)))
+(ok if 'craftgen3d.js' in rd('index.html') else bad)('ICONOS DE OFICIO: craftgen3d.js con modulepreload', 'index.html')
+
 for lv, r, d in res: print(f'{lv:7} {r}' + (f'  → {d}' if d else ''))
 nf = sum(1 for x in res if x[0] == 'FALLO'); nw = sum(1 for x in res if x[0] in ('AVISO', 'REVISAR'))
 print(f'\nRESULTADO: {"OK" if not nf else "FALLO"} ({nf} fallos, {nw} avisos)'); sys.exit(1 if nf else 0)
