@@ -204,7 +204,8 @@ export class Water{
  freeSpot(sc){for(const f of sc.fish){this.root.remove(f.m);f.m.traverse(o=>{if(o.geometry)o.geometry.dispose()});f.m.userData.mat.dispose()}}
  pulse(x,z,kind,k){const K=KINDS[kind]||KINDS.tug;if(this.on&&this.sim.inside(x,z,1.5))this.sim.dent(x,z,K.amp*(k||1),K.rad);for(let i=0;i<K.drops;i++)this.spawnDrop(x,z,K)}
  updSpots(dt,now,t,tone){const N_=typeof N!=='undefined'?N:null,hov=typeof HOV!=='undefined'?HOV:null,ac=typeof A!=='undefined'&&A?A.e:null,T=ISO.TILE,live=new Set();
-  if(N_)for(const e of N_){if(e.t!=='fi')continue;const x=e.x/T,z=e.y/T;if(Math.abs(x-this.px)>22||Math.abs(z-this.pz)>22)continue;if(typeof alive==='function'&&!alive(e,now))continue;live.add(e);if(!this.spots.has(e))this.spots.set(e,this.mkSpot(e))}
+  if(N_&&(!this.fiL||this.fiN!==N_.length)){this.fiN=N_.length;this.fiL=N_.filter(e=>e.t==='fi')}   /* E2: solo los puntos de pesca (antes se recorría TODO N cada fotograma: 225 000 a K=8) */
+  if(N_)for(const e of this.fiL){const x=e.x/T,z=e.y/T;if(Math.abs(x-this.px)>22||Math.abs(z-this.pz)>22)continue;if(typeof alive==='function'&&!alive(e,now))continue;live.add(e);if(!this.spots.has(e))this.spots.set(e,this.mkSpot(e))}
   for(const[e,sc]of this.spots)if(!live.has(e)){this.freeSpot(sc);this.spots.delete(e)}
   let hs=null;
   for(const[e,sc]of this.spots){const hv=hov===e,act=ac===e;if(hv)hs=sc;sc.agit=Math.max(0,sc.agit-dt);if(sc.hide>0){sc.hide-=dt}

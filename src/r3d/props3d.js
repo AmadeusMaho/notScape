@@ -62,7 +62,22 @@ export class Props{
 
  // Fase 49a (rendimiento): las mallas se reparten en SECTORES de 4×4 celdas; `cull` oculta los sectores lejanos (three salta el subárbol entero: sin cull de frustum ni sombras por malla).
  sec(parent,cx,cy){const M=parent.userData.sec||(parent.userData.sec=new Map()),sx=Math.floor(cx/4),sy=Math.floor(cy/4),k=sx*1000+sy;let g=M.get(k);if(!g){g=new THREE.Group();g.matrixAutoUpdate=false;g.matrixWorldAutoUpdate=false;g.updateMatrixWorld=NOUMW;const S=4*CELL*32;g.userData.c=this.W3((sx+.5)*S,(sy+.5)*S,0);parent.add(g);M.set(k,g)}return g}
- cull(tx,tz,r){const R=r+4*CELL*.72+14;for(const par of [this.grp,this.ogrp]){const M=par.userData.sec;if(!M)continue;M.forEach(g=>{const c=g.userData.c;g.visible=Math.hypot(c.x-tx,c.z-tz)<R})}}
+ cull(tx,tz,r){if(!this.gen){this.stream(tx,tz,r,this.fresh);this.fresh=false}const R=r+4*CELL*.72+14;for(const par of [this.grp,this.ogrp]){const M=par.userData.sec;if(!M)continue;M.forEach(g=>{const c=g.userData.c;g.visible=Math.hypot(c.x-tx,c.z-tz)<R})}}
+ // E2 (26 oct 2026, streaming por sector): `buildGen` solo deja los datos (grupos por sector); las mallas de un sector se crean en `stream` al entrar en el radio visible y se liberan al alejarse (objetos de escena independientes del tamaño del mundo).
+ mk(S){const o3=new THREE.Object3D();
+  for(const {G,list,s:PS,cx,cy,isRock} of S.gr){const n=list.length,m=depthI(new THREE.InstancedMesh(G.g,isRock?this.matRock:this.mat,n));m.castShadow=m.receiveShadow=true;
+   const h=new THREE.InstancedMesh(G.hull,this.ink,n),d=new THREE.InstancedMesh(G.g,this.dmat,n);d.layers.set(3);
+   const fo=G.cards?new THREE.InstancedMesh(G.cards.g,folMat(G.cards.tex),n):null;if(fo){fo.castShadow=true;fo.receiveShadow=false}   // follaje de láminas (Fase 4b): mismas matrices, sin contorno
+   const NI=NAT_ON&&G.key.startsWith('dk:nat:')?NAT_INST[G.key.slice(7,G.key.indexOf('|'))]:null;
+   list.forEach((e,i)=>{const p=this.W3(e.x,e.y,((typeof PROPS!=='undefined'&&PROPS.ELEV&&PROPS.ELEV[e.n]&&TER.baseZ)||TER.standZ)(e.x,e.y));o3.position.copy(p);   /* los props con plataforma propia (ELEV) van sobre el TERRENO (baseZ, sin elevación) y los demás sobre standZ */
+    if(NI){const u=NI[1]+(NI[2]-NI[1])*nhash(e.x,e.y,1),sy=u*(1+(nhash(e.x,e.y,3)-.5)*2*NI[3]);o3.rotation.y=NI[0]?nhash(e.x,e.y,2)*Math.PI*2:0;o3.scale.set(PS*u,PS*sy,PS*u)}else{o3.rotation.y=0;o3.scale.setScalar(PS)}
+    o3.updateMatrix();m.setMatrixAt(i,o3.matrix);h.setMatrixAt(i,o3.matrix);d.setMatrixAt(i,o3.matrix);if(fo)fo.setMatrixAt(i,o3.matrix)});
+   [m,h,d].concat(fo?[fo]:[]).forEach(x=>{x.instanceMatrix.needsUpdate=true;x.computeBoundingSphere();x.matrixAutoUpdate=false;x.matrixWorldAutoUpdate=false});this.sec(this.grp,cx,cy).add(m,h);if(fo)this.sec(this.grp,cx,cy).add(fo);this.sec(this.ogrp,cx,cy).add(d)}
+  this.built.add(S.sk);if(this.onSec)this.onSec()}
+ rm(S){for(const par of [this.grp,this.ogrp]){const M=par.userData.sec,g=M&&M.get(S.sk);if(g){g.children.forEach(o=>o.dispose&&o.dispose());par.remove(g);M.delete(S.sk)}}this.built.delete(S.sk);if(this.onSec)this.onSec()}
+ stream(tx,tz,r,all){if(!this.sd)return 0;const R=r+4*CELL*.72+14+6,U=R+60;let nb=0,lim=all?1e9:2;
+  this.sd.forEach(S=>{if(!this.built.has(S.sk)&&Math.hypot(S.c.x-tx,S.c.z-tz)<4*CELL*.72+10)lim=1e9});
+  this.sd.forEach(S=>{const d=Math.hypot(S.c.x-tx,S.c.z-tz);if(this.built.has(S.sk)){if(d>U)this.rm(S)}else if(d<R&&nb<lim){this.mk(S);nb++}});return nb}
  // R3D-FIX-CARGA (20 oct 2026): construir los 18 000 props de golpe bloqueaba el navegador ~1 s al cargar. `buildGen` es el mismo `build` como GENERADOR (cede cada ~64 props / 32 grupos); `build()` lo agota de golpe (herramientas, editor)
  // y `update()` lo agota también salvo que `Props.DEFER` esté activo: entonces lo reparte `warm(ms)` (lo llama bootRun de game.js entre fotogramas de la pantalla de carga).
  build(){const g=this.buildGen();while(!g.next().done);}
@@ -72,14 +87,10 @@ export class Props{
   let nn=0;const NL=Math.max(1,PROPS.list.length);
   for(const e of PROPS.list){if((++nn&63)===0){this.prog=nn/NL*.5;yield}const T1=performance.now(),k=e.k!=null?e.k:Math.max(0,BIOMES.at(e.x,e.y)),th=BIOMES.list[k]&&BIOMES.list[k].village.theme||null,G=propGeo(e.n,NAT_ON&&NATS.has(e.n)?Object.assign({bk:k,v:NAT_VAR[e.n]?Math.floor(nhash(e.x,e.y,5)*NAT_VAR[e.n]):0},e.o):PR_ON&&PR_BK.has(e.n)||OF_ON&&OF_BK.has(e.n)||BO_ON&&BO_BK.has(e.n)?Object.assign({bk:k},e.o):e.o,th);TG+=performance.now()-T1;if(!G){fail++;continue}
    const ck=G.key+'@'+Math.floor(e.x/(32*CELL))+','+Math.floor(e.y/(32*CELL));let a=groups.get(ck);if(!a)groups.set(ck,a={G,list:[],s:scaleOf(e.n,G),cx:Math.floor(e.x/(32*CELL)),cy:Math.floor(e.y/(32*CELL))});a.list.push(e);ok++}   // por modelo Y por zona de CELL×CELL tiles: así se descartan las zonas fuera de cámara
-  let gg=0;const NG=Math.max(1,groups.size);for(const {G,list,s:PS,cx,cy} of groups.values()){if((++gg&31)===0){this.prog=.5+gg/NG*.5;yield}const n=list.length,isRock=NAT_ON&&(list[0].n==='roca'||list[0].n==='piedra')||CI_ON&&CI_ROCK.has(list[0].n),m=depthI(new THREE.InstancedMesh(G.g,isRock?this.matRock:this.mat,n));m.castShadow=m.receiveShadow=true;
-   const T2=performance.now();if(!G.hull)G.hull=hull(G.g,isRock?.012:.016).geometry;TH+=performance.now()-T2;const h=new THREE.InstancedMesh(G.hull,this.ink,n);const d=new THREE.InstancedMesh(G.g,this.dmat,n);d.layers.set(3);
+  this.sd=new Map();this.built=new Set();let gg=0;const NG=Math.max(1,groups.size);for(const gr of groups.values()){if((++gg&31)===0){this.prog=.5+gg/NG*.5;yield}const {G,list,s:PS,cx,cy}=gr,isRock=NAT_ON&&(list[0].n==='roca'||list[0].n==='piedra')||CI_ON&&CI_ROCK.has(list[0].n);gr.isRock=isRock;
+   const T2=performance.now();if(!G.hull)G.hull=hull(G.g,isRock?.012:.016).geometry;TH+=performance.now()-T2;
    {const bb=G.g.boundingBox;if(bb&&bb.max.y>.25){const sx=Math.max(.3,(bb.max.x-bb.min.x)*.5*1.35*PS),sz=Math.max(.3,(bb.max.z-bb.min.z)*.5*1.35*PS),cx=(bb.max.x+bb.min.x)*.5*PS,cz=(bb.max.z+bb.min.z)*.5*PS;list.forEach(e=>this.fp.push({x:e.x,y:e.y,cx,cz,sx:Math.min(sx,4),sz:Math.min(sz,4),h:bb.max.y*PS,n:e.n}))}}   // F3f·P3A: huella de la malla para la sombra de contacto (contact3d.js)
-   const fo=G.cards?new THREE.InstancedMesh(G.cards.g,folMat(G.cards.tex),n):null;if(fo){fo.castShadow=true;fo.receiveShadow=false}   // follaje de láminas (Fase 4b): mismas matrices, sin contorno
-   const NI=NAT_ON&&G.key.startsWith('dk:nat:')?NAT_INST[G.key.slice(7,G.key.indexOf('|'))]:null;
-   list.forEach((e,i)=>{const p=this.W3(e.x,e.y,((typeof PROPS!=='undefined'&&PROPS.ELEV&&PROPS.ELEV[e.n]&&TER.baseZ)||TER.standZ)(e.x,e.y));o3.position.copy(p);   /* los props con plataforma propia (ELEV) van sobre el TERRENO (baseZ, sin elevación) y los demás sobre standZ (suben a los zócalos: braseros, bancos y ánforas del Ágora): si usara standZ el zócalo subiría con su propia elevación y el héroe lo seguiría atravesando */
-    if(NI){const u=NI[1]+(NI[2]-NI[1])*nhash(e.x,e.y,1),sy=u*(1+(nhash(e.x,e.y,3)-.5)*2*NI[3]);o3.rotation.y=NI[0]?nhash(e.x,e.y,2)*Math.PI*2:0;o3.scale.set(PS*u,PS*sy,PS*u)}else{o3.rotation.y=0;o3.scale.setScalar(PS)}   // Fase 4: giro y escala por instancia en la naturaleza (misma malla, misma llamada de dibujo)
-    o3.updateMatrix();m.setMatrixAt(i,o3.matrix);h.setMatrixAt(i,o3.matrix);d.setMatrixAt(i,o3.matrix);if(fo)fo.setMatrixAt(i,o3.matrix)});
-      [m,h,d].concat(fo?[fo]:[]).forEach(x=>{x.instanceMatrix.needsUpdate=true;x.computeBoundingSphere();x.matrixAutoUpdate=false;x.matrixWorldAutoUpdate=false});this.sec(this.grp,cx,cy).add(m,h);if(fo)this.sec(this.grp,cx,cy).add(fo);this.sec(this.ogrp,cx,cy).add(d)}   // Fase 44a: los props no se mueven (las posiciones van en las matrices de instancia): sin recalcular su matriz cada fotograma (≈ −0,6 ms con 10 000 objetos)
+   const sx=Math.floor(cx/4),sy=Math.floor(cy/4),sk=sx*1000+sy;let S=this.sd.get(sk);if(!S)this.sd.set(sk,S={sk,gr:[],c:this.W3((sx+.5)*4*CELL*32,(sy+.5)*4*CELL*32,0)});S.gr.push(gr)}
+  this.fresh=true;
   this.on=ok>0;this.stats={grupos:groups.size,modelos:GEO.size,props:ok,sinMalla:fail,ms:Math.round(performance.now()-T0),msGeo:Math.round(TG),msHull:Math.round(TH)};console.info('[R3D props]',this.stats)}
 }

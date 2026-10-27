@@ -269,7 +269,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  let sBad=false,sNow=0,sArm=false,sF9=false;const sSt={armados:0,disparos:0,refrescos:0,clave:''};const sTrO=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false,depthTest:false}));
  sTrO.geometry.setAttribute('position',new THREE.Float32BufferAttribute([0,0,0,0,0,0,0,0,0],3));sTrO.geometry.boundingSphere=new THREE.Sphere(new THREE.Vector3(),1e9);sTrO.renderOrder=-1e9;
  sTrO.onBeforeRender=()=>{if(!sArm)return;sArm=false;sSt.disparos++;try{shadowWork(sNow)}catch(e){sBad=true;console.warn('[R3D sombra en caché] desactivada por un error; se usa la sombra normal',e)}};scene.add(sTrO);
- {const fl=res.fell;if(typeof fl==='function')res.fell=function(...a){sDirty=true;return fl.apply(this,a)}}   // un árbol que cae / una mena que se rompe cambian lo fijo
+ res.onSec=props.onSec=()=>{sDirty=true};{const fl=res.fell;if(typeof fl==='function')res.fell=function(...a){sDirty=true;return fl.apply(this,a)}}   // un árbol que cae / una mena que se rompe cambian lo fijo
  function shadowF9(now){sNow=now;sArm=true;sSt.armados++;return true}
  function shadowWork(now){const sh=sun.shadow,sz=sh.mapSize.x,c=sh.camera,tex=(c.right-c.left)/sz,st=tex*64;
   sBasis.z.set(...TOD.dia.sunP).normalize();sBasis.x.set(0,1,0).cross(sBasis.z).normalize();sBasis.y.copy(sBasis.z).cross(sBasis.x);

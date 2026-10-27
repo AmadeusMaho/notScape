@@ -17,6 +17,7 @@
 import * as THREE from 'three';
 import {glow} from './materials3d.js';
 import {cultOf,clothC,chestC,robeC,legsC,glovesC,shieldC,JBLK,JRED} from './armorcult3d.js';
+import {helmC} from './helmets3d.js';
 
 const sph=(r,x=1,y=1,z=1,n=14)=>new THREE.SphereGeometry(r,n,Math.max(7,n*.7|0)).scale(x,y,z);
 const cyl=(a,b,h,n=12)=>new THREE.CylinderGeometry(a,b,h,n),cone=(r,h,n=6)=>new THREE.ConeGeometry(r,h,n),box=(x,y,z)=>new THREE.BoxGeometry(x,y,z);
@@ -26,9 +27,9 @@ const shade=(c,k)=>'#'+new THREE.Color(c).multiplyScalar(k).getHexString(),mixc=
 const PI=Math.PI;
 
 // ── paleta por nivel (c = color del metal, d = sombra, t = acento, g = brillo mágico o null) ──
-export const TIER_IDS=['cobre','estano','bronce','hierro','acero','plata','mitril','adam','runita','oricalco','celestita'];
-const TC={cobre:'#b8623a',estano:'#cfd4dc',bronce:'#c8742a',hierro:'#9a9aa8',acero:'#cfd8e0',plata:'#e8e8f0',mitril:'#4a7aff',adam:'#3adf6a',runita:'#3ad0d8',oricalco:'#e89a3a',celestita:'#c8a0ff'};
-const GL={mitril:'#7fb0ff',adam:'#8dffae',runita:'#8ffaff',oricalco:'#ffd070',celestita:'#ead2ff'};
+export const TIER_IDS=['cobre','bronce','hierro','acero','plata','alba','mitril','adam','runita','oricalco','infernita','celestita'];
+const TC={cobre:'#b8623a',bronce:'#c8742a',hierro:'#9a9aa8',acero:'#cfd8e0',plata:'#e8e8f0',alba:'#f1e6c4',mitril:'#4a7aff',adam:'#3adf6a',runita:'#3ad0d8',oricalco:'#e89a3a',infernita:'#b8301c',celestita:'#bcd8ff'};
+const GL={alba:'#fff0c0',infernita:'#ff6a3a',mitril:'#7fb0ff',adam:'#8dffae',runita:'#8ffaff',oricalco:'#ffd070',celestita:'#bfe6ff'};
 export function tierPal(id){const r=Math.max(0,TIER_IDS.indexOf(id)),c=TC[id]||'#9a9aa8';
  return{id,r,c:r>=3&&r<=5?mixc(c,'#8a90a0',.15):c,d:shade(c,.55),t:r>=5?'#e0b84a':mixc(c,'#ffffff',.35),g:GL[id]||null,lo:shade(c,.78)}}
 
@@ -63,8 +64,10 @@ export function boots(F,g,P,b){const k=Math.max(0,Math.min(5,b.k|0)),q=b.leg?4:b
 function dome(P,head,c,o={}){P(new THREE.SphereGeometry(.212,18,12,0,6.2832,0,o.th||1.62).scale(1,1.05,1.02),c,0,.04,-.005,Object.assign({p:head},MET));
  if(!o.nobrim)P(cyl(.226,.226,.026,20),o.brim||c,0,.047,-.005,Object.assign({p:head},MET));
  if(o.neck)P(new THREE.SphereGeometry(.214,16,8,PI*1.2,PI*.6,1.3,1.1).scale(1,1.05,1.02),o.neck,0,.04,-.005,Object.assign({p:head,t:{side:THREE.DoubleSide}},MET))}
-export function helm(F,head,P,h){const k=Math.max(0,Math.min(5,h.k|0)),q=h.leg?4:h.q||1,B=BOOT[k],G=h.leg?'#e0b84a':null;
+const HELM_DZ=.035,HELM_K=1.06;   // el cráneo del Mini está en z=.04 y los cascos se modelaron centrados en z≈0: se adelantan y agrandan un poco
+export function helm(F,head,P,h){const k=Math.max(0,Math.min(10,h.k|0)),q=h.leg?4:h.q||1,B=BOOT[k],G=h.leg?'#e0b84a':null;
  if(h.leg){dome(P,head,'#2a2430',{neck:'#2a2430'});P(tor(.215,.02,22,7).rotateX(PI/2),'#e0b84a',0,.12,-.005,{p:head,t:{rim:2}});for(let i=0;i<7;i++){const a=(i/7-.5)*PI*1.7;P(cone(.026,.14+(i===3?.07:0),5),'#e0b84a',Math.sin(a)*.2,.2,Math.cos(a)*.14-.005,Object.assign({p:head,t:{rim:2}}))}P(sph(.03,1,1,.8,8),'#c07aff',0,.14,.2,Object.assign({p:head},GLO('#c07aff',2.2)));return}
+ {const hg=new THREE.Group();hg.name='casco';hg.position.set(0,0,HELM_DZ);hg.scale.setScalar(HELM_K);head.add(hg);if(helmC(P,hg,k,q,GLO))return;head.remove(hg)}   // E3 (26 oct): un casco por cultura 0–10 (src/r3d/helmets3d.js) en un subgrupo ADELANTADO y algo mayor para que la cara no asome (tools/r3d/helmet_check.py); lo de abajo queda como reserva
  if(k===0){if(q===1){dome(P,head,'#7a4e28',{nobrim:1,th:1.55});P(box(.2,.024,.1),'#5a3418',0,.07,.2,{p:head});P(tor(.2,.012,22,6).rotateX(PI/2),'#d8b050',0,.1,-.005,{p:head,t:{rim:2}})}
   else{P(new THREE.SphereGeometry(.226,18,12,0,6.2832,0,1.75).scale(1,1.06,1.05),'#4a6a3a',0,.035,-.02,{p:head});P(cone(.1,.2,10),'#4a6a3a',0,.25,-.16,{p:head,rx:-.9});P(box(.01,.2,.05),'#e8e0c0',.1,.2,-.12,{p:head,rz:-.4,rx:-.3});
    if(q>=3){dome(P,head,'#6a4a28',{th:1.2,brim:'#e0b84a'});P(tor(.2,.02,22,7).rotateX(PI/2),'#e0b84a',0,.12,0,{p:head,t:{rim:2}});for(let i=0;i<7;i++){const a=(i/6-.5)*PI*1.3;P(cone(.018,.11,4),'#ffe27a',Math.sin(a)*.2,.2,Math.cos(a)*.15,Object.assign({p:head,rz:-Math.sin(a)*.5},GLO('#ffe27a',1.6)))}}}}

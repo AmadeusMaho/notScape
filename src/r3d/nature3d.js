@@ -19,6 +19,7 @@ export const FOL={
  ebano:{t:'broad',h:2.6,r:.95,tr:'#2a2230',pal:['#1a1224','#422c56','#9474b0']},
  caoba:{t:'broad',h:2.9,r:1.1,tr:'#42261a',pal:['#2c140c','#723020','#c47446']},
  baobab:{t:'baobab',h:2.8,r:1.25,tr:'#6e604a',pal:['#283016','#606a2c','#b2aa46']},
+ ceniza:{t:'broad',h:2.6,r:.95,tr:'#241a18',pal:['#1a0e0c','#5a2418','#c8501c']},   // CENIZA INFERNAL (madera 11, nivel 89, Infierno): copa de brasa y ceniza
  mundo:{t:'broad',h:3.7,r:1.5,tr:'#8f9bb5',pal:['#1f45a0','#4585e0','#b4deff']},   // ÁRBOL DEL MUNDO (madera 11, nivel 94): HOJAS AZULES (decisión del dueño 21 oct 2026: vive en el CIELO / endgame, ya no en el Volcán)
  colgante:{t:'willow',h:1.5,r:.9,tr:'#6a5a46',pal:['#2f6a80','#5fa9b4','#b6e4dc']}};   // El Cielo (ISLA-2e): sauce bajo y colgante de hojas azul-verdosas; solo lo usa skyzone3d.js (no es recurso talable: no está en TREES)
 // COLOR DE LOS ÁRBOLES POR BIOMA (decisión del dueño, 21 oct 2026: «en todos los biomas los árboles tienen que ser de un color distinto», a partir de la paleta azul del Cielo): la FORMA la sigue dando la especie (pino/roble/sauce…) y el COLOR el bioma
@@ -34,7 +35,7 @@ export const TREEPAL=[
  {pal:['#58501c','#b8a238','#f4e28a'],tr:'#7a5a34'},   // 7 Desierto: oro seco
  {pal:['#0e4a5a','#2ab0b8','#b8f4ee'],tr:'#5a5046'},   // 8 Costa de las Tormentas: turquesa
  {pal:['#1f45a0','#4585e0','#b4deff'],tr:'#8f9bb5'}];  // 9 El Cielo: azul cobalto
-const TREES=['pino','abedul','roble','fresno','sauce','arce','tejo','ebano','caoba','baobab','mundo'];
+const TREES=['pino','abedul','roble','fresno','sauce','arce','tejo','ebano','caoba','baobab','ceniza','mundo'];
 
 // ───────── texturas de lámina (generadas por código, como la referencia) ─────────
 const LEAFTEX={};
@@ -104,7 +105,7 @@ export function stumpGeo(){const g=jit(new THREE.CylinderGeometry(.13,.18,.2,8).
 
 // ───────── capa de recursos 3D (árboles talables y menas) ─────────
 const CELL=24,NVAR=3,CS=256;
-const ORECOL=['#c8742a','#e8e8f8','#c0603a','#9a9aa2','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff'];
+const ORECOL=['#c8742a','#e8e8f8','#c0603a','#9a9aa2','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff','#e8c24a','#ff4a2a'];
 const GOLDTEX=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,246,200,1)');r.addColorStop(.25,'rgba(255,214,90,.7)');r.addColorStop(.6,'rgba(255,170,40,.22)');r.addColorStop(1,'rgba(255,150,20,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();   // CS: celda (px de mundo) del índice de recursos para update()
 // El Cielo (ISLA-4): todo lo que está en la columna de la zona (x ≥ BIOMES.zone.x0) usa ÁRBOLES DEL MUNDO (hojas azules) y menas en mármol claro
 const inZone=x=>{try{const z=BIOMES.zone;return !!z&&x>=z.x0}catch(e){return false}};
@@ -118,8 +119,8 @@ export class Resources{
   if(e.t==='mi')return 'mena'+e.i+(inZone(e.x)?'z':'')+(dead?'d':'');return null}
  parts(kind){if(this.geo[kind])return this.geo[kind];let P=[];
   if(kind==='tocon'){const g=stumpGeo();P=[{g,mat:toon('#4a3626',{moss:1,tex:'madera',texS:30}),ink:hull(g,.012,inkFor('#4a3626')).geometry,inkM:inkFor('#4a3626')}]}
-  else if(kind.startsWith('mena')){const i=+kind.slice(4).replace(/[dz]/g,''),dead=kind.endsWith('d'),zm=kind.includes('z'),MBA=['#8a5a3a','#9a9aa8','#6a4a3a','#3a3a40','#8a9aa8','#3a4a6a','#2a4a3a','#2a4a52','#5a3a2a','#3a3a5a'],MOR=['#c8742a','#e8e8f8','#c0603a','#6a6a72','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff'];
-   const G=propGeo('mena',{base:zm?'#d6cfbb':MBA[i]||MBA[0],ore:MOR[i]||MOR[0],crystal:i>=5,dead},null);if(G){const m=toon('#ffffff',{vc:1,moss:.7,emit:1,soft:1});P=[{g:G.g,mat:m,ink:hull(G.g,.013).geometry,inkM:inkFor('#5a5560')}]}}
+  else if(kind.startsWith('mena')){const i=+kind.slice(4).replace(/[dz]/g,''),dead=kind.endsWith('d'),zm=kind.includes('z'),MBA=['#8a5a3a','#9a9aa8','#6a4a3a','#3a3a40','#8a9aa8','#3a4a6a','#2a4a3a','#2a4a52','#5a3a2a','#3a3a5a','#6a5a3a','#2a1414'],MOR=['#c8742a','#e8e8f8','#c0603a','#6a6a72','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff','#e8c24a','#ff4a2a'];
+   const G=propGeo('mena',{base:zm?'#d6cfbb':MBA[i]||MBA[0],ore:MOR[i]||MOR[0],crystal:i>=5&&i!==10,dead},null);if(G){const m=toon('#ffffff',{vc:1,moss:.7,emit:1,soft:1});P=[{g:G.g,mat:m,ink:hull(G.g,.013).geometry,inkM:inkFor('#5a5560')}]}}
   else{const[spb,v]=kind.split('#'),[sp,bk]=spb.split('@'),T=treeGeo(sp,+v*17+3,+bk),wm=toon(T.tr,{moss:1,tex:'madera',texS:30,texB:.6});
    P=[{g:T.wood,mat:wm,ink:hull(T.wood,.016).geometry,inkM:inkFor(T.tr)},{g:T.cards,mat:folMat(T.tex),fol:T.tex}]}
   return this.geo[kind]=P}
@@ -127,21 +128,32 @@ export class Resources{
 
  // Fase 49a (rendimiento): las mallas se reparten en SECTORES de 4×4 celdas; `cull` oculta los sectores lejanos (three salta el subárbol entero: sin cull de frustum ni sombras por malla).
  sec(parent,cx,cy){const M=parent.userData.sec||(parent.userData.sec=new Map()),sx=Math.floor(cx/4),sy=Math.floor(cy/4),k=sx*1000+sy;let g=M.get(k);if(!g){g=new THREE.Group();g.matrixAutoUpdate=false;g.matrixWorldAutoUpdate=false;g.updateMatrixWorld=NOUMW;const S=4*CELL*32;g.userData.c=this.W3((sx+.5)*S,(sy+.5)*S,0);parent.add(g);M.set(k,g)}return g}
- cull(tx,tz,r){const R=r+4*CELL*.72+14;for(const par of [this.grp,this.ogrp]){const M=par.userData.sec;if(!M)continue;M.forEach(g=>{const c=g.userData.c;g.visible=Math.hypot(c.x-tx,c.z-tz)<R})}}
- build(now){[this.grp,this.ogrp].forEach(g=>{while(g.children.length){const c=g.children.pop();c.dispose&&c.dispose()}g.userData.sec=null});this.idx.clear();
-  const groups=new Map();
-  for(const e of N){if(e.t!=='wc'&&e.t!=='mi')continue;[0,1].forEach(dead=>{const kind=this.kindOf(e,dead),ck=kind+'@'+Math.floor(e.x/(32*CELL))+','+Math.floor(e.y/(32*CELL));let a=groups.get(ck);if(!a)groups.set(ck,a={kind,list:[],cx:Math.floor(e.x/(32*CELL)),cy:Math.floor(e.y/(32*CELL))});a.list.push(e)})}
-  const o3=new THREE.Object3D();
-  groups.forEach(({kind,list,cx,cy})=>{const P=this.parts(kind);if(!P.length)return;const ms=[];
+ cull(tx,tz,r){this.stream(tx,tz,r,this.fresh);this.fresh=false;const R=r+4*CELL*.72+14;for(const par of [this.grp,this.ogrp]){const M=par.userData.sec;if(!M)continue;M.forEach(g=>{const c=g.userData.c;g.visible=Math.hypot(c.x-tx,c.z-tz)<R})}}
+ // E2 (26 oct 2026, streaming de entidades por sector): `build` solo REPARTE los recursos en sectores (datos); las mallas de un sector se crean en `stream` cuando entra en el radio visible y se liberan cuando se aleja. Objetos de escena independientes del tamaño del mundo (K).
+ build(now){[this.grp,this.ogrp].forEach(g=>{while(g.children.length){const c=g.children.pop();c.dispose&&c.dispose()}g.userData.sec=null});this.idx.clear();this.sd=new Map();this.built=new Set();this.cells=new Map();this.pend=new Set();this.cullR=60;
+  for(const e of N){if(e.t!=='wc'&&e.t!=='mi')continue;const cx=Math.floor(e.x/(32*CELL)),cy=Math.floor(e.y/(32*CELL)),sk=Math.floor(cx/4)*1000+Math.floor(cy/4);let S=this.sd.get(sk);if(!S)this.sd.set(sk,S={sk,cx:Math.floor(cx/4),cy:Math.floor(cy/4),g:new Map(),c:this.W3((Math.floor(cx/4)+.5)*4*CELL*32,(Math.floor(cy/4)+.5)*4*CELL*32,0),n:0});S.n++;
+   [0,1].forEach(dead=>{const kind=this.kindOf(e,dead),ck=kind+'@'+cx+','+cy;let a=S.g.get(ck);if(!a)S.g.set(ck,a={kind,list:[],cx,cy});a.list.push(e)})}
+  const ks=new Set();this.sd.forEach(S=>S.g.forEach(a=>ks.add(a.kind)));ks.forEach(k=>this.parts(k));   // geometrías/materiales de todas las especies ya en la carga (warmShaders las precompila)
+  this.on=this.sd.size>0;this.sig2=this.sign();this.sq=[];console.info('[R3D recursos]',{sectores:this.sd.size,recursos:N.length})}
+ // construye las mallas de UN sector
+ mk(S){const o3=new THREE.Object3D();
+  S.g.forEach(({kind,list,cx,cy})=>{const P=this.parts(kind);if(!P.length)return;const ms=[];
    P.forEach(pt=>{const m=depthI(new THREE.InstancedMesh(pt.g,pt.mat,list.length));m.castShadow=m.receiveShadow=true;ms.push(m);this.sec(this.grp,cx,cy).add(m);
     if(pt.ink){const h=new THREE.InstancedMesh(pt.ink,pt.inkM,list.length);ms.push(h);this.sec(this.grp,cx,cy).add(h)}
     const d=new THREE.InstancedMesh(pt.g,pt.fol?folDepth(pt.fol):this.dmat,list.length);d.layers.set(3);ms.push(d);this.sec(this.ogrp,cx,cy).add(d)});
    list.forEach((e,i)=>{const dead=kind==='tocon'||kind.endsWith('d');let r=this.idx.get(e);if(!r)this.idx.set(e,r={});r[dead?'d':'a']={ms,i};
     o3.position.copy(this.W3(e.x,e.y,TER.standZ(e.x,e.y)));o3.rotation.set(0,hash(e.x,e.y,9)*6.283,0);const sc=e.t==='wc'?.92+hash(e.x,e.y,3)*.16:1;o3.scale.setScalar(sc);o3.updateMatrix();
     r.base=r.base||{p:o3.position.clone(),q:o3.quaternion.clone(),s:sc};ms.forEach(m=>m.setMatrixAt(i,o3.matrix));r.state=null});
-   ms.forEach(m=>{m.instanceMatrix.needsUpdate=true;m.computeBoundingSphere();m.matrixAutoUpdate=false;m.matrixWorldAutoUpdate=false})});   // estáticos: sin recalcular su matriz cada fotograma (F49a: ~8 700 mallas)
-  this.cells=new Map();this.pend=new Set();this.idx.forEach((r,e)=>{const k=Math.floor(e.x/CS)*100003+Math.floor(e.y/CS);let a=this.cells.get(k);if(!a)this.cells.set(k,a=[]);a.push(e,r)});
-  this.on=this.idx.size>0;console.info('[R3D recursos]',{grupos:groups.size,recursos:this.idx.size})}
+   ms.forEach(m=>{m.instanceMatrix.needsUpdate=true;m.computeBoundingSphere();m.matrixAutoUpdate=false;m.matrixWorldAutoUpdate=false})});
+  S.g.forEach(({list})=>list.forEach(e=>{const r=this.idx.get(e);if(r&&!r.ci){r.ci=1;const k=Math.floor(e.x/CS)*100003+Math.floor(e.y/CS);let a=this.cells.get(k);if(!a)this.cells.set(k,a=[]);a.push(e,r)}}));
+  this.built.add(S.sk);if(this.onSec)this.onSec()}
+ // libera las mallas de un sector (y sus entradas del índice)
+ rm(S){for(const par of [this.grp,this.ogrp]){const M=par.userData.sec;if(!M)continue;S.g.forEach(({cx,cy})=>{const k=Math.floor(cx/4)*1000+Math.floor(cy/4),g=M.get(k);if(g){g.traverse(o=>{if(o.isInstancedMesh){o.dispose&&o.dispose()}});par.remove(g);M.delete(k)}})}
+  S.g.forEach(({list})=>list.forEach(e=>{const g=this.gs.get(e);if(g){this.scene.remove(g.sp);this.gs.delete(e)}const r=this.idx.get(e);if(r){const k=Math.floor(e.x/CS)*100003+Math.floor(e.y/CS),a=this.cells.get(k);if(a){for(let n=0;n<a.length;n+=2)if(a[n]===e){a.splice(n,2);break}if(!a.length)this.cells.delete(k)}this.pend.delete(e);this.idx.delete(e)}}));
+  this.built.delete(S.sk);if(this.onSec)this.onSec()}
+ // cada fotograma: construye (máx. `n` sectores) los que entran en el radio visible y libera los que quedan lejos. `all` = construir todos los del radio de una vez (carga / teletransporte).
+ stream(tx,tz,r,all){if(!this.sd)return 0;const R=r+4*CELL*.72+14+6,U=R+60;let nb=0,lim=all?1e9:2;this.sd.forEach(S=>{if(!this.built.has(S.sk)&&Math.hypot(S.c.x-tx,S.c.z-tz)<4*CELL*.72*1.0+10)lim=1e9});
+  this.sd.forEach(S=>{const d=Math.hypot(S.c.x-tx,S.c.z-tz);if(this.built.has(S.sk)){if(d>U)this.rm(S)}else if(d<R&&nb<lim){this.mk(S);nb++}});return nb}
  // CAÍDA / ROTURA (21 oct 2026; «que se caiga el árbol lentamente, que el mineral se rompa de a poco»): al agotarse un recurso se crea una COPIA que lo anima mientras la instancia ya muestra el tocón/escombro.
  //  · árbol: cruje y se inclina despacio (≈ 0,6 s), cae hacia el lado contrario al leñador acelerando, rebota al tocar el suelo (hojas y polvo) y se encoge hasta desaparecer (≈ 3 s en total);
  //  · mena: se parte en 7 trozos que saltan, giran y se encogen, con polvo y chispas del color de la veta.
@@ -175,7 +187,7 @@ export class Resources{
    if(u>2.7){const k=Math.max(0,1-(u-2.7)/.6);piv.scale.setScalar(k);piv.position.y=f.base.p.y-.25*(1-k)}
    if(u>3.3){this.scene.remove(piv);this.falls.splice(i,1)}}}
  // cada fotograma: vivo/agotado (cambia de instancia), temblor del que se está talando, resalte bajo el puntero
- update(now,t,hov,act,dt){const s=this.sign();if(s!==this.sig){this.sig=s;this.build(now)}if(this.falls.length)this.updFalls(t,dt||.016);
+ update(now,t,hov,act,dt){const s=this.sign();if(s!==this.sig){this.sig=s;this.build(now);this.fresh=true}if(this.falls.length)this.updFalls(t,dt||.016);
   const o3=new THREE.Object3D(),Z=new THREE.Matrix4().makeScale(0,0,0);
   // temblor SOLO al recibir el golpe (pedido del dueño): swPh() de game.js vale 0 en el impacto y crece hasta 1 en el siguiente golpe → amortiguado en el primer ~20 % del ciclo
   const hitK=e=>{if(act!==e)return 0;try{if(typeof A!=='undefined'&&A&&A.wh){const f=(performance.now()-(A.h0+(typeof WH_IMP!=='undefined'?WH_IMP:90)))/340;return f>=0&&f<1?Math.pow(1-f,2):0}   // rueda de recolección: el temblor sale del golpe del jugador (impacto a los 300 ms de pulsar)

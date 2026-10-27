@@ -27,12 +27,12 @@ const flat=g=>{const n=g.index?g.toNonIndexed():g;n.computeVertexNormals();retur
 const GOLD='#d8a24a',WOOD='#5a3e2c',LEATH='#4a3424';
 
 // ── ids → descripción de la pieza de armadura (misma lógica que armorInfo() de game.js) ──
-const TI=['cobre','estano','bronce','hierro','acero','plata','mitril','adam','runita','oricalco','celestita'];
+const TI=['cobre','bronce','hierro','acero','plata','alba','mitril','adam','runita','oricalco','infernita','celestita'];
 const cl=t=>TI.includes(t)?t:t==='cuero'?'bronce':t==='madera'?'cobre':'hierro';
 function armorOf(kind,info){const id=(info.id||'').split('~')[0];let m;
  if(m=/^lt_(\d)([a-z])(\d)$/.exec(id)){const k=+m[1],s=m[2],q=+m[3];
   if(s==='h'||s==='f'||s==='c')return{slot:s,arm:{[s]:{k,q}}};
-  const pc={f:['m','cu','tu'][k%3],t:TI[Math.min(10,k*2+q-1)],cu:k};if(s==='l'||s==='g'||s==='s')return{slot:s,arm:{[s]:pc}};return null}
+  const pc={f:['m','cu','tu'][k%3],t:TI[Math.min(11,k*2+q-1)],cu:k};if(s==='l'||s==='g'||s==='s')return{slot:s,arm:{[s]:pc}};return null}
  if(id==='lg_helm')return{slot:'h',arm:{h:{k:5,q:4,leg:1}}};if(id==='lg_boots')return{slot:'f',arm:{f:{k:5,q:4,leg:1}}};
  const sl={chest:'a',legs:'l',gloves:'g',shield:'s'}[kind];if(!sl)return null;
  const fm=/^(?:ar|sh|lg|gl)_(cu|tu)_/.exec(id),f=fm?fm[1]:id==='ar_cuero'?'cu':'m';

@@ -4,7 +4,7 @@
 // Las herramientas de recolección (hacha, pico, caña) siguen en S.tool/TOOLT hasta el rework de recolección (Puntos de Recolección).
 const OFGEAR=(()=>{
   // Un tier cada 9 niveles de oficio (X = 9, decidido 22 oct). Aspecto por cultura (solo estético): CULT[i] = cultura del bioma del tier (0 Pradera … ; el resto se rellena con cada bioma).
-  const TLV=[1,10,19,28,37,46,55,64,73,82,91],CULT=[0,0,0,1,1,2,3,3,4,5,5];
+  const TLV=[1,9,17,26,34,43,52,61,70,79,88,97],CULT=[0,0,1,1,2,3,3,4,4,5,10,9];
   const OFD={
     sm:{n:'Herrería',slots:{m:'Martillo',s:'Tenazas',h:'Gorro de fragua',d:'Delantal de herrero',g:'Guantes de herrero'},mk:{m:'sm',s:'sm',h:'pe',d:'pe',g:'pe'}}
   };

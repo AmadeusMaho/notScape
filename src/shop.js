@@ -8,7 +8,7 @@
 //    (Fase S15) solo hay que cambiar esas 5 funciones por llamadas al servidor; la interfaz no cambia. Estado en `S.mk`.
 // Dinero: S.coins en COBRE (ver `money()/moneyH()` de game.js).
 const TRADE=(()=>{
- const BUY_K=3,MK_K=2.2,COMM=.05,TIER=['cobre','estano','bronce','hierro','acero','plata','mitril','adam','runita','oricalco','celestita'],WOOD=['pino','abedul','roble','fresno','sauce','arce','tejo','ebano','caoba','baobab','mundo'];
+ const BUY_K=3,MK_K=2.2,COMM=.05,TIER=['cobre','bronce','hierro','acero','plata','alba','mitril','adam','runita','oricalco','infernita','celestita'],WOOD=['pino','abedul','roble','fresno','sauce','arce','tejo','ebano','caoba','baobab','ceniza','mundo'];
  const PRICE={rn_air:30,rn_earth:30,rn_life:30,rn_water:30,rn_fire:30,rn_arc:60,carbon:60};   // objetos con valor 0 o que conviene fijar
  const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
  const val=id=>PRICE[id]!=null?PRICE[id]/BUY_K:(I[id]?I[id][2]:0),buyPrice=id=>PRICE[id]!=null?PRICE[id]:Math.max(1,Math.round(I[id][2]*BUY_K)),sellPrice=id=>Math.round((I[id]?I[id][2]:0)*(1+.1*S.merc));

@@ -5,8 +5,8 @@
 // Registro: WKUI.reg('sm',{skin:'forge'}) · 'cr'→'carp' · 'pe'→'tan' · 'sa'→'sew'. Un oficio nuevo = una entrada en THEMES (bake de fondo y estación, formas de pieza, herramientas, partículas).
 // Reglas (REGLAS_CREACION §P): solo canvas 2D, un rAF mientras la hoja está abierta, ≤ 220 partículas, sin filtros ni backdrop-filter. OJO: `P` es el jugador; las partículas son `PA`.
 const FORGE=(()=>{
-  const TIERC={cobre:'#c8742a',estano:'#cfd4dc',bronce:'#c8842a',hierro:'#8d8f9c',acero:'#c8d4de',plata:'#e8e8f2',mitril:'#6a8aff',adam:'#5fd98a',runita:'#3ad0d8',oricalco:'#e89a3a',celestita:'#c8a0ff'};
-  const WOODC={pino:'#c79a5a',abedul:'#d8c9a0',roble:'#a07040',fresno:'#b99a64',sauce:'#9aa070',arce:'#c0763a',tejo:'#7a4a32',ebano:'#3a3030',caoba:'#8a3a28',baobab:'#b08a58',mundo:'#7aa86a'};
+  const TIERC={cobre:'#c8742a',bronce:'#c8842a',hierro:'#8d8f9c',acero:'#c8d4de',plata:'#e8e8f2',alba:'#f1e6c4',mitril:'#6a8aff',adam:'#5fd98a',runita:'#3ad0d8',oricalco:'#e89a3a',infernita:'#b8301c',celestita:'#c8a0ff'};
+  const WOODC={pino:'#c79a5a',abedul:'#d8c9a0',roble:'#a07040',fresno:'#b99a64',sauce:'#9aa070',arce:'#c0763a',tejo:'#7a4a32',ebano:'#3a3030',caoba:'#8a3a28',baobab:'#b08a58',ceniza:'#5a4a44',mundo:'#7aa86a'};
   const WOOD='#7a5230',VW=640,VH=240,MAXP=220,FLOOR=207;
   const USE_HERO=false;   // decisión del dueño (26 oct): sin héroe 3D dentro de la interfaz (desentonaba con el 2D); queda el martillo 2D. El código del héroe se conserva: pon true para reactivarlo.
   const HX=122,HY=128,HSZ=420,DX=USE_HERO?-30:0;   // héroe (centro del sprite y tamaño) y desplazamiento de la estación (el yunque/banco queda al alcance de sus manos)
@@ -33,8 +33,8 @@ const FORGE=(()=>{
   const mix=(a,b,t)=>{const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),A=p(a),B=p(b);return'#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')};
   const hash=n=>{let x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)};
   let seed=1;const rnd=()=>hash(seed++);
-  const tierOf=id=>{const m=/_(cobre|estano|bronce|hierro|acero|plata|mitril|adam|runita|oricalco|celestita)$/.exec(String(id||''));return m?m[1]:'hierro'};
-  const woodOf=id=>{const m=/_(pino|abedul|roble|fresno|sauce|arce|tejo|ebano|caoba|baobab|mundo)$/.exec(String(id||''));return m?m[1]:'pino'};
+  const tierOf=id=>{const m=/_(cobre|bronce|hierro|acero|plata|alba|mitril|adam|runita|oricalco|infernita|celestita)$/.exec(String(id||''));return m?m[1]:'hierro'};
+  const woodOf=id=>{const m=/_(pino|abedul|roble|fresno|sauce|arce|tejo|ebano|caoba|baobab|ceniza|mundo)$/.exec(String(id||''));return m?m[1]:'pino'};
   function kindOf(id){id=String(id||'');return /^sw_|^lw_/.test(id)?'sword':/^ax_/.test(id)?'axe':/^pk_/.test(id)?'pick':/^(ar|sh|lg|gl)_(cu|tu)_/.test(id)?(id[0]==='a'?'chest':id[0]==='s'?'shield':id[0]==='l'?'legs':'glove'):/^ar_/.test(id)?'chest':/^sh_/.test(id)?'shield':/^lg_/.test(id)?'legs':/^gl_/.test(id)?'glove':/^og_/.test(id)?'hammer':
     /^tb_/.test(id)?'plank':/^mn_/.test(id)?'handle':/^bw_/.test(id)?'bow':/^st_/.test(id)?'staff':/^rd_/.test(id)?'rod':/^(fl|vi)_/.test(id)?'arrows':/^qv_/.test(id)?'quiver':/^cu_/.test(id)?'leather':/^mj_/.test(id)?'thread':/^(tela|te_)/.test(id)?'cloth':'bar'}
   function colOf(id){id=String(id||'');if(/^(tb|mn|bw|st|rd)_/.test(id))return WOODC[woodOf(id)];if(/_cu_|^cu_|^qv_/.test(id))return mix('#8a5a2a',TIERC[tierOf(id)]||'#8d8f9c',.28);if(/_tu_|^tela|^te_|^mj_/.test(id))return mix('#d8d0e8',TIERC[tierOf(id)]||'#c8c0d8',.35);return TIERC[tierOf(id)]||'#8d8f9c'}

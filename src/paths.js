@@ -5,7 +5,7 @@
 const PSEG=15,PEND=19,PCH=14;   // PCH = paso "Elige tu camino"; PSEG..PEND-1 = tramo del camino
 const PATHS={
  m:{n:'Guerrero',e:'⚔️',col:'#e5453a',tag:'Cuerpo a cuerpo · Combate',ben:['Pelea cuerpo a cuerpo con espada y escudo','Ventaja: la mejor defensa y aguante','Ventaja: sin munición ni maná; golpe especial (V)'],rw:'sw_cobre~2',
-  steps:[['Forja una espada de estaño','make:sw_estano',1,80,'Funde estaño y forja una espada en el yunque.','S:anvil'],
+  steps:[['Forja una espada de cobre','make:sw_cobre',1,80,'Funde cobre y forja una espada en el yunque.','S:anvil'],
    ['Fabrica una armadura de cuero','make:ar_cuero',1,100,'Reúne 4 cueros y cóselos en el banco de curtidor del taller.','S:curtidor'],
    ['Derrota a 5 goblins','kill:goblin',5,150,'Los goblins (⚔) atacan al verte. Lleva comida cocinada.','M:goblin'],
    ['Usa tu golpe especial','spec',1,120,'En combate, con energía suficiente, pulsa V y tu siguiente golpe será especial.','M:goblin']]},

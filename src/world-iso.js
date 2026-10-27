@@ -54,11 +54,11 @@ const TER=(()=>{
  // Los datos (rutas de tierra `routes`, plaza, calles adoquinadas `cobs`, puente `bridge`) viven en biomes.js (F3-B): BIOMES.list[k].routes / .village.
  // rellena PM (0–255: cuánto camino hay en el tile; ≥128 = camino) y DK (1 = pasarela sobre el río, 2 = pasarela de frontera)
  function buildPaths(){PM=new Uint8Array(NX*NY);DK=new Uint8Array(NX*NY);
-  const SG=4,FW=NX*SG,sc=T/SG;PF=new Float32Array(FW*NY*SG);PC=new Float32Array(FW*NY*SG);
+  const SG=4,FW=NX*SG,sc=T/SG;PF=new Uint8Array(FW*NY*SG);PC=new Uint8Array(FW*NY*SG);   /* E2 (26 oct): 0–255 (antes Float32: 750 MB a K=6; ahora 190 MB) */
   const mark=(F,ax,ay,bx,by,w,sf)=>{sf=sf||0;const x0=Math.max(0,Math.floor((Math.min(ax,bx)-w-24-sf*2)/sc)),x1=Math.min(FW-1,Math.floor((Math.max(ax,bx)+w+24+sf*2)/sc)),y0=Math.max(0,Math.floor((Math.min(ay,by)-w-24-sf*2)/sc)),y1=Math.min(NY*SG-1,Math.floor((Math.max(ay,by)+w+24+sf*2)/sc)),dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy||1;
-   for(let j=y0;j<=y1;j++)for(let i=x0;i<=x1;i++){if(!isLand(gh(Math.floor(i/SG),Math.floor(j/SG))))continue;const cx=(i+.5)*sc,cy=(j+.5)*sc,u=Math.max(0,Math.min(1,((cx-ax)*dx+(cy-ay)*dy)/l2)),d=Math.hypot(cx-ax-dx*u,cy-ay-dy*u),e=w+(PAINT.vnoise(cx*.05,cy*.05,7)-.5)*(14+sf*1.5)+(sf?(PAINT.vnoise(cx*.14,cy*.14,11)-.5)*sf:0),t=Math.max(0,Math.min(1,(e+12+sf-d)/(24+2*sf))),a=t*t*(3-2*t);if(a>F[j*FW+i])F[j*FW+i]=a}};
+   for(let j=y0;j<=y1;j++)for(let i=x0;i<=x1;i++){if(!isLand(gh(Math.floor(i/SG),Math.floor(j/SG))))continue;const cx=(i+.5)*sc,cy=(j+.5)*sc,u=Math.max(0,Math.min(1,((cx-ax)*dx+(cy-ay)*dy)/l2)),d=Math.hypot(cx-ax-dx*u,cy-ay-dy*u),e=w+(PAINT.vnoise(cx*.05,cy*.05,7)-.5)*(14+sf*1.5)+(sf?(PAINT.vnoise(cx*.14,cy*.14,11)-.5)*sf:0),t=Math.max(0,Math.min(1,(e+12+sf-d)/(24+2*sf))),a=t*t*(3-2*t);const q=Math.round(a*255);if(q>F[j*FW+i])F[j*FW+i]=q}};
   for(let k=0;k<BIOMES.N;k++){const x0=BIOMES.list[k].ox,y0=BIOMES.list[k].oy,B=BIOMES.list[k],V=B.village;for(const r of B.routes)for(let i=0;i<r.length-1;i++)mark(PF,x0+r[i][0],y0+r[i][1],x0+r[i+1][0],y0+r[i+1][1],B.pathW);for(const q of V.plaza)mark(PF,x0+q[0],y0+q[1],x0+q[0],y0+q[1],q[2]);for(const r of V.cobs)for(let i=0;i<r.p.length-1;i++)mark(PC,x0+r.p[i][0],y0+r.p[i][1],x0+r.p[i+1][0],y0+r.p[i+1][1],r.w,COB_SOFT)}
-  for(let ty=0;ty<NY;ty++)for(let tx=0;tx<NX;tx++){let m=0;for(let j=0;j<SG;j++)for(let i=0;i<SG;i++)m=Math.max(m,PF[(ty*SG+j)*FW+tx*SG+i]);PM[ty*NX+tx]=Math.round(m*255)}
+  for(let ty=0;ty<NY;ty++)for(let tx=0;tx<NX;tx++){let m=0;for(let j=0;j<SG;j++)for(let i=0;i<SG;i++)m=Math.max(m,PF[(ty*SG+j)*FW+tx*SG+i]);PM[ty*NX+tx]=m}
   // pasarelas: el puente sobre el río de la aldea (DK=1) y el paso de cada compuerta (DK=2 compuerta E–O, DK=3 compuerta N–S)
   for(let k=0;k<BIOMES.N;k++){const B=BIOMES.list[k],br=B.village.bridge;if(!br)continue;
    for(let ty=0;ty<NY;ty++){const cy=(ty+.5)*T;for(let tx=0;tx<NX;tx++){const cx=(tx+.5)*T;if(!isLand(gh(tx,ty)))continue;
@@ -68,7 +68,7 @@ const TER=(()=>{
     if(isLand(gh(tx,ty))&&cx>x0&&cx<x1&&cy>y0&&cy<y1&&!DK[ty*NX+tx])DK[ty*NX+tx]=g.vert?2:3}}}
  const rk=(tx,ty)=>ROCK&&tx>=0&&ty>=0&&tx<NX&&ty<NY&&ROCK[ty*NX+tx]===1;   // afloramiento de piedra (lay.hills con rock:1)
  const pc=(tx,ty)=>tx<0||ty<0||tx>=NX||ty>=NY?0:PC[(ty*4)*(NX*4)+tx*4+0]>=0&&cobAny(tx,ty);
- const cobAny=(tx,ty)=>{for(let j=0;j<4;j++)for(let i=0;i<4;i++)if(PC[(ty*4+j)*NX*4+tx*4+i]>=.5)return true;return false};
+ const cobAny=(tx,ty)=>{for(let j=0;j<4;j++)for(let i=0;i<4;i++)if(PC[(ty*4+j)*NX*4+tx*4+i]>=128)return true;return false};
  const pm=(tx,ty)=>tx<0||ty<0||tx>=NX||ty>=NY?0:PM[ty*NX+tx]>=10,pmf=(tx,ty)=>PM[ty*NX+tx]>=128,dk=(tx,ty)=>tx<0||ty<0||tx>=NX||ty>=NY?0:DK[ty*NX+tx];
  const grid=()=>{if(GRID)return GRID;GRID=new Float32Array(NX*NY);ROCK=new Uint8Array(NX*NY);BO=new Uint8Array(NX*NY);MTN=new Uint8Array(NX*NY);for(let ty=0;ty<NY;ty++)for(let tx=0;tx<NX;tx++){const k=BIOMES.at((tx+.5)*T,(ty+.5)*T),ko=BIOMES.own((tx+.5)*T,(ty+.5)*T);BO[ty*NX+tx]=k<0?255:k;{const h=tileH(tx,ty);GRID[ty*NX+tx]=h;if(h===HCLIFF&&BIOMES.ranges.length&&BIOMES.rangeAt((tx+.5)*T,(ty+.5)*T)[0]>=HCLIFF)MTN[ty*NX+tx]=1;if(h>=HGROUND&&h<HCLIFF&&ko>=0){const r=BIOMES.list[ko];if(r.lay&&r.lay.hills&&BIOMES.geo.rock(r,(tx+.5)*T-r.ox,(ty+.5)*T-r.oy))ROCK[ty*NX+tx]=1}}}buildPaths();return GRID};
  const gh=(tx,ty)=>tx<0||ty<0||tx>=NX||ty>=NY?0:GRID[ty*NX+tx];

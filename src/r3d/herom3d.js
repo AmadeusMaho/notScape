@@ -89,5 +89,5 @@ export class MiniHero{
   m.obj.position.copy(pos);m.obj.rotation.y=this.face;G.uChrB.value.set(pos.y,HEIGHT);
   {const sl=st.sleep||0;m.obj.rotation.order='YXZ';if(sl>0){const r=1-sl,sm=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)},a2=sm(.4,.8,r),a3=sm(.8,1,r);   // DORMIDO / LEVANTÁNDOSE (22 oct 2026): `st.sleep` 1 = tumbado boca arriba; al bajar a 0: (r<.4) solo se incorpora el torso (heroanim3d.js), (.4–.8) el cuerpo se alza en cuclillas, (.8–1) se pone de pie
    m.obj.rotation.x=-Math.PI/2*(1-a2)+.14*a2*(1-a3);m.obj.position.y+=.17*(1-a2)}else m.obj.rotation.x=0}
-  st.dist=dist;this.anim.update(st,dt,this.t);this.rodTip=this.anim.rodTip;this.handR=this.anim.handR}
+  st.dist=dist;this.anim.update(st,dt,this.t);m.tickSkirt(dt);this.rodTip=this.anim.rodTip;this.handR=this.anim.handR}
 }

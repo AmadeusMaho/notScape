@@ -17,7 +17,7 @@ JS=r"""()=>{const out={};const save=JSON.stringify(S);
     else d=dur(sk,a)/1000;const r=x/d;if(r>best)best=r}
    if(!best)best=.5;t+=(XT[l+1]-XT[l])/best;l++;if(marks.includes(l))res[l]=+(t/3600).toFixed(1)}
   out.skills[sk]=res}
- const IL=TI.map(t=>t[4]),AL=[1,7,12,18,28,38,50,64,76,86,95];
+ const IL=TI.map(t=>t[4]),AL=[1,12,19,30,40,48,56,66,76,85,91,98];
  const gear=l=>{let wi=-1;IL.forEach((v,i)=>{if(l>=v)wi=i});let ai=-1;AL.forEach((v,i)=>{if(l>=v)ai=i});return['sw_'+(wi>=0?TI[wi][0]:'cobre'),ai>=0?'ar_'+TI[ai][0]:'ar_cuero']};
  const fight=(l,id,mlv)=>{S.xp.cb=XT[l];const g=gear(l);S.eq.w=g[0];S.eq.a=g[1];S.eq.h=S.eq.f=S.eq.r=S.eq.r2=S.eq.n=null;S.vig=0;S.fzr=0;S.dfs=0;S.buf={};
   const d=MD[id],f=MSF[id],hp=Math.max(3,Math.round(HPF(mlv)*f[0])),dm=f[1]?Math.max(1,Math.round(DMF(mlv)*f[1])):0,m={d,lv:mlv,hp,mh:hp,dm};

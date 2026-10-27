@@ -8,8 +8,8 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 const ITEMICON=(()=>{
  const INK='#5b3a29',C={};
- const TC={abedul:'#d8d0b0',fresno:'#b09a6a',ebano:'#4a4646',cobre:'#c8742a',estano:'#cfd4dc',plata:'#e8e8f0',bronce:'#c8842a',hierro:'#8a8a98',acero:'#c8d4de',mitril:'#4a7aff',adam:'#3adf6a',madera:'#8a6a3a',cuero:'#9a6a34',pino:'#a0703a',roble:'#7a4a22',sauce:'#7a9a4a',arce:'#c8652a',tejo:'#8a4aaa',caoba:'#8a3a2a',baobab:'#b08a52',mundo:'#6ad08a',runita:'#3ad0d8',oricalco:'#e89a3a',celestita:'#c8a0ff',adamantita:'#3adf6a',logs:'#8a5a2a',carbon:'#3a3a40'};
- const ORB={pino:'#8cf',abedul:'#cfe',roble:'#9f9',fresno:'#7fd',sauce:'#6fd',arce:'#fa6',tejo:'#e8f',ebano:'#a8f',caoba:'#f86',baobab:'#fd8',mundo:'#8fa'};
+ const TC={abedul:'#d8d0b0',fresno:'#b09a6a',ebano:'#4a4646',cobre:'#c8742a',estano:'#cfd4dc',alba:'#f1e6c4',infernita:'#b8301c',oro:'#e8c24a',ceniza:'#5a4a44',plata:'#e8e8f0',bronce:'#c8842a',hierro:'#8a8a98',acero:'#c8d4de',mitril:'#4a7aff',adam:'#3adf6a',madera:'#8a6a3a',cuero:'#9a6a34',pino:'#a0703a',roble:'#7a4a22',sauce:'#7a9a4a',arce:'#c8652a',tejo:'#8a4aaa',caoba:'#8a3a2a',baobab:'#b08a52',mundo:'#6ad08a',runita:'#3ad0d8',oricalco:'#e89a3a',celestita:'#c8a0ff',adamantita:'#3adf6a',logs:'#8a5a2a',carbon:'#3a3a40'};
+ const ORB={pino:'#8cf',abedul:'#cfe',roble:'#9f9',fresno:'#7fd',sauce:'#6fd',arce:'#fa6',tejo:'#e8f',ebano:'#a8f',caoba:'#f86',baobab:'#fd8',ceniza:'#f95',mundo:'#8fa'};
  const PB=[{m:'#d8a84a',a:'#fff2c0'},{m:'#4f9a4a',a:'#d8f0b0'},{m:'#8a9a3a',a:'#e8f0a0'},{m:'#6aa8e0',a:'#f4fbff'},{m:'#c8382e',a:'#ffe0c0'},{m:'#e0601a',a:'#ffd890'}];   // pradera, bosque, pantano, cumbres, oriental, volcán
  const mix=(a,b,t)=>{const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),A=p(a),B=p(b);return'#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')},lt=(h,t)=>mix(h,'#ffffff',t||.35),dk=(h,t)=>mix(h,'#000000',t||.35);
  let g;   // contexto actual
@@ -122,10 +122,10 @@ const ITEMICON=(()=>{
  // OFICIOS-D4 (25 oct 2026): id de oficio → [kind 3D, color]. Sufijo = id del tier (TC) o de la madera (WCOL); og_<oficio>_<ranura>_<tier>. Añadir un prefijo = una fila aquí + su kind en src/r3d/craftgen3d.js.
  const CRK={m:'hammer',s:'tongs',h:'cap',d:'apron',g:'oglove'},OGK={sm:CRK,cr:{m:'saw',s:'needle',h:'cap',d:'apron',g:'oglove'},es:{m:'chisel',s:'hammer',h:'cap',d:'apron',g:'oglove'},ins:{m:'needle',s:'chisel',h:'cap',d:'apron',g:'oglove'}};
  const CRP={tb:['plank','w'],mn:['handle','w'],pc:['hide','l'],cu:['leather','l'],fb:['fiber','t'],mj:['thread','t'],te:['cloth','t'],bl:['stoneblk','t'],ld:['brick','t'],hj:['blade','t'],hr:['fitting','t'],eng:['gear','t'],hb:['herb','g'],cv:['herb','g']};
- const WCOL={pino:'#a0703a',abedul:'#d8d0b0',roble:'#7a4a22',fresno:'#b09a6a',sauce:'#7a9a4a',arce:'#c8652a',tejo:'#8a4aaa',ebano:'#4a4a4a',caoba:'#8a3a2a',baobab:'#b08a52',mundo:'#6ad08a'},LCOL=['#9a6a34','#8a5a2a','#7a4a22','#6a4a3a','#8a8a9a','#6b4a32','#4a3a2a','#8a3a3a','#5a3a6a','#c8742a','#e8e0c8'],GRN='#5aa048';
+ const WCOL={pino:'#a0703a',abedul:'#d8d0b0',roble:'#7a4a22',fresno:'#b09a6a',sauce:'#7a9a4a',arce:'#c8652a',tejo:'#8a4aaa',ebano:'#4a4a4a',caoba:'#8a3a2a',baobab:'#b08a52',ceniza:'#5a4a44',mundo:'#6ad08a'},LCOL=['#9a6a34','#8a5a2a','#7a4a22','#6a4a3a','#8a8a9a','#6b4a32','#4a3a2a','#8a3a3a','#5a3a6a','#c8742a','#e8e0c8'],GRN='#5aa048';
  function CRAFT(id,tb){const b=id.split('~')[0],p=b.split('_');let m;
   if(p[0]==='og'&&p.length>=4){const k=(OGK[p[1]]||CRK)[p[2]];return k?[k,TC[p[3]]||'#aaaaaa']:null}
-  const r=CRP[p[0]];if(!r||p.length<2)return null;const last=p[p.length-1],ti=['cobre','estano','bronce','hierro','acero','plata','mitril','adam','runita','oricalco','celestita'].indexOf(last);
+  const r=CRP[p[0]];if(!r||p.length<2)return null;const last=p[p.length-1],ti=['cobre','bronce','hierro','acero','plata','alba','mitril','adam','runita','oricalco','infernita','celestita'].indexOf(last);
   const col=r[1]==='w'?(WCOL[last]||'#a0703a'):r[1]==='l'?(LCOL[Math.max(0,ti)]):r[1]==='g'?GRN:(ti>=0?TC[last]:'#cdbfe8');
   return[r[0],col]}
  function spec(id){let m,t;
@@ -135,8 +135,8 @@ const ITEMICON=(()=>{
   if(id.startsWith('fl_'))return['arrows',tc];if(id.startsWith('vi_'))return['bolts',tc];if(id.startsWith('qv_'))return['quiver',mix('#8a5a2a',tb,.3)]; // lote C5
   {const cr=CRAFT(id,tb);if(cr)return cr}   // OFICIOS-D4: herramientas, ropa e intermedios de oficio (convenciones: REGLAS_CREACION §13)
   if(id.startsWith('b_'))return['bar',tc];
-  if(TC[id]&&['plata','cobre','estano','hierro','carbon','mitril','adam','runita','oricalco','celestita'].includes(id))return['ore',TC[id]];
-  if(TC[id]&&['abedul','fresno','ebano','logs','roble','sauce','arce','tejo','caoba','baobab','mundo'].includes(id))return['log',TC[id]];
+  if(TC[id]&&['plata','cobre','estano','hierro','carbon','mitril','adam','runita','oricalco','celestita','oro','infernita'].includes(id))return['ore',TC[id]];
+  if(TC[id]&&['abedul','fresno','ebano','logs','roble','sauce','arce','tejo','caoba','baobab','ceniza','mundo'].includes(id))return['log',TC[id]];
   if(m=/^lt_(\d)([hfrncslgm])(\d)$/.exec(id)){const b=+m[1],q=+m[3],c=PB[b].m,o={gem:['#6ad8ff','#ff6a8a','#ffe060'][q-1],crest:q===3?'#e8c040':null,g:q===3?'#f0d060':'#d8c070'};
    return[{h:'helm',f:'boots',r:'ring',n:'amulet',c:'cape',s:'shield',l:'legs',g:'gloves',m:'quiver'}[m[2]],q===3?mix(c,'#e8c040',.25):c,o]}
   if(m=/^lw_(\d)([dmbc])(\d)$/.exec(id)){const b=+m[1],q=+m[3],c=mix('#c8d0dc',PB[b].m,.28+.12*q),o={g:q===3?'#f0d060':PB[b].m,h:dk(PB[b].m,.45),orb:['#6ad8ff','#ff6a8a','#ffe060'][q-1]};return[{d:'dagger',m:'greatsword',b:'xbow',c:'scepter'}[m[2]],q===3?mix(c,'#fff4c0',.2):c,o]}
@@ -156,7 +156,7 @@ const ITEMICON=(()=>{
  const rgba=(h,a)=>{h=(h||'#ffd890').replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');const n=parseInt(h,16);return'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'};
  const hsh=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0)/4294967295};
  const spark=(x,y,r,col)=>{g.save();g.translate(x,y);g.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4-Math.PI/2,q=i%2?r*.2:r;g.lineTo(Math.cos(a)*q,Math.sin(a)*q)}g.closePath();g.fillStyle=col;g.shadowColor=col;g.shadowBlur=r*.9;g.fill();g.restore()};
- const gradeOf=id=>{const tr=ITEMICON.tier?ITEMICON.tier(id):null,ti=['cobre','estano','bronce','hierro','acero','plata','mitril','adam','runita','oricalco','celestita'].indexOf(tr),r=typeof rr==='function'?rr(id):0;return Math.max(r||0,ti<0?0:ti<3?0:ti<5?1:ti<7?2:ti<9?3:4)};
+ const gradeOf=id=>{const tr=ITEMICON.tier?ITEMICON.tier(id):null,ti=['cobre','bronce','hierro','acero','plata','alba','mitril','adam','runita','oricalco','infernita','celestita'].indexOf(tr),r=typeof rr==='function'?rr(id):0;return Math.max(r||0,ti<0?0:ti<3?0:ti<5?1:ti<7?2:ti<9?3:4)};
  function fx(id,k,c){const a=AURA.has(k),gr=gradeOf(id);if(!a&&gr<3)return;const col=c&&/^#/.test(c)?c:(k==='potion'?'#6ad88a':'#ffd890'),h=hsh(id);
   g.save();g.globalCompositeOperation='destination-over';
   const R0=a?31:27,gd=g.createRadialGradient(32,34,2,32,34,R0);gd.addColorStop(0,rgba(col,a?.62:.38));gd.addColorStop(.55,rgba(col,a?.28:.14));gd.addColorStop(1,rgba(col,0));g.fillStyle=gd;g.fillRect(0,0,64,64);g.restore();

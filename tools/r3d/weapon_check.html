@@ -1,0 +1,27 @@
+<!doctype html><meta charset="utf-8"><title>weapon_check</title>
+<script type="importmap">{"imports":{"three":"../../vendor/three/build/three.module.js","three/addons/":"../../vendor/three/examples/jsm/"}}</script>
+<script type="module">
+// NotScape · comprobación GEOMÉTRICA de armas por cultura (26 oct 2026). Detecta tiras/aristas «flotantes»: una pieza delgada y larga (p. ej. el filo central de una hoja)
+// que debería estar pegada a una pieza grande (la hoja) pero en parte queda fuera de su silueta, como la línea vertical de la espadón del desierto cuando la hoja se curva.
+// Método: por cada malla delgada (lado mayor > .12 y proporción > 7) busca «anfitriones» (mallas no delgadas que abarcan ≥ 50 % de su largo); lanza rayos en -z desde N puntos de su eje
+// y cuenta cuántos NO tocan al anfitrión. > 20 % sin cubrir = FLOTANTE. Resultado en window.__res.
+import * as THREE from 'three';
+import {cultWeapon} from '../../src/r3d/weapons3d.js';
+const KINDS=['sword','dagger','great','staff','scepter','bow','xbow','mace','hatchet','greataxe'];
+const p=(geo,col,x,y,z,o={})=>{const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:col||'#888',side:THREE.DoubleSide}));m.position.set(x||0,y||0,z||0);m.rotation.set(o.rx||0,o.ry||0,o.rz||0);(o.p||root).add(m);return m};
+const root=new THREE.Group();
+function check(kind,cu){const g=new THREE.Group();root.add(g);let ok=true;try{const r=cultWeapon(kind,p,g,{col:'#8a8e96',cu});if(r===null){root.remove(g);return{skip:1}}}catch(e){root.remove(g);return{err:String(e).slice(0,100)}}
+ g.updateMatrixWorld(true);const ms=[];g.traverse(o=>{if(o.isMesh){const b=new THREE.Box3().setFromObject(o),s=b.getSize(new THREE.Vector3()),a=[s.x,s.y,s.z].sort((u,v)=>v-u);ms.push({o,b,s,thin:a[0]>.12&&a[0]/Math.max(a[1],1e-4)>7,box:o.geometry.type==='BoxGeometry'})}});
+ const bad=[],ray=new THREE.Raycaster();
+ for(const t of ms.filter(m=>m.thin&&m.box)){   // solo TIRAS en forma de caja (filos, vetas); los mangos cilíndricos son estructura, no decoración
+ const ax=t.s.y>=t.s.x&&t.s.y>=t.s.z?'y':t.s.x>=t.s.z?'x':'z',lo=t.b.min[ax],len=t.s[ax];
+  const hosts=ms.filter(h=>!(h.thin&&h.box)&&h!==t&&Math.min(h.b.max[ax],t.b.max[ax])-Math.max(h.b.min[ax],t.b.min[ax])>=.5*len&&h.b.intersectsBox(t.b));
+  if(!hosts.length)continue;const N=16;let un=0;const c=t.b.getCenter(new THREE.Vector3());
+  for(let i=0;i<N;i++){const v=lo+len*(i+.5)/N,pt=new THREE.Vector3(ax==='x'?v:c.x,ax==='y'?v:c.y,ax==='z'?v:c.z);ray.set(new THREE.Vector3(pt.x,pt.y,pt.z+.5),new THREE.Vector3(0,0,-1));
+   if(!ray.intersectObjects(hosts.map(h=>h.o),false).length)un++}
+  if(un/N>.2)bad.push({frac:+(un/N).toFixed(2),eje:ax,largo:+len.toFixed(2)})}
+ root.remove(g);return{bad}}
+const res={fallos:[],ok:0,omitidos:0,errores:[]};
+for(const k of KINDS)for(let cu=0;cu<=10;cu++){const r=check(k,cu);if(r.skip){res.omitidos++;continue}if(r.err){res.errores.push(k+'/'+cu+': '+r.err);continue}if(r.bad.length)res.fallos.push({arma:k,cultura:cu,piezas:r.bad});else res.ok++}
+window.__res=res;
+</script>

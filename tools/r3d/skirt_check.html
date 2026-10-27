@@ -1,0 +1,15 @@
+<!doctype html><meta charset="utf-8"><title>skirt_check</title>
+<script type="importmap">{"imports":{"three":"../../vendor/three/build/three.module.js","three/addons/":"../../vendor/three/examples/jsm/"}}</script>
+<script type="module">
+// NotScape · comprobación de la FALDA LIGERA (túnicas y vestidos): el héroe con túnica de tela camina y corre durante 3 s simulados; se mide la PENETRACIÓN máxima de las piernas
+// (muslo, rodilla, tobillo y punta del pie) en la falda, descontando lo que ya se abrió cada cuña (SkirtPhys.pen). > 1,5 cm = los pies sobresalen.
+import * as THREE from 'three';
+import {MiniHero} from '../../src/r3d/herom3d.js';
+const BASE={app:{g:'m',hair:'cut',hc:'#5a3a22',skin:'#d9a878',col:'#6a5a4a',eye:'#2a1a14'},outfit:{scarf:false},gear:{wp:null}};
+const res={casos:[]};
+for(const [k,t] of [[0,'hierro'],[3,'mitril'],[9,'celestita']])for(const run of [0,1]){
+ const H=new MiniHero();H.setLook(Object.assign({},BASE,{arm:{a:{f:'tu',t,cu:k},l:{f:'tu',t,cu:k}}}));const m=H.m;let dist=0;
+ for(let f=0;f<180;f++){const tt=f/60;if(f===40&&m.skp)m.skp.pen=0;dist+=.016*(run?5.6:3);H.update({x:dist,y:0,z:0,mv:1,run,w:0,act:null,hurt:0,t:tt,face:0,night:0,wind:0,dist:0},.016)}
+ res.casos.push({cultura:k,run,skirt:!!m.skp,pen:m.skp?+m.skp.pen.toFixed(3):null,worst:m.skp&&m.skp.worst,a:m.skp&&Array.from(m.skp.a).map(x=>+x.toFixed(2)),t:m.skp&&+m.skp.t.toFixed(2),cunas:m.skG?m.skG.length:0})}
+window.__res=res;
+</script>

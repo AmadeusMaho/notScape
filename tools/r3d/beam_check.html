@@ -1,0 +1,34 @@
+<!doctype html><meta charset="utf-8"><title>beam_check</title>
+<script type="importmap">{"imports":{"three":"../../vendor/three/build/three.module.js","three/addons/":"../../vendor/three/examples/jsm/"}}</script>
+<script type="module">
+// NotScape · comprobación de «VIGAS»: cajas largas y RECTAS (franjas, correas, cordones) colocadas sobre una superficie CURVA (torso/piernas), que se ven como un listón plano pegado
+// al cuerpo en vez de seguir su curvatura (p. ej. las franjas pintadas del Pantano). Método: por cada caja delgada (lado mayor ≥ .1, proporción ≥ 4) se toman 9 puntos a lo largo de su eje
+// y se lanza un rayo hacia el eje del cuerpo contra la malla anfitriona (peto/piernas, no delgada); el HUECO = distancia hasta la superficie − medio grosor. Si el hueco varía más de .016
+// entre extremos y centro (la franja «flota» en el centro o se hunde en los extremos), es una VIGA. También cuenta placas COLGANTES planas grandes (delantales/faldones de una pieza).
+import * as THREE from 'three';
+import {MiniHero} from '../../src/r3d/herom3d.js';
+const BASE={app:{g:'m',hair:'cut',hc:'#5a3a22',skin:'#d9a878',col:'#6a5a4a',eye:'#2a1a14'},outfit:{scarf:false},gear:{wp:null}};
+const ray=new THREE.Raycaster(),res={fallos:[],ok:0,placas:[],tabla:[]};
+// eje largo en MUNDO: dirección principal (iteración de potencias) de las esquinas de la caja, por si la rotación está cocida en la geometría
+function axisOf(o){const a=o.geometry.attributes.position,pts=[];for(let i=0;i<a.count;i++)pts.push(new THREE.Vector3(a.getX(i),a.getY(i),a.getZ(i)).applyMatrix4(o.matrixWorld));const c=pts.reduce((u,v)=>u.add(v),new THREE.Vector3()).multiplyScalar(1/pts.length);let v=new THREE.Vector3(1,.7,.3).normalize();
+ for(let it=0;it<12;it++){const n=new THREE.Vector3();for(const p of pts){const q=p.clone().sub(c);n.addScaledVector(q,q.dot(v))}v=n.length()?n.normalize():v}return v}
+function analiza(root,etiqueta,hostFilter){root.updateMatrixWorld(true);const ms=[];root.traverse(o=>{if(o.isMesh&&o.geometry){o.geometry.computeBoundingBox();const bb=o.geometry.boundingBox,P0=o.geometry.parameters,s=(o.geometry.type==='BoxGeometry'&&P0)?new THREE.Vector3(P0.width,P0.height,P0.depth):bb.getSize(new THREE.Vector3());   // dimensiones REALES de la caja (la rotación puede estar «cocida» en la geometría y agrandar su caja envolvente)
+  ms.push({o,s,wb:new THREE.Box3().setFromObject(o)})}});
+ const dims=m=>[m.s.x,m.s.y,m.s.z],isBox=m=>m.o.geometry.type==='BoxGeometry',thin=m=>{const a=dims(m).sort((x,y)=>y-x);return isBox(m)&&a[0]>=.15&&a[0]/Math.max(a[1],1e-4)>=4};
+ const hosts=ms.filter(m=>!thin(m)&&m.wb.getSize(new THREE.Vector3()).length()>.25&&(!hostFilter||hostFilter(m)));hosts.forEach(h=>{h.o.material=h.o.material.clone();h.o.material.side=THREE.DoubleSide});
+ const out=[];
+ for(const t of ms.filter(thin)){const d=dims(t),L=Math.max(...d),th=Math.min(...d)/2,dirW=axisOf(t.o),cW=t.wb.getCenter(new THREE.Vector3());
+  const gaps=[];for(let i=0;i<9;i++){const u=(i/8-.5)*L*.9,pt=cW.clone().addScaledVector(dirW,u);const to=new THREE.Vector3(-pt.x,0,-pt.z);if(to.length()<1e-3)continue;to.normalize();ray.set(pt,to);ray.far=.6;const h=ray.intersectObjects(hosts.map(x=>x.o),false);if(h.length)gaps.push(h[0].distance-th);else gaps.push(null)}
+  if(window.__dbg)window.__dbg.push({c:window.__cur,L:+L.toFixed(2),gaps:gaps.map(x=>x==null?null:+x.toFixed(3))});const g=gaps.filter(x=>x!=null&&x<.1);if(g.length<4||t.o.userData.cloth)continue;   // userData.cloth = tela suelta que cuelga (juncos, jirones): se separa del cuerpo a propósito
+     // huecos > 10 cm = rayo que no da con el cuerpo (no se mide)
+  const mn=Math.min(...g),mx=Math.max(...g),vari=mx-mn;
+  const curv=Math.abs(dirW.x)>.05||Math.abs(dirW.z)>.05||Math.abs(dirW.y)<.97;   // franja horizontal/inclinada (la vertical sobre un cilindro no se «dobla» a lo largo)
+  out.push({L:+L.toFixed(2),mn:+mn.toFixed(3),mx:+mx.toFixed(3),vari:+vari.toFixed(3),curv})}
+ return out}
+const FAM=['m','cu','tu'];window.__dbg=[];
+const B0=new MiniHero();B0.setLook(Object.assign({},BASE,{arm:{}}));const base=new Set(analiza(B0.obj,'').map(x=>x.L+'|'+x.mn+'|'+x.mx));   // franjas del cuerpo SIN armadura: no cuentan
+for(let k=0;k<=10;k++)for(const f of FAM){window.__cur=k+f;const H=new MiniHero();H.setLook(Object.assign({},BASE,{arm:{a:{f,t:'hierro',cu:k},l:{f,t:'hierro',cu:k},g:{f,t:'hierro',cu:k}}}));H.obj.position.set(0,0,0);
+ const r=analiza(H.obj,'').filter(x=>!base.has(x.L+'|'+x.mn+'|'+x.mx));const bad=r.filter(x=>x.vari>.016);const nb=H.obj.children.length;res.tabla.push({k,f,vigas:bad.length,total:r.length});
+ if(bad.length>=2||bad.some(b=>b.vari>.03))res.fallos.push({k,f,vigas:bad.slice(0,6)});else res.ok++}
+window.__res=res;
+</script>

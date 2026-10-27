@@ -35,7 +35,7 @@ const FOOT=(()=>{
   const fm=floorAt(x,y);if(fm)return fm;
   const T=ISO.TILE,F=TER.fields(),SG=F.SG,NX=TER.NX,NY=TER.NY,FW=NX*SG,sc=T/SG,i=Math.floor(x/sc),j=Math.floor(y/sc),tx=Math.floor(x/T),ty=Math.floor(y/T);
   let b=typeof curB==='number'?curB:0;try{const q=BIOMES.at(x,y);if(q>=0)b=q}catch(e){}
-  if(tx>=0&&ty>=0&&tx<NX&&ty<NY){if(F.DK[ty*NX+tx])return 'wood';if(F.PC[j*FW+i]>=.5)return b===9?'marble':'stone';if(F.PF[j*FW+i]>=.5)return 'dirt';if(TER.rk(tx,ty))return 'stone';if(TER.sandAt(tx,ty)>.5)return 'sand';
+  if(tx>=0&&ty>=0&&tx<NX&&ty<NY){if(F.DK[ty*NX+tx])return 'wood';if(F.PC[j*FW+i]>=128)return b===9?'marble':'stone';if(F.PF[j*FW+i]>=128)return 'dirt';if(TER.rk(tx,ty))return 'stone';if(TER.sandAt(tx,ty)>.5)return 'sand';
    try{if(BIOMES.ranges.length&&BIOMES.rangeAt(x,y)[0]>1)return 'gravel'}catch(e){}}
   return ['grass','grass','mud','snow','grass','gravel','gravel','sand','gravel','grass'][b]||'grass'}catch(e){return 'grass'}}
  const ST={n:0,last:'',run:0,by:{}};   // contador de pasos (pruebas): total, última superficie, corriendo, por superficie

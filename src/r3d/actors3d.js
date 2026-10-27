@@ -18,11 +18,21 @@ import {toon,hull,hash,glow,INK,INK_SK} from './materials3d.js';
 import {Mini,MINI,sword,shieldMesh} from './mini3d.js';
 import {hairFn} from './herom3d.js';
 import {angelWings} from './wings3d.js';   // alas de ángel reutilizables (Lote CINE-2b)
+import {SkirtPhys,flapRig} from './skirt3d.js';
 
 const M4=THREE.Matrix4,V3=THREE.Vector3,QT=THREE.Quaternion;
 import {HK} from './scale3d.js';
 const U=HK/52;                                            // px de modelo → unidades de mundo (52 px = altura del héroe = 1 unidad)
 const sph=(r,x=1,y=1,z=1,n=16)=>new THREE.SphereGeometry(r,n,Math.max(8,n*.75|0)).scale(x,y,z);
+// PAÑO COLGANTE (delantales, tabardos, jirones): sustituye a la «placa plana» (box fino) que parecía un prop recto. Cuelga del borde superior (y=0) hasta y=−h, se CURVA alrededor del cuerpo
+// (los lados se retiran), se ENSANCHA y abomba hacia la cintura/bajo, con PLIEGUES verticales y un dobladillo ondulado. dir=−1 para un paño de espalda. Doble cara. (tools/r3d/beam_check.py avisa de placas planas nuevas)
+const drape=(w,h,o={})=>{const nx=10,ny=8,dir=o.dir||1,pos=[],idx=[];for(let j=0;j<=ny;j++)for(let i=0;i<=nx;i++){const u=i/nx-.5,t=j/ny,x=u*w*(1+.1*t),y=-t*h+Math.sin(u*TWOPI*1.6+1)*.01*t*t,z=dir*(-(x*x)*1.5+Math.sin(x*38+t*2)*.007*t+t*t*.045);pos.push(x,y,z)}
+ for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){const a=j*(nx+1)+i,b=a+1,c=a+nx+1,d=c+1;idx.push(a,c,b,b,c,d,b,c,a,d,c,b)}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();return g};
+const TWOPI=Math.PI*2;
+// PAÑO COLGANTE CON PIVOTE (delantal, tabardo, jirones): el `drape` cuelga de un grupo/hueso en su borde superior para que skirt3d.js (flapRig) lo mueva con las piernas
+function flap(F,g,part,w,h,col,x,y,z,o={}){const dir=o.dir||1,pv=new THREE.Group();pv.position.set(x,y,z);g.add(pv);(F.flaps||(F.flaps=[])).push({g:pv,dir,y0:y,z0:Math.abs(z),h});const m=part(drape(w,h,{dir}),col,0,0,0,{p:pv,ink:o.ink||.012});if(o.rx)m.rotation.x=o.rx;return m}
+
 const cone=(r,h,n=8)=>new THREE.ConeGeometry(r,h,n),cyl=(a,b,h,n=10)=>new THREE.CylinderGeometry(a,b,h,n),box=(x,y,z)=>new THREE.BoxGeometry(x,y,z);
 const shade=(c,k)=>'#'+new THREE.Color(c).multiplyScalar(k).getHexString(),mixc=(a,b,t)=>'#'+new THREE.Color(a).lerp(new THREE.Color(b),t).getHexString();
 const cl=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,u)=>a+(b-a)*u,ss=(a,b,x)=>{const t=cl((x-a)/(b-a),0,1);return t*t*(3-2*t)};
@@ -161,7 +171,7 @@ const kanabo=(F,h,p)=>{p(cyl(.03,.03,.3,6),'#6a4a32',0,.1,0,{p:h,ink:.01});p(cyl
 const trident=(F,h,p)=>{p(cyl(.016,.018,1.5,6),'#5a4a52',0,.45,0,{p:h,ink:.01});[-1,0,1].forEach(q=>p(cone(.022,q?.18:.26,5),'#c8c8d4',q*.07,1.28+(q?0:.03),0,{p:h,ink:.008}));p(box(.16,.025,.025),'#c8c8d4',0,1.2,0,{p:h,ink:.006})};
 const staffW=(orb,L=1.3)=>(F,h,p)=>{p(cyl(.02,.024,L,6),'#5a4030',0,L*.32,0,{p:h,ink:.012});p(new THREE.TorusGeometry(.06,.014,6,12),'#6a4a30',0,L*.67+.02,0,{p:h,ink:.006});p(sph(.06,1,1,1,10),orb,0,L*.67,0,{p:h,ink:0,mat:glow(orb,2)})};
 const shiv=(blade='#a6a08c',L=.28)=>(F,h,p)=>{p(cyl(.016,.016,.1,5),'#4a3422',0,0,0,{p:h,ink:.008});p(box(.1,.02,.03),'#6a5a3a',0,.06,0,{p:h,ink:.006});p(box(.035,L,.012),blade,0,.06+L/2,0,{p:h,ink:.008})};
-const cleaver=(F,h,p)=>{p(cyl(.02,.02,.2,5),'#6a4a32',0,0,0,{p:h,ink:.008});p(box(.03,.4,.2),'#9aa0ae',0,.34,.06,{p:h,ink:.012})};
+const cleaver=(F,h,p)=>{p(cyl(.02,.02,.2,5),'#6a4a32',0,0,0,{p:h,ink:.008});p(box(.03,.4,.2),'#9aa0ae',0,.34,.06,{p:h,ink:.012})};   /*slab-ok: hoja de herramienta rígida*/
 const katana=(c='#d8dce8',L=.62)=>(F,h,p)=>{p(cyl(.017,.017,.2,6),'#2a2a32',0,0,0,{p:h,ink:.008});p(cyl(.05,.05,.015,10),'#b8302a',0,.11,0,{p:h,ink:.006});p(box(.025,L,.012),c,0,.11+L/2,0,{p:h,ink:.008})};
 const flameSword=(F,h,p)=>{p(cyl(.022,.022,.18,6),'#3a2a2a',0,0,0,{p:h,ink:.008});p(box(.18,.03,.04),'#c0502a',0,.1,0,{p:h,ink:.008});p(box(.07,.8,.02),'#e8541c',0,.55,0,{p:h,ink:0,mat:glow('#e8541c',1.15)});p(box(.03,.7,.025),'#ff9a3a',0,.5,0,{p:h,ink:0,mat:glow('#ff9a3a',1.2)})};
 const boneStaff=(F,h,p)=>{p(cyl(.022,.026,1.2,6),'#efe8d4',0,.35,0,{p:h,ink:.01});p(sph(.05,1,1,1,8),'#efe8d4',-.03,.97,0,{p:h,ink:.008});p(sph(.05,1,1,1,8),'#efe8d4',.03,.97,0,{p:h,ink:.008});p(sph(.04,1,1,1,8),'#9affc0',0,1.04,0,{p:h,ink:0,mat:glow('#7fffb0',2)})};
@@ -223,7 +233,7 @@ function HUM_shinobiTop(){return(F,head,part)=>{part(sph(.215,1,1.04,1.02,14),'#
 // Ru (tendera): MUJER, con vestido largo y delantal (el vestido es la excepción permitida: `dress:true`), pelo recogido en moño con cinta, mejillas rosadas y sonrisa. Altura del héroe.
 const RU={id:'ru',H:52,spec:{ph:2,dress:true,hem:.17,flare:1.1,robe:'#8a5a4a',trim:'#d8ccb0',belt:'#5a4a38',skin:'#e6bc98',sleeve:'#8a5a4a',w:.98,pants:'#4a4038',boot:'#3a2c20',blush:1,smile:1,
  top:mix(hairFn('bun','#5a3a28'),(F,head,part)=>{part(sph(.045,1.3,.8,.8,8),'#d8b050',.13,.15,.08,{p:head,ink:.008});part(sph(.04,1,1,1,8),'#d8b050',0,.2,-.12,{p:head,ink:.008})}),
- acc:(F,g,part)=>{part(box(.34,.5,.02).translate(0,.3,0),'#e6dcc0',0,.1,.2,{p:g,ink:.01});part(box(.2,.1,.025),'#c8bca0',0,.24,.215,{p:g,ink:0})}}};
+ acc:(F,g,part)=>{flap(F,g,part,.34,.5,'#e6dcc0',0,.65,.2,{ink:.01});part(box(.2,.1,.025),'#c8bca0',0,.24,.215,{p:g,ink:0})}}};
 
 // ── PNJ DE ALDEA (Fase 6, 20 oct 2026): Guardia, Herrera y Anciano. Diseños APROBADOS de `outfits3d.js` NPCS traducidos al spec de Mini (colores y piezas de ahí; el equipo va como `acc`,
 //    porque estos actores se hornean y no pasan por HeroAnim). Datos de juego (nombre, sitio, diálogo) en `src/npcs.js` (VNPC, misma clave). Reglas de estilo: contorno negro, UN acento
@@ -262,16 +272,16 @@ function vdef(key){const L=NPCLK[key],sp={ph:L.ph,robe:L.robe,trim:L.trim,belt:L
  if(L.blush){sp.blush=1;sp.smile=1}if(L.lean)sp.lean=L.lean;
  const hair=hairFn(L.hs,L.hair),hatF=L.hat&&HATW[L.hat]?HATW[L.hat](L.hatC||L.trim,L.hatC2):null,beardF=L.beard?elderBeard(L.hair,L.beard,.1):null;sp.top=mix(hair,hatF,beardF);
  const tool=TOOLW[L.tool],hand=L.hand==null?0:L.hand;
- sp.acc=(F,g,part)=>{if(L.apron)part(box(.32,.44,.025).translate(0,-.22,0),L.apron,0,.58,.2,{p:g,ink:.012});if(L.scarf)part(new THREE.TorusGeometry(.16,.035,6,14).rotateX(Math.PI/2),L.scarf,0,.86,.01,{p:g,ink:.01});
+ sp.acc=(F,g,part)=>{if(L.apron)flap(F,g,part,.32,.44,L.apron,0,.58,.2,{ink:.012});if(L.scarf)part(new THREE.TorusGeometry(.16,.035,6,14).rotateX(Math.PI/2),L.scarf,0,.86,.01,{p:g,ink:.01});
   if(L.pauld)part(box(.4,.07,.2),L.pauld,0,.84,0,{p:g,ink:.012});if(L.sash)part(box(.34,.06,.24),L.sash,0,.46,0,{p:g,ink:.01});if(tool)F.hold(hand,L.rx==null?-.9:L.rx,tool)};
  return{id:key,H:L.H,wave:!!L.wave,spec:sp}}
 const NPC_DEF={
  guardia:{id:'guardia',H:55,wave:false,spec:{ph:3,robe:'#5a5a62',trim:'#8a8e96',belt:'#3a2a20',skin:'#d0a07a',sleeve:'#8a8e96',pants:'#4a4a5a',boot:'#3a3a44',w:1.06,chestW:1.05,plate:'#8a8a92',pauld:'#8a8a90',brow:'#2a1a12',
   top:mix(hairFn('cut','#3a2a20',true),(F,head,part)=>{part(new THREE.SphereGeometry(.215,16,10,0,6.3,0,1.65).scale(1,1.05,1),'#8a8a90',0,.04,0,{p:head,ink:.018});part(box(.03,.14,.03),'#7a7a82',0,0,.22,{p:head,ink:.01});part(cyl(.235,.235,.03,18),'#7a7a82',0,.045,0,{p:head,ink:.014})}),
-  acc:(F,g,part)=>{part(box(.2,.6,.02),'#6a2a2a',0,.46,.215,{p:g,ink:.012});part(box(.2,.6,.02),'#5a2222',0,.46,-.215,{p:g,ink:.012});part(sph(.04,1,1.3,.4,6),'#d8b050',0,.6,.23,{p:g,ink:0});F.hold(0,0,spearW())}}},
+  acc:(F,g,part)=>{flap(F,g,part,.2,.6,'#6a2a2a',0,.76,.215,{ink:.012});flap(F,g,part,.2,.6,'#5a2222',0,.76,-.215,{ink:.012,dir:-1});part(sph(.04,1,1.3,.4,6),'#d8b050',0,.6,.23,{p:g,ink:0});F.hold(0,0,spearW())}}},
  herrera:{id:'herrera',H:50,wave:true,spec:{ph:1.1,robe:'#7a5a46',trim:'#4a3426',belt:'#3a2a20',skin:'#b5764a',sleeve:'#7a5a46',pants:'#4a3a32',boot:'#2e2218',w:.98,chestW:1.02,brow:'#2a1a12',
   top:(F,head,part)=>{part(new THREE.SphereGeometry(.21,16,10,0,6.3,0,1.45).scale(1,1,1.02),'#8a3a2a',0,.04,-.03,{p:head,ink:.016});part(sph(.085),'#2a1a12',0,.17,-.17,{p:head,ink:.012});part(sph(.05),'#8a3a2a',0,.08,-.22,{p:head,ink:.01})},
-  acc:(F,g,part)=>{part(box(.34,.44,.025).translate(0,-.22,0),'#4a3426',0,.58,.2,{p:g,ink:.012}).rotation.x=.1;part(box(.2,.22,.025),'#4a3426',0,.62,.2,{p:g,ink:.01});part(box(.09,.07,.06),'#6a4a30',-.19,.34,.14,{p:g,ink:.012});F.hold(1,-.9,hammerW)}}},
+  acc:(F,g,part)=>{flap(F,g,part,.34,.44,'#4a3426',0,.58,.2,{ink:.012,rx:.1});part(box(.2,.22,.025),'#4a3426',0,.62,.2,{p:g,ink:.01});part(box(.09,.07,.06),'#6a4a30',-.19,.34,.14,{p:g,ink:.012});F.hold(1,-.9,hammerW)}}},
  anciano:{id:'anciano',H:47,wave:false,spec:{ph:4.2,dress:true,hem:.06,flare:1.08,robe:'#33335a',trim:'#8a7a5a',belt:'#8a7a5a',skin:'#e0bc9a',sleeve:'#33335a',w:.95,lean:.22,brow:'#c8c4bc',
   top:mix(hairFn('mane','#d8d4cc'),elderBeard('#d8d4cc',.32,.12)),
   acc:(F,g,part)=>{part(new THREE.CylinderGeometry(.15,.3,.26,18,1,true).translate(0,.8,0),'#2a2a44',0,0,0,{p:g,ink:.014,t:{side:THREE.DoubleSide}});F.hold(0,0,elderStaff)}}}};
@@ -280,9 +290,9 @@ const NPC_DEF={
 const ROBE=['#4f7a4a','#3f7a46','#8a7a3a','#3a5a8a','#b8302a','#8a2a1a'],HAIR=['#6a4a2a','#3a2a1a','#2a1a12','#d8c8a0','#1a1410','#2a1a14'],SKINS=['#e0b690','#d8a878','#b5764a','#f0d0b8','#e8c8a0','#c08a60'];
 for(let k=0;k<6;k++){const rb=ROBE[k];
  NPC_DEF['cajero@'+k]={id:'cajero@'+k,H:50,wave:false,spec:{ph:k*1.3,robe:rb,trim:'#f1e4c4',belt:'#3a2a20',skin:SKINS[k],sleeve:rb,pants:'#4a3a32',boot:'#2e2218',w:1,chestW:1.02,brow:'#2a1a12',top:hairFn('cut',HAIR[k]),
-  acc:(F,g,part)=>{part(box(.3,.36,.025).translate(0,-.18,0),'#e8dcc0',0,.6,.2,{p:g,ink:.012});part(box(.09,.07,.04),'#d8b050',.12,.5,.215,{p:g,ink:0})}}};
+  acc:(F,g,part)=>{flap(F,g,part,.3,.36,'#e8dcc0',0,.6,.2,{ink:.012});part(box(.09,.07,.04),'#d8b050',.12,.5,.215,{p:g,ink:0})}}};
  NPC_DEF['tendero@'+k]={id:'tendero@'+k,H:48,wave:false,spec:{ph:k*1.7+1,robe:'#7a5a46',trim:rb,belt:rb,skin:SKINS[(k+2)%6],sleeve:'#7a5a46',pants:'#4a3a32',boot:'#2e2218',w:.98,chestW:1.04,brow:'#2a1a12',top:hairFn('bun',HAIR[(k+3)%6]),
-  acc:(F,g,part)=>{part(box(.34,.46,.025).translate(0,-.23,0),rb,0,.6,.2,{p:g,ink:.012});part(box(.2,.2,.025),mix2(rb),0,.62,.2,{p:g,ink:.01})}}}}
+  acc:(F,g,part)=>{flap(F,g,part,.34,.46,rb,0,.6,.2,{ink:.012});part(box(.2,.2,.025),mix2(rb),0,.62,.2,{p:g,ink:.01})}}}}
 const mix2=c=>c;
 // ── GABRIEL (Lote CINE-2, 21 oct 2026): ángel caído, jefe del tutorial y protagonista de la cinemática «La caída de Gabriel» (docs/GUION_TUTORIAL.md, docs/PROMPT_INVIDEO_CINEMATICA_GABRIEL.md).
 //    ≈1,2× el héroe (H=64). Túnica blanca-gris rasgada (con pantalones: regla de PNJ), faja y hombrera dorada gastadas, pelo largo blanco-dorado, ALAS ROTAS horneadas (`angelWings`, wings3d.js: ala derecha alzada y la izquierda caída, con plumas que faltan y puntas quemadas). El HALO agrietado NO se hornea: es una malla emisiva aparte colgada del hueso de la cabeza (`gabriel3d.js`) para poder apagarlo.
@@ -309,7 +319,7 @@ NPC_DEF.gabriel={id:'gabriel',H:64,wave:false,spec:{ph:2.2,browT:-.4,robe:'#b6b1
  top:gabHelm,
  acc:mix(angelWings({q:1,span:1.1,hole:.12,burnt:.2,seed:3}),angelWings({q:-1,span:1.05,droop:.82,hole:.22,burnt:.3,seed:7}),
   (F)=>F.hold(0,-1.05,celestial),
-  (F,g,part)=>{part(box(.2,.5,.02).translate(0,-.25,0),'#b3ae9e',0,.5,.2,{p:g,ink:.01}).rotation.x=.08;part(box(.2,.62,.02).translate(0,-.31,0),'#a49f90',.04,.5,-.2,{p:g,ink:.01}).rotation.x=-.08;   // jirones de túnica delante y detrás
+  (F,g,part)=>{flap(F,g,part,.2,.5,'#b3ae9e',0,.5,.2,{ink:.01,rx:.08});flap(F,g,part,.2,.62,'#a49f90',.04,.5,-.2,{ink:.01,dir:-1,rx:-.08});   // jirones de túnica delante y detrás
    part(box(.4,.07,.22),'#b79f66',0,.84,0,{p:g,ink:.012});part(sph(.1,1.2,.6,.9,10),'#b79f66',-.2,.83,0,{p:g,ink:0})}) }};   // hombreras doradas gastadas
 HUM.gabriel=unit('gabriel',NPC_DEF.gabriel.spec,64);   // ISLA-6: Gabriel como ENEMIGO (jefe del tutorial); el modelo es el mismo del PNJ/cinemática
 export const NPC_IDS=['ru',...Object.keys(NPC_DEF)];
@@ -317,8 +327,8 @@ export const NPC_IDS=['ru',...Object.keys(NPC_DEF)];
 // plantilla de un humanoide: Mini → bake. La escala k se deja FUERA (grupo del actor) para poder cambiarla sin reconstruir.
 function buildHuman(def){const s=Object.assign({},def.spec);s.k=1;s.id=def.id;Mini.detail=.62;let m;try{m=new Mini(s)}finally{Mini.detail=0}m.setInk(true);m.root.scale.setScalar(1);
  const bn=[[m.root,'root'],[m.pelvis,'pelvis'],[m.chest,'chest'],[m.body,'body'],[m.head,'head'],[m.legs[0],'legR'],[m.legs[1],'legL'],[m.knees[0],'kneeR'],[m.knees[1],'kneeL'],[m.ankles[0],'ankR'],[m.ankles[1],'ankL'],
-  [m.arms[0],'armR'],[m.arms[1],'armL'],[m.elbows[0],'elbR'],[m.elbows[1],'elbL'],[m.grips[0],'gripR'],[m.grips[1],'gripL']];
- const t=bake(m.obj,bn,new THREE.Color(m.skinC).getHex());t.kind='human';t.k=(def.H/52)*HK/1.25*(s.k0||1);t.mini={W:m.W};t.lean=m.lean||0;t.dress=!!m.dress;t.rad=.9;t.h=def.H/52*HK;t.cycle=.85*def.H/52*HK;t.eye=[.07,.012,.212,.04];t.eyeCol=s.eye||'#ffd36a';
+  [m.arms[0],'armR'],[m.arms[1],'armL'],[m.elbows[0],'elbR'],[m.elbows[1],'elbL'],[m.grips[0],'gripR'],[m.grips[1],'gripL'],...(m.skG||[]).map((g,i)=>[g,'sk'+i]),...(m.flaps||[]).map((f,i)=>[f.g,'fl'+i])];
+ const t=bake(m.obj,bn,new THREE.Color(m.skinC).getHex());t.kind='human';t.k=(def.H/52)*HK/1.25*(s.k0||1);t.mini={W:m.W};t.lean=m.lean||0;t.dress=!!m.dress;t.skirt=m.skG?{phi:m.skPhi,y0:m.skY0,rad:m.skRad,hem:m.skHem}:null;t.flaps=m.flaps?m.flaps.map(f=>({dir:f.dir,y0:f.y0,z0:f.z0,h:f.h})):null;t.rad=.9;t.h=def.H/52*HK;t.cycle=.85*def.H/52*HK;t.eye=[.07,.012,.212,.04];t.eyeCol=s.eye||'#ffd36a';
  // las órbitas (Morgana) y otros objetos independientes no se hornean: quedan en m; no se usan (se animan sólo con huesos)
  m.obj.traverse(o=>{if(o.geometry)o.geometry.dispose()});return t}
 
@@ -334,7 +344,9 @@ const AX=new THREE.Vector3(1,0,0);
 export class Actor{
  constructor(tpl,key,e,W3){this.tpl=tpl;this.key=key;this.e=e;this.W3=W3;this.grp=new THREE.Group();this.grp.name='actor:'+key;
   const bones=tpl.local.map(l=>{const b=new THREE.Bone();b.position.copy(l.p);b.quaternion.copy(l.q);b.scale.copy(l.s);return b});tpl.parent.forEach((p,i)=>p>=0&&bones[p].add(bones[i]));this.grp.add(bones[0]);
-  this.b={};tpl.names.forEach((n,i)=>this.b[n]=bones[i]);this.rest={};tpl.names.forEach((n,i)=>this.rest[n]=bones[i].quaternion.clone());this.restP={};tpl.names.forEach((n,i)=>this.restP[n]=bones[i].position.clone());
+  this.b={};tpl.names.forEach((n,i)=>this.b[n]=bones[i]);
+  if(tpl.flaps){const b=this.b;this.fkp=new SkirtPhys(flapRig({pelvis:b.pelvis,chest:b.chest,body:b.body,legs:[b.legR,b.legL],knees:[b.kneeR,b.kneeL],ankles:[b.ankR,b.ankL],seed:key.length},tpl.flaps.map((f,i)=>Object.assign({g:b['fl'+i]},f)),tpl.skirt&&tpl.skirt.rad))}   /* paños con pivote */
+  /* falda ligera (skirt3d.js) */if(tpl.skirt){const b=this.b;this.skp=new SkirtPhys({pelvis:b.pelvis,chest:b.chest,body:b.body,legs:[b.legR,b.legL],knees:[b.kneeR,b.kneeL],ankles:[b.ankR,b.ankL],groups:tpl.skirt.phi.map((_,i)=>b['sk'+i]),phi:tpl.skirt.phi,y0:tpl.skirt.y0,rad:tpl.skirt.rad,hem:tpl.skirt.hem,seed:(key.length*7+(e&&e.x?e.x%13:0))})}this.rest={};tpl.names.forEach((n,i)=>this.rest[n]=bones[i].quaternion.clone());this.restP={};tpl.names.forEach((n,i)=>this.restP[n]=bones[i].position.clone());
   const sk=new THREE.Skeleton(bones,tpl.inv);this.mesh=new THREE.SkinnedMesh(tpl.geo,MATS);this.mesh.bind(sk,new M4());this.hull=new THREE.SkinnedMesh(tpl.hgeo,INK_SK);this.hull.bind(sk,new M4());
   this.mesh.frustumCulled=this.hull.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.hull.castShadow=false;this.grp.add(this.mesh,this.hull);
   this.sc=tpl.k;this.grp.scale.setScalar(this.sc);this.face=0;this.faceT=0;this.ph=hash(e.x,e.y,3)*6.28;this.mv=0;this.last=null;this.state='live';this.td=0;this.hov=false;this.fl=false;this.vis=true;
@@ -456,7 +468,7 @@ export class Actors{
   A.ph+=dist/(A.tpl.cycle*(A.tpl.kind==='human'?1:1))*6.283;
   const wave=isNpc&&!A.tpl.nowave&&dp<110&&Math.sin(t*.35)>.3?1:0;if(isNpc){look=cl(Math.atan2(px,py)-A.face,-1,1)}
   A.b.root.position.z-=A.pz||0;A.pz=0;   // deshace el retroceso del fotograma anterior (antes se ACUMULABA: el modelo se iba lejos del enemigo lógico)
-  ANIM[A.tpl.kind](A,{t,dt,mv:A.mv,at:atk,wave:(isNpc&&e.job)?0:wave,look,job:isNpc?e.job:null});
+  ANIM[A.tpl.kind](A,{t,dt,mv:A.mv,at:atk,wave:(isNpc&&e.job)?0:wave,look,job:isNpc?e.job:null});if(A.skp)A.skp.update(dt);if(A.fkp)A.fkp.update(dt);
   // REACCIÓN CORPORAL AL GOLPE (22 oct 2026; «los hits deben sentirse pesados»): el juego deja en `e.hit` = {t, ux, uy, k} (dirección del golpe y fuerza 0..1). El modelo se EMPUJA visualmente en esa dirección (≈ .08–.28 u) y se INCLINA (pitch/roll del `root`, .12–.5 rad) con una curva rápida que decae en ≈ .26–.48 s; solo visual (la posición lógica no se toca: el empuje lógico `knock` desincronizaba el modelo). ATURDIDO (`e.stun`): bamboleo mareado en bucle. La muerte conserva el empuje (`hdx/hdz`).
   if(!isNpc&&A.state==='live'){const h=e.hit;let rx=0,rz=0;
    if(h){const u=(rn-h.t)/(260+220*h.k);if(u>=0&&u<1){const q=this.W3(e.x+h.ux*10,e.y+h.uy*10,z).sub(p),ql=Math.hypot(q.x,q.z)||1;A.hdx=q.x/ql;A.hdz=q.z/ql;

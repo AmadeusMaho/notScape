@@ -271,3 +271,7 @@ he al en jo ing dm ag ap
 ```ids-prefijos-reservados
 pc cu fb mj te tb mn hj hr bl ld mb sem cv hb rc tn gm eg pv tt eng ml
 ```
+
+## Herramientas de verificación de modelos (26 oct 2026) — OBLIGATORIAS tras tocar armas, armaduras, cascos o ropa de PNJ
+`python tools/r3d/weapon_check.py` (tiras/filos flotantes: un adorno de una hoja curva usa `fuller()`/`blade(...,off)`, nunca `box().translate`) · `python tools/r3d/helmet_check.py` (la cabeza/cara no puede atravesar el casco; los cerrados cubren todo) · `python tools/r3d/beam_check.py` (nada de «vigas»: franjas sobre el cuerpo con `ribbon()`, paños colgantes con `drape()`/`cloth()`, nunca cajas finas y rectas). Detalle en AGENTS.md (lote HELMET-BEAM-CHECK).
+`python tools/r3d/skirt_check.py` — túnicas y vestidos deben tener falda de cuñas (`skirt3d.js`) y no dejar que las piernas la atraviesen. Los vestidos NUNCA son un cono sólido.

@@ -3,6 +3,7 @@
 // (normales suaves; el cel lo hacen las bandas de `toon`), contorno = casco invertido (`hull`). Un diseño = datos + 1 función de accesorios.
 import * as THREE from 'three';
 import {toon,hull,hash,glow} from './materials3d.js';
+import {SkirtPhys,flapRig,splitProfile,radAt,SK_N,SK_OV} from './skirt3d.js';
 const V=THREE.Vector3;
 const T=(c,o)=>toon(c,Object.assign({chr:1,rim:1.4},o||{}));
 // Mini.detail (1 por defecto = el héroe): factor de teselación para figuras secundarias (actors3d.js lo baja a ~.62 al hornear enemigos: −55 % de triángulos, imperceptible a su tamaño)
@@ -46,8 +47,12 @@ export class Mini{
    const f=s.flare||1,hem=s.hem==null?.3:s.hem,PF=[[.3,0],[.31,.04],[.24,.3],[.19,.55],[.17,.74],[.12,.84],[0,.86]],rad=y=>{for(let i=0;i<PF.length-1;i++){const a=PF[i],b=PF[i+1];if(y>=a[1]&&y<=b[1])return a[0]+(b[0]-a[0])*(y-a[1])/(b[1]-a[1])}return .1},
     fl=y=>1+(f-1)*Math.max(0,Math.min(1,(.6-y)/.5)),prof=[[0,hem],[rad(hem)*W*fl(hem)*1.12,hem],[rad(hem+.03)*W*fl(hem+.03)*1.06,hem+.03]];
    PF.forEach(p=>{if(p[1]>hem+.06)prof.push([p[0]*W*fl(p[1]),p[1]])});prof[prof.length-1][0]=0;
-   part(lathe(prof),robe,0,0,0);
-   if(s.trim)part(lathe([[prof[1][0]*1.005,hem],[prof[1][0]*1.012,hem+.03],[prof[2][0]*1.01,hem+.06],[prof[2][0]*.99,hem+.02]]),s.trim,0,0,0,{ink:0})
+   // FALDA LIGERA (skirt3d.js): parte alta fija + 8 cuñas articuladas en la cintura que se abren cuando las piernas las empujan
+   {const y0=.52,[lo,hi]=splitProfile(prof,y0),LT=(pts,seg,ps,pl)=>new THREE.LatheGeometry(pts.map(p=>new THREE.Vector2(p[0],p[1])),seg,ps,pl);
+    part(LT(hi,24),robe,0,0,0);this.skG=[];this.skPhi=[];this.skY0=y0;this.skHem=hem;this.skRad=radAt(prof);const dphi=Math.PI*2/SK_N;
+    const tr=s.trim?[[prof[1][0]*1.005,hem],[prof[1][0]*1.012,hem+.03],[prof[2][0]*1.01,hem+.06],[prof[2][0]*.99,hem+.02]]:null;
+    for(let i=0;i<SK_N;i++){const grp=new THREE.Group();grp.position.set(0,y0,0);body.add(grp);this.skG.push(grp);this.skPhi.push(i*dphi+dphi/2);const ps=i*dphi-SK_OV/2,pl=dphi+SK_OV;
+     part(LT(lo.map(p=>[p[0],p[1]-y0]),5,ps,pl),robe,0,0,0,{p:grp});if(tr)part(LT(tr.map(p=>[p[0],p[1]-y0]),5,ps,pl),s.trim,0,0,0,{p:grp,ink:0})}}
   }else{
    const rc=.19*W*cw;
    part(lathe([[0,.36],[.13*W,.365],[.155*W*ww+bel,.42],[rw,.5],[rw,.52]]),pc,0,0,0);                                                       // abdomen + cadera (pantalón)
@@ -67,6 +72,7 @@ export class Mini{
    const an=new THREE.Group();an.position.set(0,-.19,0);kn.add(an);this.ankles.push(an);
    l.userData.foot=part(FC?fsph(.074*lw,1,.62,1.5,7,4):sph(.07*lw,1,.65,1.5),bc,0,0,.04,{p:an,ink:.014});return l});
   this.feet=this.ankles;
+  if(this.skG)this.skp=new SkirtPhys({pelvis:this.pelvis,chest:this.chest,body:this.body,legs:this.legs,knees:this.knees,ankles:this.ankles,groups:this.skG,phi:this.skPhi,y0:this.skY0,rad:this.skRad,hem:this.skHem,seed:this.ph});
   if(s.belt)part(FC?fct(new THREE.TorusGeometry(dress?.19*W:rw*1.04,.03,4,14).rotateX(Math.PI/2)):new THREE.TorusGeometry(dress?.19*W:rw*1.04,.025,8,24).rotateX(Math.PI/2),s.belt,0,dress?.52:.515,0,{ink:.012});
   // cabeza
   const hy=1.06,head=this.head=new THREE.Group();head.position.set(0,hy,0);if(s.headK)head.scale.setScalar(s.headK);body.add(head);
@@ -94,6 +100,7 @@ export class Mini{
  // rx=0 → el +y del objeto apunta hacia el codo (arriba); rx=π/2 → hacia delante. fn(F,grupo,part) construye con part(...,{p:grupo})
  hold(i,rx,fn){const h=new THREE.Group();h.rotation.x=rx;this.grips[i].add(h);fn(this,h,this.part);return h}
  setInk(on){this.inkOn=!!on;this.hulls.forEach(h=>h.visible=!!on)}
+ tickSkirt(dt){if(this.skp)this.skp.update(dt);if(this.flaps&&this.flaps.length){if(!this.fkp)this.fkp=new SkirtPhys(flapRig({pelvis:this.pelvis,chest:this.chest,body:this.body,legs:this.legs,knees:this.knees,ankles:this.ankles,seed:this.ph},this.flaps,this.skRad));this.fkp.update(dt)}}   // falda ligera: la llaman MiniHero.update y (con huesos) actors3d.js
  update(t){const b=Math.sin(t*1.9+this.ph),root=this.root;root.position.y=Math.abs(b)*.006*this.k;this.head.rotation.y=Math.sin(t*.4+this.ph)*.14;this.head.rotation.x=Math.sin(t*.6+this.ph)*.03;
   this.arms.forEach((a,i)=>a.rotation.z=this.base[i]+(i?-1:1)*b*.012)}
 }

@@ -1,0 +1,31 @@
+<!doctype html><meta charset="utf-8"><title>helmet_check</title>
+<script type="importmap">{"imports":{"three":"../../vendor/three/build/three.module.js","three/addons/":"../../vendor/three/examples/jsm/"}}</script>
+<script type="module">
+// NotScape · comprobación GEOMÉTRICA casco ↔ cabeza del jugador (26 oct 2026). La cabeza del Mini es una esfera r .19 (×1,02 en y) centrada en (0,0,.04) con ojos, nariz y boca delante.
+// Por cada casco (cultura 0–10 × calidad 1–3) se lanza un rayo desde el centro de la cabeza hacia cada punto de su superficie y se mira dónde corta al casco:
+//   · SALE  = el casco corta el rayo ANTES del punto y no hay casco más allá → ese trozo de cabeza/cara asoma por fuera del casco (se ve «atravesado»).
+//   · DESCUBIERTA (solo cascos cerrados) = punto sin ninguna pared de casco por fuera → no cubre toda la cabeza.
+// Resultado en window.__res. Los cascos = hijos directos del grupo `head` creados después de la boca (H.mouth).
+import * as THREE from 'three';
+import {MiniHero} from '../../src/r3d/herom3d.js';
+const BASE={app:{g:'m',hair:'cut',hc:'#5a3a22',skin:'#d9a878',col:'#6a5a4a',eye:'#2a1a14'},outfit:{scarf:false},gear:{wp:null}};
+const CLOSED={0:[3],2:[3],3:[3],4:[3],5:[2,3],6:[3],7:[3],9:[3],10:[3]};   // culturas/calidades que DEBEN cubrir toda la cabeza
+const C=new THREE.Vector3(0,0,.04);
+const pts=[],feat=[];{const g=new THREE.SphereGeometry(.19,32,20).scale(1,1.02,1).translate(0,0,.04),a=g.attributes.position;for(let i=0;i<a.count;i++){const v=new THREE.Vector3(a.getX(i),a.getY(i),a.getZ(i));if(v.y>-.12)pts.push(v)}
+ [[.07,.012,.232],[-.07,.012,.232],[0,-.015,.256],[0,-.08,.215],[.07,.075,.2],[-.07,.075,.2]].forEach(f=>{const v=new THREE.Vector3(...f);pts.push(v);feat.push(v)})}
+const ray=new THREE.Raycaster(),res={fallos:[],ok:0,tabla:[]};
+for(let k=0;k<=10;k++)for(let q=1;q<=3;q++){
+ const H=new MiniHero();H.setLook(Object.assign({},BASE,{arm:{h:{k,q}}}));H.obj.updateMatrixWorld(true);
+ const head=H.m.head,i0=head.children.indexOf(H.m.mouth),hm=[];head.children.slice(i0+1).forEach(o=>{if(o.isMesh)hm.push(o);else if(o.isGroup)o.children.forEach(c=>c.isMesh&&hm.push(c))});   // casco = mallas posteriores a la boca (y las del subgrupo `casco`)
+ hm.forEach(m=>{m.material=m.material.clone?m.material.clone():m.material;m.material.side=THREE.DoubleSide});
+ let sale=0,desc=0,fsale=0,depth=0;const pk=[],ds=[];const closed=(CLOSED[k]||[]).includes(q);
+ for(const v of pts){/* se ignoran las TAPAS planas (borde inferior/superior de un casco abierto: por ahí la cabeza sale a propósito) */const dir=v.clone().sub(C),dv=dir.length();dir.normalize();
+  const o=head.localToWorld(C.clone()),d=head.localToWorld(v.clone()).sub(o),dw=d.length(),sc=dw/dv;d.normalize();ray.set(o,d);ray.far=2;
+  const all=ray.intersectObjects(hm,false),hits=all.map(h=>h.distance/sc),hw=all.filter(h=>!h.face||Math.abs(h.face.normal.clone().transformDirection(h.object.matrixWorld).y)<.85).map(h=>h.distance/sc);const inside=hits.some(h=>h>dv+.002),between=hw.some(h=>h<dv-.002);
+  if(!inside&&between){sale++;pk.push(v);if(feat.includes(v))fsale++;depth=Math.max(depth,dv-Math.max(...hw.filter(h=>h<dv)))}
+  if(closed&&!inside&&!between){desc++;ds.push(v)}if(closed&&!inside&&between){/* ya contada en sale */}}
+ const N=pts.length,fr=sale/N,fd=desc/N;const bb=a=>{if(!a.length)return null;const mn=[1,1,1],mx=[-1,-1,-1];a.forEach(v=>[v.x,v.y,v.z].forEach((c,i)=>{mn[i]=Math.min(mn[i],c);mx[i]=Math.max(mx[i],c)}));return mn.map((c,i)=>[+c.toFixed(2),+mx[i].toFixed(2)])};
+ res.tabla.push({k,q,donde:bb(pk),dondeDesc:bb(ds),piezas:hm.length,sale:+fr.toFixed(3),rasgos:fsale,prof:+depth.toFixed(3),desc:+fd.toFixed(3),cerrado:closed});
+ if(fr>.03||fsale>0&&(closed||fr>.01)||(closed&&fd>.05))res.fallos.push({k,q,sale:+fr.toFixed(3),rasgos:fsale,prof:+depth.toFixed(3),descubierta:+fd.toFixed(3),cerrado:closed});else res.ok++}
+window.__res=res;
+</script>

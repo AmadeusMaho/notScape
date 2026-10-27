@@ -14,7 +14,7 @@ select,button{background:#202426;color:var(--fg);border:1px solid var(--line);bo
 #err{position:absolute;left:12px;bottom:12px;color:#ffb3b3;font:12px monospace;white-space:pre-wrap}
 </style>
 <header><h1>Armaduras 3D · catálogo</h1>
-<select id="set"><option value="metal">Peto+pantalón+guantes de METAL (11 niveles)</option><option value="cuero">CUERO tachonado (11 niveles)</option><option value="tela">TELA / túnica (11 niveles)</option><option value="cascos">Cascos (bioma × rareza)</option><option value="botas">Botas (bioma × rareza)</option><option value="capas">Capas (bioma × rareza)</option><option value="escudos">Escudos (familia × nivel)</option><option value="armas">Armas por cultura (10 tipos × 6 culturas)</option><option value="culturas">Culturas (6 biomas × metal/cuero/tela)</option><option value="conjuntos">Conjuntos completos</option></select>
+<select id="set"><option value="metal">Peto+pantalón+guantes de METAL (11 niveles)</option><option value="cuero">CUERO tachonado (11 niveles)</option><option value="tela">TELA / túnica (11 niveles)</option><option value="cascos">Cascos (bioma × rareza)</option><option value="botas">Botas (bioma × rareza)</option><option value="capas">Capas (bioma × rareza)</option><option value="escudos">Escudos (familia × nivel)</option><option value="armas">Armas por cultura (10 tipos × 11 culturas)</option><option value="culturas">Culturas (6 biomas × metal/cuero/tela)</option><option value="conjuntos">Conjuntos completos</option></select>
 <button id="baz">↻ Girar cámara</button></header>
 <div id="st"><canvas id="gl"></canvas><div id="lb"></div><div id="err"></div></div>
 <script type="importmap">{"imports":{"three":"../../../vendor/three/build/three.module.js","three/addons/":"../../../vendor/three/examples/jsm/"}}</script>
@@ -35,18 +35,18 @@ sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.0008;sun
 G.uSat.value=D.sat;G.uLive.value=D.live;G.uNight.value=0;G.uRimCol.value.set(D.rim);setInk(D.ink,D.inkK);r.setClearColor('#3a4332');
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(80,80).rotateX(-Math.PI/2),new THREE.MeshToonMaterial({color:'#5a6a44'}));ground.receiveShadow=true;scene.add(ground);
 const BASE={app:{g:'m',hair:'cut',hc:'#5a3a22',skin:'#d9a878',col:'#6a5a4a',eye:'#2a1a14'},outfit:{scarf:false},gear:{wp:null}};
-const BIO=['Pradera','Bosque','Pantano','Nieve','Japón','Volcán'];
+const BIO=['Pradera','Bosque','Pantano','Nieve','Japón','Volcán','Páramo','Desierto','Costa','Cielo','Infierno'];
 const mk=(arm,label,extra)=>({look:Object.assign({},BASE,{arm},extra||{}),label});
 const SETS={
  metal:()=>TIER_IDS.map(t=>mk({a:{f:'m',t},l:{f:'m',t},g:{f:'m',t}},'metal · '+t)),
  cuero:()=>TIER_IDS.map(t=>mk({a:{f:'cu',t},l:{f:'cu',t},g:{f:'cu',t}},'cuero · '+t)),
  tela:()=>TIER_IDS.map(t=>mk({a:{f:'tu',t},l:{f:'tu',t},g:{f:'tu',t}},'tela · '+t)),
- cascos:()=>[...[0,1,2,3,4,5].flatMap(k=>[1,2,3].map(q=>mk({h:{k,q}},BIO[k]+' q'+q))),mk({h:{k:5,q:4,leg:1}},'legendario')],
+ cascos:()=>[...[0,1,2,3,4,5,6,7,8,9,10].flatMap(k=>[1,2,3].map(q=>mk({h:{k,q}},BIO[k]+' q'+q))),mk({h:{k:5,q:4,leg:1}},'legendario')],
  botas:()=>[...[0,1,2,3,4,5].flatMap(k=>[1,2,3].map(q=>mk({f:{k,q}},BIO[k]+' q'+q))),mk({f:{k:0,q:4,leg:1}},'legendario')],
  capas:()=>[...[0,1,2,3,4,5].flatMap(k=>[1,2,3].map(q=>mk({c:{k,q}},BIO[k]+' q'+q))),mk({c:{k:5,q:4,leg:1}},'legendario')],
  escudos:()=>['m','cu','tu'].flatMap(f=>TIER_IDS.map(t=>mk({s:{f,t}},f+' · '+t,{gear:{wp:null,sh:'#888'}}))),
- armas:()=>['sword','dagger','great','staff','scepter','bow','xbow','mace','hatchet','greataxe'].flatMap(k=>[['bronce','#c8742a'],['acero','#cfd8e0'],['plata','#e8e8f0'],['mitril','#6a90ff'],['adam','#3adf6a'],['oricalco','#e89a3a']].map(([t,c],cu)=>mk(null,k+' · '+BIO[cu],{gear:{wp:{t:k==='bow'?'bow':k==='staff'||k==='scepter'?'staff':'sword',wk:k,col:k==='staff'||k==='scepter'?'#9cf':c,cu},sh:null}}))),
- culturas:()=>['m','cu','tu'].flatMap(f=>[['cobre',0],['hierro',1],['plata',2],['mitril',3],['adam',4],['oricalco',5]].map(([t,k])=>mk({a:{f,t},l:{f,t},g:{f,t},h:{k,q:3},f:{k,q:2},c:{k,q:2}},f+' '+t+' · '+BIO[k]))),
+ armas:()=>['sword','dagger','great','staff','scepter','bow','xbow','mace','hatchet','greataxe'].flatMap(k=>[['bronce','#c8742a'],['acero','#cfd8e0'],['plata','#e8e8f0'],['mitril','#6a90ff'],['adam','#3adf6a'],['oricalco','#e89a3a'],['runita','#9a8ad8'],['alba','#d8c890'],['acero','#8a8e96'],['celestita','#bcd8ff'],['infernita','#b8301c']].map(([t,c],cu)=>mk(null,k+' · '+BIO[cu],{gear:{wp:{t:k==='bow'?'bow':k==='staff'||k==='scepter'?'staff':'sword',wk:k,col:k==='staff'||k==='scepter'?'#9cf':c,cu},sh:null}}))),
+ culturas:()=>['m','cu','tu'].flatMap(f=>[['cobre',0],['hierro',1],['plata',2],['mitril',3],['adam',4],['oricalco',5],['runita',6],['alba',7],['acero',8],['celestita',9],['infernita',10]].map(([t,k])=>mk({a:{f,t,cu:k},l:{f,t,cu:k},g:{f,t,cu:k},s:{f,t,cu:k},h:{k,q:3},f:{k:Math.min(k,5),q:2},c:{k:Math.min(k,5),q:2}},f+' '+t+' · '+BIO[k]))),
  conjuntos:()=>[['cobre',0,'m'],['bronce',0,'cu'],['hierro',1,'m'],['acero',1,'cu'],['plata',2,'m'],['mitril',3,'m'],['adam',4,'m'],['runita',4,'tu'],['oricalco',5,'cu'],['celestita',5,'m']].map(([t,k,f])=>mk({a:{f,t},l:{f,t},g:{f,t},s:{f,t},h:{k,q:3},f:{k,q:2},c:{k,q:2}},f+' '+t+' · '+BIO[k],{gear:{wp:null,sh:'#888'}}))};
 const setName=Q.get('set')||'metal';let list=(SETS[setName]||SETS.metal)();if(Q.get('ids')){const ix=Q.get('ids').split(',').map(Number);list=ix.map(i=>list[i]).filter(Boolean)}
 let az=(Q.has('az')?+Q.get('az'):45)*Math.PI/180;const EL=Math.PI/6,cols=+(Q.get('cols')||Math.min(11,Math.ceil(Math.sqrt(list.length*1.6)))),SP=+(Q.get('sp')||1.7),acts=[];
@@ -67,7 +67,8 @@ document.getElementById('baz').onclick=()=>{az+=Math.PI/4;layout()};
 const FA=(Q.has('face')?+Q.get('face'):45)*Math.PI/180;   // hacia dónde MIRAN los héroes (la cámara se gira con az; con az=225 y face=45 se ven de espaldas: capas)
 let T=+(Q.get('t')||1.2),last=performance.now();
 function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!still)T+=dt;const f=[Math.sin(FA),Math.cos(FA)];
- acts.forEach(H=>H.update({x:H.home.x,y:0,z:H.home.z,mv:false,run:false,w:0,act:null,hurt:0,cb:Q.has('draw')?1:0,t:T,face:f,night:0,wind:[.9,.4]},still?1/60:dt));layout();r.render(scene,cam);if(!still)requestAnimationFrame(frame)}
+ if(Q.has('walk')&&still&&!window.__warm){window.__warm=1;for(let n=0;n<150;n++)acts.forEach(H=>H.update({x:H.home.x,y:0,z:H.home.z+n*.03,mv:true,run:Q.get('walk')==='run',w:0,act:null,hurt:0,t:n/60,face:f,night:0,wind:[.9,.4],dist:0},1/60))}   // ?walk=1|run (con still): simula 2,5 s andando/corriendo antes de la captura (falda ligera)
+ acts.forEach(H=>H.update({x:H.home.x,y:0,z:H.home.z,mv:Q.has('walk'),run:Q.get('walk')==='run',w:0,act:null,hurt:0,cb:Q.has('draw')?1:0,t:T,face:f,night:0,wind:[.9,.4]},still?1/60:dt));layout();r.render(scene,cam);if(!still)requestAnimationFrame(frame)}
 layout();addEventListener('resize',layout);frame(performance.now());if(still){for(let i=0;i<(Q.has('draw')?90:20);i++)frame(performance.now()+i*20)}else requestAnimationFrame(frame);
 window.__ready=1;
 }catch(e){fail(e.stack||String(e))}
