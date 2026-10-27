@@ -27,7 +27,7 @@ async def run(p, k, a):
     pg.on('console', lambda m: logs.append(m.type + ' ' + m.text[:160]) if m.type == 'error' or 'PRESUPUESTO' in m.text else None)
     pg.on('pageerror', lambda e: logs.append('ERR ' + str(e)[:160]))
     t0 = asyncio.get_event_loop().time()
-    await pg.goto(f'http://127.0.0.1:8811/index.html?noedit&test=1&load&wk={k}', wait_until='commit')
+    await pg.goto(f'http://127.0.0.1:8811/index.html?noedit&test=1&load&wk={k}{a.extra}', wait_until='commit')
     await pg.wait_for_function('window.__nstestReady===true', timeout=600000)
     await pg.wait_for_function("(()=>{const b=document.querySelector('#boot');return b&&getComputedStyle(b).display==='none'})()", timeout=600000, polling=250)
     out['carga_s'] = round(asyncio.get_event_loop().time() - t0, 1)
@@ -47,5 +47,5 @@ async def main(a):
             print(json.dumps(r, ensure_ascii=False), flush=True); res.append(r)
     if a.json: open(a.json, 'w', encoding='utf8').write(json.dumps(res, indent=1, ensure_ascii=False))
 ap = argparse.ArgumentParser(); ap.add_argument('--k', default='2,3,4,5'); ap.add_argument('--q', default='1'); ap.add_argument('--secs', type=int, default=15)
-ap.add_argument('--w', type=int, default=1600); ap.add_argument('--h', type=int, default=900); ap.add_argument('--json', default=None)
+ap.add_argument('--w', type=int, default=1600); ap.add_argument('--h', type=int, default=900); ap.add_argument('--json', default=None); ap.add_argument('--extra', default='')   # p. ej. --extra '&map=A'
 asyncio.run(main(ap.parse_args()))

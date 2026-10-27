@@ -20,7 +20,8 @@
 (()=>{
  if(typeof BIOMES==='undefined'||!BIOMES.list||!BIOMES.geo)return;
  const T=32,list=BIOMES.list,NX=Math.ceil(BIOMES.WW/T),NY=Math.ceil(BIOMES.WH/T);
- const ZB=list.find(b=>b.zone)||null,NXc=ZB?Math.round(NX*BIOMES.COLS0/BIOMES.COLS):NX;   // Lote ISLA-1: con la ZONA del Cielo el mundo tiene 4 columnas; NXc = ancho del CONTINENTE (3 columnas) en tiles. Sin zona: NXc = NX (todo igual que antes)
+ const ZB=list.find(b=>b.zone)||null,NXc=ZB?(BIOMES.mapA?Math.round(ZB.ox/T):Math.round(NX*BIOMES.COLS0/BIOMES.COLS)):NX;   // E-MAPA-2b: con ?map=A el continente acaba donde empieza la columna del Cielo (BIOMES.mapA, src/mapa-a.js)
+    // Lote ISLA-1: con la ZONA del Cielo el mundo tiene 4 columnas; NXc = ancho del CONTINENTE (3 columnas) en tiles. Sin zona: NXc = NX (todo igual que antes)
  const qs=typeof location!=='undefined'?location.search:'';
  const t0=typeof performance!=='undefined'?performance.now():0;
  const ST={landTiles:0,seaTiles:0,shore:0,perim:2*(NX+NY),protegidos:0,removed:0,ms:0};
@@ -84,13 +85,15 @@
   for(let j=0;j<GY;j++)for(let i=0;i<GX;i++){const o=j*GX+i;F[o]=Math.min(G[o],edge(i*CG,j*CG)-API.MIN_D)}}
 
  // ── consulta (bilineal) ──
- const D=(xp,yp)=>{const u=Math.max(0,Math.min(GX-1.001,xp/T/CG)),v=Math.max(0,Math.min(GY-1.001,yp/T/CG)),i=u|0,j=v|0,a=u-i,b=v-j,o=j*GX+i;
+ const D0=(xp,yp)=>{const u=Math.max(0,Math.min(GX-1.001,xp/T/CG)),v=Math.max(0,Math.min(GY-1.001,yp/T/CG)),i=u|0,j=v|0,a=u-i,b=v-j,o=j*GX+i;
   return(F[o]*(1-a)+F[o+1]*a)*(1-b)+(F[o+GX]*(1-a)+F[o+GX+1]*a)*b};
+ // E-MAPA-2b: con ?map=A el continente sale de la máscara del mapa antiguo A (CONT, campo de distancia con signo de mapa-a.js); la zona del Cielo conserva su isla propia (ZI)
+ const D=BIOMES.mapA?(xp,yp)=>(ZB&&xp>=NXc*T?D0(xp,yp):BIOMES.mapA.D(xp,yp)):D0;
  API.D=D;API.dbg={K,F,GX,GY,CG,depth,inset};
  const LAND=new Uint8Array(NX*NY);for(let ty=0;ty<NY;ty++)for(let tx=0;tx<NX;tx++)LAND[ty*NX+tx]=D((tx+.5)*T,(ty+.5)*T)>0?1:0;
  API.land=(tx,ty)=>tx<0||ty<0||tx>=NX||ty>=NY?0:LAND[ty*NX+tx];
  const sm=t=>t<=0?0:t>=1?1:t*t*(3-2*t);
- API.sandAt=(xp,yp)=>{if(ZB&&xp>=NXc*T)return 0;const d=D(xp,yp);return d<=0?0:1-sm(d/API.BEACH)};   // la zona del Cielo no tiene playa
+ API.sandAt=(xp,yp)=>{if(ZB&&xp>=NXc*T)return 0;const d=D(xp,yp),rv=BIOMES.mapA&&BIOMES.mapA.sandAt?BIOMES.mapA.sandAt(xp,yp):0;return Math.max(d<=0?0:1-sm(d/API.BEACH),rv)};   // ?map=A: + arena de las orillas de ríos y lagos (mapa-a.js)   // la zona del Cielo no tiene playa
  API.sand=(tx,ty)=>API.sandAt((tx+.5)*T,(ty+.5)*T);
 
  // ── estadísticas y poda de props en el mar ──

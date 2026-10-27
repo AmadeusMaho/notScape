@@ -329,6 +329,7 @@ export const LOOPS={
  cr:(t,ph)=>{const s=Math.sin(ph*Math.PI*6);return P(DEF,{py:-.07,cx:.3,yaw:-.1,hx:.25,fl:[.12,.1,0,0,.25],fr:[-.12,-.08,0,0,-.3],rp:[-.12,.6,.27+.05*s],rd:nrm([.05,-.35,.94]),re:[0,-1,0],
   lp:[.1,.58,.29],ld:[0,0,1],cy:.05*s,pz:.01*s})},
  se:t=>P(DEF,Object.assign({},CROUCH,{py:-.22,cx:.55,hx:.32,fl:[.14,.12,0,0,.35],fr:[-.13,-.08,0,.3,-.4],rp:[-.14+.05*Math.cos(t*4),.42,.34+.05*Math.sin(t*4)],rd:nrm([.1,-.9,.4]),re:[1,0,0],lp:[.16+.05*Math.sin(t*3.3),.4,.32+.04*Math.cos(t*3.3)],ld:nrm([-.1,-.9,.4]),le:[-1,0,0],cy:.07*Math.sin(t*4)})),   // BUSCAR (21 oct 2026): agachado rebuscando con las dos manos (castear en el suelo)
+ he:(t,ph)=>{const s=ph<1?Math.sin(Math.max(0,ph)*Math.PI):0,c=ph<1?Math.sin(Math.max(0,ph)*Math.PI*2):0;return P(DEF,Object.assign({},CROUCH,{py:-.2,cx:.5,hx:.3,fl:[.13,.1,0,0,.3],fr:[-.12,-.06,0,.25,-.3],rp:[-.12+.02*s,.46,.34+.03*s],rd:nrm([.05,-.55,.8]),re:[1,0,0],lp:[.13,.42,.3],ld:nrm([-.05,-.7,.7]),le:[-1,0,0],cy:.04*s,pz:.01*c}))},   // HERBOLARIA: agachado, la izquierda sujeta el tallo y la derecha corta (ph<1 = justo después de un corte)
  ins:t=>P(DEF,{hx:.35,cx:.08,lp:[.06,.7,.24],ld:nrm([0,.35,.94]),le:[-1,0,0],rp:[-.02+.015*Math.cos(t*7),.73,.25+.012*Math.sin(t*9)],rd:nrm([.1,.7,-.5]),re:[1,0,0],pl:[.7,-.6,.1]})};
 
 // golpes de trabajo: clave → constructor (se cachean)
@@ -404,6 +405,9 @@ export const BUILD={
   p(box(.05,.06,.035),DWOOD,-.01,.2,0,{p:g,ink:.008});return{}},
  pick:(p,g,o)=>{p(cyl(.02,.023,.58,6).translate(0,-.06,0),WOOD,0,0,0,{p:g,ink:.01});p(box(.06,.05,.045),DWOOD,0,.22,0,{p:g,ink:.008});
   [-1,1].forEach(q=>p(new THREE.ConeGeometry(.025,.2,5).rotateZ(-q*Math.PI/2+q*.25),o.col||IRON,q*.12,.2+.012,0,{p:g,ink:.008}));return{}},
+ shears:(p,g,o)=>{const gs=[-1,1].map(q=>{const bg=new THREE.Group();bg.position.set(0,.02,0);g.add(bg);   // cada hoja = un grupo articulado en el pivote (los contornos «ink» copian la pose AL CREARSE: nunca girar la malla después, girar el grupo)
+   p(new THREE.ConeGeometry(.02,.27,4).rotateY(Math.PI/4).scale(1,1,.35).translate(0,.135,0).rotateZ(0),o.col||STEEL,0,0,0,{p:bg,ink:.005});p(box(.014,.13,.012).translate(0,-.065,0),WOOD,0,0,0,{p:bg,ink:.004});p(new THREE.TorusGeometry(.028,.007,5,8),WOOD,0,-.155,0,{p:bg,ink:.004});return bg});
+  p(sph(.012),'#c8c0a8',0,.02,.008,{p:g,ink:0});const snip=a=>{gs[0].rotation.z=-a;gs[1].rotation.z=a};snip(.22);return{snip}},   // snip(a): ángulo de apertura de cada hoja (0 = cerradas)
  hammer:(p,g,o)=>{p(cyl(.017,.02,.3,6).translate(0,0,0),WOOD,0,0,0,{p:g,ink:.009});p(box(.12,.065,.065),IRON,0,.15,0,{p:g,ink:.009});return{}},
  tongs:(p,g,o)=>{[-1,1].forEach(q=>p(box(.012,.3,.012).translate(0,.15,0),'#4a4a52',.012*q,0,0,{p:g,ink:.006}).rotation.z=-q*.05);
   p(box(.07,.025,.04),'#ff8a3a',0,.31,0,{p:g,ink:0,mat:glow('#ff7a2a',1.6)});return{}},
@@ -431,7 +435,7 @@ const BACK={great:1,staff:1,bow:1,xbow:1};
 const PULL={sword:.42,dagger:.26,scepter:.12,great:.1,staff:.1,bow:0,xbow:.05,shield:.06};
 const SWAP=.5,DRAW_T=.5,SHEATH_T=.55,DUR_K={great:1.4,staff:1.2,bow:1.1,xbow:1.15};   // duración por arma (el mandoble pesa: se saca más despacio)   // s=SWAP: la mano agarra el objeto y este cambia de sitio (funda/espalda ↔ mano)
 const TOOLKIND={tongsR:'tongs'};
-const TOOL={wc:['axe'],mi:['pick'],sm:['hammer','tongs'],fu:['tongsR'],co:['ladle'],fi:['rod'],cr:['saw'],es:['saw'],ins:['quill','book'],eat:['food']};
+const TOOL={he:['shears'],wc:['axe'],mi:['pick'],sm:['hammer','tongs'],fu:['tongsR'],co:['ladle'],fi:['rod'],cr:['saw'],es:['saw'],ins:['quill','book'],eat:['food']};
 
 // ════════════════════════════ EL ANIMADOR ════════════════════════════
 // ARMAS → ANIMACIÓN (reciclar): un arma nueva NO necesita animaciones nuevas. Añade una fila: anim = clase de animación existente
@@ -508,7 +512,7 @@ export class HeroAnim{
     if(this.tug>.01){const s=this.tug;v[C.rd+1]+=.45*s;v[C.rd+2]-=.25*s;v[C.rp+1]+=.04*s;v[C.cx]-=.05*s}
     v[C.rd]+=Math.sin(t*1.3)*.03;v[C.rd+1]+=Math.sin(t*1.7)*.03;this.breath(v,t,.5);key='fi'}
    else if(ak==='eat'||ak==='pk'){if(this.key===ak&&(a.ph||0)<this.lastU-.3)this.forceFade=.12;this.lastU=a.ph||0;sampleClip(this.clip(ak,cls,sh,0,this.eatL()),a.ph||0,v);if(ak==='eat'){const c=a.ph>.25&&a.ph<.92?Math.sin((a.ph-.25)*Math.PI*10):0;v[C.mouth]=Math.max(0,c);v[C.hx]+=c*.04;v[C.rp+1]+=Math.max(0,c)*.012}key=ak;feetStep=0}
-   else if(LOOPS[ak]){v.set(LOOPS[ak](t,a.ph||0));this.breath(v,t,.5);key=ak}
+   else if(LOOPS[ak]){v.set(LOOPS[ak](t,a.ph||0));this.breath(v,t,.5);key=ak;if(ak==='he'){const sh=this.it.shears,u=a.ph==null?1:a.ph;if(sh&&sh.snip)sh.snip(u<1?.26-.22*Math.sin(Math.PI*u):.22+.03*Math.sin(t*2.1))}}   // tijeras: se cierran a mitad del corte y se reabren
    else if(ak==='es'){v.set(LOOPS.cr(t,a.ph||0));key=ak}
    else{this.relaxPose(cls,sh,t,v);key='idle'}
    if(ak!=='f'&&!WORK[ak]){this.inStrike=0;this.lastPh=0}}

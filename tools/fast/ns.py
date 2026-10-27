@@ -27,7 +27,8 @@ async def daemon(a):
   from playwright.async_api import async_playwright
   logs=[]
   async with async_playwright() as p:
-    b=await p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
+    # --gpu: GPU REAL del PC (ventana visible, sin SwiftShader); por defecto software (sirve en cualquier sandbox)
+    b=await p.chromium.launch(headless=False,args=['--ignore-gpu-blocklist','--enable-precise-memory-info']) if a.gpu else await p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
     ctx=await b.new_context(viewport={'width':a.w,'height':a.h})
     await ctx.add_init_script("try{localStorage.setItem('ns_q','%s')}catch(e){}"%a.q)
     pg=await ctx.new_page()
@@ -86,13 +87,13 @@ async def daemon(a):
 def main():
   ap=argparse.ArgumentParser();ap.add_argument('cmd');ap.add_argument('arg',nargs='?')
   ap.add_argument('--url',default='?r3d=1&test=1&noedit');ap.add_argument('--w',type=int,default=800);ap.add_argument('--h',type=int,default=500)
-  ap.add_argument('--q',default='4');ap.add_argument('--no3d',action='store_true');ap.add_argument('--sel');ap.add_argument('--wait',type=float,default=3);ap.add_argument('--pad',type=int,default=8)
+  ap.add_argument('--q',default='4');ap.add_argument('--no3d',action='store_true');ap.add_argument('--gpu',action='store_true');ap.add_argument('--sel');ap.add_argument('--wait',type=float,default=3);ap.add_argument('--pad',type=int,default=8)
   a=ap.parse_args();c=a.cmd
   if c=='daemon':asyncio.run(daemon(a));return
   if c=='start':
     if up():print('ya hay una sesión; usa `stop` antes (o `reload`)');return
     if not game_up():subprocess.Popen([sys.executable,'tools/serve_nocache.py','8811'],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True);time.sleep(2)
-    cmd=[sys.executable,__file__,'daemon','--url',a.url,'--w',str(a.w),'--h',str(a.h),'--q',a.q]+(['--no3d'] if a.no3d else [])
+    cmd=[sys.executable,__file__,'daemon','--url',a.url,'--w',str(a.w),'--h',str(a.h),'--q',a.q]+(['--no3d'] if a.no3d else [])+(['--gpu'] if a.gpu else [])
     lf=open('/tmp/ns_daemon.log','w');subprocess.Popen(cmd,stdout=lf,stderr=subprocess.STDOUT,cwd=ROOT,start_new_session=True)
     print('arrancando (la 1ª carga con SwiftShader tarda minutos; se hace UNA vez)…',flush=True)
     t=time.time()

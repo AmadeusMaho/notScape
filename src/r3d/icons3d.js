@@ -40,7 +40,7 @@ function armorOf(kind,info){const id=(info.id||'').split('~')[0];let m;
 
 // ── constructor de piezas para modelos sueltos (igual que Mini.part: toon de personaje + casco de contorno) ──
 function mkPart(root,keep){return(geo,col,x,y,z,o={})=>{const m=new THREE.Mesh(geo,o.mat||toon(col,Object.assign({chr:1,rim:1.4},o.t)));m.position.set(x,y,z);(o.p||root).add(m);keep.push(m);
- if(o.ink!==0){const h=hull(geo,o.ink||.016);h.position.copy(m.position);h.rotation.copy(m.rotation);h.scale.copy(m.scale);(o.p||root).add(h);keep.push(h);m.userData.h=h}return m}}
+ if(o.ink!==0){const h=hull(geo,o.ink||.016);m.add(h);   /* hijo de la malla: sigue sus giros posteriores (ver mini3d.js) */keep.push(h);m.userData.h=h}return m}}
 
 // ── modelos genéricos (tamaño ≈ .5 para que el contorno de .012–.02 pese igual que en las armas) ──
 const GEN={
@@ -70,16 +70,16 @@ const GEN={
 Object.assign(GEN,GEN2);   // los kinds nuevos usan la misma firma que GEN
 
 // qué kind del 2D → modelo de arma/herramienta de BUILD
-const WK={sword:'sword',dagger:'dagger',greatsword:'great',xbow:'xbow',scepter:'scepter',staff:'staff',bow:'bow',mace:'mace',axe:'axe',pick:'pick',rod:'rod'};
+const WK={sword:'sword',dagger:'dagger',greatsword:'great',xbow:'xbow',scepter:'scepter',staff:'staff',bow:'bow',mace:'mace',axe:'axe',pick:'pick',rod:'rod',shears:'shears'};
 const ARM_K=new Set(['chest','legs','gloves','boots','helm','cape','shield']);
 export const supports=k=>!!(WK[k]||ARM_K.has(k)||GEN[k]||k==='arrows'||k==='bolts'||k==='quiver');
 
 // orientación de cada modelo en el icono: [rx, ry, rz] del grupo (las armas se inclinan 45°, el resto se ve en 3/4)
-const POSE={sword:[0,-.5,-.8],dagger:[0,-.5,-.8],greatsword:[0,-.5,-.8],staff:[0,-.4,-.6],scepter:[0,-.5,-.8],mace:[0,-.5,-.8],axe:[0,-.5,-.7],pick:[0,-.5,-.7],rod:[0,-.3,-.55],bow:[0,-.85,0],xbow:[-.95,-.35,-.7],
+const POSE={sword:[0,-.5,-.8],dagger:[0,-.5,-.8],greatsword:[0,-.5,-.8],staff:[0,-.4,-.6],scepter:[0,-.5,-.8],mace:[0,-.5,-.8],axe:[0,-.5,-.7],pick:[0,-.5,-.7],rod:[0,-.3,-.55],shears:[0,-.5,-.7],bow:[0,-.85,0],xbow:[-.95,-.35,-.7],
  ore:[0,-.5,0],bar:[0,-.55,0],log:[.25,-.5,.25],potion:[0,-.4,0],gem:[0,.5,0],ring:[-.35,-.4,0],amulet:[0,-.3,0],coins:[.3,-.4,0],arrows:[0,-.3,-.7],bolts:[0,-.3,-.7],quiver:[0,-.5,.25],shield:[0,-.45,0]};
 
 // Pose en el SUELO (Lote R3D-DROPS-3D, drops3d.js): lo largo se tumba, lo plano queda plano. `info.ground` activa esta tabla en build().
-const DPOSE=Object.assign({sword:[0,0,PI/2],dagger:[0,0,PI/2],greatsword:[0,0,PI/2],staff:[0,0,PI/2],scepter:[0,0,PI/2],mace:[0,0,PI/2],axe:[0,0,PI/2],pick:[0,0,PI/2],rod:[0,0,PI/2],bow:[PI/2,0,0],xbow:[0,0,0],
+const DPOSE=Object.assign({sword:[0,0,PI/2],dagger:[0,0,PI/2],greatsword:[0,0,PI/2],staff:[0,0,PI/2],scepter:[0,0,PI/2],mace:[0,0,PI/2],axe:[0,0,PI/2],pick:[0,0,PI/2],rod:[0,0,PI/2],shears:[0,0,PI/2],bow:[PI/2,0,0],xbow:[0,0,0],
  ore:[0,0,0],bar:[0,0,0],log:[0,0,0],potion:[0,0,PI/2],gem:[0,0,0],ring:[PI/2,0,0],amulet:[PI/2,0,0],coins:[0,0,0],arrows:[0,0,PI/2],bolts:[0,0,PI/2],quiver:[0,0,PI/2.4]},DPOSE2);
 const poseOf=(kind,info)=>(info.ground&&DPOSE[kind])||POSE[kind]||POSE2[kind]||[0,0,0];
 

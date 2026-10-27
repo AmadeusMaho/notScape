@@ -7,6 +7,7 @@
 import * as THREE from 'three';
 import {toon,hull,inkFor,hash,jit,depthI} from './materials3d.js';
 import {propGeo} from './props3d.js';
+import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 
 export const FOL={
  pino:{t:'con',h:2.9,r:.95,tr:'#3e2c22',pal:['#132a24','#2f573a','#86a845']},
@@ -101,6 +102,13 @@ export function deadTreeGeo(seed=1,h=1.75){const V=THREE.Vector3,G=[];G.push(bra
   G.push(branch([p0,p1,p2],.065,.012,7));
   for(let k=0;k<2;k++){const q0=p1.clone().lerp(p2,.3+k*.35),a2=a+(k?.9:-.8),d2=new V(Math.cos(a2)*.6,.75,Math.sin(a2)*.6).normalize(),q2=q0.clone().addScaledVector(d2,L*.38);G.push(branch([q0,q0.clone().lerp(q2,.5).add(new V(0,.04,0)),q2],.022,.006,4))}});
  return merge(G)}
+// HERBOLARIA (27 oct 2026): mata de hierba = 9 hojas (conos finos inclinados) + 1–3 flores (icosaedros de detalle 0) con color por vértice; `dead` = brote pequeño tras cortarla. Escala: ~0,35 de alto (media rodilla del héroe).
+export function herbGeo(i,dead){const D=(typeof HERB!=='undefined'&&HERB.D[i])||['','',0,'#ffffff','#5f9a4a'],fl=new THREE.Color(D[3]),lf=new THREE.Color(D[4]),ps=[];
+ const add=(g,c)=>{g=g.index?g.toNonIndexed():g;const n=g.attributes.position.count,a=new Float32Array(n*3);for(let k=0;k<n;k++){a[k*3]=c.r;a[k*3+1]=c.g;a[k*3+2]=c.b}g.setAttribute('color',new THREE.BufferAttribute(a,3));ps.push(g)};
+ const nb=dead?3:9;for(let k=0;k<nb;k++){const an=k/nb*6.283+hash(i,k,1)*.6,h=(dead?.1:.26)+hash(i,k,2)*(dead?.04:.12),g=new THREE.ConeGeometry(.026,h,4);g.translate(0,h/2,0);g.rotateZ(.28+hash(i,k,3)*.35);g.rotateY(an);g.translate(Math.cos(an)*.03,0,Math.sin(an)*.03);add(g,lf.clone().multiplyScalar(.82+hash(i,k,4)*.3))}
+ if(!dead){const nf=1+Math.floor(hash(i,5,5)*3);for(let k=0;k<nf;k++){const an=k/nf*6.283+hash(i,k,6),r=.06+hash(i,k,7)*.05,g=new THREE.IcosahedronGeometry(.045+hash(i,k,8)*.015,0);g.translate(Math.cos(an)*r,.3+hash(i,k,9)*.08,Math.sin(an)*r);add(g,fl.clone().multiplyScalar(.9+hash(i,k,10)*.2));
+  const st=new THREE.CylinderGeometry(.008,.01,.3,4);st.translate(Math.cos(an)*r*.5,.15,Math.sin(an)*r*.5);add(st,lf.clone().multiplyScalar(.7))}}
+ const g=mergeGeometries(ps,false);g.scale(1.7,1.7,1.7);return g}
 export function stumpGeo(){const g=jit(new THREE.CylinderGeometry(.13,.18,.2,8).translate(0,.1,0),.02);return g}
 
 // ───────── capa de recursos 3D (árboles talables y menas) ─────────
@@ -116,9 +124,10 @@ export class Resources{
   this.sig='';this.idx=new Map();this.cells=null;this.pend=new Set();this.geo={};this.wmat={};this.dmat=new THREE.MeshBasicMaterial({colorWrite:false});this.on=false;
   this.hlMat=new THREE.MeshBasicMaterial({color:'#fff0c8',transparent:true,opacity:.28,blending:THREE.AdditiveBlending,depthWrite:false});this.hlFol={};this.hl=new THREE.Group();scene.add(this.hl);this.hlE=null;this.falls=[];this.gs=new Map();this.ck=null}
  kindOf(e,dead){if(e.t==='wc'){let sp=TREES[e.i]||'roble';if(inZone(e.x))sp='mundo';let bk=0;try{bk=inZone(e.x)?9:Math.max(0,BIOMES.at(e.x,e.y))}catch(x){}return dead?'tocon':sp+'@'+bk+'#'+(Math.floor(hash(Math.round(e.x),Math.round(e.y),5)*NVAR))}
-  if(e.t==='mi')return 'mena'+e.i+(inZone(e.x)?'z':'')+(dead?'d':'');return null}
+  if(e.t==='mi')return 'mena'+e.i+(inZone(e.x)?'z':'')+(dead?'d':'');if(e.t==='he')return 'hierba'+e.i+(dead?'d':'');return null}
  parts(kind){if(this.geo[kind])return this.geo[kind];let P=[];
   if(kind==='tocon'){const g=stumpGeo();P=[{g,mat:toon('#4a3626',{moss:1,tex:'madera',texS:30}),ink:hull(g,.012,inkFor('#4a3626')).geometry,inkM:inkFor('#4a3626')}]}
+  else if(kind.startsWith('hierba')){const dead=kind.endsWith('d'),i=+kind.slice(6).replace('d',''),g=herbGeo(i,dead);P=[{g,mat:toon('#ffffff',{vc:1,soft:1}),ink:hull(g,.008).geometry,inkM:inkFor('#2a3a22')}]}
   else if(kind.startsWith('mena')){const i=+kind.slice(4).replace(/[dz]/g,''),dead=kind.endsWith('d'),zm=kind.includes('z'),MBA=['#8a5a3a','#9a9aa8','#6a4a3a','#3a3a40','#8a9aa8','#3a4a6a','#2a4a3a','#2a4a52','#5a3a2a','#3a3a5a','#6a5a3a','#2a1414'],MOR=['#c8742a','#e8e8f8','#c0603a','#6a6a72','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff','#e8c24a','#ff4a2a'];
    const G=propGeo('mena',{base:zm?'#d6cfbb':MBA[i]||MBA[0],ore:MOR[i]||MOR[0],crystal:i>=5&&i!==10,dead},null);if(G){const m=toon('#ffffff',{vc:1,moss:.7,emit:1,soft:1});P=[{g:G.g,mat:m,ink:hull(G.g,.013).geometry,inkM:inkFor('#5a5560')}]}}
   else{const[spb,v]=kind.split('#'),[sp,bk]=spb.split('@'),T=treeGeo(sp,+v*17+3,+bk),wm=toon(T.tr,{moss:1,tex:'madera',texS:30,texB:.6});
@@ -131,7 +140,7 @@ export class Resources{
  cull(tx,tz,r){this.stream(tx,tz,r,this.fresh);this.fresh=false;const R=r+4*CELL*.72+14;for(const par of [this.grp,this.ogrp]){const M=par.userData.sec;if(!M)continue;M.forEach(g=>{const c=g.userData.c;g.visible=Math.hypot(c.x-tx,c.z-tz)<R})}}
  // E2 (26 oct 2026, streaming de entidades por sector): `build` solo REPARTE los recursos en sectores (datos); las mallas de un sector se crean en `stream` cuando entra en el radio visible y se liberan cuando se aleja. Objetos de escena independientes del tamaño del mundo (K).
  build(now){[this.grp,this.ogrp].forEach(g=>{while(g.children.length){const c=g.children.pop();c.dispose&&c.dispose()}g.userData.sec=null});this.idx.clear();this.sd=new Map();this.built=new Set();this.cells=new Map();this.pend=new Set();this.cullR=60;
-  for(const e of N){if(e.t!=='wc'&&e.t!=='mi')continue;const cx=Math.floor(e.x/(32*CELL)),cy=Math.floor(e.y/(32*CELL)),sk=Math.floor(cx/4)*1000+Math.floor(cy/4);let S=this.sd.get(sk);if(!S)this.sd.set(sk,S={sk,cx:Math.floor(cx/4),cy:Math.floor(cy/4),g:new Map(),c:this.W3((Math.floor(cx/4)+.5)*4*CELL*32,(Math.floor(cy/4)+.5)*4*CELL*32,0),n:0});S.n++;
+  for(const e of N){if(e.t!=='wc'&&e.t!=='mi'&&e.t!=='he')continue;const cx=Math.floor(e.x/(32*CELL)),cy=Math.floor(e.y/(32*CELL)),sk=Math.floor(cx/4)*1000+Math.floor(cy/4);let S=this.sd.get(sk);if(!S)this.sd.set(sk,S={sk,cx:Math.floor(cx/4),cy:Math.floor(cy/4),g:new Map(),c:this.W3((Math.floor(cx/4)+.5)*4*CELL*32,(Math.floor(cy/4)+.5)*4*CELL*32,0),n:0});S.n++;
    [0,1].forEach(dead=>{const kind=this.kindOf(e,dead),ck=kind+'@'+cx+','+cy;let a=S.g.get(ck);if(!a)S.g.set(ck,a={kind,list:[],cx,cy});a.list.push(e)})}
   const ks=new Set();this.sd.forEach(S=>S.g.forEach(a=>ks.add(a.kind)));ks.forEach(k=>this.parts(k));   // geometrías/materiales de todas las especies ya en la carga (warmShaders las precompila)
   this.on=this.sd.size>0;this.sig2=this.sign();this.sq=[];console.info('[R3D recursos]',{sectores:this.sd.size,recursos:N.length})}

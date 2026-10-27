@@ -1010,3 +1010,87 @@ body.hs-on #gfxadv button.bt{font-size:.76em;padding:.34em .7em}
 body.hs-on #gfxadv button.bt.gfx.on{border-color:rgba(232,207,148,.85);color:#e8cf94}
 body.hs-on #gfxadv .gfxpre{flex-basis:100%;display:flex;flex-wrap:wrap;gap:.25em;margin-bottom:.2em}
 body.hs-on #gfxadv .gfxpre button.bt{flex:1 1 45%;text-align:center;font-size:.72em}
+
+/* HERBOLARIA · minijuego «punto de corte» v2 (27 oct 2026): tallo dibujado en un canvas con 3 nudos; el nudo activo brilla y unas tijeras suben y bajan */
+#hg{position:fixed;left:calc(50% + 150px);bottom:26%;transform:translateX(-50%);z-index:8;display:none;text-align:center;font-family:var(--cap,Cinzel,serif);color:#e8cf94;pointer-events:none;text-shadow:0 1px 3px #000}
+#hg .hg-t{font-size:15px;letter-spacing:.06em;margin-bottom:2px}
+#hg .hg-c{display:block;width:150px;height:220px;margin:0 auto}
+#hg .hg-p{display:flex;gap:8px;justify-content:center;margin-top:2px}
+#hg .hg-p i{width:12px;height:12px;border-radius:50%;border:1px solid rgba(232,207,148,.6);background:rgba(16,13,10,.85)}
+#hg .hg-p i.q2{background:#bfe880;box-shadow:0 0 8px #bfe880}#hg .hg-p i.q1{background:#e8cf94}#hg .hg-p i.q0{background:#8a4a3a}
+#hg .hg-h{font-size:12px;margin-top:6px;opacity:.9}
+
+/* ALQUIMIA · panel del Alambique (27 oct 2026): elegir ingredientes + minijuego de destilación (canvas) */
+#alq{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9;display:none;width:min(760px,94vw);background:rgba(16,13,10,.94);border:1px solid rgba(232,207,148,.45);border-radius:10px;padding:14px 16px;font-family:var(--f,Spectral,serif);color:#e8dcc0;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+#alq .aq-t{font-family:var(--cap,Cinzel,serif);color:#e8cf94;font-size:17px;letter-spacing:.06em;text-align:center;margin-bottom:8px}
+#alq h4{font-family:var(--cap,Cinzel,serif);font-size:12px;letter-spacing:.1em;color:#c8b888;margin:0 0 6px;text-transform:uppercase}
+#alq .aq-cols{display:flex;gap:14px}#alq .aq-l{flex:1.15;min-width:0}#alq .aq-r{flex:1;min-width:0}
+#alq .aq-g{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:300px;overflow:auto;padding-right:4px}
+#alq .aq-c{display:block;text-align:left;background:rgba(40,32,24,.8);border:1px solid rgba(232,207,148,.25);border-radius:6px;color:#e8dcc0;padding:6px 8px;cursor:pointer;font:inherit;transition:background .15s,border-color .15s}
+#alq .aq-c:hover{background:rgba(70,56,38,.9);border-color:rgba(232,207,148,.7)}#alq .aq-c.off,#alq .aq-so.off,#alq .aq-go.off{opacity:.4;cursor:default}
+#alq .aq-c span{display:block;font-size:13px}#alq .aq-c em{color:#c8b888;font-style:normal}#alq .aq-c small{display:block;font-size:11px;line-height:1.35;margin-top:2px}#alq .aq-c small b{font-weight:600;margin-right:6px}
+#alq .aq-u{opacity:.65;font-size:12px;font-style:italic}
+#alq .aq-s{display:flex;gap:6px;margin-bottom:8px}
+#alq .aq-sl{flex:1;height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:20px;background:rgba(40,32,24,.8);border:1px solid rgba(232,207,148,.4);border-radius:6px;color:#e8dcc0;cursor:pointer}
+#alq .aq-sl small{font-size:10px;line-height:1.1;text-align:center}#alq .aq-sl.e{opacity:.35;font-size:11px;cursor:default;border-style:dashed}
+#alq .aq-v{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}#alq .aq-v label{font-size:12px;color:#c8b888;margin-right:2px}
+#alq .aq-so{background:rgba(40,32,24,.8);border:1px solid rgba(232,207,148,.3);border-radius:6px;color:#e8dcc0;padding:3px 8px;font:inherit;font-size:12px;cursor:pointer}#alq .aq-so.on{border-color:#e8cf94;background:rgba(110,88,40,.7)}
+#alq .aq-b{display:grid;grid-template-columns:70px 1fr 22px;gap:6px;align-items:center;font-size:12px;margin:3px 0}#alq .aq-b i{display:block;height:7px;border-radius:4px}#alq .aq-b em{font-style:normal;text-align:right}
+#alq .aq-pred{margin:8px 0;font-size:13px;color:#e8cf94;min-height:2.6em}
+#alq .aq-go{width:100%;padding:8px;background:linear-gradient(#7a6228,#54421a);border:1px solid #e8cf94;border-radius:6px;color:#fff3d0;font-family:var(--cap,Cinzel,serif);letter-spacing:.08em;cursor:pointer}#alq .aq-go:hover:not(.off){filter:brightness(1.15)}
+#alq .aq-h{font-size:12px;text-align:center;margin-top:8px;opacity:.85}
+#alq .aq-cv{display:block;width:min(100%,calc((100vh - 210px)*1.739));margin:0 auto;touch-action:none;height:auto;aspect-ratio:560/340;display:block;border-radius:8px;border:1px solid rgba(232,207,148,.3);padding:0;cursor:default;background:none}
+#alq .aq-p{display:flex;gap:8px;justify-content:center;margin-top:8px}
+#alq .aq-p i{font-style:normal;font-size:12px;padding:2px 10px;border-radius:10px;border:1px solid rgba(232,207,148,.4);background:rgba(16,13,10,.85)}
+#alq .aq-p i.cur{border-color:#e8cf94;color:#e8cf94}#alq .aq-p i.q3{background:#4a6a2a;border-color:#bfe880}#alq .aq-p i.q2{background:#5a5a2a}#alq .aq-p i.q1{background:#5a4a2a}#alq .aq-p i.q0{background:#5a2a22}
+@media (max-width:700px){#alq .aq-cols{flex-direction:column}}
+
+#alq .aq-rec{margin-top:10px;border-top:1px solid rgba(232,207,148,.2);padding-top:8px}
+#alq .aq-rr{display:flex;align-items:center;gap:8px;font-size:12px;margin:3px 0}#alq .aq-rr .n{flex:1;min-width:0}#alq .aq-rr b{color:#e8cf94;font-weight:600}#alq .aq-rr em{opacity:.7;font-style:normal;margin-left:4px}
+#alq .aq-rr button{background:rgba(40,32,24,.8);border:1px solid rgba(232,207,148,.35);border-radius:5px;color:#e8dcc0;padding:2px 9px;font:inherit;font-size:12px;cursor:pointer}#alq .aq-rr button.off{opacity:.4}
+#alq .aq-name{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(10,8,6,.78);border-radius:10px;z-index:3}
+#alq .aq-name p{font-family:var(--cap,Cinzel,serif);color:#e8cf94;font-size:20px;margin:0}#alq .aq-name small{opacity:.8}
+#alq .aq-name input{width:min(340px,80%);padding:8px 10px;background:rgba(30,24,18,.95);border:1px solid #e8cf94;border-radius:6px;color:#fff3d0;font:inherit;font-size:15px;text-align:center}
+#alq .aq-name button{padding:7px 22px;background:linear-gradient(#7a6228,#54421a);border:1px solid #e8cf94;border-radius:6px;color:#fff3d0;font-family:var(--cap,Cinzel,serif);cursor:pointer}
+#alq .aq-res .aq-ri{width:96px;height:96px;display:flex;align-items:center;justify-content:center;background:radial-gradient(rgba(232,207,148,.25),rgba(232,207,148,0) 70%)}
+#alq .aq-res .aq-ri img{width:88px;height:88px;image-rendering:auto;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}
+#alq .aq-res p b{color:#fff3d0}#alq .aq-res small.q{margin-top:6px;color:#e8cf94}
+#alq .aq-bt{display:flex;gap:10px;margin-top:4px}#alq .aq-bt .n{background:rgba(40,32,24,.9);border-color:rgba(232,207,148,.4);color:#e8dcc0}
+
+/* ALQUIMIA v3: barra de herramientas y cajón (Ingredientes / Recetas) dentro del banco de trabajo */
+#alq .aq-tb{display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:8px}
+#alq .aq-tt{font-family:var(--cap,Cinzel,serif);color:#e8cf94;font-size:16px;letter-spacing:.06em;margin-right:12px}
+#alq .aq-tb button{background:linear-gradient(#5a4624,#3a2e18);border:1px solid rgba(232,207,148,.6);border-radius:6px;color:#f4e6bc;padding:5px 14px;font-family:var(--cap,Cinzel,serif);font-size:12px;letter-spacing:.06em;cursor:pointer}
+#alq .aq-tb button:hover{filter:brightness(1.2)}
+#alq .aq-bd{position:relative}
+#alq .aq-dr{position:absolute;left:0;top:0;bottom:0;width:min(350px,52%);overflow:auto;background:rgba(14,11,8,.97);border:1px solid rgba(232,207,148,.45);border-radius:8px;padding:10px 12px;z-index:2;box-shadow:6px 0 24px rgba(0,0,0,.55)}
+#alq .aq-dr .aq-g{display:flex;flex-direction:column;max-height:none;gap:6px}
+#alq .aq-dr .aq-c{position:relative;padding-right:92px}
+#alq .aq-pm{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px}
+#alq .aq-pm button{width:24px;height:24px;border-radius:50%;background:rgba(60,48,30,.95);border:1px solid #e8cf94;color:#fff3d0;cursor:pointer;font-size:15px;line-height:1;padding:0}
+#alq .aq-pm button.off,#alq .aq-rr button.off{opacity:.35;cursor:default}#alq .aq-pm b{min-width:14px;text-align:center;color:#e8cf94}
+#alq .aq-dr small{opacity:.8}#alq .aq-rr{padding:5px 0;border-bottom:1px solid rgba(232,207,148,.12)}
+#alq .aq-res small.sc{opacity:.7;font-size:11px}
+#alq .aq-tb button{white-space:nowrap;padding:5px 10px}#alq .aq-tt{white-space:nowrap}
+/* ALQUIMIA v6: cajones Base y Mejoras */
+#alq .aq-tb{flex-wrap:wrap}#alq .aq-tb button{font-size:11px;padding:5px 9px}
+#alq .aq-ba{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(232,207,148,.14)}
+#alq .aq-ba .sw{flex:0 0 26px;height:26px;border-radius:50%;border:2px solid #2a1a0e;box-shadow:inset -3px -3px 6px rgba(0,0,0,.35),inset 3px 3px 6px rgba(255,255,255,.25)}
+#alq .aq-ba .n{flex:1;min-width:0}#alq .aq-ba .n b{color:#e8cf94}#alq .aq-ba .n em{opacity:.7;font-style:normal}
+#alq .aq-ba button{background:linear-gradient(#5a4624,#3a2e18);border:1px solid rgba(232,207,148,.6);border-radius:6px;color:#f4e6bc;padding:5px 10px;font-family:var(--cap,Cinzel,serif);font-size:11px;cursor:pointer;white-space:nowrap}
+#alq .aq-ba button.off{opacity:.38;cursor:default}
+#alq .aq-tb{gap:5px}#alq .aq-tb button{font-size:10.5px;padding:5px 7px;letter-spacing:.03em}#alq .aq-tt{font-size:14px;margin-right:6px}
+
+/* ALQUIMIA v7: barra de herramientas ordenada — acciones a la izquierda/centro, CERRAR arriba a la derecha, VACIAR OLLA abajo a la derecha */
+#alq .aq-tb{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;margin-bottom:8px}
+#alq .aq-tt{white-space:nowrap;font-size:14px}
+#alq .aq-tg{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap}
+#alq .aq-tg button,#alq .aq-x,#alq .aq-em{white-space:nowrap;font-family:var(--cap,Cinzel,serif);font-size:11px;letter-spacing:.03em;padding:6px 10px;border-radius:7px;cursor:pointer;color:#f4e6bc;transition:filter .15s,transform .15s,background .15s}
+#alq .aq-tg button{background:linear-gradient(#5a4624,#3a2e18);border:1px solid rgba(232,207,148,.55)}
+#alq .aq-tg button:hover,#alq .aq-x:hover,#alq .aq-em:hover{filter:brightness(1.25);transform:translateY(-1px)}
+#alq .aq-tg button.on{background:linear-gradient(#8a6a28,#5e4818);border-color:#f4e6bc;box-shadow:0 0 10px rgba(232,207,148,.45)}
+#alq .aq-x{margin-left:auto;background:linear-gradient(#4a3030,#2e1c1c);border:1px solid rgba(220,140,120,.6)}
+#alq .aq-bot{display:flex;align-items:center;gap:10px;margin-top:8px}
+#alq .aq-bot .aq-p{flex:1;margin-top:0;justify-content:center}
+#alq .aq-em{background:linear-gradient(#5a2e22,#3a1c14);border:1px solid rgba(220,140,100,.55)}
+#alq .aq-tt{display:none}@media (min-width:1100px){#alq .aq-tt{display:inline}}

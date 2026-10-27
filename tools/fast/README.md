@@ -12,6 +12,7 @@ python3 tools/fast/ns.py logs                   # errores de consola/página acu
 python3 tools/fast/ns.py reload                 # tras editar .js (vuelve a cargar; con --no3d ~20 s)
 python3 tools/fast/ns.py stop                   # al terminar
 ```
+**`--gpu`**: usa la GPU REAL del PC (ventana visible) en lugar de SwiftShader (software): carga rápida y mediciones de fps/ms válidas. Úsala en un PC con GPU.
 Opciones de `start`: `--url '?r3d=1&test=1&noedit&at=4600,15152'` · `--w 800 --h 500` (menos píxeles = más rápido; el HUD escala) · `--q 4` (calidad 0 máxima … 4 mínima; por defecto 4 = más rápido).
 
 ## Qué usar según lo que compruebes

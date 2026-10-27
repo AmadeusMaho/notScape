@@ -29,6 +29,8 @@ const ITEMICON=(()=>{
   dagger(c,o){SH.sword(c,Object.assign({w:5,len:26},o))},
   greatsword(c,o){SH.sword(c,Object.assign({w:8,len:44},o))},
   axe(c,o){rot(-.5,()=>{L(32,56,32,12,'#8a5a2a',5);S(c,()=>{g.moveTo(34,10);g.quadraticCurveTo(54,8,54,24);g.quadraticCurveTo(46,24,34,26);g.closePath()});S(dk(c,.2),R(28,10,8,16,2),{hi:.2})})},
+  shears(c){rot(-.35,()=>{L(24,12,40,44,c,3.2);L(40,12,24,44,dk(c,.15),3.2);S('#6a4a2a',E(23,52,6,6),{lw:2});S('#6a4a2a',E(41,52,6,6),{lw:2});L(24,46,23,50,'#6a4a2a',3);L(40,46,41,50,'#6a4a2a',3);S('#d8d0bc',E(32,28,2.4,2.4))})},
+  herbplant(c,o){const lf=(o&&o.leaf)||'#5f9a4a';L(32,58,32,28,dk(lf,.3),3);S(lf,E(22,44,9,4.5));S(lf,E(42,40,9,4.5));S(dk(lf,.12),E(26,52,7,3.5));S(c,E(32,20,9,9),{lw:2});S('#f4d060',E(32,20,3.2,3.2));S(c,E(21,26,5,5));S(c,E(43,25,5,5))},
   pick(c){rot(-.5,()=>{L(32,56,32,14,'#8a5a2a',5);S(c,()=>{g.moveTo(10,24);g.quadraticCurveTo(32,6,54,24);g.quadraticCurveTo(32,15,10,24)});S(dk(c,.2),R(28,12,8,8,2),{hi:.2})})},
   rod(c){L(10,56,52,10,'#8a5a2a',4);L(52,10,56,34,'#e8e8e8',1.6);S('#e5453a',E(56,38,4,4),{lw:1.8});S('#fff',E(56,35,2.5,2.5),{lw:0})},
   bow(c){g.beginPath();g.moveTo(22,6);g.quadraticCurveTo(58,32,22,58);g.strokeStyle=INK;g.lineWidth=8;g.lineCap='round';g.stroke();g.strokeStyle=c;g.lineWidth=5;g.stroke();L(22,6,22,58,'#f4f0e0',1.4)},
@@ -80,6 +82,8 @@ const ITEMICON=(()=>{
   mush(c){S('#f0e8d0',R(24,30,16,24,6));S(c||'#c8503a',()=>{g.moveTo(6,34);g.quadraticCurveTo(8,8,32,8);g.quadraticCurveTo(56,8,58,34);g.closePath()});dot(20,22,3.6,'#fff');dot(38,16,3,'#fff');dot(46,28,3.2,'#fff')},
   rice(){S('#f4f0e0',()=>{g.moveTo(6,32);g.lineTo(58,32);g.quadraticCurveTo(54,58,32,58);g.quadraticCurveTo(10,58,6,32)});S('#fdfaf0',()=>{g.moveTo(10,32);g.quadraticCurveTo(16,10,32,10);g.quadraticCurveTo(48,10,54,32);g.closePath()});for(const [x,y] of[[24,20],[34,16],[42,24],[30,26]])L(x,y,x+3,y+2,'#d8d0b8',2)},
   salt(c){S('#f4f0f0',Pl([[6,52],[22,18],[32,32],[42,12],[58,52]]));L(20,46,30,36,'#d8d0d0',2);L(40,44,46,34,'#d8d0d0',2);dot(30,14,2,'#fff')},
+  elixir(c,o){SH.potion(c);const g=o&&o.g;if(g>=1)L(26,24,38,24,g>=2?'#e8cf94':'#d8c8b0',3);if(g>=2){S('#fff3c0',E(48,14,2.4,2.4));S('#fff3c0',E(14,36,1.8,1.8))}},
+  flask(c){S('#cfe8f0',()=>{g.moveTo(26,6);g.lineTo(38,6);g.lineTo(38,22);g.quadraticCurveTo(58,30,52,48);g.quadraticCurveTo(48,58,32,58);g.quadraticCurveTo(16,58,12,48);g.quadraticCurveTo(6,30,26,22);g.closePath()},{hi:.5});S('#8a5a32',R(25,2,14,6,2))},
   potion(c){S('#cfe8f0',()=>{g.moveTo(26,6);g.lineTo(38,6);g.lineTo(38,22);g.quadraticCurveTo(58,30,52,48);g.quadraticCurveTo(48,58,32,58);g.quadraticCurveTo(16,58,12,48);g.quadraticCurveTo(6,30,26,22);g.closePath()},{hi:.5});S(c,()=>{g.moveTo(14,38);g.quadraticCurveTo(32,30,50,38);g.quadraticCurveTo(52,56,32,56);g.quadraticCurveTo(12,56,14,38)},{lw:0,hi:.45});S('#a8764a',R(24,2,16,8,2),{lw:2});dot(24,44,3,'rgba(255,255,255,.8)')},
   rune(c,o){S('#9a9aa8',()=>{g.moveTo(12,8);g.lineTo(52,8);g.lineTo(58,56);g.lineTo(6,56);g.closePath()});g.beginPath();g.arc(32,32,13,0,7);g.strokeStyle=c;g.lineWidth=4;g.stroke();g.beginPath();g.moveTo(32,18);g.lineTo(32,46);g.moveTo(22,28);g.lineTo(42,28);g.moveTo(24,40);g.lineTo(40,40);g.strokeStyle=c;g.lineWidth=3;g.stroke()},
   scroll(c){S('#f4e8c0',R(12,10,40,44,3));S('#e8d8a0',R(6,6,52,10,5),{lw:2.4});S('#e8d8a0',R(6,48,52,10,5),{lw:2.4});g.beginPath();for(const y of[24,30,36])g.moveTo(18,y),g.lineTo(46,y);g.strokeStyle='#8a6a4a';g.lineWidth=2;g.stroke();star(32,40,6,c||'#e5453a')},
@@ -131,6 +135,8 @@ const ITEMICON=(()=>{
  function spec(id){let m,t;
   const tr=ITEMICON.tier?ITEMICON.tier(id):null,cm0=/^(?:ar|sh|lg|gl)_(cu|tu)_/.exec(id),tb=TC[tr]||'#aaaaaa',tc=cm0?(cm0[1]==='cu'?mix('#8a5a2a',tb,.3):mix('#cfc8e8',tb,.5)):(TC[tr]||'#aaa'); // lote C1: cuero = marrón teñido · túnica = tela clara teñida por el tier
   if(id.startsWith('sw_'))return['sword',tc];if(id.startsWith('ar_'))return['chest',tc];if(id.startsWith('sh_'))return['shield',tc];if(id.startsWith('lg_'))return['legs',tc];if(id.startsWith('gl_'))return['gloves',tc];
+  if(typeof ALQ!=='undefined'){const pz=ALQ.parse(id);if(pz)return['elixir',ALQ.liq(pz.type),{g:pz.g,ti:pz.ti,sk:pz.sk}];if(id==='frasco')return['flask','#cfe8f0'];if(id==='vino')return['elixir','#8a2a3a',{g:1,ti:3}];if(id==='alcohol')return['elixir','#cfe0e8',{g:0,ti:3}];if(id==='al_turbio')return['elixir','#6a5a3a',{g:-1,ti:1}]}   // Alquimia (27 oct 2026)
+  if(id.startsWith('sc_'))return['shears',tc];if(/^h_/.test(id)&&typeof HERB!=='undefined'){const hd=HERB.D.find(d=>'h_'+d[1]===id);if(hd)return['herbplant',hd[3],{leaf:hd[4],sp:hd[1]}]}   // Herbolaria (27 oct 2026)
   if(id.startsWith('ax_'))return['axe',tc];if(id.startsWith('pk_'))return['pick',tc];if(id.startsWith('rd_'))return['rod',tc];if(id.startsWith('bw_'))return['bow',tc];if(id.startsWith('st_'))return['staff',tc,{orb:ORB[tr]||'#9cf'}];
   if(id.startsWith('fl_'))return['arrows',tc];if(id.startsWith('vi_'))return['bolts',tc];if(id.startsWith('qv_'))return['quiver',mix('#8a5a2a',tb,.3)]; // lote C5
   {const cr=CRAFT(id,tb);if(cr)return cr}   // OFICIOS-D4: herramientas, ropa e intermedios de oficio (convenciones: REGLAS_CREACION §13)

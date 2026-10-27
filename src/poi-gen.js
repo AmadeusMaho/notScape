@@ -22,7 +22,8 @@ const POIGEN=(()=>{
  function run(){
   if(off||typeof BIOMES==='undefined'||typeof TER==='undefined')return;
   const P=BIOMES.tk&&BIOMES.tk.P;if(!P)return;
-  const ok=(wx,wy,r)=>{if(BIOMES.own(wx,wy)<0)return false;for(let a=0;a<8;a++){const x=wx+Math.cos(a*.785)*r,y=wy+Math.sin(a*.785)*r;if(!TER.isLand(TER.tileH(Math.floor(x/T),Math.floor(y/T))))return false}
+  const MA=BIOMES.mapA,ok=(wx,wy,r,k)=>{if(BIOMES.own(wx,wy)<0)return false;if(MA&&BIOMES.own(wx,wy)!==k)return false;   // ?map=A: el POI debe caer en SU región
+   for(let a=0;a<8;a++){const x=wx+Math.cos(a*.785)*r,y=wy+Math.sin(a*.785)*r;if(!TER.isLand(TER.tileH(Math.floor(x/T),Math.floor(y/T))))return false}
    const tx=Math.floor(wx/T),ty=Math.floor(wy/T);return TER.isLand(TER.tileH(tx,ty))&&!TER.cliffNear(wx,wy,r*.5)&&TER.sandAt(tx,ty)<.35&&!TER.seaAt(tx,ty)&&!TER.mtnAt(wx,wy)};
   BIOMES.list.forEach((B,k)=>{
    if(B===BIOMES.zone||B.noPoi||!B.village||!B.w||!B.h)return;
@@ -32,11 +33,12 @@ const POIGEN=(()=>{
    const sf=B.village.safe||[B.w/2,B.h/2,700,600],core=[B.cen||[B.w/2,B.h/2],B.spawn||[B.w/2,B.h/2],B.bossPos||[B.w/2,B.h/2]];
    const bad=(x,y,r)=>{if(Math.abs(x-sf[0])<sf[2]+700+r&&Math.abs(y-sf[1])<sf[3]+700+r)return true;if(B.bossPos&&Math.hypot(x-B.bossPos[0],y-B.bossPos[1])<900)return true;
     for(const q of rects)if(x>q[0]-r&&x<q[1]+r&&y>q[2]-r&&y<q[3]+r)return true;for(const p of pois)if(Math.hypot(x-p.x,y-p.y)<p.r+r+260)return true;return false};
-   const nx=Math.max(1,Math.round(B.w/(CELLT*T))),ny=Math.max(1,Math.round(B.h/(CELLT*T))),cw=B.w/nx,ch=B.h/ny,cs=Math.min(cw,ch);let n=0;
+   const RB=MA&&MA.bbox?MA.bbox(k):null,gx=RB?RB.x0:0,gy=RB?RB.y0:0,GW=RB?RB.w:B.w,GH=RB?RB.h:B.h;   // ?map=A: la rejilla cubre la caja de la REGIÓN (coords locales, pueden ser negativas), no el rectángulo
+   const nx=Math.max(1,Math.round(GW/(CELLT*T))),ny=Math.max(1,Math.round(GH/(CELLT*T))),cw=GW/nx,ch=GH/ny,cs=Math.min(cw,ch);let n=0;
    for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){
     const kind=pick(H(k*131+i,j,1)),tp=TPL[kind];let put=false;
-    for(let a=0;a<6&&!put;a++){const lx=(i+.15+H(k*131+i,j,10+a)*.7)*cw,ly=(j+.15+H(k*131+i,j,30+a)*.7)*ch;
-     if(bad(lx,ly,tp.r)||!ok(B.ox+lx,B.oy+ly,Math.min(tp.r,110)))continue;
+    for(let a=0;a<6&&!put;a++){const lx=gx+(i+.15+H(k*131+i,j,10+a)*.7)*cw,ly=gy+(j+.15+H(k*131+i,j,30+a)*.7)*ch;
+     if(bad(lx,ly,tp.r)||!ok(B.ox+lx,B.oy+ly,Math.min(tp.r,110),k))continue;
      const dv=Math.hypot(lx-sf[0],ly-sf[1]),tier=dv>cs*1.7?2:1,id='g'+i+'_'+j,p={id,k:kind==='ruina'?'cofre':kind,n:tp.n(tier),x:Math.round(lx),y:Math.round(ly),r:tp.r,tier};
      const pool=(POOL[kind]&&POOL[kind].length?POOL[kind]:all);if(tp.mobs&&pool.length){const sl=tp.mobs(tier);if(sl.length)p.mobs=sl.map(([dx,dy],m)=>[pool[Math.floor(H(k*131+i,j,50+m)*pool.length)],dx,dy])}   // campamentos: guardias humanoides; ruinas: fieras
      pois.push(p);tp.dec.forEach(([nm,dx,dy,o,fp])=>props.push(P(nm,p.x+dx,p.y+dy,o||null,fp?{fp}:undefined)));put=true;n++}

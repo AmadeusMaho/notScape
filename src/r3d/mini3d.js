@@ -34,7 +34,7 @@ export class Mini{
   const chest=this.chest=new THREE.Group();pelvis.add(chest);
   const body=this.body=new THREE.Group();body.position.set(0,-.42,0);chest.add(body);
   const part=(geo,col,x,y,z,o={})=>{const m=new THREE.Mesh(geo,o.mat||T(col,col===skin?Object.assign({rim:.3},o.t):o.t));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=col!==skin;(o.p||body).add(m);
-   if(o.ink!==0){const h=hull(geo,(o.ink||.022)*(s.inkK||1));h.visible=!!this.inkOn;h.position.copy(m.position);h.rotation.copy(m.rotation);h.scale.copy(m.scale);(o.p||body).add(h);this.hulls.push(h);m.userData.h=h}return m};
+   if(o.ink!==0){const h=hull(geo,(o.ink||.022)*(s.inkK||1));h.visible=!!this.inkOn;m.add(h);   /* el contorno es HIJO de la malla: gira/escala/mueve con ella aunque se cambie después (antes copiaba la pose al crearse y quedaba una cuña negra) */this.hulls.push(h);m.userData.h=h}return m};
   this.part=part;this.skinC=skin;
   // TORSO (Lote R3D-SINVESTIDO, 18 oct 2026, pedido del dueño: «el vestidito se ve horrible»): camisa/chaleco hasta la cintura + abdomen y cadera en color de pantalón, con las
   // piernas visibles desde la cadera. El VESTIDO (cono hasta la rodilla/tobillo) solo existe con `s.dress:true` — reservado a contados PNJ femeninos (Ru, Aldeana). Ningún héroe ni enemigo lo usa.

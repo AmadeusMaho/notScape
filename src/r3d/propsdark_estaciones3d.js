@@ -162,6 +162,14 @@ const MODELS={
   b.beam([-.26,.04,.24],[-.2,.62,.26],.035,PL());b.box(-.29,.3,.235,.14,.035,.04,PAL.iron,{nb:1});tube(b,[-.2,.62,.26],[-.19,.76,.26],.025,.02,5,a.wood,{nb:1});return b},
 
  // BANCO DE CURTIDOR (≈0,63 × 0,91 × 1,02 a lo largo de z): bastidor con piel tensada, cuba de curtido con líquido, raspador y tiras de cuero colgando.
+ // ALAMBIQUE (Alquimia, 27 oct 2026): hornilla de piedra con su fuego, caldero de cobre con cabeza, tubo a un serpentín y un frasco que gotea. Provisional en el Taller hasta la Botica. ≈ 1,1 × 0,85 × 0,6.
+ alambique(o){const b=new B(772),a=A({bk:K(o)}),cu=dirty('#9a6a3a',.75,.5,.1),cu2=mul(cu,.8);
+  b.box(-.2,0,0,.62,.34,.5,a.stone2,{v:.08,g:.1,t:.62});b.box(-.2,.34,0,.66,.04,.54,a.stone,{nb:1});b.box(-.2,.08,.255,.3,.16,.02,PAL.lamp,{em:1,nb:1});b.box(-.2,.06,.262,.34,.2,.02,PAL.stoneD,{nb:1,t:.97});   // hornilla con la boca encendida
+  b.cyl(-.2,.38,0,.22,.22,.26,10,cu,{seg:2,bulge:.04,v:.1});b.cyl(-.2,.64,0,.17,.17,.07,10,cu2,{nb:1});b.cyl(-.2,.71,0,.09,.09,.1,8,cu,{nb:1});b.cyl(-.2,.81,0,.05,.05,.05,6,cu2,{nb:1});   // caldero y cabeza
+  tube(b,[-.2,.84,0],[.2,.72,0],.03,.028,5,cu,{nb:1});tube(b,[.2,.72,0],[.34,.6,0],.028,.022,5,cu,{nb:1});   // tubo hacia el serpentín
+  b.cyl(.36,.28,0,.1,.1,.34,8,cu2,{nb:1,v:.08});[.34,.48].forEach(y=>b.cyl(.36,y,0,.11,.11,.02,8,PAL.iron,{nb:1}));tube(b,[.36,.3,.1],[.36,.1,.1],.012,.012,4,cu,{nb:1});
+  b.cyl(.36,0,.14,.07,.07,.1,8,dirty('#8ab0b8',.5,.5,.2),{nb:1,t:.9});b.cyl(.36,.1,.14,.03,.03,.06,6,dirty('#8ab0b8',.5,.5,.2),{nb:1});   // frasco
+  b.box(-.62,0,.12,.14,.18,.14,a.wood,{v:.1});b.cyl(-.62,.18,.12,.045,.045,.07,6,dirty('#5f9a4a',.6,.5,.2),{nb:1});return b},
  curtidor(o){const b=new B(771),a=A({bk:K(o)}),Z=.4,hd=HIDE();
   [-Z,Z].forEach((z,i)=>tube(b,[-.1,0,z+.1],[-.1,.88,z+.1],.04,.035,5,vary(a.wood,.12,771,i),{v:.1,nb:1}));[.1,.8].forEach(y=>b.box(-.1,y,.1,.06,.05,.9,a.wood2,{nb:1}));
   b.box(-.1,.14,.1,.03,.64,.76,hd,{v:.1,t:.97});for(let i=0;i<7;i++){b.box(-.075,.78,-.24+i*.12+.1,.012,.03,.02,PAL.rope,{nb:1});b.box(-.075,.15,-.24+i*.12+.1,.012,.03,.02,PAL.rope,{nb:1})}   // piel con cordeles
@@ -249,7 +257,7 @@ const MODELS={
 };
 
 // huella y altura de la malla ORG ACTUAL (ancho x, alto y, fondo z; medida con `node tools/r3d/org_capture.js` el 20 oct 2026; ejes ORG x,z↑,y → three x,y↑,z)
-export const OF_FOOT={banco:[1.92,1.36,1.42],tienda:[2.32,1.48,1.27],subastas:[1.90,1.66,1.16],tablon:[.34,1.41,1.64],fogata:[1.34,.20,1.31],horno:[1.03,1.17,.91],yunque:[1.12,.65,.42],armero:[.80,1.24,.78],curtidor:[.63,.91,1.02],
+export const OF_FOOT={banco:[1.92,1.36,1.42],tienda:[2.32,1.48,1.27],subastas:[1.90,1.66,1.16],tablon:[.34,1.41,1.64],fogata:[1.34,.20,1.31],horno:[1.03,1.17,.91],yunque:[1.12,.65,.42],armero:[.80,1.24,.78],curtidor:[.63,.91,1.02],alambique:[1.1,.85,.6],
  taller:[1.46,.83,.68],escritorio:[1.20,1.07,.68],altarRezo:[1.18,1.32,.82],lanzas:[.50,1.49,.31],totem:[.57,1.93,.31],arcoRuina:[1.49,1.14,.50],brasero:[.51,.84,.52],tinaja:[1.10,.37,.48],monumento:[1.64,2.34,1.64]};
 const GEO=new Map();
 export function ofGeo(n,o,th){if(!MODELS[n])return null;const key='dk:of:'+n+'|'+JSON.stringify(o||{});if(GEO.has(key))return GEO.get(key);

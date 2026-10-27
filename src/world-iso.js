@@ -11,22 +11,26 @@ const TER=(()=>{
  const inR=(r,x,y)=>x>r[0]&&x<r[1]&&y>r[2]&&y<r[3];
  const BOF=()=>BO; let BO=null;                            // bioma de cada tile (por su centro; 255 = vacío), se rellena en grid()
  const biomeOf=(tx,ty)=>BO?(BO[ty*NX+tx]===255?0:BO[ty*NX+tx]):Math.max(0,BIOMES.at((tx+.5)*T,(ty+.5)*T));   // bioma de ATRIBUCIÓN del tile (región deformada, Fase 49a): paleta, colores, luz
- const ownerOf=(tx,ty)=>Math.max(0,BIOMES.own((tx+.5)*T,(ty+.5)*T));   // bioma DUEÑO de la casilla rectangular (geometría y datos locales: agua, colinas, mar, puentes)
+ const GEO=(x,y)=>(BIOMES.geoOwn||BIOMES.own)(x,y);   // E-MAPA-2b: con ?map=A (BIOMES.mapA) la GEOMETRÍA solo sale del rectángulo de datos locales del bioma de la región (geoOwn); sin rectángulo = terreno llano sin datos. Sin ?map=A: igual que own
+ const FORD=(x,y)=>!!(BIOMES.mapA&&BIOMES.mapA.ford&&BIOMES.mapA.ford(x,y));
+ const ownerOf=(tx,ty)=>BIOMES.mapA?GEO((tx+.5)*T,(ty+.5)*T):Math.max(0,BIOMES.own((tx+.5)*T,(ty+.5)*T));   // bioma DUEÑO de la casilla rectangular (geometría y datos locales: agua, colinas, mar, puentes)
  // ¿el tile (centro x,y) del anillo de borde del bioma k cae en el hueco de una compuerta? (entonces no es acantilado)
  const gateOpen=(x,y)=>{for(const g of BIOMES.gates){if(g.vert?(Math.abs(x-g.x)<T&&y>g.y0&&y<g.y1):(Math.abs(y-g.y)<T&&x>g.x0&&x<g.x1))return g}return null};
  // altura del tile por su centro. Cliff: franja de la frontera de cada bioma (salvo el hueco) y el borde del mundo.
  function tileH(tx,ty){
   if(tx<0||ty<0||tx>=NX||ty>=NY)return 0;
-  const x=(tx+.5)*T,y=(ty+.5)*T,k=BIOMES.own(x,y);   // Fase 49a: la geometría la manda la casilla rectangular (BIOMES.own), no la región deformada (BIOMES.at)
-  if(k<0)return 0;                                          // vacío (fuera de todo rectángulo)
+  const x=(tx+.5)*T,y=(ty+.5)*T,k=GEO(x,y);   // Fase 49a: la geometría la manda la casilla rectangular (BIOMES.own), no la región deformada (BIOMES.at)
+  if(k<0&&!BIOMES.mapA)return 0;                                          // vacío (fuera de todo rectángulo)
   if(CO&&!CO.land(tx,ty))return BIOMES.zone&&x>=BIOMES.zone.x0?0:HWATER;   // ISLA-2: fuera de la isla del Cielo NO hay agua: vacío (el 3D pone debajo el mar de nubes; sigue siendo infranqueable)
                       // Fase 49b: MAR EXTERIOR (fuera de la máscara de tierra de src/coast.js): agua, no vacío ni anillo de acantilado; el 3D lo continúa hasta el horizonte
+  const MW=BIOMES.mapA&&BIOMES.mapA.waterAt;
+  if(k<0){const rg0=BIOMES.ranges.length?BIOMES.rangeAt(x,y)[0]:0;if(rg0>=HCLIFF)return HCLIFF;if(MW&&MW(x,y,BIOMES.own(x,y))&&!FORD(x,y))return HWATER;return rg0>1?rg0:1}   // ?map=A: región sin datos locales = llano + cordilleras y ríos/lagos del mapa A (mapa-a.js)
   const r=BIOMES.list[k],lx=x-r.ox,ly=y-r.oy;
   if(lx<T||ly<T||lx>=r.w-T||ly>=r.h-T){   // anillo de 1 tile en el borde de cada rectángulo, salvo en las compuertas y en las UNIONES ABIERTAS (Fase 44a: BIOMES.openAt; cada lado del anillo se abre solo si su unión lo está)
    if(!gateOpen(x,y)&&(((lx<T||lx>=r.w-T)&&!BIOMES.openAt(x,y,true))||((ly<T||ly>=r.h-T)&&!BIOMES.openAt(x,y,false))))return HCLIFF}
   const cl=r.lay&&r.lay.cliff;if(cl)for(const c of cl)if(lx>c[0]&&lx<c[1]&&ly>c[2]&&ly<c[3])return HCLIFF;   // macizos/crestas del layout (lay.cliff, rectángulos locales): paredes de roca pintadas como el borde
   const rg=BIOMES.ranges.length?BIOMES.rangeAt(x,y)[0]:0;if(rg>=HCLIFF)return HCLIFF;   // núcleo de una cordillera (BIOMES.ranges, Fase 44-0 ii): acantilado, no se pisa (ni siquiera sobre el agua)
-  if(BIOMES.geo.water(r,lx,ly))return HWATER;              // agua orgánica (lagos/río/mar) o rectangular del layout antiguo: sale de BIOMES.geo (biomes.js)
+  if((BIOMES.geo.water(r,lx,ly)||(MW&&MW(x,y,k)))&&!FORD(x,y))return HWATER;   // FORD = vado tallado por mapa-a-fill.js para que ninguna región quede aislada por agua del layout              // agua orgánica (lagos/río/mar) o rectangular del layout antiguo: sale de BIOMES.geo (biomes.js)
   const gh0=BIOMES.geo.ground(r,lx,ly);return rg>gh0?rg:gh0}   // 1 = llano; 1.3, 1.6… = montículos escalonados (lay.hills) o falda de una cordillera
  const th=(tx,ty)=>GRID?(tx<0||ty<0||tx>=NX||ty>=NY?0:GRID[ty*NX+tx]):tileH(tx,ty);   // altura del tile: de la rejilla ya construida (rápido) o calculada
  const heightAt=(x,y)=>th(Math.floor(x/T),Math.floor(y/T));
@@ -63,6 +67,7 @@ const TER=(()=>{
   for(let k=0;k<BIOMES.N;k++){const B=BIOMES.list[k],br=B.village.bridge;if(!br)continue;
    for(let ty=0;ty<NY;ty++){const cy=(ty+.5)*T;for(let tx=0;tx<NX;tx++){const cx=(tx+.5)*T;if(!isLand(gh(tx,ty)))continue;
     if(cx>B.ox+br.x[0]&&cx<B.ox+br.x[1]&&cy>B.oy+br.y[0]&&cy<B.oy+br.y[1]&&ownerOf(tx,ty)===k)DK[ty*NX+tx]=1}}}
+  if(BIOMES.mapA&&BIOMES.mapA.bridgeList){const S=BIOMES.mapA.bridgeS;for(const[ci,cj,dv]of BIOMES.mapA.bridgeList)for(let b=0;b<S;b++)for(let c=0;c<S;c++){const tx=ci*S+c,ty=cj*S+b;if(tx<NX&&ty<NY&&isLand(gh(tx,ty))&&!DK[ty*NX+tx])DK[ty*NX+tx]=dv}}   // ?map=A: pasarelas de los caminos A* (mapa-a-fill.js)
   for(const g of BIOMES.gates){const x0=g.vert?g.x-1.5*T:g.x0,x1=g.vert?g.x+1.5*T:g.x1,y0=g.vert?g.y0:g.y-1.5*T,y1=g.vert?g.y1:g.y+1.5*T;
    for(let ty=Math.max(0,Math.floor(y0/T));ty<=Math.min(NY-1,Math.floor(y1/T));ty++)for(let tx=Math.max(0,Math.floor(x0/T));tx<=Math.min(NX-1,Math.floor(x1/T));tx++){const cx=(tx+.5)*T,cy=(ty+.5)*T;
     if(isLand(gh(tx,ty))&&cx>x0&&cx<x1&&cy>y0&&cy<y1&&!DK[ty*NX+tx])DK[ty*NX+tx]=g.vert?2:3}}}
@@ -70,7 +75,7 @@ const TER=(()=>{
  const pc=(tx,ty)=>tx<0||ty<0||tx>=NX||ty>=NY?0:PC[(ty*4)*(NX*4)+tx*4+0]>=0&&cobAny(tx,ty);
  const cobAny=(tx,ty)=>{for(let j=0;j<4;j++)for(let i=0;i<4;i++)if(PC[(ty*4+j)*NX*4+tx*4+i]>=128)return true;return false};
  const pm=(tx,ty)=>tx<0||ty<0||tx>=NX||ty>=NY?0:PM[ty*NX+tx]>=10,pmf=(tx,ty)=>PM[ty*NX+tx]>=128,dk=(tx,ty)=>tx<0||ty<0||tx>=NX||ty>=NY?0:DK[ty*NX+tx];
- const grid=()=>{if(GRID)return GRID;GRID=new Float32Array(NX*NY);ROCK=new Uint8Array(NX*NY);BO=new Uint8Array(NX*NY);MTN=new Uint8Array(NX*NY);for(let ty=0;ty<NY;ty++)for(let tx=0;tx<NX;tx++){const k=BIOMES.at((tx+.5)*T,(ty+.5)*T),ko=BIOMES.own((tx+.5)*T,(ty+.5)*T);BO[ty*NX+tx]=k<0?255:k;{const h=tileH(tx,ty);GRID[ty*NX+tx]=h;if(h===HCLIFF&&BIOMES.ranges.length&&BIOMES.rangeAt((tx+.5)*T,(ty+.5)*T)[0]>=HCLIFF)MTN[ty*NX+tx]=1;if(h>=HGROUND&&h<HCLIFF&&ko>=0){const r=BIOMES.list[ko];if(r.lay&&r.lay.hills&&BIOMES.geo.rock(r,(tx+.5)*T-r.ox,(ty+.5)*T-r.oy))ROCK[ty*NX+tx]=1}}}buildPaths();return GRID};
+ const grid=()=>{if(GRID)return GRID;GRID=new Float32Array(NX*NY);ROCK=new Uint8Array(NX*NY);BO=new Uint8Array(NX*NY);MTN=new Uint8Array(NX*NY);for(let ty=0;ty<NY;ty++)for(let tx=0;tx<NX;tx++){const k=BIOMES.at((tx+.5)*T,(ty+.5)*T),ko=GEO((tx+.5)*T,(ty+.5)*T);BO[ty*NX+tx]=k<0?255:k;{const h=tileH(tx,ty);GRID[ty*NX+tx]=h;if(h===HCLIFF&&BIOMES.ranges.length&&BIOMES.rangeAt((tx+.5)*T,(ty+.5)*T)[0]>=HCLIFF)MTN[ty*NX+tx]=1;if(h>=HGROUND&&h<HCLIFF&&ko>=0){const r=BIOMES.list[ko];if(r.lay&&r.lay.hills&&BIOMES.geo.rock(r,(tx+.5)*T-r.ox,(ty+.5)*T-r.oy))ROCK[ty*NX+tx]=1}}}buildPaths();return GRID};
  const gh=(tx,ty)=>tx<0||ty<0||tx>=NX||ty>=NY?0:GRID[ty*NX+tx];
  const out=(tx,ty)=>tx<0||ty<0||tx>=NX||ty>=NY||GRID[ty*NX+tx]===0;   // fuera del mundo o vacío
   const reset=()=>{GRID=null;ROCK=null;BO=null;PF=null;PC=null;PM=null;DK=null};

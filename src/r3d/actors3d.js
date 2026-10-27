@@ -78,7 +78,7 @@ class Proto{
  constructor(){this.obj=new THREE.Group();this.list=[];this.skinC=null}
  bone(name,parent,x=0,y=0,z=0){const g=new THREE.Group();g.position.set(x,y,z);(parent||this.obj).add(g);this.list.push([g,name]);return g}
  part(geo,col,x,y,z,o={}){const m=new THREE.Mesh(geo,toon(col,{chr:1,rim:o.skin?.3:1.4,side:o.dbl?THREE.DoubleSide:THREE.FrontSide}));m.position.set(x,y,z);if(o.rot)m.rotation.set(...o.rot);(o.p||this.obj).add(m);
-  if(o.ink!==0){const h=hull(geo,o.ink||.016);h.position.copy(m.position);h.rotation.copy(m.rotation);(o.p||this.obj).add(h)}return m}
+  if(o.ink!==0){const h=hull(geo,o.ink||.016);m.add(h)}return m}   /* contorno hijo de la malla: sigue sus giros posteriores (ver mini3d.js) */
  glow(geo,col,x,y,z,o={}){const m=new THREE.Mesh(geo,glow(col,o.k||1.6));m.position.set(x,y,z);(o.p||this.obj).add(m);return m}
  eyes(p,x,y,z,r,col,glowing){[-1,1].forEach(q=>{if(glowing)this.glow(sph(r,1,1.1,.7,10),col,x*q,y,z,{p});else{this.part(sph(r,1,1.1,.7,10),col||'#1c1410',x*q,y,z,{p,ink:0});this.part(sph(r*.32,1,1,1,6),'#fff6e0',x*q+r*.3*q*.0+r*.25,y+r*.35,z+r*.45,{p,ink:0})}})}
 }

@@ -135,6 +135,8 @@ for n, ok_, d in [
     ('three SIN minificar (el .min crea una función por llamada de dibujo = basura)', 'three/build/three.module.js"' in rd('index.html') and 'three.module.min.js' not in rd('index.html'), 'index.html'),
     ('opciones gráficas por aspecto (GFX_DEF/gfx) y límite de fps', 'const GFX_DEF=[' in gj and "gfx('fps')" in gj, 'src/game.js'),
     ('mapa con niebla: presupuesto pequeño con el minimapa', 'WMAP.paint(MM===2?8:1.5)' in gj, 'src/game.js'),
+    # Lote HERBOLARIA-3 (27 oct 2026): el contorno «ink» de una pieza es HIJO de su malla (si copia la pose al crearse, girar la malla después deja una cuña negra)
+    ('contorno de piezas: hijo de la malla en mini3d/icons3d/actors3d (no copia la pose)', all('m.add(h)' in rd(f) and 'h.rotation.copy(m.rotation)' not in rd(f) for f in ('src/r3d/mini3d.js','src/r3d/icons3d.js','src/r3d/actors3d.js')), 'src/r3d/mini3d.js, icons3d.js, actors3d.js'),
     # Lote FLUIDEZ-2 (26 oct 2026): propuestas F1–F16
     ('carga: dibujos «en seco» antes de precompilar (sin compilar shaders uno a uno)', 'R3D.dry=true' in gj and 'if(!dry)composer.render(dt)' in rj, 'src/game.js / src/r3d/r3d.js'),
     ('compuerta: objetos con un material que aún compila también se ocultan', 'this.pm.get(mt)' in rd('src/r3d/shadergate3d.js'), 'src/r3d/shadergate3d.js'),

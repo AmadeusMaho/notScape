@@ -15,7 +15,7 @@ const TRADE=(()=>{
  const cap=k=>Math.min(10,2+Math.max(0,k|0)),upto=(pre,list,k)=>list.slice(0,cap(k)+1).map(t=>pre+'_'+t).filter(id=>I[id]),ex=ids=>ids.filter(id=>I[id]);
  // ══ VENDEDORES ══  stock(k) → filas [id, límite] (límite 0 = ilimitado; con límite se repone cada 10 min)
  const VEND={
-  ru:{n:'Ru',rol:'Tendero',ic:'shop',acc:'#e58aa8',up:1,stock:k=>[...ex(['pan','c_sardina','c_camaron','c_carne','c_pollo']).map(id=>[id,0]),...(k>=1?ex(['c_trucha','f_camaron']).map(id=>[id,0]):[]),...(k>=2?ex(['c_salmon','f_hamb','f_trucha']).map(id=>[id,0]):[]),
+  ru:{n:'Ru',rol:'Tendero',ic:'shop',acc:'#e58aa8',up:1,stock:k=>[...ex(['pan','frasco','vino','c_sardina','c_camaron','c_carne','c_pollo']).map(id=>[id,0]),...(k>=1?ex(['c_trucha','f_camaron']).map(id=>[id,0]):[]),...(k>=2?ex(['c_salmon','f_hamb','f_trucha']).map(id=>[id,0]):[]),
    ...upto('fl',TIER,k).map(id=>[id,0]),...upto('vi',TIER,k).map(id=>[id,0]),...upto('qv',TIER,k).filter((_,i)=>i%2===0).map(id=>[id,3]),...upto('rd',WOOD,k).map(id=>[id,0]),...ex(['pot_mana']).map(id=>[id,10])]},
   herrera:{n:'Brenna',rol:'Herrera',ic:'anvil',acc:'#c8704a',stock:k=>[...ex(['cobre','estano','carbon']).map(id=>[id,60]),...upto('b',TIER,k).map(id=>[id,25]),...upto('pk',TIER,k).map(id=>[id,0]),...upto('ax',TIER,k).map(id=>[id,0])]},
   anciano:{n:'Orsen',rol:'Anciano',ic:'altar',acc:'#9cc4ff',stock:k=>[...ex(['rn_air','rn_earth','rn_life','rn_water','rn_fire']).map(id=>[id,80]),...(k>=2?ex(['rn_arc']).map(id=>[id,30]):[]),...ex(['pot_mana']).map(id=>[id,10]),...(k>=1?ex(['pot_pr']).map(id=>[id,6]):[]),...(k>=2?ex(['pot_mana2']).map(id=>[id,5]):[]),
