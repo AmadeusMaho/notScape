@@ -153,7 +153,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  light(TOD.dia);
  // ── luces prácticas (guía §4.8): de las MISMAS fuentes que light.js (props con lamp/LIGHTN y estaciones fire/furnace); las 4 más cercanas a la cámara ──
  const LK={farola:['#ffb060',1.9,4,1.25,'win'],linterna:['#ffb866',1.5,3.4,1.15,'win'],faro:['#ffc070',2.4,6,1.6,'win'],brasero:['#ff8a30',3.2,4.5,.9,'fire'],antorcha:['#ff8a30',2.6,4,1.1,'fire'],
-  hoguera:['#ff8a30',5,6.5,.75,'fire'],lava:['#ff5020',3.5,5,.5,'fire'],fire:['#ff8a30',5,6.5,.75,'fire'],furnace:['#ff7030',3,4,.8,'fire'],braseroG:['#ff9a40',1.5,2.3,.6,'fire']};
+  hoguera:['#ff8a30',5,6.5,.75,'fire'],lava:['#ff5020',3.5,5,.5,'fire'],fire:['#ff8a30',5,6.5,.75,'fire'],furnace:['#ff7030',3,4,.8,'fire'],cocina:['#ff8a30',3.6,5,.9,'fire'],braseroG:['#ff9a40',1.5,2.3,.6,'fire']};
  const LAMPK={farola:'farola',brasero:'brasero',linterna:'linterna',antorcha:'antorcha',hoguera:'hoguera',faro:'faro'},LIGHTN={hoguera:'hoguera',antorcha:'antorcha',fumarola:'lava',faroLava:'lava',estelaLava:'lava',altarDemon:'lava',lavaPozo:'lava',fogataC:'hoguera',braseroG:'braseroG',tiendaFuego:'antorcha'};
  let SRC=null,srcSig='';const pool=[0,1,2,3].map(()=>{const l=new THREE.PointLight(0xffa050,0,4,1.3);if(!dl.on)scene.add(l);return l});
  const lantern=new THREE.PointLight(0xffb866,0,3.2,1.4),aLantern=new THREE.PointLight(0xffb866,0,2.4,1.4);if(!dl.on){scene.add(lantern);aScene.add(aLantern)}let heroL=null;
@@ -163,7 +163,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  [aHemi,aSun,aBack,aLantern].forEach(l=>l.layers.enable(3));
  function sources(){const sig=PROPS.list.length+'|'+ST.length;if(SRC&&sig===srcSig)return SRC;srcSig=sig;SRC=[];
   PROPS.list.forEach(e=>{const k=e.lamp?(LAMPK[e.n]||'farola'):LIGHTN[e.n];if(!k)return;const z=TER.standZ(e.x,e.y),p=W3(e.x,e.y,z);p.y+=LK[k][3];SRC.push({p,k,ph:(e.x*.13+e.y*.07)%6.28})});
-  ST.forEach(e=>{if(e.id!=='fire'&&e.id!=='furnace')return;const p=W3(e.x,e.y,TER.standZ(e.x,e.y));p.y+=LK[e.id][3];SRC.push({p,k:e.id,ph:(e.x*.11)%6.28})});return SRC}
+  ST.forEach(e=>{if(e.id!=='fire'&&e.id!=='furnace'&&e.id!=='cocina')return;const p=W3(e.x,e.y,TER.standZ(e.x,e.y));p.y+=LK[e.id][3];SRC.push({p,k:e.id,ph:(e.x*.11)%6.28})});return SRC}
  // Lote R3D-LUZ: las 4 luces reales ya NO saltan entre fuentes (cada hueco conserva su fuente y se funde al cambiar) y el parpadeo es lento y por fuente; el resto de fuentes llevan halo + charco de luz barato (lampglow3d.js)
  const slots=pool.map(()=>({s:null,v:0,out:0}));let lastT=0;
  const top=[],topD=[];   // FLUIDEZ (26 oct 2026): las 4 fuentes más cercanas (≤ 18 tiles) SIN ordenar todas ni crear arrays por fotograma (antes map+sort de todas las fuentes del mundo = basura → tirones del recolector)

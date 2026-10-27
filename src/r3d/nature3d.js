@@ -113,7 +113,7 @@ export function stumpGeo(){const g=jit(new THREE.CylinderGeometry(.13,.18,.2,8).
 
 // ───────── capa de recursos 3D (árboles talables y menas) ─────────
 const CELL=24,NVAR=3,CS=256;
-const ORECOL=['#c8742a','#e8e8f8','#c0603a','#9a9aa2','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff','#e8c24a','#ff4a2a'];
+const ORECOL=['#c8742a','#e8e8f8','#c0603a','#9a9aa2','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff','#e8c24a','#ff4a2a','#d8d0b8','#9a9aa2','#d4a468','#55525a','#f2ece2','#4a3a5a','#9aaaf0'];   // 12–18: piedras de Escultor (ESC-JOY)
 const GOLDTEX=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,246,200,1)');r.addColorStop(.25,'rgba(255,214,90,.7)');r.addColorStop(.6,'rgba(255,170,40,.22)');r.addColorStop(1,'rgba(255,150,20,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();   // CS: celda (px de mundo) del índice de recursos para update()
 // El Cielo (ISLA-4): todo lo que está en la columna de la zona (x ≥ BIOMES.zone.x0) usa ÁRBOLES DEL MUNDO (hojas azules) y menas en mármol claro
 const inZone=x=>{try{const z=BIOMES.zone;return !!z&&x>=z.x0}catch(e){return false}};
@@ -128,8 +128,8 @@ export class Resources{
  parts(kind){if(this.geo[kind])return this.geo[kind];let P=[];
   if(kind==='tocon'){const g=stumpGeo();P=[{g,mat:toon('#4a3626',{moss:1,tex:'madera',texS:30}),ink:hull(g,.012,inkFor('#4a3626')).geometry,inkM:inkFor('#4a3626')}]}
   else if(kind.startsWith('hierba')){const dead=kind.endsWith('d'),i=+kind.slice(6).replace('d',''),g=herbGeo(i,dead);P=[{g,mat:toon('#ffffff',{vc:1,soft:1}),ink:hull(g,.008).geometry,inkM:inkFor('#2a3a22')}]}
-  else if(kind.startsWith('mena')){const i=+kind.slice(4).replace(/[dz]/g,''),dead=kind.endsWith('d'),zm=kind.includes('z'),MBA=['#8a5a3a','#9a9aa8','#6a4a3a','#3a3a40','#8a9aa8','#3a4a6a','#2a4a3a','#2a4a52','#5a3a2a','#3a3a5a','#6a5a3a','#2a1414'],MOR=['#c8742a','#e8e8f8','#c0603a','#6a6a72','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff','#e8c24a','#ff4a2a'];
-   const G=propGeo('mena',{base:zm?'#d6cfbb':MBA[i]||MBA[0],ore:MOR[i]||MOR[0],crystal:i>=5&&i!==10,dead},null);if(G){const m=toon('#ffffff',{vc:1,moss:.7,emit:1,soft:1});P=[{g:G.g,mat:m,ink:hull(G.g,.013).geometry,inkM:inkFor('#5a5560')}]}}
+  else if(kind.startsWith('mena')){const i=+kind.slice(4).replace(/[dz]/g,''),dead=kind.endsWith('d'),zm=kind.includes('z'),MBA=['#8a5a3a','#9a9aa8','#6a4a3a','#3a3a40','#8a9aa8','#3a4a6a','#2a4a3a','#2a4a52','#5a3a2a','#3a3a5a','#6a5a3a','#2a1414','#b8b098','#6a6a72','#b08450','#2c2a30','#d8d2c6','#1e1626','#4a5280'],MOR=['#c8742a','#e8e8f8','#c0603a','#6a6a72','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff','#e8c24a','#ff4a2a','#d8d0b8','#8a8a92','#d4a468','#3c3a40','#ece6dc','#3a2a4a','#8a9ae0'];
+   const G=propGeo('mena',{base:zm?'#d6cfbb':MBA[i]||MBA[0],ore:MOR[i]||MOR[0],crystal:i>=5&&i!==10&&i<12||i===18,dead},null);if(G){const m=toon('#ffffff',{vc:1,moss:.7,emit:1,soft:1});P=[{g:G.g,mat:m,ink:hull(G.g,.013).geometry,inkM:inkFor('#5a5560')}]}}
   else{const[spb,v]=kind.split('#'),[sp,bk]=spb.split('@'),T=treeGeo(sp,+v*17+3,+bk),wm=toon(T.tr,{moss:1,tex:'madera',texS:30,texB:.6});
    P=[{g:T.wood,mat:wm,ink:hull(T.wood,.016).geometry,inkM:inkFor(T.tr)},{g:T.cards,mat:folMat(T.tex),fol:T.tex}]}
   return this.geo[kind]=P}

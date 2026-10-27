@@ -72,7 +72,19 @@ const WK=(()=>{
     cf:{of:'pe',n:'Costura fina',lv:22,po:18,t:'q',e:140,d:.5},
     ct:{of:'pe',n:'Curtir a fondo',lv:32,po:30,t:'r',fn:s=>{s.dur=Math.min(s.durMax,s.dur+15);s.b.wn=2;s.b.wn2=0}},
     gr:{of:'pe',n:'Grabar',lv:44,po:36,t:'q',e:170,ok:s=>s.iq>=2},
-    tz:{of:'pe',n:'Tensar',lv:56,po:28,t:'p',e:200,fn:s=>{s.iq=Math.min(MAXIQ,s.iq+1)}}
+    tz:{of:'pe',n:'Tensar',lv:56,po:28,t:'p',e:200,fn:s=>{s.iq=Math.min(MAXIQ,s.iq+1)}},
+    // ---- exclusivas de ESCULTOR (of:'es', piedra; ESC-JOY 27 oct) ----
+    dbs:{of:'es',n:'Desbastar',lv:11,po:24,t:'p',e:220,d:2},
+    ccl:{of:'es',n:'Cincelar',lv:21,po:18,t:'q',e:140,d:.5},
+    hum:{of:'es',n:'Humedecer la piedra',lv:30,po:20,t:'b',fn:s=>{s.cond='buena'}},
+    esq:{of:'es',n:'Escuadrar',lv:40,po:32,t:'r',fn:s=>{s.dur=Math.min(s.durMax,s.dur+15);s.b.wn=2;s.b.wn2=0}},
+    plp:{of:'es',n:'Pulir la piedra',lv:52,po:40,t:'q',e:175,ok:s=>s.iq>=2},
+    // ---- exclusivas de JOYERÍA (of:'jo', metal fino y gemas; ESC-JOY 27 oct) ----
+    sld:{of:'jo',n:'Soldar',lv:12,po:22,t:'p',e:180,fn:s=>{s.iq=Math.min(MAXIQ,s.iq+1)}},
+    egs:{of:'jo',n:'Engastar',lv:24,po:26,t:'q',e:150,ok:s=>s.iq>=1},
+    rcc:{of:'jo',n:'Recocer',lv:32,po:36,t:'r',fn:s=>{s.dur=Math.min(s.durMax,s.dur+20);s.b.wn=3;s.b.wn2=0}},
+    lup:{of:'jo',n:'Lupa',lv:42,po:30,t:'b',fn:s=>{s.b.inn=4;s.iq=Math.min(MAXIQ,s.iq+1)}},
+    esp:{of:'jo',n:'Pulido espejo',lv:54,po:44,t:'q',e:190,ok:s=>s.iq>=2}
   };
   const IDS=Object.keys(A);
   // PRNG mulberry32 (sin Math.random).

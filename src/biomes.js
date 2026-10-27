@@ -95,7 +95,10 @@ const BIOMES=(()=>{
  DEC_ALL.push(Object.assign({},DEC_ALL[3],{dots:['#d8c8ff','#ffffff','#9ae8ff'],soil:'#6e66a8',soilL:'#948cd0',soilD:'#443e78',clay:'#a89ae0',rock:'#7a78a8',rockL:'#b4b2de',wl:'#e8f4ff',wd:'#4aa8e0',wsh:'#f6fbff',pa:['#c8c4e8','#e4e2f6','#9a96c4'],cb:['#b0acd8','#d4d0f0','#8884b0']}),
   Object.assign({},DEC_ALL[2],{dots:['#e8d090','#ffffff','#c88a4a'],soil:'#b08850',soilL:'#d0a868',soilD:'#7a5a30',clay:'#d89a5a',rock:'#a89070',rockL:'#d4c098',wl:'#cfeee0',wd:'#2f9a8a',wsh:'#e6f8ec',pa:['#e0c890','#f0dca8','#b89a60'],cb:['#d4bc88','#ecdcae','#a8905c']}),
   Object.assign({},DEC_ALL[4],{dots:['#ffffff','#f0d878','#8ac8f0'],soil:'#9a7a5a',soilL:'#bc9c78',soilD:'#6a4e36',clay:'#c8906a',rock:'#a8a29a',rockL:'#d4cfc4',wl:'#d0f0ff',wd:'#2a8ac0',wsh:'#f0fbff',pa:['#d8ceb8','#ece4d0','#b0a68c'],cb:['#c8c0ac','#e4dcc8','#9c9480']}));
- WC_ALL.push(WC_ALL[3],WC_ALL[4],WC_ALL[4]);MI_ALL.push(MI_ALL[3],MI_ALL[4],MI_ALL[4]);FI_ALL.push(FI_ALL[3],FI_ALL[4],FI_ALL[4]);
+ WC_ALL.push(WC_ALL[3],WC_ALL[4],WC_ALL[4]);MI_ALL.push(MI_ALL[3],MI_ALL[4],MI_ALL[4]);
+ {/* ESC-JOY (27 oct 2026): PIEDRA de Escultor (ACT.mi 12 caliza · 13 granito · 14 arenisca · 15 basalto · 16 mármol · 17 obsidiana · 18 piedra astral) y ORO (10) por bioma; se copia cada lista para que Páramo/Desierto/Costa no compartan la de su modelo */
+  const STONE_ADD=[[[12,3]],[[12,3]],[[13,3]],[[13,3],[16,2],[10,2]],[[14,3],[16,2],[10,2]],[[15,3],[17,2]],[[13,3],[18,2]],[[14,3],[10,2]],[[12,3]]];
+  for(let k=0;k<MI_ALL.length;k++){MI_ALL[k]=MI_ALL[k].map(z=>z.slice());(STONE_ADD[k]||[]).forEach((e,j)=>MI_ALL[k][Math.min(j,MI_ALL[k].length-1)].push(e))}}FI_ALL.push(FI_ALL[3],FI_ALL[4],FI_ALL[4]);
  ING_ALL.push(['yak'],['zorro'],['lagarto']);MID_ALL.push('ogro','ogro','oni');
  META.push({n:'Páramo Arcano',lv:52,ic:'🔮',g:['#8a86c4','#7a76b4','#9a96d4'],w:'#5a9ad8',sh:'#c8e8ff',noBoss:1,base:3},{n:'Desierto',lv:58,ic:'🏜️',g:['#d8b878','#c8a868','#e8c888'],w:'#2fa890',sh:'#a8f0dc',noBoss:1,base:5},{n:'Costa de las Tormentas',lv:72,ic:'⚓',g:['#a8b870','#98a860','#b8c880'],w:'#2a8ac0',sh:'#c0e8ff',noBoss:1,base:4});
  PEN.push([294,349,392,440,523],[220,233,277,330,349],[262,294,330,392,440]);RVC.push(6000,6500,9000);BRESP.push(150,160,175);BRN.push(BRN[3],BRN[4],BRN[4]);

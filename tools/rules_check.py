@@ -216,6 +216,15 @@ _sz = set(re.findall(r'(\w+):[.\d]+', _sz3))
 (ok if _g3 <= _sz else bad)('ICONOS DE OFICIO: todo kind de GEN3 tiene tamaño en SIZE3', ', '.join(sorted(_g3 - _sz)))
 (ok if 'craftgen3d.js' in rd('index.html') else bad)('ICONOS DE OFICIO: craftgen3d.js con modulepreload', 'index.html')
 
+# 13. GLOBALES `const` DE SCRIPT CLÁSICO (27 oct 2026, lote COCINA-CIERRE): `const X=…` / `let X=…` en lo alto de un script clásico NO cuelga de `window`,
+#     así que `window.X` es SIEMPRE undefined y la rama nunca corre (rompió el tutorial de cocina de la isla y el precalentado de iconos/HUD de la carga). Usa `typeof X!=='undefined'`.
+_cls = [p for p in src if p.suffix == '.js']
+_cg_names = set()
+for p in _cls: _cg_names |= set(re.findall(r'^(?:const|let) ([A-Z][A-Z0-9_]*)\b', rd(str(p.relative_to(R))), re.M))
+_srcall = '\n'.join(rd(str(p.relative_to(R))) for p in src + r3d)
+_wbad = sorted(n for n in _cg_names if re.search(r'window\.' + n + r'\b(?!\s*=[^=])', _srcall) and not re.search(r'window\.' + n + r'\s*=[^=]', _srcall))
+(bad if _wbad else ok)('GLOBALES: ningún `window.X` lee una const/let de script clásico (usa typeof X)', ', '.join(_wbad))
+
 for lv, r, d in res: print(f'{lv:7} {r}' + (f'  → {d}' if d else ''))
 nf = sum(1 for x in res if x[0] == 'FALLO'); nw = sum(1 for x in res if x[0] in ('AVISO', 'REVISAR'))
 print(f'\nRESULTADO: {"OK" if not nf else "FALLO"} ({nf} fallos, {nw} avisos)'); sys.exit(1 if nf else 0)

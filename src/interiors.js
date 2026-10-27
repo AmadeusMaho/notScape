@@ -34,25 +34,24 @@ const IRC={x:6000,y:6000},IK=2;   // IRC: centro de todas las salas; IK: px de m
   const table=(x,y,o)=>ori?add('mesaBaja',x,y,o):add('mesa',x,y,o);
   const doorX=RW*DOOR;
   if(id==='herreria'){
-   st.push(['furnace',-42,-38],['anvil',-8,-10],['armero',34,-12]); // lote C1b-1: Armero (armaduras de malla/placa)
-   wr('rackArmas',-12);wr('herramientas',14);wl('escudoPared',-22,{col:P.cloth});wl('escudoPared',8,{col:P.cloth});
-   add('fuelle',-23,-46,{},{fp:[12,8]});add('mesaTrabajo',16,-42);add('barrilAgua',-60,30);add('cestaLena',-58,46);
+   st.push(['furnace',-42,-38],['anvil',-8,-10],['armero',34,-12],['joyero',-60,2]);   // ESC-JOY (27 oct 2026): Banco de joyero contra la pared izquierda, girado hacia el centro (lejos del horno y del yunque, que se quedaban la tecla F) // lote C1b-1: Armero (armaduras de malla/placa)
+   wr('rackArmas',-12);wr('herramientas',14);wl('escudoPared',-22,{col:P.cloth});wl('escudoPared',30,{col:P.cloth});
+   add('fuelle',-23,-46,{},{fp:[12,8]});add('barrilAgua',-60,30);add('cestaLena',-58,46);
    add('arcon',54,34);add('maceta',63,-40,{kind:P.kind});add('alfombra',-8,28,{w:50,d:30,col:vol?'#7a3a2a':P.cloth,col2:P.cloth2},{fl:1});
    add('plantaGrande',62,50);add('barrilAgua',-48,52);
    if(vol||nor)wr('pielPared',-36);
    lt.push([-42,-38,16,170,'#ff7a2a'],[-8,-10,10,80,'#ffb050']);
    return{id,nm:'Herrería',it,st,lt}}
   if(id==='taberna'){
-   add('hogar',-26,WR,{stone:P.stone,lava:P.lava},{w:1});
    wr('estante',18);wr('cuadro',-2);wl('estante',-40);wr('colgante',-56);
    add('barra',WL+8,8,{w:62,rot:true},{wl:1,fp:[12,56]});add('barrilTap',WL+6,-34,{rot:true},{wl:1});
    table(14,12);sit(2,12);sit(26,12);sit(14,0);sit(14,24);
    table(28,42);sit(14,42);sit(42,42);
    add('alfombra',14,22,{w:56,d:48,col:P.cloth,col2:P.cloth2},{fl:1});
    if(ori)add('farolPapel',62,-38);
-   add('plantaGrande',64,22);add('maceta',-58,52,{kind:P.kind2});add('cojin',-30,-34,{col:P.cloth},{fl:0});
-   if(vol||nor)wr('pielPared',-8);if(swp||bos)wr('colgante',-8);
-   st.push(['fire',-26,-30]);lt.push([-26,-52,12,190,'#ff8a3a']);
+   add('plantaGrande',64,22);add('maceta',-58,52,{kind:P.kind2});add('cojin',-50,-30,{col:P.cloth},{fl:0});
+   if(vol||nor)wr('pielPared',42);if(swp||bos)wr('colgante',42);   /* x=42: antes en −8, pegados a la cocina */
+   st.push(['cocina',-26,-46]);lt.push([-26,-52,12,190,'#ff8a3a']);   // 27 oct 2026 (dueño): la COCINA 3D de cada cultura sustituye al hogar de la pared; mide 2,05 × 1,19 casillas (≈ 33 × 19 u): fondo pegado a la pared (WR), frente hacia la sala
    return{id,nm:'Taberna',it,st,lt}}
   if(id==='templo'){
    st.push(['shrine',-4,-34]);
@@ -81,9 +80,8 @@ const IRC={x:6000,y:6000},IK=2;   // IRC: centro de todas las salas; IK: px de m
    lt.push([-18,-36,16,130,'#ffd890'],[24,20,10,80,'#ffc070']);
    return{id,nm:'Tienda',it,st,lt}}
   // taller
-  st.push(['bench',-40,-36],['altar',2,-36],['curtidor',42,-10],['alambique',50,-38]); // lote C1b-1 · ALQUIMIA (provisional en el Taller hasta tener la Botica): Banco de curtidor (cuero)
+  st.push(['bench',-40,-36],['altar',2,-36],['curtidor',42,-10],['alambique',50,-38],['cantero',8,26]);   // ESC-JOY (27 oct 2026): Banco de cantero en el centro (donde estaba la mesa con sillas) // lote C1b-1 · ALQUIMIA (provisional en el Taller hasta tener la Botica): Banco de curtidor (cuero)
   wr('estante',-52);wr('estante',-16);wr('cuadro',26);wl('estante',-22);wl('cuadro',16);
-  table(8,28);sit(-6,28);sit(22,28);
   if(swp||bos||ori)add('hamaca',-34,46);else add('cama',-46,36,{});
   if(ori)add('biombo',-56,-6,{rot:true},{wl:1});
   add('farolPapel',62,-40);
@@ -125,8 +123,8 @@ const IRC={x:6000,y:6000},IK=2;   // IRC: centro de todas las salas; IK: px de m
   const sv={N:N.slice(),ST:ST.slice(),M:M.slice(),PO:PO.slice(),GD:GD.slice(),GA:GA.slice()};[N,ST,M,PO,GD,GA].forEach(a=>a.length=0);PJ.length=0;HFX.length=0;
   const items=R.it.map(q=>{const[n,x,y,o,ex]=q,fp=ex.fp||(ex.w||ex.wl||ex.fl?null:FPT[n])||null,tall=['hogar','alacena','plantaGrande','biombo','rackArmas','cama','barra'].includes(n);return{n,o,wx:IRC.x+x*IK,wy:IRC.y+y*IK,fl:!!ex.fl,fp,tall,oa:1,wall:!!(ex.w||ex.wl)}});
   const fpR=[];items.forEach(it=>{if(it.fp&&!it.fl){let[hx,hy]=it.fp;if(it.o.rot){const t=hx;hx=hy;hy=t}fpR.push([it.wx-hx,it.wx+hx,it.wy-hy,it.wy+hy])}});
-  R.st.forEach(([id,x,y])=>{const s={id,n:({furnace:'Horno',anvil:'Yunque',armero:'Armero',curtidor:'Banco de curtidor',alambique:'Alambique',bench:'Taller',altar:'Escritorio',bank:'Banco',shop:'Tienda',market:'Mercado',fire:'Hogar',shrine:'Altar de oración'})[id]||id,x:IRC.x+x*IK,y:IRC.y+y*IK,k:e.k,inroom:1};if(id==='market')s.rot=1;   // una vuelta a la derecha (x↔z): el tablón queda paralelo a la pared izquierda y de cara a la sala
-   if(id==='fire'){s.sks=['co'];s.nodraw=1}if(id==='bench'||id==='altar')s.sks=id==='bench'?['cr','sa','es']:['ins'];if(id==='furnace'||id==='anvil'||id==='armero')s.sks=['sm'];if(id==='curtidor')s.sks=['pe'];if(id==='alambique')s.sks=['al'];ST.push(s);if(id==='bank'){s.lh=52;fpR.push([s.x-56,s.x+56,s.y-60,s.y+12])}else if(id==='shop')fpR.push([s.x-36,s.x+36,s.y-24,s.y+20]);else if(id==='market')fpR.push([s.x-22,s.x+22,s.y-32,s.y+32]);else if(id!=='fire')fpR.push([s.x-20,s.x+20,s.y-13,s.y+13])});
+  R.st.forEach(([id,x,y])=>{const s={id,n:({cocina:'Cocina',furnace:'Horno',anvil:'Yunque',armero:'Armero',curtidor:'Banco de curtidor',cantero:'Banco de cantero',joyero:'Banco de joyero',alambique:'Alambique',bench:'Taller',altar:'Escritorio',bank:'Banco',shop:'Tienda',market:'Mercado',fire:'Hogar',shrine:'Altar de oración'})[id]||id,x:IRC.x+x*IK,y:IRC.y+y*IK,k:e.k,inroom:1};if(id==='market'||id==='joyero')s.rot=1;   // una vuelta a la derecha (x↔z): el tablón queda paralelo a la pared izquierda y de cara a la sala
+   if(id==='fire'||id==='cocina'){s.sks=['co'];if(id==='fire')s.nodraw=1}if(id==='bench'||id==='altar')s.sks=id==='bench'?['cr','sa']:['ins'];if(id==='cantero')s.sks=['es'];if(id==='joyero')s.sks=['jo'];if(id==='furnace'||id==='anvil'||id==='armero')s.sks=['sm'];if(id==='curtidor')s.sks=['pe'];if(id==='alambique')s.sks=['al'];ST.push(s);if(id==='bank'){s.lh=52;fpR.push([s.x-56,s.x+56,s.y-60,s.y+12])}else if(id==='shop')fpR.push([s.x-36,s.x+36,s.y-24,s.y+20]);else if(id==='market')fpR.push([s.x-22,s.x+22,s.y-32,s.y+32]);else if(id==='cocina')fpR.push([s.x-33,s.x+33,s.y-19,s.y+16]);else if(id==='cantero')fpR.push([s.x-23,s.x+23,s.y-13,s.y+13]);else if(id==='joyero')fpR.push([s.x-11,s.x+11,s.y-18,s.y+18]);else if(id!=='fire')fpR.push([s.x-20,s.x+20,s.y-13,s.y+13])});
   const dx=IRC.x+RW*DOOR*IK;
   ST.push({id:'exit',n:'Salir',x:dx,y:IRC.y-RD*IK/2+26,lh:44});
   INT={k:e.k,R,id:e.room,sv,items,fpR,ret:{x:e.x,y:e.y,rot:!!e.rot},t0:now,so:shellO(IKB(e.k)),dust:Array.from({length:16},(_,i)=>({x:Math.random(),y:Math.random(),v:.01+Math.random()*.02,p:Math.random()*6.28}))};

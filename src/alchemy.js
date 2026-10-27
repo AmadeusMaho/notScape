@@ -242,7 +242,7 @@ const ALQ=(()=>{
   const prog=pt.started?clamp(pt.clock/Math.max(1,g.total),0,1):0;if(g.motes.length<36&&Math.random()<dt*(1+prog*7))g.motes.push({x:CAULD.x+rnd(-55,55),y:CAULD.y-4,vy:-rnd(20,42),vx:rnd(-8,8),t:0,life:rnd(1.2,2.2),s:rnd(3,6)});g.motes.forEach(m=>{m.t+=dt;m.y+=m.vy*dt;m.x+=m.vx*dt+Math.sin(m.t*4+m.s)*10*dt});g.motes=g.motes.filter(m=>m.t<m.life)}
  // ── textos y píldoras ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
  function hint(){const e=document.querySelector('#alq .aq-h');if(!e||!G)return;const g=G,pt=g.pot,ing=g.F?[...new Set(g.F.ing)]:[];let h='';if(g.warn>0)h=g.warnT;else if(pt.fill<.6&&!pt.started)h='Llena la olla: pulsa «Base» y elige agua, aceite, alcohol o vino';else if(pt.F<.05&&pt.T<.16&&!pt.started)h='Enciende la olla con el fuelle (clic repetido); la llama baja sola si dejas de soplar';
-  if(h){}else if(g.bubble)h='¡Burbuja inestable! Haz clic sobre ella antes de que reviente';
+  if(h){}else if(g.bubble)h='¡Burbuja inestable! LMB sobre ella antes de que reviente';
   else if(pt.started&&!pt.ready&&have_('frasco')<1&&pt.clock>=g.total)h='Necesitas un frasco de cristal para embotellar (Ru los vende)';
   else if(pt.ready)h=g.ever?'Arrastra el corcho a la botella para embotellar':'¡Listo! Arrastra la jarra a la botella y vierte hasta la raya';
   else if(!pt.started)h=!g.jars.length?'Pulsa «Ingredientes» y elige qué usar (o «Recetas» para seguir una fórmula)':g.mort.items.length?'Agarra el mazo, súbelo y golpea el fondo del bol de arriba abajo: cuanto más fuerte, más se muele · luego arrastra el MORTERO sobre la olla':'Arrastra un ingrediente del estante al mortero';
@@ -387,8 +387,8 @@ const ALQ=(()=>{
  function hud(c){const g=G;let name='Preparación',pt=g.pot;if(pt.ready)name=g.ever?'Embotellar':'Poción lista';else if(pt.started)name=g.curPh?'Cocción · fase '+(1+g.proc.ph.indexOf(g.curPh))+'/'+g.proc.ph.length:'Remover y esperar';else name='Preparación · moler';c.fillStyle='rgba(16,13,10,.72)';c.beginPath();c.roundRect(WW/2-150-80,8,300,26,13);c.fill();c.fillStyle='#e8cf94';c.font='600 14px Cinzel,serif';c.fillText(name,WW/2-80,26)}
  // ── resultado ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
  // PANTALLA DE RESULTADO: «Has creado Poción de X» con su icono; si la fórmula es nueva pregunta si quiere ponerle un nombre (opcional)
- function showRes(){const M=G.M,sc=G.score,t=sc.total,g0=t>=.86?2:t>=.66?1:t>=.4?0:-1,exact=G.F&&sameSet(G.F.ing,potUnits()),g=exact?g0:Math.min(g0,1),none=!M.type||g<0||M.str<2,out=none?'al_turbio':idOf(M.type,M.str*(1+.12*(g-1)),g,M.sk);
-  G.res={g,none,out,avg:t,capped:!exact&&g0>1};G.key=keyOf(potUnits(),baseKey());NAMEIN=true;const e=document.getElementById('alq'),isNew=!(S.alr||{})[G.key]&&!none,def=(TN[M.type]?TN[M.type][0]:'Brebaje')+' de '+(potUnits()[0]&&I[potUnits()[0]]?I[potUnits()[0]][0].toLowerCase():'hierbas');
+ function showRes(){const M=G.M,sc=G.score,t=sc.total,g0=t>=.86?2:t>=.66?1:t>=.4?0:-1,exact=G.F&&sameSet(G.F.ing,potUnits()),g=exact?g0:Math.min(g0,0),none=!M.type||g<0||M.str<2,out=none?'al_turbio':idOf(M.type,M.str*(1+.12*(g-1)),g,M.sk);
+  G.res={g,none,out,avg:t,capped:!exact&&g0>0};G.key=keyOf(potUnits(),baseKey());NAMEIN=true;const e=document.getElementById('alq'),isNew=!(S.alr||{})[G.key]&&!none,def=(TN[M.type]?TN[M.type][0]:'Brebaje')+' de '+(potUnits()[0]&&I[potUnits()[0]]?I[potUnits()[0]][0].toLowerCase():'hierbas');
   const pc=v=>Math.round(v*100)+' %';
   const d=document.createElement('div');d.className='aq-name aq-res';d.innerHTML='<div class="aq-ri">'+ic(out)+'</div><p>'+(none?'El brebaje no ha salido bien':'Has creado <b>'+I[out][0]+'</b>')+'</p><small>'+(none?(M.type?'La destilación salió mal: no sirve de nada.':'Ninguna propiedad dominante: no hace nada.'):'Calidad '+ROM[g]+(g===2?' · ¡perfecta!':'')+(G.res.capped?' · improvisada: con la fórmula podría ser III':''))+(sc.conf?' · mezcla confusa':'')+(sc.over?' · saturada':'')+'</small>'+
    '<small class="sc">Molienda '+pc(sc.fine)+' · Momento '+pc(sc.add)+' · Calor '+pc(sc.heat)+' · Remover '+pc(sc.stir)+' · Vertido '+pc(sc.pour)+'</small>'+
@@ -418,4 +418,6 @@ const ALQ=(()=>{
   if(sk){const K={tox:'poison',fue:'burn',hie:'slow',som:'blind'}[sk];try{STS.add(P,K,{dur:2500})}catch(e){}log('Efecto secundario leve: '+SIDE[sk][1]+'.')}
   return true}
  const LIQ={vida:'#d8382a',mana:'#4a7ae0',vigor:'#e8a030',rapidez:'#6ad0e8',antidoto:'#6ad04a'};
- return{reg,open,close,tick,use,mix,props,PR,ING,parse,liq:t=>LIQ[t]||'#8a7a5a',get G(){return G},jump(k){if(G){begin(k);pips()}},get active(){return!!G||OPEN},get brewing(){return!!G},get stn(){return STN}}})();
+ /* estilo 2D compartido con Cocina (src/cooking.js): trozos con forma, color por ingrediente, tinta y acabado de pincel */
+ const gfx={drawChunk,chunkKind,icol,inkS,css,lerpc,hex,paintFinish,herbD};
+ return{reg,open,close,tick,use,mix,props,PR,ING,parse,gfx,liq:t=>LIQ[t]||'#8a7a5a',get G(){return G},jump(k){if(G){begin(k);pips()}},get active(){return!!G||OPEN},get brewing(){return!!G},get stn(){return STN}}})();

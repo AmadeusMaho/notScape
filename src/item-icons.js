@@ -59,6 +59,8 @@ const ITEMICON=(()=>{
   fiber(c){for(let i=0;i<5;i++)L(14+i*8,12,18+i*8,52,i%2?lt(c,.2):c,3)},
   thread(c){S(c,E(32,32,18,22));L(18,28,46,28,dk(c,.3),2);L(16,36,48,36,dk(c,.3),2);L(18,44,46,44,dk(c,.3),2)},
   cloth(c){S(c,Pl([[8,16],[56,12],[58,50],[10,54]]));L(10,30,56,28,dk(c,.25),1.4);L(10,40,56,38,dk(c,.25),1.4)},
+  column(c){S(dk(c,.1),Pl([[18,52],[46,52],[50,58],[14,58]]));S(c,R(22,14,20,38,2));L(28,16,28,50,dk(c,.25),1.4);L(36,16,36,50,dk(c,.25),1.4);S(lt(c,.2),Pl([[14,8],[50,8],[46,14],[18,14]]))},   // ESC-JOY
+  statue(c){S(dk(c,.15),Pl([[16,50],[48,50],[52,58],[12,58]]));S(c,Pl([[24,50],[22,34],[26,24],[24,16],[32,8],[40,16],[38,24],[42,34],[40,50]]));S(lt(c,.35),E(32,15,5,5))},
   stoneblk(c){S(c,Pl([[8,24],[32,12],[56,24],[56,44],[32,56],[8,44]]));L(32,34,32,56,dk(c,.3),1.6);L(8,24,32,34,dk(c,.2),1.6);L(56,24,32,34,dk(c,.2),1.6)},
   brick(c){S(c,R(8,22,48,22,3));L(32,22,32,44,dk(c,.3),1.6);L(8,33,56,33,dk(c,.3),1.6)},
   blade(c){S(c,Pl([[32,6],[42,22],[40,48],[24,48],[22,22]]));L(32,10,32,44,lt(c,.5),1.6)},
@@ -135,10 +137,16 @@ const ITEMICON=(()=>{
  function spec(id){let m,t;
   const tr=ITEMICON.tier?ITEMICON.tier(id):null,cm0=/^(?:ar|sh|lg|gl)_(cu|tu)_/.exec(id),tb=TC[tr]||'#aaaaaa',tc=cm0?(cm0[1]==='cu'?mix('#8a5a2a',tb,.3):mix('#cfc8e8',tb,.5)):(TC[tr]||'#aaa'); // lote C1: cuero = marrón teñido · túnica = tela clara teñida por el tier
   if(id.startsWith('sw_'))return['sword',tc];if(id.startsWith('ar_'))return['chest',tc];if(id.startsWith('sh_'))return['shield',tc];if(id.startsWith('lg_'))return['legs',tc];if(id.startsWith('gl_'))return['gloves',tc];
+  if(typeof COC!=='undefined'){const pl=COC.parse(id);if(pl){const fc=pl.top.length?COC.FX[pl.top[0][0]][1]:'#c8a060';return['bowl','#8a6a4a',{food:fc,steam:1,bits:[[26,28,3,'#d8884a'],[38,27,3,'#6ab048']]}]}}
   if(typeof ALQ!=='undefined'){const pz=ALQ.parse(id);if(pz)return['elixir',ALQ.liq(pz.type),{g:pz.g,ti:pz.ti,sk:pz.sk}];if(id==='frasco')return['flask','#cfe8f0'];if(id==='vino')return['elixir','#8a2a3a',{g:1,ti:3}];if(id==='alcohol')return['elixir','#cfe0e8',{g:0,ti:3}];if(id==='al_turbio')return['elixir','#6a5a3a',{g:-1,ti:1}]}   // Alquimia (27 oct 2026)
   if(id.startsWith('sc_'))return['shears',tc];if(/^h_/.test(id)&&typeof HERB!=='undefined'){const hd=HERB.D.find(d=>'h_'+d[1]===id);if(hd)return['herbplant',hd[3],{leaf:hd[4],sp:hd[1]}]}   // Herbolaria (27 oct 2026)
   if(id.startsWith('ax_'))return['axe',tc];if(id.startsWith('pk_'))return['pick',tc];if(id.startsWith('rd_'))return['rod',tc];if(id.startsWith('bw_'))return['bow',tc];if(id.startsWith('st_'))return['staff',tc,{orb:ORB[tr]||'#9cf'}];
   if(id.startsWith('fl_'))return['arrows',tc];if(id.startsWith('vi_'))return['bolts',tc];if(id.startsWith('qv_'))return['quiver',mix('#8a5a2a',tb,.3)]; // lote C5
+  {const ST={caliza:'#d8d0b8',granito:'#8a8a92',arenisca:'#d4a468',basalto:'#55525a',marmol:'#ece6dc',obsidiana:'#3a2a4a',astral:'#9aaaf0'},GM={cuarzo:'#e6e2f2',ambar:'#e8a030',jade:'#3aa86a',zafiro:'#3a6aff',opalo:'#d8eef0',rubi:'#e02a3a',amatista:'#9a5ae0',topacio:'#f0b040',coral:'#ff7a6a',diamante:'#e8f8ff'};   // ESC-JOY (27 oct 2026): Escultor y Joyería
+   if(m=/^(bl|ls|ta_columna|ta_estatuilla|ta_idolo)_(\w+)$/.exec(id)){const c=ST[m[2]]||'#9a958d';return[m[1]==='bl'?'stoneblk':m[1]==='ls'?'brick':m[1]==='ta_columna'?'column':'statue',c]}
+   if(m=/^(gb|gm)_(\w+)$/.exec(id))return[m[1]==='gb'?'ore':'gem',GM[m[2]]||'#cfe8f0'];   // en bruto = roca con veta del color de la gema
+   if(m=/^(eg|an|cl)_(\w+)$/.exec(id)){const gc=GM[m[2]],mc=gc?'#e8c24a':(m[2]==='oro'?'#e8c24a':TC[m[2]]||'#c8c8d0');return[m[1]==='cl'?'amulet':'ring',gc?(m[2]==='diamante'||m[2]==='coral'?'#e8e8f2':'#e8c24a'):mc,{gem:gc||mix(mc,'#ffffff',.3)}]}
+   if(id==='b_oro')return['bar','#e8c24a']}
   {const cr=CRAFT(id,tb);if(cr)return cr}   // OFICIOS-D4: herramientas, ropa e intermedios de oficio (convenciones: REGLAS_CREACION §13)
   if(id.startsWith('b_'))return['bar',tc];
   if(TC[id]&&['plata','cobre','estano','hierro','carbon','mitril','adam','runita','oricalco','celestita','oro','infernita'].includes(id))return['ore',TC[id]];

@@ -25,6 +25,7 @@ JS = """(()=>{
  out.tsrc=typeof TSRC!=='undefined'?TSRC:{};
  out.shop=[];try{for(const v in TRADE.VEND){const s=TRADE.VEND[v].stock?TRADE.VEND[v].stock(5):[];s.forEach(r=>out.shop.push(r[0]))}}catch(e){}
  out.rare=typeof RARE!=='undefined'?RARE:{};
+ out.gems=typeof EJ!=='undefined'?EJ.GEMS.map(g=>'gb_'+g[0]):[];   // ESC-JOY: gemas en bruto que caen al picar (EJ.gemDrop)
  return out})()"""
 
 async def main():
@@ -40,7 +41,7 @@ async def main():
         for i, r in enumerate(rows):
             gather_item[r['item']] = (sk, i)
     made = {r['out'] for r in d['recipes']}
-    shop = set(d['shop']); drops = d['drops']; tsrc = d['tsrc']; rare = {v[0] for v in d['rare'].values()}
+    shop = set(d['shop']); drops = d['drops']; tsrc = d['tsrc']; rare = {v[0] for v in d['rare'].values()}; gems = set(d.get('gems', []))
 
     def src(item):
         if item in gather_item: return 'gather'
@@ -48,6 +49,7 @@ async def main():
         if item in drops or item in tsrc: return 'mob'
         if item in shop: return 'shop'
         if item in rare: return 'rare'
+        if item in gems: return 'gem'
         return None
     effort_cache = {}
     def effort(item, depth=0):
@@ -60,6 +62,7 @@ async def main():
         elif s == 'mob': e = SEC_MOB
         elif s == 'shop': e = SEC_SHOP
         elif s == 'rare': e = 120.0
+        elif s == 'gem': e = 70.0   # 1 de cada 14 picadas de piedra (≈ 5 s cada una)
         elif s == 'craft' and depth < 6:
             r = next((r for r in d['recipes'] if r['out'] == item), None)
             e = sum(n * (effort(m, depth + 1) or 0) for m, n in r['mats'].items()) + r['ms'] / 1000.0 if r else None

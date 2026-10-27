@@ -149,6 +149,7 @@ export class Rooms3D{
   for(const e of ST){if(!e.inroom)continue;const n=PROPS.ST[e.id]&&PROPS.ST[e.id].n;if(!n||e.nodraw)continue;const k=I.k,th=BIOMES.list[k]&&BIOMES.list[k].village&&BIOMES.list[k].village.theme||null,Gm=propGeo(n,e.rot?{arch:k,rot:1}:{arch:k},th);if(!Gm)continue;
    const x=(e.x-IRC.x)/32,z=(e.y-IRC.y)/32;this.mesh(Gm.g,x,0,z,0);if(e.id==='furnace'||e.id==='anvil'||e.id==='armero')this.glows.push({x,y:.8,z,r:1.6,ph:z,fire:1});
    if(e.id==='furnace'){this.emit.push({x,y:1.5,z,rate:5,r:.14,h:1.9,op:.5,sz:.55,drift:.12});this.glows.push({x,y:.5,z:z+.5,r:2.4,ph:1,fire:1})}
+   if(e.id==='cocina'){this.glows.push({x:x-.55,y:.75,z:z+.15,r:1.9,ph:x,fire:1});this.emit.push({x:x-.55,y:1.25,z,rate:2.5,r:.1,h:1.4,op:.3,sz:.4,drift:.08})}   // fuego y vapor del fogón de la cocina (lado izquierdo del modelo)
    if(e.id==='shrine')this.emit.push({x,y:.85,z,rate:2.2,r:.05,h:1.6,op:.16,sz:.28,drift:.07})}
   // personal 3D tras el mostrador: cajeros del banco (ventanillas 1 y 3) y tendero de la tienda (misma paleta de cultura que la sala)
   {const kk=INTROOMS.PALS[I.k]?I.k:({6:3,7:4,8:0})[I.k]||0,bk=ST.find(e=>e.inroom&&e.id==='bank'),sh=ST.find(e=>e.inroom&&e.id==='shop');

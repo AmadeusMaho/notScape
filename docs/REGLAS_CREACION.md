@@ -239,7 +239,7 @@ Se comprueba y se cuenta en la entrega: (1) **ESCALA** vs. héroe (≈1 unidad �
 - **El sufijo «por tier» es SIEMPRE el id del tier de `TNM`/`TI`** (`cobre, estano, bronce, hierro, acero, plata, mitril, adam, runita, oricalco, celestita`; nunca el índice 0–10): `sw_acero`, `ar_mitril`, `b_hierro`, `og_sm_m_bronce`. Para cosas ligadas a la MADERA el sufijo es el id de la madera de `WON` (`pino, abedul, roble, fresno, sauce, arce, tejo, ebano, caoba, baobab, mundo`): `bw_roble`, `tb_roble`. El eje de tiers, sus niveles (`OFGEAR.TLV` = 1, 10, 19 … 91) y su cultura (`OFGEAR.CULT`) son DATOS; nunca un `if` por tier.
 - **Calidad:** sufijo `~0..3` (`sw_cobre~2`); compara con `String(id).split('~')[0]`; no apila (`stk`).
 - **Prefijos existentes (no los cambies):** `b_` barra · `sw_` espada · `lw_` arma de botín · `bw_` arco · `st_` bastón · `sh_` escudo · `ar_` peto/armadura · `lg_` pantalones · `gl_` guantes de combate · `lt_` sets de cuero de botín (`lt_<cultura><ranura><n>`) · `fl_`/`vi_` flechas/virotes · `qv_` carcaj · `ax_`/`pk_`/`rd_` hacha/pico/caña de recolección · `c_` comida cocinada · `f_` plato frito · `pot_` poción · `carne_`/`hueso_`/`piel_` botín animal · `bag_` mochila · `rn_` runa · `rv_` runa de viaje · `sc_` pergamino · `of_` ofrenda de misión (lleva su id en `QITEM`) · `og_` equipo de oficio (`og_<oficio>_<ranura>_<tier>`) · `gema_`, `sal_`, `maza_`, `ropa_` sueltos.
-- **Prefijos RESERVADOS para lo que viene** (usa estos, no inventes otros): `pc_` piel cruda · `cu_` cuero curtido por tier · `fb_` fibra (lino, cáñamo, algodón, seda… por tier) · `mj_` madeja · `te_` tela por tier · `tb_` madera lisa/tablón por madera · `mn_` mango · `hj_` hoja metálica · `hr_` herraje · `bl_` bloque de piedra · `ld_` ladrillo · `mb_` mueble (`mb_<tipo>_<cultura>`) · `sem_` semilla · `cv_` cultivo · `hb_` hierba · `rc_` reactivo de Alquimia · `tn_` tintura · `gm_` gema tallada · `eg_` engarce · `pv_` polvo · `tt_` tinta arcana · `eng_` engranaje/pieza mecánica · `ml_` miel/cera. Comida y poción con buff siguen `c_`/`f_`/`pot_` y declaran su buff en una tabla (`BUFD`).
+- **Prefijos RESERVADOS para lo que viene** (usa estos, no inventes otros): `pc_` piel cruda · `cu_` cuero curtido por tier · `fb_` fibra (lino, cáñamo, algodón, seda… por tier) · `mj_` madeja · `te_` tela por tier · `tb_` madera lisa/tablón por madera · `mn_` mango · `hj_` hoja metálica · `hr_` herraje · `bl_` bloque de piedra · `ld_` ladrillo · `mb_` mueble (`mb_<tipo>_<cultura>`) · `sem_` semilla · `cv_` cultivo · `hb_` hierba · `rc_` reactivo de Alquimia · `tn_` tintura · `gm_` gema tallada · `gb_` gema en bruto · `eg_` engarce/aro · `an_` anillo · `cl_` colgante/amuleto · `ls_` sillar · `ta_` talla de piedra (`ta_<tipo>_<piedra>`) · `pv_` polvo · `tt_` tinta arcana · `eng_` engranaje/pieza mecánica · `ml_` miel/cera. Comida y poción con buff siguen `c_`/`f_`/`pot_` y declaran su buff en una tabla (`BUFD`).
 - **Cuero (D6, 26 oct):** `HID[i]` (`cuero`, `piel_<tier>`) son ahora la PIEL CRUDA que sueltan las criaturas (ids sin cambiar; el prefijo `pc_` queda reservado para un renombrado futuro) y Peletería la CURTE (`Curtir …`) en `cu_<tier>`, el cuero que usan armaduras de cuero, carcajes, arcos y cañas. Madera: `tb_<madera>` (tablón, Artesanía) y `mn_<madera>` (mango). **A migrar cuando se porte el oficio dueño:** `tela` → `te_<tier>` (Sastrería); `lana`, `pluma`, `grasa` se quedan como materias primas.
 - **Objeto de misión:** añade su id a `QITEM`. **Objeto con equipo:** debe entrar en `eqKey`/`OFGEAR.is`.
 ### 13.2 Claves de habilidad (`SK`, `S.xp`, `SKI`)
@@ -263,15 +263,24 @@ Cada prefijo cae en UNA categoría de icono paramétrico con la paleta de su tie
 - Todo drop de una criatura (`MD[id].dr` = `[[idObjeto, prob],…]` y `MD[id].rare` = `[idObjeto, valor]`) usa ids EXISTENTES de `I` y respeta las convenciones de 13.1. Un id con una errata no suelta nada y no avisa.
 - **`python tools/ids_check.py`** (con la sesión rápida en marcha: `python tools/fast/ns.py start --no3d`) comprueba que existan en `I` los ids de: drops y raros de `MD`, ingredientes y resultados de TODAS las recetas `ACT`, `OFGEAR.G` y `QITEM`; y que ningún id rompa la forma (`[a-z0-9_]` + `~calidad`). Falla (código 1) si hay inexistentes. Correrlo al añadir objetos, recetas o criaturas.
 ```ids-skills
-wc mi fi ds co sm pe sa cr es ins mg cb ra pr
+wc mi fi ds co sm pe sa cr es jo ins mg cb ra pr
 ```
 ```ids-skills-reservadas
-he al en jo ing dm ag ap
+he al en ing dm ag ap
 ```
 ```ids-prefijos-reservados
-pc cu fb mj te tb mn hj hr bl ld mb sem cv hb rc tn gm eg pv tt eng ml
+pc cu fb mj te tb mn hj hr bl ld ls ta mb sem cv hb rc tn gb gm eg an cl pv tt eng ml
 ```
 
 ## Herramientas de verificación de modelos (26 oct 2026) — OBLIGATORIAS tras tocar armas, armaduras, cascos o ropa de PNJ
 `python tools/r3d/weapon_check.py` (tiras/filos flotantes: un adorno de una hoja curva usa `fuller()`/`blade(...,off)`, nunca `box().translate`) · `python tools/r3d/helmet_check.py` (la cabeza/cara no puede atravesar el casco; los cerrados cubren todo) · `python tools/r3d/beam_check.py` (nada de «vigas»: franjas sobre el cuerpo con `ribbon()`, paños colgantes con `drape()`/`cloth()`, nunca cajas finas y rectas). Detalle en AGENTS.md (lote HELMET-BEAM-CHECK).
 `python tools/r3d/skirt_check.py` — túnicas y vestidos deben tener falda de cuñas (`skirt3d.js`) y no dejar que las piernas la atraviesen. Los vestidos NUNCA son un cono sólido.
+
+## Escala de ventanas grandes por tamaño de pantalla (27 oct 2026)
+Las ventanas grandes con lienzo (Alquimia y Cocina, `#alq`) NO usan un tamaño fijo en px: `src/uiscale.js` (global `UIS`) calcula `--ui` en `:root` (= el mayor factor que hace caber el panel en ~94 % del ancho y del alto, con suelo 1 y techo 2,4; diseño base 760×640 px) y el CSS usa `zoom:var(--ui,1)` y `width:min(760px,calc(94vw / var(--ui,1)))`. Medido: 1280×720 → 1,06 · 1920×1080 → 1,59 · 3440×1440 → 2,11. **Toda ventana grande nueva sigue la misma regla** (no inventes px fijos). Prueba: `python tools/cook_scale_test.py` (3 tamaños, que el panel quepa y que el arrastre con ratón real siga acertando con el zoom).
+
+## Globales de script clásico: nunca `window.X` (27 oct 2026, lote COCINA-CIERRE)
+Un `const X=…` o `let X=…` en lo alto de un script clásico (`src/*.js`, cargado con `<script>`) es global pero **NO cuelga de `window`**: `window.X` vale siempre `undefined`. Para saber si existe se usa `typeof X!=='undefined'`. Este fallo silencioso rompió el modo tutorial de la cocina de la isla (`window.ISLA`) y el precalentado de iconos 3D y del HUD en la pantalla de carga (`window.ITEMICON`, `window.HUDSU`). Solo es válido `window.X` si algún archivo hace `window.X=…`. `tools/rules_check.py` (bloque «GLOBALES») lo vigila.
+
+## Botones de un minijuego: fuera de la zona de juego (27 oct 2026)
+En un lienzo de minijuego un botón (SERVIR, ENCENDER…) nunca se superpone a la zona donde el jugador arrastra o pulsa piezas, y su zona de pulsación es el rectángulo del botón (no un círculo más grande): el SERVIR de la parrilla estaba encima de la rejilla y pulsar un trozo de la esquina servía el plato crudo. Las piezas que caen en una estación ocupan huecos distintos también si se lanzan seguidas (cuenta las que siguen en vuelo).

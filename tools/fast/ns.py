@@ -63,8 +63,11 @@ async def daemon(a):
         for st in json.loads(d['steps']):
           t=st['t']
           if t=='move':await pg.mouse.move(st['x'],st['y'],steps=st.get('steps',1))
-          elif t=='down':await pg.mouse.down()
-          elif t=='up':await pg.mouse.up()
+          elif t=='down':await pg.mouse.down(button=st.get('b','left'))
+          elif t=='up':await pg.mouse.up(button=st.get('b','left'))
+          elif t=='key':await pg.keyboard.press(st['k'])   # 27 oct 2026: también teclado real (b='right' = RMB; key/kd/ku = pulsar/bajar/soltar una tecla)
+          elif t=='kd':await pg.keyboard.down(st['k'])
+          elif t=='ku':await pg.keyboard.up(st['k'])
           elif t=='wait':await pg.wait_for_timeout(st['ms'])
         return {'ok':True,'r':'ok'}
       if c=='stop':asyncio.get_event_loop().call_later(.3,lambda:os._exit(0));return {'ok':True}

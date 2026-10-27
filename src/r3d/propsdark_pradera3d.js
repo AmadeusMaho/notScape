@@ -66,7 +66,8 @@ const ARQ=[
  {id:'paramo',  wood:'#3a3248',wood2:'#54486a',stone:'#5f5a78',stone2:'#8a84aa',cloth:'#4a4488',cloth2:'#bcb4e0',roof:'#3c3674',metal:'#2a2838',acc:'#bcd0ff'},
  {id:'desierto',wood:'#6a5438',wood2:'#8a7452',stone:'#a08a64',stone2:'#c4ae84',cloth:'#8a5a3a',cloth2:'#d8c8a0',roof:'#8a7452',metal:'#3a3228',acc:'#c8a850'},
  {id:'costa',   wood:'#5a5046',wood2:'#7a6e5e',stone:'#7a8084',stone2:'#a2a8a8',cloth:'#3a5a6a',cloth2:'#d8d0b8',roof:'#6a5e50',metal:'#2e3236',acc:'#d8d0b8'},
- {id:'cielo',   wood:'#8a7456',wood2:'#a89472',stone:'#cfc8b4',stone2:'#e8e2d0',cloth:'#d8d0b8',cloth2:'#e8cf94',roof:'#b3664b',metal:'#8a8a92',acc:'#e8cf94'},];   // El Cielo (ISLA-4): mármol, madera de olivo y dorado
+ {id:'cielo',   wood:'#8a7456',wood2:'#a89472',stone:'#cfc8b4',stone2:'#e8e2d0',cloth:'#d8d0b8',cloth2:'#e8cf94',roof:'#b3664b',metal:'#8a8a92',acc:'#e8cf94'},
+ {id:'infierno',wood:'#241816',wood2:'#3a2420',stone:'#2c2a2e',stone2:'#4a3a3c',cloth:'#5a1a16',cloth2:'#3a2a2a',roof:'#201c1e',metal:'#141214',acc:'#e8482a'},];   // El Cielo (ISLA-4): mármol, madera de olivo y dorado
 const A=o=>{const p=ARQ[clamp((o&&o.bk)|0,0,ARQ.length-1)];if(!p.c){p.c={};['wood','wood2','stone','stone2','cloth','cloth2','roof','metal','acc'].forEach(k=>p.c[k]=col(p[k]))}return p.c};
 
 // ═════════ MODELOS ═════════

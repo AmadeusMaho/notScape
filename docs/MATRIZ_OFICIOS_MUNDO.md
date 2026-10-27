@@ -78,7 +78,7 @@ Leyenda: **E** = estación y dónde · **IN** = entrada · **MID** = intermedio 
 - **E:** Fogón/cocina (hoguera en el campo; cocina en la taberna). **IN:** carne (fauna), pescado, setas/frutos/cultivos, hierbas, sal. **MID:** ingredientes procesados (harina, masa, caldo, mantequilla, conservas). **OUT:** platos = buff largo (~30 min, uno activo) a Maña/Pulso/PO.
 - **MUNDO:** carne y grasa PROPIA por animal de cada bioma (§5r), setas y frutos como nodos silvestres (1–2 por bioma), sal (Costa), especias (Oriental, Desierto). Agricultura aporta harina/verduras ★.
 
-### 3.4 Escultor (`es`, proceso — `ACT.es` está VACÍO)
+### 3.4 Escultor (`es`, proceso) — ✅ IMPLEMENTADO v1 el 27 oct 2026 (lote ESC-JOY en AGENTS.md: 7 piedras como vetas de Minería, Banco de cantero en el Taller)
 - **Decidido (§5r):** piedra y tallas. **E:** Banco de cantero (Taller; cantera en el campo ★5). **IN:** bloques de piedra. **MID:** losas, ladrillos, columnas (vendibles; sirven para casa del jugador y POI). **OUT:** tallas y adornos, estatuillas y mobiliario de piedra.
 - **MUNDO:** NODOS DE PIEDRA por bioma con su material propio (granito, caliza, basalto, arenisca, mármol del Cielo): ★5 ¿la piedra es un nodo de Minería (la misma rueda, drop extra) o una recolección propia «cantera»? Recomendado: nodo de Minería de tipo `piedra` con cantera como POI.
 
@@ -86,7 +86,7 @@ Leyenda: **E** = estación y dónde · **IN** = entrada · **MID** = intermedio 
 - **Decidido (22 oct):** Encantamiento SUSTITUYE a Inscripción (`ins` se retira cuando entre `en`). **E:** Mesa de encantamiento (Taller arcano / templo). **IN:** polvos (de desencantar equipo), tintas (Alquimia/Herbolaria), pergamino (piel curtida o papel ★6). **MID:** polvo, tinta, pergamino. **OUT:** encantamientos y ranuras en equipo, rollos de hechizo.
 - **MUNDO:** reliquias/ruinas (POI) con equipo viejo para desencantar; cristales en minas; fauna arcana (Páramo).
 
-### 3.6 Joyería (`jo`)
+### 3.6 Joyería (`jo`) — ✅ IMPLEMENTADO v1 el 27 oct 2026 (lote ESC-JOY: 10 gemas por bioma que caen al picar, oro colocado, Banco de joyero en la Herrería)
 - **E:** Banco de joyero. **IN:** metal fino (plata, oro★7, mitril…) + gemas. **MID:** gemas talladas, engarces, aros (vendibles). **OUT:** anillos, amuletos, coronas (llenan las ranuras `r`, `r2`, `n` hoy sin fabricante).
 - **Gemas (★8 propuesta, una por bioma + raras):** Pradera cuarzo · Bosque ámbar · Pantano jade · Cumbres zafiro · Oriental ópalo · Volcán rubí · Desierto topacio · Costa perla/coral · Páramo amatista · Cielo diamante. **Oro:** ¿existe el metal «oro» (hoy solo es la moneda)? ★7.
 - **MUNDO:** vetas de gema en minas/cuevas (POI de mina), perlas en la Costa (pesca), geodas como nodo raro.

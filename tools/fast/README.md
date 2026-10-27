@@ -36,3 +36,4 @@ También por URL: `?test=1&hour=noche&at=x,y&hp=5&spawn=goblin&target=goblin&no3
 
 ## Ratón real (22 oct 2026)
 `ns.py mouse '[{"t":"move","x":100,"y":100},{"t":"down"},{"t":"move","x":300,"y":200,"steps":8},{"t":"wait","ms":500},{"t":"up"}]'` usa el ratón de Playwright (no eventos sintéticos): necesario para probar hover, arrastres y cualquier cosa que dependa de `:hover`/iconos 3D.
+Pasos admitidos: `{"t":"down","b":"right"}` (RMB), `{"t":"key","k":"Space"}`, `{"t":"kd","k":"1"}` / `{"t":"ku","k":"1"}` (teclado real; 27 oct 2026).

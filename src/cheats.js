@@ -28,7 +28,7 @@ const CHEAT=(()=>{
   if(sec==null){fixT=null;window.requestAnimationFrame=rafOrig;rafOrig=null;say('Hora: reloj normal');return}
   fixT=sec*1000;t0=performance.now();const ro=rafOrig;window.requestAnimationFrame=cb=>ro(ts=>cb(fixT+(ts-t0)*.002));say('Hora fijada: '+n)};
  API.spawn=id=>{if(!need('MD','mob','P'))return;if(!MD[id])return say('criatura desconocida');mob(id,P.x+50,P.y+10);say('Creado: '+MD[id].n)};
- API.reveal=()=>{try{if(window.WMAP&&WMAP.revealAll)WMAP.revealAll();else if(S.fog){for(const k in S.fog)S.fog[k]=1}say('Mapa: revelado (si el motor lo permite)')}catch(e){say('no se pudo revelar')}};
+ API.reveal=()=>{try{if(typeof WMAP!=='undefined'&&WMAP.revealAll)WMAP.revealAll();else if(S.fog){for(const k in S.fog)S.fog[k]=1}say('Mapa: revelado (si el motor lo permite)')}catch(e){say('no se pudo revelar')}};
  setInterval(()=>{if(god&&typeof P!=='undefined'&&P.hp>0){try{P.hp=maxHp();MN=mnMax();S.exh=0}catch(e){}}},80);
  // ───────── interfaz ─────────
  const CSS=`#cheat{position:fixed;left:12px;top:12px;width:min(420px,calc(100vw - 24px));max-height:calc(100vh - 24px);z-index:60;display:none;flex-direction:column;font:500 14px Spectral,Georgia,serif;color:#f2e6c4;background:rgba(16,13,10,.94);border:1.5px solid rgba(232,207,148,.45);border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.6);backdrop-filter:blur(3px)}

@@ -25,9 +25,9 @@
 
  HL.push({c:tp(-19,5.5),r:[5.9*T,4.2*T],seed:77,amp:.06,lv:1});   // PROPÍLEOS: zócalo elevado de 1 nivel bajo toda la estructura (relieve DENTRO del edificio: se sube al pórtico, no se atraviesa a ras)
  // ISLA-4 (21 oct 2026) · VIDA de la isla: OLIVAR (tala; olivos y cipreses en lugar de pinos, ver nature3d.js `inZone`), CANTERA (cobre y estaño en menas de mármol claro), FUENTE DE LAS NINFAS (pesca de camarones),
- // estaciones del Ágora (horno, yunque, fogata) y el BANCO al pie de la Acrópolis, y el CAMINO DE LAJAS de mármol (cobs → adoquín; suena a mármol) desde la llegada hasta el templo. Zonas y estaciones según docs/PLAN_ISLA_CIELO.md §6.2.
+ // estaciones del Ágora (horno, yunque, cocina junto a Rafael) y el BANCO al pie de la Acrópolis, y el CAMINO DE LAJAS de mármol (cobs → adoquín; suena a mármol) desde la llegada hasta el templo. Zonas y estaciones según docs/PLAN_ISLA_CIELO.md §6.2.
  const RC=(x0,x1,y0,y1)=>{const a=tp(x0,y0),b=tp(x1,y1);return[a[0],b[0],a[1],b[1]]};
- const STN=[['fire','Fogata',...tp(-1.6,-3.7),['co']],['furnace','Horno',...tp(0.4,-5.4),['sm']],['anvil','Yunque',...tp(3.6,-5.4),['sm']],['bank','Banco',...tp(21,-3)]];
+ const STN=[['cocina','Cocina',...tp(13,-2.4),['co']],['furnace','Horno',...tp(0.4,-5.4),['sm']],['anvil','Yunque',...tp(3.6,-5.4),['sm']],['bank','Banco',...tp(21,-3)]];
  const CAM=[[-26,12.4],[-19,12.4],[-19,-1.6],[2,-6],[9,-6.4],[16,-6.4]],COBZ=[{p:CAM.map(q=>tp(q[0],q[1])),w:60},{p:[tp(16,-6.4),tp(21,-6.4),tp(21,-3.8)],w:44},{p:[tp(2,-3.6),tp(-.5,3),tp(.5,11),tp(6,17),tp(6,29),tp(6,32)],w:50}];   // camino principal (propíleos → ágora → templo) y ramal al banco
  // ISLA-3 (21 oct 2026) · ARQUITECTURA GRIEGA de MÁRMOL (src/r3d/propsdark_cielo3d.js): Propileos en la llegada, camino de columnas, Ágora, Acrópolis (templo + Altar Quebrado con sus 4 braseros) y ruinas del borde.
  // Coordenadas en tiles desde el centro (como tp); `fp`/`fps` = colisión en px SIN escalar (props.js la multiplica ×PROP_K). Todo es decoración + colisión: los oficios, PNJ y recursos llegan en ISLA-4.

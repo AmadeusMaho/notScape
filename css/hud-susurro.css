@@ -1021,7 +1021,7 @@ body.hs-on #gfxadv .gfxpre button.bt{flex:1 1 45%;text-align:center;font-size:.7
 #hg .hg-h{font-size:12px;margin-top:6px;opacity:.9}
 
 /* ALQUIMIA · panel del Alambique (27 oct 2026): elegir ingredientes + minijuego de destilación (canvas) */
-#alq{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9;display:none;width:min(760px,94vw);background:rgba(16,13,10,.94);border:1px solid rgba(232,207,148,.45);border-radius:10px;padding:14px 16px;font-family:var(--f,Spectral,serif);color:#e8dcc0;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+#alq{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9;display:none;zoom:var(--ui,1);width:min(760px,calc(94vw / var(--ui,1)));background:rgba(16,13,10,.94);border:1px solid rgba(232,207,148,.45);border-radius:10px;padding:14px 16px;font-family:var(--f,Spectral,serif);color:#e8dcc0;box-shadow:0 10px 40px rgba(0,0,0,.6)}
 #alq .aq-t{font-family:var(--cap,Cinzel,serif);color:#e8cf94;font-size:17px;letter-spacing:.06em;text-align:center;margin-bottom:8px}
 #alq h4{font-family:var(--cap,Cinzel,serif);font-size:12px;letter-spacing:.1em;color:#c8b888;margin:0 0 6px;text-transform:uppercase}
 #alq .aq-cols{display:flex;gap:14px}#alq .aq-l{flex:1.15;min-width:0}#alq .aq-r{flex:1;min-width:0}
@@ -1039,7 +1039,7 @@ body.hs-on #gfxadv .gfxpre button.bt{flex:1 1 45%;text-align:center;font-size:.7
 #alq .aq-pred{margin:8px 0;font-size:13px;color:#e8cf94;min-height:2.6em}
 #alq .aq-go{width:100%;padding:8px;background:linear-gradient(#7a6228,#54421a);border:1px solid #e8cf94;border-radius:6px;color:#fff3d0;font-family:var(--cap,Cinzel,serif);letter-spacing:.08em;cursor:pointer}#alq .aq-go:hover:not(.off){filter:brightness(1.15)}
 #alq .aq-h{font-size:12px;text-align:center;margin-top:8px;opacity:.85}
-#alq .aq-cv{display:block;width:min(100%,calc((100vh - 210px)*1.739));margin:0 auto;touch-action:none;height:auto;aspect-ratio:560/340;display:block;border-radius:8px;border:1px solid rgba(232,207,148,.3);padding:0;cursor:default;background:none}
+#alq .aq-cv{display:block;width:100%;max-width:calc((100vh / var(--ui,1) - 150px)*1.739);margin:0 auto;touch-action:none;height:auto;aspect-ratio:560/340;display:block;border-radius:8px;border:1px solid rgba(232,207,148,.3);padding:0;cursor:default;background:none}
 #alq .aq-p{display:flex;gap:8px;justify-content:center;margin-top:8px}
 #alq .aq-p i{font-style:normal;font-size:12px;padding:2px 10px;border-radius:10px;border:1px solid rgba(232,207,148,.4);background:rgba(16,13,10,.85)}
 #alq .aq-p i.cur{border-color:#e8cf94;color:#e8cf94}#alq .aq-p i.q3{background:#4a6a2a;border-color:#bfe880}#alq .aq-p i.q2{background:#5a5a2a}#alq .aq-p i.q1{background:#5a4a2a}#alq .aq-p i.q0{background:#5a2a22}
@@ -1094,3 +1094,41 @@ body.hs-on #gfxadv .gfxpre button.bt{flex:1 1 45%;text-align:center;font-size:.7
 #alq .aq-bot .aq-p{flex:1;margin-top:0;justify-content:center}
 #alq .aq-em{background:linear-gradient(#5a2e22,#3a1c14);border:1px solid rgba(220,140,100,.55)}
 #alq .aq-tt{display:none}@media (min-width:1100px){#alq .aq-tt{display:inline}}
+/* COCINA v3: estrellas del emplatado y plato que entra con rebote */
+#alq .cc-st{display:flex;gap:10px;font-size:34px;line-height:1}
+#alq .cc-st i{font-style:normal;color:#4a4236;transform:scale(0);animation:ccpop2 .4s forwards;animation-delay:.5s}
+#alq .cc-st i.on{color:#ffd84a;text-shadow:0 0 14px rgba(255,216,74,.75);animation:ccpop .5s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes ccpop{from{transform:scale(0) rotate(-50deg)}to{transform:scale(1) rotate(0)}}
+@keyframes ccpop2{from{transform:scale(0)}to{transform:scale(.8)}}
+#alq .cc-plate{animation:ccplate .6s cubic-bezier(.2,1.5,.4,1)}
+@keyframes ccplate{from{transform:translateY(40px) scale(.3);opacity:0}to{transform:none;opacity:1}}
+
+/* COCINA · estante superior (despensa + recetas + guía paso a paso) — 27 oct 2026 */
+#alq .aq-sh{position:absolute;left:0;right:0;top:0;z-index:2;max-height:84%;overflow:auto;background:rgba(14,11,8,.96);border:1px solid rgba(232,207,148,.45);border-radius:8px;padding:8px 12px 10px;box-shadow:0 8px 26px rgba(0,0,0,.55)}
+#alq .aq-sr{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px}#alq .aq-sx{flex:0 0 74px;font-family:var(--cap,Cinzel,serif);font-size:11px;letter-spacing:.08em;color:#c8b888;text-transform:uppercase;padding-top:7px}
+#alq .aq-chips{flex:1;display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+#alq .aq-ch{position:relative;display:flex;align-items:center;gap:6px;background:rgba(40,32,24,.85);border:1px solid rgba(232,207,148,.3);border-radius:7px;color:#e8dcc0;padding:3px 9px 3px 4px;font:inherit;font-size:12px;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+#alq .aq-ch:hover:not(.off){background:rgba(80,62,38,.95);border-color:#e8cf94;transform:translateY(-1px)}#alq .aq-ch.on{border-color:#e8cf94;background:rgba(110,88,40,.75)}#alq .aq-ch.off{opacity:.38;cursor:default}
+#alq .aq-ch .ic{width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex:none}#alq .aq-ch .ic img{width:28px;height:28px}#alq .aq-ch b{font-weight:600}#alq .aq-ch em{font-style:normal;opacity:.7}
+#alq .aq-ch u{position:absolute;top:-6px;right:-5px;min-width:16px;height:16px;border-radius:8px;background:#e8cf94;color:#2a1a0e;font-size:10px;font-weight:700;text-decoration:none;text-align:center;line-height:16px}
+#alq .aq-rc{flex-direction:column;align-items:flex-start;gap:0;padding:4px 10px}#alq .aq-rc small{font-size:10px;opacity:.7}#alq .aq-rc em{font-size:10px}
+#alq .aq-act{align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid rgba(232,207,148,.2)}#alq .aq-act .aq-sx{padding-top:0}#alq .aq-meth{display:flex;gap:4px;flex:none}#alq .aq-act .aq-go{width:auto;flex:none;padding:7px 16px}
+#alq .aq-sh .aq-pred{margin:2px 0 0 84px;font-size:12px;min-height:0}
+#alq .aq-gd{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin-bottom:4px}#alq .aq-gr{color:#e8cf94;font-family:var(--cap,Cinzel,serif);font-size:12px;letter-spacing:.05em;margin-right:6px}#alq .aq-gr.aq-imp{opacity:.7}
+#alq .aq-gs{display:flex;align-items:center;gap:5px;font-size:11px;padding:2px 9px 2px 3px;border-radius:12px;background:rgba(40,32,24,.8);border:1px solid rgba(232,207,148,.2);color:#c8b888;opacity:.75}#alq .aq-gs i{font-style:normal;width:17px;height:17px;border-radius:50%;background:rgba(232,207,148,.2);text-align:center;line-height:17px;font-size:10px}
+#alq .aq-gs.cur{opacity:1;color:#fff3d0;border-color:#e8cf94;background:rgba(110,88,40,.8);box-shadow:0 0 10px rgba(232,207,148,.35)}#alq .aq-gs.cur i{background:#e8cf94;color:#2a1a0e}#alq .aq-gs.ok{opacity:.9;color:#bfe880;border-color:rgba(191,232,128,.4)}#alq .aq-gs.ok i{background:#4a6a2a;color:#fff}
+#alq .aq-ht{opacity:.85}
+
+/* COCINA · menú simplificado: 1 ingredientes → 2 qué hacer (botones grandes con icono) */
+#alq .aq-meth{display:flex;gap:8px;flex:1;flex-wrap:wrap}
+#alq .aq-mt{display:flex;flex-direction:column;align-items:center;gap:0;min-width:84px;padding:6px 12px;background:rgba(40,32,24,.85);border:1px solid rgba(232,207,148,.3);border-radius:9px;color:#e8dcc0;font:inherit;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+#alq .aq-mt i{font-style:normal;font-size:22px;line-height:1.1}#alq .aq-mt b{font-family:var(--cap,Cinzel,serif);font-size:12px;letter-spacing:.05em}#alq .aq-mt small{font-size:10px;opacity:.65}
+#alq .aq-mt:hover{background:rgba(80,62,38,.95);border-color:#e8cf94;transform:translateY(-1px)}#alq .aq-mt.on{border-color:#e8cf94;background:rgba(110,88,40,.8);box-shadow:0 0 10px rgba(232,207,148,.3)}
+#alq .aq-mesa .aq-ch{padding:2px 8px 2px 3px}#alq .aq-mesa .aq-ch .ic{width:22px;height:22px}#alq .aq-mesa .aq-ch .ic img{width:22px;height:22px}
+
+/* COCINA · estante compacto: elegir ingredientes arriba y luego tocar la estación */
+#alq .aq-sh{max-height:35%;padding:6px 10px 6px}#alq .aq-sr{margin-bottom:3px}#alq .aq-sx{flex:0 0 78px;padding-top:5px;font-size:10px}
+#alq .aq-ch{padding:2px 8px 2px 3px;font-size:11px}#alq .aq-ch .ic,#alq .aq-ch .ic img{width:22px;height:22px}
+#alq .aq-rc{flex-direction:row;align-items:center;gap:6px;padding:3px 10px}#alq .aq-rc small{display:none}
+#alq .aq-go2{margin:4px 0 0 88px;font-size:12px;color:#c8b888;font-style:italic}#alq .aq-go2.on{color:#ffe58a;font-style:normal;animation:aqpulse 1.4s ease-in-out infinite}
+@keyframes aqpulse{0%,100%{opacity:.75}50%{opacity:1}}

@@ -18,8 +18,10 @@ import {B,hash,vary,mix,mul,col,dirty,PAL,lanternAt,mossPatch,swapXZ} from './pr
 import {tube,lump,A,clamp,TAU} from './propsdark_pradera3d.js';
 
 // toldo por cultura: cloth = tiras de tela del color del bioma · thatch = paja · hide = pieles oscuras
-const CU=[{awn:'cloth'},{awn:'cloth'},{awn:'thatch'},{awn:'cloth'},{awn:'cloth'},{awn:'hide'},{awn:'cloth'},{awn:'thatch'},{awn:'cloth'}];
-const K=o=>clamp(((o&&(o.bk!=null?o.bk:o.arch))|0),0,8);
+const CU=[{awn:'cloth'},{awn:'cloth'},{awn:'thatch'},{awn:'cloth'},{awn:'cloth'},{awn:'hide'},{awn:'cloth'},{awn:'thatch'},{awn:'cloth'},{awn:'cloth'},{awn:'hide'}];   // 0..10: ver CULT_NAMES (9 Cielo, 10 Infierno)
+const K=o=>clamp(((o&&(o.bk!=null?o.bk:o.arch))|0),0,10);
+// COCINA por cultura (DATOS): hood = cubierta del puchero · oven = horno · pot = puchero · hang = colgantes del riel · simple = versión del tutorial del Cielo
+const CK=[{hood:'stone',oven:'brick',pot:'iron',hang:'tools'},{hood:'timber',oven:'dome',pot:'cu',hang:'herbs'},{hood:'thatch',oven:'mud',pot:'clay',hang:'fish'},{hood:'chim',oven:'brick',pot:'iron',hang:'ham'},{hood:'pagoda',oven:'kamado',pot:'wok',hang:'tools'},{hood:'vent',oven:'basalt',pot:'iron',hang:'chain'},{hood:'rune',oven:'mud',pot:'cu',hang:'crystal'},{hood:'awn',oven:'tandoor',pot:'clay',hang:'herbs'},{hood:'mast',oven:'brick',pot:'iron',hang:'fish'},{simple:1},{hood:'chain',oven:'basalt',pot:'iron',hang:'skull'}];
 const PL=()=>mix(col('#8a929c'),col('#5a5e66'),.3);          // placa de armadura / hierro pulido apagado
 const CLAY=()=>dirty('#b0703c',.55,.7,.2);
 const HIDE=()=>dirty('#a8794a',.5,.72,.15);
@@ -170,12 +172,85 @@ const MODELS={
   b.cyl(.36,.28,0,.1,.1,.34,8,cu2,{nb:1,v:.08});[.34,.48].forEach(y=>b.cyl(.36,y,0,.11,.11,.02,8,PAL.iron,{nb:1}));tube(b,[.36,.3,.1],[.36,.1,.1],.012,.012,4,cu,{nb:1});
   b.cyl(.36,0,.14,.07,.07,.1,8,dirty('#8ab0b8',.5,.5,.2),{nb:1,t:.9});b.cyl(.36,.1,.14,.03,.03,.06,6,dirty('#8ab0b8',.5,.5,.2),{nb:1});   // frasco
   b.box(-.62,0,.12,.14,.18,.14,a.wood,{v:.1});b.cyl(-.62,.18,.12,.045,.045,.07,6,dirty('#5f9a4a',.6,.5,.2),{nb:1});return b},
+ // COCINA (≈ 2,05 × 1,82 × 1,19; frente a +z): la SUPERESTACIÓN de Cocina en una sola pieza, como la cocina cenital del minijuego: a la izquierda el fogón con el puchero y su cubierta, en el centro los fuegos con la sartén,
+ // a la derecha el horno y por delante la mesa de trabajo con la tabla; utensilios colgados de un riel. UNA POR CULTURA (tabla CK): cada fila cambia la ESTRUCTURA (cubierta, horno, puchero, colgantes), no solo el color.
+ // El Cielo (fila 9) es la versión SIMPLIFICADA del tutorial: hogar de mármol con parrilla y mesa, sin horno (≈ 1,7 × 1,5 × 1,0). aEmit 2 = fuego/lava, 1 = luz de la boca del horno / runas.
+ cocina(o){const k=K(o),c=CK[k],b=new B(781+k),a=A({bk:k}),iron=PAL.iron,cu=dirty('#9a6a3a',.75,.5,.1),sd=781+k,ORG=col('#ff7a2a');
+  if(c.simple){   // hogar del tutorial del Cielo
+   b.box(0,0,0,1.56,.12,.86,PAL.stoneD,{v:.08,g:.15});b.box(0,.12,-.04,1.5,.4,.72,mix(a.stone2,PAL.plaster,.2),{v:.06,g:.12});b.box(0,.52,-.04,1.58,.06,.78,a.stone2,{v:.06});b.box(0,.58,-.04,1.58,.03,.06,a.acc,{nb:1,t:.4});b.box(0,0,.5,1.3,.05,.24,PAL.stoneD,{v:.1,g:.15});b.box(0,.05,.52,1.1,.02,.18,a.stone,{nb:1});   // basamento, cornisa con filete dorado y peldaño delantero
+   b.cyl(-.42,.58,-.04,.3,.26,.14,10,iron,{seg:2,v:.08});b.cyl(-.42,.7,-.04,.25,.25,.015,10,col('#262120'),{nb:1});b.box(-.42,.7,-.04,.34,.04,.3,ORG,{em:2,nb:1,t:.6,jit:.03});b.box(-.4,.73,-.02,.16,.03,.16,col('#ffb040'),{em:2,nb:1,t:.6});   // brasero de bronce con brasas
+   for(let i=0;i<5;i++)b.box(-.42+(i-2)*.1,.74,-.04,.018,.02,.34,iron,{nb:1});tube(b,[-.55,.78,.24],[-.2,.78,.24],.012,.012,4,a.wood,{nb:1});[0,1].forEach(i=>lump(b,-.5+i*.2,.8,.24,.07,.025,.03,dirty('#c8c4b8',.5,.5,.1),i));   // parrilla y pincho de pescado
+   b.box(.42,.58,.06,.62,.05,.46,a.wood2,{v:.1});b.box(.42,.63,.06,.5,.02,.38,mul(a.wood,1.1),{nb:1});b.cyl(.62,.65,-.02,.1,.08,.08,7,CLAY(),{nb:1});tube(b,[.3,.66,.12],[.52,.66,.14],.012,.012,4,iron,{nb:1});   // mesa con tabla, cuenco y cuchillo
+   [-.72,.72].forEach(x=>{b.cyl(x,.58,-.3,.07,.06,.82,8,mix(a.stone2,PAL.plaster,.3),{nb:1,seg:2,v:.05});b.cyl(x,.56,-.3,.1,.1,.04,8,a.stone,{nb:1});b.cyl(x,1.38,-.3,.09,.09,.04,8,a.acc,{nb:1})});b.box(0,1.42,-.3,1.6,.07,.12,a.stone2,{v:.06});b.box(0,1.49,-.3,1.5,.03,.1,a.acc,{nb:1,t:.4});   // dos columnas y arquitrabe
+   [-.3,.2].forEach((x,i)=>{tube(b,[x,1.42,-.3],[x,1.2,-.3],.008,.008,3,a.acc,{nb:1});b.cyl(x,1.1,-.3,.06,.05,.1,6,i?cu:iron,{nb:1})});return b}
+  b.box(-.28,0,-.04,1.38,.62,.8,vary(a.wood,.1,sd,1),{v:.1,g:.1,t:.7});b.box(-.28,.62,-.04,1.44,.06,.86,a.stone2,{nb:1});[-.7,-.28,.14].forEach(x=>b.box(x,.06,.38,.38,.46,.02,mul(a.wood2,.9),{nb:1}));   // mueble con puertas y encimera
+  b.box(-.7,.68,-.1,.62,.1,.62,a.stone,{v:.1});b.box(-.7,.7,.2,.34,.1,.02,ORG,{em:2,nb:1,t:.6});   // hogar
+  const P=c.pot;   // puchero: barro / cobre / wok / hierro
+  if(P==='clay'){b.cyl(-.7,.78,-.1,.26,.22,.26,10,CLAY(),{seg:3,bulge:.06,v:.12});b.cyl(-.7,1.0,-.1,.2,.2,.03,9,mul(CLAY(),.7),{nb:1})}
+  else if(P==='cu'){b.cyl(-.7,.78,-.1,.24,.2,.24,10,cu,{seg:2,bulge:.05,v:.08});b.cyl(-.7,.99,-.1,.2,.2,.03,9,mul(cu,.7),{nb:1})}
+  else if(P==='wok'){b.cyl(-.7,.78,-.1,.08,.3,.12,12,iron,{seg:2,v:.06});b.cyl(-.7,.9,-.1,.3,.3,.02,12,mul(iron,.7),{nb:1});[-1,1].forEach(sg=>b.box(-.7+sg*.33,.88,-.1,.08,.04,.04,iron,{nb:1}))}
+  else{b.cyl(-.7,.78,-.1,.24,.2,.24,10,iron,{seg:2,bulge:.05,v:.08});b.cyl(-.7,.99,-.1,.2,.2,.03,9,mul(iron,.7),{nb:1})}
+  const Hd=c.hood,X=-.7;   // cubierta sobre el puchero
+  if(Hd==='stone'){b.box(X,1.34,-.28,.76,.08,.34,a.stone2,{nb:1});b.box(X,1.42,-.3,.3,.4,.26,a.stone,{nb:1})}
+  else if(Hd==='timber'){[-1,1].forEach(sg=>tube(b,[X+sg*.36,.68,-.3],[X+sg*.36,1.4,-.3],.045,.04,6,vary(a.wood,.12,sd,3),{nb:1}));b.box(X,1.4,-.3,.9,.1,.36,a.wood2,{v:.1});b.box(X,1.5,-.3,.7,.08,.3,a.wood,{v:.1});[0,1,2,3].forEach(i=>lump(b,X-.3+i*.2,1.52,-.3+(i%2)*.04,.14,.06,.14,dirty('#4a6a34',.6,.6,.1),i))}   // pérgola viva con musgo
+  else if(Hd==='thatch'){[-1,1].forEach(sg=>tube(b,[X+sg*.4,.68,-.34],[X+sg*.4,1.42,-.34],.04,.035,5,vary(a.wood,.12,sd,3),{nb:1}));awning(b,a,k,X-.5,X+.5,-.4,1.52,.1,1.3,sd)}
+  else if(Hd==='chim'){b.box(X,1.04,-.3,.62,.2,.3,a.stone2,{nb:1,t:.5});b.box(X,1.2,-.3,.4,.6,.28,a.stone,{v:.1,g:.1});b.box(X,1.8,-.3,.5,.05,.34,a.stone2,{nb:1})}
+  else if(Hd==='pagoda'){[-1,1].forEach(sg=>tube(b,[X+sg*.38,.68,-.3],[X+sg*.38,1.36,-.3],.04,.04,6,a.acc,{nb:1}));b.box(X,1.36,-.3,1.0,.07,.6,a.roof,{v:.08});b.box(X,1.43,-.3,.7,.07,.44,mul(a.roof,.9),{v:.08});b.box(X,1.5,-.3,.4,.07,.3,a.roof,{v:.06});[-1,1].forEach(sg=>tube(b,[X+sg*.5,1.36,-.3],[X+sg*.58,1.44,-.3],.025,.012,4,a.roof,{nb:1}));b.cyl(X,1.57,-.3,.04,.02,.1,5,a.acc,{nb:1})}
+  else if(Hd==='vent'){b.box(X,1.04,-.3,.7,.16,.34,PAL.stoneD,{nb:1,t:.5});b.box(X,1.2,-.3,.46,.56,.3,a.stone,{v:.12,g:.12});[0,1,2].forEach(i=>b.box(X,1.3+i*.16,-.145,.3,.025,.012,ORG,{em:2,nb:1}));b.box(X,1.76,-.3,.56,.06,.36,a.stone2,{nb:1})}
+  else if(Hd==='rune'){[[-.2,1.34,.0],[.18,1.52,-.12],[-.04,1.72,.06]].forEach(([dx,y,dz],i)=>{b.box(X+dx,y,-.3+dz,.4-i*.06,.07,.26,vary(a.stone2,.1,sd,i),{v:.1,t:.7});b.box(X+dx,y,-.3+dz+.131,.12,.05,.012,a.acc,{em:1,nb:1})})}
+  else if(Hd==='awn'){[-1,1].forEach(sg=>tube(b,[X+sg*.4,.68,-.36],[X+sg*.4,1.5,-.36],.04,.035,5,vary(a.wood,.12,sd,3),{nb:1}));awning(b,a,k,X-.5,X+.5,-.4,1.54,.12,1.32,sd)}
+  else if(Hd==='mast'){tube(b,[X-.4,.68,-.34],[X-.4,1.7,-.34],.045,.04,6,vary(a.wood,.12,sd,3),{nb:1});tube(b,[X-.4,1.62,-.34],[X+.5,1.62,-.34],.03,.03,5,a.wood2,{nb:1});for(let i=0;i<6;i++)b.box(X-.2+i*.1,1.42,-.34,.012,.2,.012,PAL.rope,{nb:1});b.box(X+.1,1.5,-.34,.6,.01,.01,PAL.rope,{nb:1});b.box(X+.48,1.5,-.34,.06,.1,.06,PAL.lamp,{em:1,nb:1})}
+  else{[-1,1].forEach(sg=>tube(b,[X+sg*.36,.68,-.3],[X+sg*.36,1.5,-.3],.03,.03,5,iron,{nb:1}));b.box(X,1.52,-.3,.84,.05,.1,iron,{nb:1});[-.2,.2].forEach(dx=>{tube(b,[X+dx,1.5,-.3],[X+dx,1.18,-.3],.008,.008,3,iron,{nb:1});b.cyl(X+dx,1.08,-.3,.07,.06,.1,6,col('#d8d0b8'),{nb:1})})}   // marco de hierro con cráneos (Infierno)
+  b.cyl(-.04,.7,-.08,.27,.27,.04,12,mul(iron,.6),{nb:1});b.cyl(-.04,.74,-.08,.24,.24,.03,12,iron,{nb:1});tube(b,[.2,.76,-.08],[.52,.78,-.08],.025,.022,5,a.wood,{nb:1});b.box(-.04,.7,.2,.28,.1,.02,ORG,{em:2,nb:1,t:.6});   // fuegos y sartén
+  const O=c.oven,OX=.62;   // horno
+  if(O==='brick'){b.box(OX,0,-.04,.62,.98,.84,a.stone,{v:.12,g:.1,t:.62});b.box(OX,.98,-.04,.7,.08,.9,a.stone2,{nb:1});b.box(OX,.18,.4,.4,.38,.02,iron,{nb:1});b.box(OX,.22,.415,.32,.3,.02,PAL.lamp,{em:1,nb:1});b.box(OX,.1,.425,.44,.05,.02,iron,{nb:1});b.box(.78,1.06,-.26,.2,.6,.2,a.stone2,{nb:1});b.box(.78,1.66,-.26,.26,.06,.26,a.stone,{nb:1})}
+  else if(O==='dome'||O==='mud'){const cl=O==='mud'?CLAY():mix(a.stone,a.wood2,.4);b.box(OX,0,-.04,.7,.34,.8,a.stone,{v:.12,g:.1});b.cyl(OX,.34,-.04,.4,.14,.6,10,cl,{seg:3,bulge:.08,v:.12});b.cyl(OX,.94,-.04,.14,.1,.1,8,mul(cl,.8),{nb:1});b.box(OX,.42,.34,.3,.26,.04,iron,{nb:1});b.box(OX,.45,.355,.22,.2,.02,PAL.lamp,{em:1,nb:1})}
+  else if(O==='kamado'){b.box(OX,0,-.04,.5,.3,.6,a.wood2,{v:.1});b.cyl(OX,.3,-.04,.3,.3,.52,12,mul(a.acc,.6),{seg:3,bulge:.1,v:.06});b.cyl(OX,.78,-.04,.26,.12,.14,12,mul(a.acc,.5),{nb:1});b.cyl(OX,.9,-.04,.1,.08,.1,6,iron,{nb:1});b.box(OX,.4,.3,.2,.14,.03,PAL.lamp,{em:1,nb:1});b.cyl(OX,.56,-.04,.31,.31,.025,12,iron,{nb:1})}
+  else if(O==='tandoor'){b.box(OX,0,-.04,.64,.12,.74,a.stone,{v:.1});b.cyl(OX,.12,-.04,.32,.2,.8,12,CLAY(),{seg:3,bulge:.08,v:.1});b.cyl(OX,.92,-.04,.2,.2,.03,12,mul(CLAY(),.7),{nb:1});b.box(OX,.28,.28,.2,.2,.03,PAL.lamp,{em:1,nb:1});b.box(OX,.24,.285,.26,.04,.02,iron,{nb:1})}
+  else{b.box(OX,0,-.04,.64,.9,.84,PAL.stoneD,{v:.14,g:.12,t:.7});b.box(OX,.9,-.04,.72,.08,.9,a.stone2,{nb:1});b.box(OX,.18,.4,.4,.3,.02,iron,{nb:1});b.box(OX,.22,.415,.32,.2,.02,ORG,{em:2,nb:1});[0,1,2].forEach(i=>b.box(OX-.2+i*.2,.6,.425,.02,.2,.012,ORG,{em:2,nb:1}));b.box(.78,.98,-.26,.2,.7,.2,a.stone2,{nb:1});b.box(.78,1.68,-.26,.26,.06,.26,a.stone,{nb:1})}
+  b.box(.2,.7,.52,.72,.04,.36,a.wood2,{v:.1});b.box(.2,.74,.52,.5,.02,.28,mul(a.wood,1.1),{nb:1});b.box(-.4,.7,.5,.12,.06,.1,cu,{nb:1});   // tabla de cortar y cuenco
+  tube(b,[-1.0,1.22,-.36],[.1,1.22,-.36],.012,.012,4,iron,{nb:1});const H=c.hang;   // riel con colgantes
+  [-.8,-.5,-.2].forEach((x,i)=>{tube(b,[x,1.22,-.36],[x,1.02-i*.04,-.36],.008,.008,3,iron,{nb:1});
+   if(H==='herbs')lump(b,x,.86-i*.04,-.36,.1,.2,.08,dirty(['#5f8a46','#7a9a50','#8a7a48'][i],.5,.6,.1),i);
+   else if(H==='fish')b.box(x,.78-i*.04,-.36,.05,.26,.02,dirty('#aab4b8',.4,.6,.1),{nb:1});
+   else if(H==='ham')lump(b,x,.8-i*.04,-.36,.13,.24,.1,dirty('#9a4a38',.55,.6,.1),i);
+   else if(H==='chain'){tube(b,[x,1.02-i*.04,-.36],[x,.8-i*.04,-.36],.014,.014,3,PAL.iron,{nb:1});b.box(x,.74-i*.04,-.36,.07,.07,.02,ORG,{em:2,nb:1})}
+   else if(H==='crystal')b.box(x-.025,.84-i*.04,-.36,.05,.18,.05,a.acc,{em:1,nb:1,t:.5});
+   else if(H==='skull')lump(b,x,.86-i*.04,-.36,.09,.1,.08,col('#d8d0b8'),i);
+   else b.cyl(x,.9-i*.04,-.36,.06,.05,.1,6,i%2?cu:iron,{nb:1})});
+  return b},
  curtidor(o){const b=new B(771),a=A({bk:K(o)}),Z=.4,hd=HIDE();
   [-Z,Z].forEach((z,i)=>tube(b,[-.1,0,z+.1],[-.1,.88,z+.1],.04,.035,5,vary(a.wood,.12,771,i),{v:.1,nb:1}));[.1,.8].forEach(y=>b.box(-.1,y,.1,.06,.05,.9,a.wood2,{nb:1}));
   b.box(-.1,.14,.1,.03,.64,.76,hd,{v:.1,t:.97});for(let i=0;i<7;i++){b.box(-.075,.78,-.24+i*.12+.1,.012,.03,.02,PAL.rope,{nb:1});b.box(-.075,.15,-.24+i*.12+.1,.012,.03,.02,PAL.rope,{nb:1})}   // piel con cordeles
   b.box(-.085,.4,.1,.01,.3,.5,mul(hd,.8),{nb:1,v:.1});
   b.cyl(.3,0,-.3,.2,.2,.3,9,a.wood,{seg:2,bulge:.02,v:.12});b.cyl(.3,.3,-.3,.2,.2,.012,9,PAL.iron,{nb:1});b.cyl(.3,.26,-.3,.18,.18,.02,9,dirty('#4a3a22',.7,.5,.1),{nb:1});[.08,.22].forEach(y=>b.cyl(.3,y,-.3,.205,.205,.025,9,PAL.iron,{nb:1}));
   b.beam([.1,.02,.18],[.0,.62,.15],.04,a.wood2);b.box(.12,.12,.14,.1,.04,.04,PL(),{nb:1});for(let i=0;i<3;i++)b.box(.3,.5-i*.13,.38,.03,.2,.05,mul(hd,.9-i*.1),{nb:1,v:.12});tube(b,[.3,.58,.3],[.3,.58,.5],.01,.01,4,a.wood,{nb:1});return b},
+
+ // BANCO DE CANTERO (≈1,30 × 0,95 × 0,80; frente +z; ESC-JOY 27 oct 2026): banco de piedra maciza (dos pilares y losa gruesa) con un bloque a medio labrar
+ // (la mitad superior ya es busto), maza y cinceles, cubo de agua, columna terminada a un lado y polvo de piedra en el suelo. Paleta de piedra del bioma (`a.stone`).
+ cantero(o){const b=new B(791),a=A({bk:K(o)}),st=a.stone,st2=a.stone2||mul(a.stone,.85),dust=mix(st,col('#e8e2d4'),.45);
+  [-.48,.48].forEach((x,i)=>b.box(x,0,0,.22,.5,.5,vary(mul(st2,.9),.08,791,i),{v:.1,jit:.012}));b.box(0,.5,0,1.24,.12,.62,st,{v:.1,jit:.012});b.box(0,.6,.3,1.2,.02,.03,mul(st,.75),{nb:1});   // pilares y losa
+  b.box(-.08,.62,-.02,.42,.22,.34,vary(st2,.1,791,7),{v:.14,jit:.03});lump(b,-.08,.84,-.02,.17,.16,.14,mix(st2,dust,.3),3);lump(b,-.08,1.0,-.02,.09,.1,.09,mix(st2,dust,.4),4);   // bloque y busto a medio labrar
+  for(let i=0;i<6;i++){const h=hash(i,791,1);lump(b,-.36+h*.6,.62,.18+hash(i,791,2)*.08,.03+h*.02,.02,.03,dust,i+9)}   // esquirlas sobre la losa
+  tube(b,[.22,.65,.12],[.48,.65,.02],.018,.018,5,a.wood,{nb:1});b.box(.44,.62,-.03,.12,.1,.1,a.wood2,{nb:1});   // maza
+  [0,1,2].forEach(i=>{tube(b,[.18+i*.07,.63,-.2],[.2+i*.07,.63,-.02],.008,.008,4,PAL.iron,{nb:1});b.box(.19+i*.07,.62,-.03,.024,.03,.05,a.wood,{nb:1})});   // cinceles
+  b.cyl(.58,0,.36,.12,.1,.24,8,a.wood,{seg:2,bulge:.02,v:.12});b.cyl(.58,.22,.36,.1,.1,.012,8,dirty('#5a8aa0',.5,.5,.1),{nb:1});[.05,.17].forEach(y=>b.cyl(.58,y,.36,.125,.125,.02,8,PAL.iron,{nb:1}));   // cubo de agua
+  b.box(-.62,0,.3,.16,.05,.16,st2,{v:.08});b.cyl(-.62,.05,.3,.055,.055,.62,8,st,{v:.06});b.box(-.62,.67,.3,.15,.05,.15,st2,{v:.08});   // columna terminada
+  for(let i=0;i<9;i++){const h=hash(i,791,5);b.box(-.5+h*1.0,0,.32+hash(i,791,6)*.12,.06+h*.06,.012,.05,dust,{nb:1})}   // polvo
+  return b},
+
+ // BANCO DE JOYERO (≈1,10 × 1,10 × 0,62; frente +z; ESC-JOY 27 oct 2026): mesa de madera oscura con estante de cajoncitos, tas de joyero (yunquecito),
+ // lupa en un brazo, bandeja de terciopelo con gemas (brillan de noche), crisol con brasas y una lámpara cálida.
+ joyero(o){const b=new B(801),a=A({bk:K(o)}),vel=dirty('#6a1e2a',.6,.55,.1);
+  [[-.48,-.22],[.48,-.22],[-.48,.22],[.48,.22]].forEach(([x,z],i)=>b.box(x,0,z,.07,.68,.07,vary(a.wood,.12,801,i),{v:.1}));b.box(0,.68,0,1.08,.06,.56,a.wood2,{v:.1,jit:.01});b.box(0,.2,0,.96,.04,.46,mul(a.wood,.85),{v:.1});
+  b.box(0,.74,-.24,1.0,.36,.1,a.wood,{v:.1});for(let r=0;r<2;r++)for(let c=0;c<5;c++){b.box(-.4+c*.2,.78+r*.16,-.19,.17,.12,.02,vary(a.wood2,.12,801,10+r*5+c),{nb:1});b.box(-.4+c*.2,.83+r*.16,-.175,.03,.015,.012,a.acc,{nb:1})}   // estante con cajoncitos y tiradores
+  b.box(0,.74,.3,.12,.03,.07,a.wood2,{nb:1});   // tablilla de joyero (bench pin)
+  b.box(-.3,.74,.06,.1,.05,.08,PAL.iron,{nb:1});b.box(-.3,.79,.06,.16,.04,.06,PL(),{nb:1});   // tas (yunquecito)
+  tube(b,[.32,.74,-.12],[.32,.98,-.08],.012,.012,4,PAL.iron,{nb:1});tube(b,[.32,.98,-.08],[.2,1.02,.04],.01,.01,4,PAL.iron,{nb:1});b.cyl(.2,.99,.06,.075,.075,.012,12,PL(),{nb:1});b.cyl(.2,1.0,.06,.062,.062,.01,12,mix(col('#cfe8f0'),col('#ffffff'),.3),{nb:1,t:.6});   // lupa
+  b.box(.05,.74,.12,.26,.025,.14,vel,{nb:1});['#e02a3a','#3a6aff','#3aa86a','#f0b040','#9a5ae0'].forEach((c,i)=>b.box(-.04+i*.05,.765,.14+(i%2)*.04,.025,.025,.025,col(c),{em:1,nb:1}));   // bandeja con gemas
+  b.cyl(-.08,.74,-.06,.045,.035,.06,8,CLAY(),{nb:1});b.cyl(-.08,.795,-.06,.03,.03,.008,8,col('#ff8a30'),{em:2,nb:1});   // crisol con brasas
+  tube(b,[-.48,.74,-.14],[-.48,1.08,-.14],.012,.012,4,PAL.iron,{nb:1});b.cyl(-.48,1.04,-.08,.07,.03,.08,8,PAL.iron,{nb:1});b.box(-.51,1.0,-.11,.06,.04,.06,PAL.lamp,{em:1,nb:1});   // lámpara
+  return b},
 
  // TALLER (≈1,46 × 0,83 × 0,68): banco de carpintero con tornillo de banco, tablones, sierra, garlopa, mazo, formones y virutas.
  taller(o){const b=new B(781),a=A({bk:K(o)});
@@ -257,14 +332,14 @@ const MODELS={
 };
 
 // huella y altura de la malla ORG ACTUAL (ancho x, alto y, fondo z; medida con `node tools/r3d/org_capture.js` el 20 oct 2026; ejes ORG x,z↑,y → three x,y↑,z)
-export const OF_FOOT={banco:[1.92,1.36,1.42],tienda:[2.32,1.48,1.27],subastas:[1.90,1.66,1.16],tablon:[.34,1.41,1.64],fogata:[1.34,.20,1.31],horno:[1.03,1.17,.91],yunque:[1.12,.65,.42],armero:[.80,1.24,.78],curtidor:[.63,.91,1.02],alambique:[1.1,.85,.6],
+export const OF_FOOT={cantero:[1.30,.95,.80],joyero:[1.10,1.10,.62],banco:[1.92,1.36,1.42],tienda:[2.32,1.48,1.27],subastas:[1.90,1.66,1.16],tablon:[.34,1.41,1.64],fogata:[1.34,.20,1.31],horno:[1.03,1.17,.91],yunque:[1.12,.65,.42],armero:[.80,1.24,.78],curtidor:[.63,.91,1.02],cocina:[2.05,1.82,1.19],alambique:[1.1,.85,.6],
  taller:[1.46,.83,.68],escritorio:[1.20,1.07,.68],altarRezo:[1.18,1.32,.82],lanzas:[.50,1.49,.31],totem:[.57,1.93,.31],arcoRuina:[1.49,1.14,.50],brasero:[.51,.84,.52],tinaja:[1.10,.37,.48],monumento:[1.64,2.34,1.64]};
 const GEO=new Map();
 export function ofGeo(n,o,th){if(!MODELS[n])return null;const key='dk:of:'+n+'|'+JSON.stringify(o||{});if(GEO.has(key))return GEO.get(key);
  let g=MODELS[n](o||{}).geo();if(o&&(o.rot||o.dir==='y'))g=swapXZ(g);const r={g,key};GEO.set(key,r);return r}
 export const OF_NAMES=Object.keys(MODELS);
 // casos que mide `pradera_sheet.py --medir`: [nombre, opciones, clave de OF_FOOT]
-export function OF_CASES(){const L=[];for(const n of OF_NAMES)for(let k=0;k<9;k++){L.push([n,{bk:k},n]);if(n==='horno')L.push([n,{bk:k,on:1},n])}return L}
+export function OF_CASES(){const L=[];for(const n of OF_NAMES)for(let k=0;k<11;k++){L.push([n,{bk:k},n]);if(n==='horno')L.push([n,{bk:k,on:1},n])}return L}
 // props de PROPS.list que reciben `bk` (bioma de la instancia) en props3d.js (las estaciones llevan `arch`, que ofGeo trata igual)
 export const OF_BK=new Set(['lanzas','totem','arcoRuina','brasero','tinaja','monumento']);
 // verificador anti-clipping de tejados (ver propsdark3d.js «ANTI-CLIPPING» y tools/r3d/roof_clip_check.py)

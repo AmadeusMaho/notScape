@@ -5,7 +5,7 @@
 // Registro: WKUI.reg('sm',{skin:'forge'}) · 'cr'→'carp' · 'pe'→'tan' · 'sa'→'sew'. Un oficio nuevo = una entrada en THEMES (bake de fondo y estación, formas de pieza, herramientas, partículas).
 // Reglas (REGLAS_CREACION §P): solo canvas 2D, un rAF mientras la hoja está abierta, ≤ 220 partículas, sin filtros ni backdrop-filter. OJO: `P` es el jugador; las partículas son `PA`.
 const FORGE=(()=>{
-  const TIERC={cobre:'#c8742a',bronce:'#c8842a',hierro:'#8d8f9c',acero:'#c8d4de',plata:'#e8e8f2',alba:'#f1e6c4',mitril:'#6a8aff',adam:'#5fd98a',runita:'#3ad0d8',oricalco:'#e89a3a',infernita:'#b8301c',celestita:'#c8a0ff'};
+  const TIERC={oro:'#e8c24a',cobre:'#c8742a',bronce:'#c8842a',hierro:'#8d8f9c',acero:'#c8d4de',plata:'#e8e8f2',alba:'#f1e6c4',mitril:'#6a8aff',adam:'#5fd98a',runita:'#3ad0d8',oricalco:'#e89a3a',infernita:'#b8301c',celestita:'#c8a0ff'};
   const WOODC={pino:'#c79a5a',abedul:'#d8c9a0',roble:'#a07040',fresno:'#b99a64',sauce:'#9aa070',arce:'#c0763a',tejo:'#7a4a32',ebano:'#3a3030',caoba:'#8a3a28',baobab:'#b08a58',ceniza:'#5a4a44',mundo:'#7aa86a'};
   const WOOD='#7a5230',VW=640,VH=240,MAXP=220,FLOOR=207;
   const USE_HERO=false;   // decisión del dueño (26 oct): sin héroe 3D dentro de la interfaz (desentonaba con el 2D); queda el martillo 2D. El código del héroe se conserva: pon true para reactivarlo.
@@ -24,8 +24,15 @@ const FORGE=(()=>{
   const T_SEW={id:'sew',n:'Sastrería',var:{p:'t',pq:'t',q:'t',b:'c',r:'m',u:'o'},
     tools:{p:{n:'Aguja e hilo',s:'Avance',i:NEE},q:{n:'Tijeras',s:'Calidad',i:'<circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><path d="M8.5 15L18 5M15.5 15L6 5"/>'},b:{n:'Carretes',s:'Estados',i:'<path d="M7 5h10M7 19h10M9 5v14M15 5v14"/>'},r:{n:'Plancha',s:'Reparación',i:'<path d="M4 17h16c0-5-4-8-9-8H4z"/>'},u:{n:'Mesa',s:'Utilidad',i:EYE}},
     fx:{p:{spr:'needle',c:['#ffffff','#e8cf94'],k:1},q:{spr:'scissors',c:['#e8dfc8','#c8b8d8'],k:4},b:{spr:'pot',c:['#c8a0ff'],k:1},r:{spr:'iron',c:['#d8e4ea'],k:2},u:{spr:'eye',c:['#c8a0ff'],k:1}},hot:0};
-  const THEMES={forge:T_FORGE,carp:T_CARP,tan:T_TAN,sew:T_SEW};
-  const OFSKIN={sm:'forge',cr:'carp',pe:'tan',sa:'sew'};
+  const T_STONE={id:'stone',n:'Cantería',var:{p:'h',pq:'h',q:'o',b:'c',r:'m',u:'o'},   // ESC-JOY (27 oct 2026): Escultor
+    tools:{p:{n:'Cincel y maza',s:'Avance',i:HAM},q:{n:'Escofina y pulidor',s:'Calidad',i:'<path d="M4 15h16v4H4z"/><path d="M8 15l2-8h4l2 8"/>'},b:{n:'Agua',s:'Estados',i:DROP},r:{n:'Escuadra',s:'Reparación',i:'<path d="M5 4v15h15"/><path d="M5 9h4M5 14h4"/>'},u:{n:'Banco',s:'Utilidad',i:EYE}},
+    fx:{p:{spr:'hammer',c:['#f0ece2','#c8c0b0','#8a8478'],k:4},q:{spr:'sand',c:['#f0ece2','#d8d0c0'],k:4},b:{spr:'bucket',c:['#9fd8ff'],k:3},r:{spr:'eye',c:['#d8d0c0'],k:1},u:{spr:'eye',c:['#d8d0c0'],k:1}},hot:0};
+  const T_JEWEL={id:'jewel',n:'Joyería',var:{p:'t',pq:'t',q:'t',b:'c',r:'m',u:'o'},   // ESC-JOY (27 oct 2026): Joyería
+    tools:{p:{n:'Martillito y soldador',s:'Avance',i:HAM},q:{n:'Pinzas y engaste',s:'Calidad',i:'<path d="M5 20l7-9M19 20l-7-9"/><path d="M12 11V4"/>'},b:{n:'Lupa',s:'Estados',i:'<circle cx="10" cy="10" r="5"/><path d="M14 14l6 6"/>'},r:{n:'Recocido',s:'Reparación',i:'<path d="M12 4c3 4 5 6 5 9a5 5 0 0 1-10 0c0-3 2-5 5-9z"/>'},u:{n:'Mesa',s:'Utilidad',i:EYE}},
+    fx:{p:{spr:'hammer',c:['#fff6d8','#e8cf94','#c8a050'],k:1},q:{spr:'tongs',c:['#ffffff','#bfe0ff','#e8cf94'],k:1},b:{spr:'eye',c:['#bfe0ff'],k:1},r:{spr:'bellows',c:['#ffb347'],k:1},u:{spr:'eye',c:['#e8cf94'],k:1}},hot:1};
+  const THEMES={forge:T_FORGE,carp:T_CARP,tan:T_TAN,sew:T_SEW,stone:T_STONE,jewel:T_JEWEL};
+  const OFSKIN={sm:'forge',cr:'carp',pe:'tan',sa:'sew',es:'stone',jo:'jewel'};
+  const STONEC={caliza:'#d8d0b8',granito:'#8a8a92',arenisca:'#d4a468',basalto:'#55525a',marmol:'#ece6dc',obsidiana:'#3a2a4a',astral:'#9aaaf0'},GEMC={cuarzo:'#e6e2f2',ambar:'#e8a030',jade:'#3aa86a',zafiro:'#3a6aff',opalo:'#d8eef0',rubi:'#e02a3a',amatista:'#9a5ae0',topacio:'#f0b040',coral:'#ff7a6a',diamante:'#e8f8ff'};
   let TH=T_FORGE,HS=null,hsx=null,hsT=-1e9,hand=null,el=null,cv=null,g=null,raf=0,last=0,on=false,bg=null,stn=null,ro=null,kind='bar',tcol='#8d8f9c',pname='',SC=null,SC2=null;const PC={};
   const PA=[],F=[];
   const st={prog:0,pg:0,q:0,qg:0,dur:1,heat:0,cond:'normal',exc:false,streak:0,lastAct:0,shake:0,flash:0,flashC:'#fff',squash:0,lift:0,ring:[],tool:null,glow:0,end:null,fire:0,zp:0,kick:0,mood:0,moodT:0,pendText:null};
@@ -36,8 +43,8 @@ const FORGE=(()=>{
   const tierOf=id=>{const m=/_(cobre|bronce|hierro|acero|plata|alba|mitril|adam|runita|oricalco|infernita|celestita)$/.exec(String(id||''));return m?m[1]:'hierro'};
   const woodOf=id=>{const m=/_(pino|abedul|roble|fresno|sauce|arce|tejo|ebano|caoba|baobab|ceniza|mundo)$/.exec(String(id||''));return m?m[1]:'pino'};
   function kindOf(id){id=String(id||'');return /^sw_|^lw_/.test(id)?'sword':/^ax_/.test(id)?'axe':/^pk_/.test(id)?'pick':/^(ar|sh|lg|gl)_(cu|tu)_/.test(id)?(id[0]==='a'?'chest':id[0]==='s'?'shield':id[0]==='l'?'legs':'glove'):/^ar_/.test(id)?'chest':/^sh_/.test(id)?'shield':/^lg_/.test(id)?'legs':/^gl_/.test(id)?'glove':/^og_/.test(id)?'hammer':
-    /^tb_/.test(id)?'plank':/^mn_/.test(id)?'handle':/^bw_/.test(id)?'bow':/^st_/.test(id)?'staff':/^rd_/.test(id)?'rod':/^(fl|vi)_/.test(id)?'arrows':/^qv_/.test(id)?'quiver':/^cu_/.test(id)?'leather':/^mj_/.test(id)?'thread':/^(tela|te_)/.test(id)?'cloth':'bar'}
-  function colOf(id){id=String(id||'');if(/^(tb|mn|bw|st|rd)_/.test(id))return WOODC[woodOf(id)];if(/_cu_|^cu_|^qv_/.test(id))return mix('#8a5a2a',TIERC[tierOf(id)]||'#8d8f9c',.28);if(/_tu_|^tela|^te_|^mj_/.test(id))return mix('#d8d0e8',TIERC[tierOf(id)]||'#c8c0d8',.35);return TIERC[tierOf(id)]||'#8d8f9c'}
+    /^(ls|bl)_/.test(id)?'block':/^ta_columna_/.test(id)?'column':/^ta_/.test(id)?'statue':/^(eg|an)_/.test(id)?'ring':/^cl_/.test(id)?'amulet':/^(gm|gb)_/.test(id)?'gem':/^tb_/.test(id)?'plank':/^mn_/.test(id)?'handle':/^bw_/.test(id)?'bow':/^st_/.test(id)?'staff':/^rd_/.test(id)?'rod':/^(fl|vi)_/.test(id)?'arrows':/^qv_/.test(id)?'quiver':/^cu_/.test(id)?'leather':/^mj_/.test(id)?'thread':/^(tela|te_)/.test(id)?'cloth':'bar'}
+  function colOf(id){id=String(id||'');{const m=/_(caliza|granito|arenisca|basalto|marmol|obsidiana|astral)$/.exec(id);if(m)return STONEC[m[1]]}{const m=/_(cuarzo|ambar|jade|zafiro|opalo|rubi|amatista|topacio|coral|diamante)$/.exec(id);if(m)return GEMC[m[1]]}if(id==='b_oro'||/_oro$/.test(id))return TIERC.oro;if(/^(tb|mn|bw|st|rd)_/.test(id))return WOODC[woodOf(id)];if(/_cu_|^cu_|^qv_/.test(id))return mix('#8a5a2a',TIERC[tierOf(id)]||'#8d8f9c',.28);if(/_tu_|^tela|^te_|^mj_/.test(id))return mix('#d8d0e8',TIERC[tierOf(id)]||'#c8c0d8',.35);return TIERC[tierOf(id)]||'#8d8f9c'}
   function mk(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c}
 
   // ---------- escenas horneadas (fondo + estación; la estación se dibuja desplazada DX) ----------
@@ -83,7 +90,19 @@ const FORGE=(()=>{
     glowDot(x,450,40,70);x.restore();
     base(x2,.8);x2.strokeStyle='#050403';x2.lineWidth=1.5;x2.fillStyle='#5a3b22';[[228,140],[360,140]].forEach(([a,b])=>{x2.fillRect(a,b,12,87);x2.strokeRect(a,b,12,87)});x2.fillStyle='#8a5a32';x2.fillRect(204,128,192,16);x2.strokeRect(204,128,192,16);x2.fillStyle='rgba(255,255,255,.2)';x2.fillRect(208,129,184,2);
     x2.fillStyle='#d8d0e8';x2.fillRect(214,120,60,8);x2.strokeRect(214,120,60,8);x2.fillStyle='#e8cf94';x2.beginPath();x2.arc(372,122,6,0,7);x2.fill();x2.stroke();x2.restore()}
-  const BAKE={forge:bakeForge,carp:bakeCarp,tan:bakeTan,sew:bakeSew};
+  function bakeStone(x,x2){   // taller de cantero: piedra vista, bloques apilados, columna a medio labrar, polvo en el suelo
+    wallBricks(x,[52,48,42],[18,16,14],70,34);floor(x,'#3a3630','#141210');x.fillStyle='rgba(230,224,210,.18)';for(let i=0;i<46;i++)x.fillRect(hash(i)*VW,200+hash(i*3)*34,3+hash(i*5)*8,1.5);
+    x.save();x.strokeStyle='#050403';x.lineWidth=1.3;for(let i=0;i<3;i++){x.fillStyle=mix('#a8a090','#6a665e',hash(i+3)*.6);x.fillRect(470+i*12,196-(i+1)*30,110-i*18,30);x.strokeRect(470+i*12,196-(i+1)*30,110-i*18,30)}
+    x.fillStyle='#d8d0c0';x.fillRect(70,74,20,110);x.strokeRect(70,74,20,110);x.fillRect(62,66,36,10);x.strokeRect(62,66,36,10);x.fillRect(62,182,36,10);x.strokeRect(62,182,36,10);glowDot(x,600,40,70);x.restore();
+    base(x2,.8);x2.strokeStyle='#050403';x2.lineWidth=1.5;x2.fillStyle='#6a6a70';x2.fillRect(214,150,172,77);x2.strokeRect(214,150,172,77);x2.fillStyle='#8a8a92';x2.fillRect(204,128,192,22);x2.strokeRect(204,128,192,22);x2.fillStyle='rgba(255,255,255,.22)';x2.fillRect(208,130,184,3);
+    x2.fillStyle='#4a4a50';for(let i=0;i<5;i++)x2.fillRect(222+i*34,170,26,4);x2.restore()}
+  function bakeJewel(x,x2){   // mesa de joyero: madera oscura, cajoncitos, lámpara cálida y estuche de terciopelo con gemas
+    x.fillStyle='#22180f';x.fillRect(0,0,VW,VH);for(let c=0;c<20;c++){const sh=.55+hash(c*5)*.45;x.fillStyle='rgb('+Math.round(56*sh)+','+Math.round(38*sh)+','+Math.round(24*sh)+')';x.fillRect(c*32,0,31,200)}floor(x,'#2a1e14','#0e0905');
+    x.save();x.strokeStyle='#050403';x.lineWidth=1.3;for(let r=0;r<3;r++)for(let c=0;c<4;c++){x.fillStyle='#4a3220';x.fillRect(470+c*36,60+r*34,32,30);x.strokeRect(470+c*36,60+r*34,32,30);x.fillStyle='#e8cf94';x.fillRect(484+c*36,74+r*34,5,3)}
+    x.fillStyle='#5a1e2a';x.fillRect(40,150,150,40);x.strokeRect(40,150,150,40);['#e02a3a','#3a6aff','#3aa86a','#f0b040','#9a5ae0','#e6e2f2'].forEach((cl,i)=>{x.fillStyle=cl;x.beginPath();x.arc(58+i*22,170,5,0,7);x.fill();x.stroke()});glowDot(x,120,46,90);x.restore();
+    base(x2,.8);x2.strokeStyle='#050403';x2.lineWidth=1.5;x2.fillStyle='#4a3020';[[228,140],[360,140]].forEach(([a,b])=>{x2.fillRect(a,b,12,87);x2.strokeRect(a,b,12,87)});x2.fillStyle='#6a4a2c';x2.fillRect(204,128,192,16);x2.strokeRect(204,128,192,16);x2.fillStyle='rgba(255,255,255,.2)';x2.fillRect(208,129,184,2);
+    x2.fillStyle='#8a6a40';x2.beginPath();x2.moveTo(286,128);x2.lineTo(314,128);x2.lineTo(304,112);x2.lineTo(296,112);x2.closePath();x2.fill();x2.stroke();x2.fillStyle='#6a6a74';x2.fillRect(214,118,22,10);x2.strokeRect(214,118,22,10);x2.restore()}
+  const BAKE={forge:bakeForge,carp:bakeCarp,tan:bakeTan,sew:bakeSew,stone:bakeStone,jewel:bakeJewel};
   function texture(){if(TEXC)return TEXC;TEXC=mk(256,256);const x=TEXC.getContext('2d');x.fillStyle='#808080';x.fillRect(0,0,256,256);for(let i=0;i<900;i++){const v=hash(i*3)>.5?255:0;x.strokeStyle='rgba('+v+','+v+','+v+','+(.03+hash(i*7)*.07)+')';x.lineWidth=1+hash(i*5)*2.5;x.beginPath();const px=hash(i)*256,py=hash(i*11)*256,a=.5+hash(i*13)*.6;x.moveTo(px,py);x.lineTo(px+Math.cos(a)*(10+hash(i*17)*22),py+Math.sin(a)*(10+hash(i*17)*22));x.stroke()}return TEXC}
   let TEXC=null;
   function bake(skin){const s=2;const raw=mk(VW*s,VH*s);stn=mk(VW*s,VH*s);const x=raw.getContext('2d'),x2=stn.getContext('2d');x.scale(s,s);x2.scale(s,s);BAKE[skin](x,x2);
@@ -115,6 +134,12 @@ const FORGE=(()=>{
     if(k==='quiver'){poly([[-30,-52],[30,-52],[22,56],[-22,56]],body);x.fillStyle=dk;x.fillRect(-26,-40,52,6);x.fillStyle='#e8dfc8';[[-12,-70],[0,-76],[12,-68]].forEach(([a,b])=>x.fillRect(a,b,4,24));return}
     if(k==='leather'){x.beginPath();x.moveTo(-96,-30);x.quadraticCurveTo(-60,-52,-20,-36);x.quadraticCurveTo(30,-50,70,-34);x.quadraticCurveTo(100,-10,84,20);x.quadraticCurveTo(70,46,20,38);x.quadraticCurveTo(-30,52,-70,34);x.quadraticCurveTo(-110,10,-96,-30);x.closePath();x.fillStyle=body;x.fill();x.stroke();x.strokeStyle=dk;x.lineWidth=1;x.setLineDash([3,3]);x.beginPath();x.moveTo(-84,-20);x.quadraticCurveTo(0,-34,74,-22);x.moveTo(-84,22);x.quadraticCurveTo(0,38,72,28);x.stroke();x.setLineDash([]);return}
     if(k==='thread'){for(let i=0;i<5;i++){x.beginPath();x.ellipse(0,-14+i*7,38,10,0,0,7);x.fillStyle=i%2?body:hi;x.fill();x.stroke()}return}
+    if(k==='block'){poly([[-70,-34],[70,-34],[70,34],[-70,34]],body);x.strokeStyle=dk;x.lineWidth=1.2;x.beginPath();x.moveTo(-70,0);x.lineTo(70,0);x.moveTo(-20,-34);x.lineTo(-20,0);x.moveTo(30,0);x.lineTo(30,34);x.stroke();x.fillStyle=hi;x.fillRect(-68,-32,136,3);return}
+    if(k==='column'){poly([[-34,-60],[34,-60],[30,-50],[-30,-50]],hi);poly([[-24,-50],[24,-50],[22,50],[-22,50]],body);x.strokeStyle=dk;x.lineWidth=1;for(let i=-2;i<=2;i++){x.beginPath();x.moveTo(i*9,-48);x.lineTo(i*8.5,48);x.stroke()}poly([[-30,50],[30,50],[34,60],[-34,60]],dk);return}
+    if(k==='statue'){poly([[-34,46],[34,46],[38,60],[-38,60]],dk);x.beginPath();x.moveTo(-18,46);x.quadraticCurveTo(-26,6,-14,-12);x.quadraticCurveTo(-22,-30,-8,-44);x.quadraticCurveTo(0,-58,8,-44);x.quadraticCurveTo(22,-30,14,-12);x.quadraticCurveTo(26,6,18,46);x.closePath();x.fillStyle=body;x.fill();x.stroke();x.fillStyle=hi;x.beginPath();x.arc(-3,-44,7,0,7);x.fill();return}
+    if(k==='ring'){x.scale(.66,.66);x.lineWidth=11;x.strokeStyle='rgba(8,6,5,.9)';x.beginPath();x.ellipse(0,8,44,40,0,0,7);x.stroke();x.lineWidth=8;x.strokeStyle=body;x.stroke();x.lineWidth=2;x.strokeStyle=hi;x.beginPath();x.ellipse(0,8,44,40,0,3.6,5.6);x.stroke();x.lineWidth=1.4;x.strokeStyle='rgba(8,6,5,.9)';poly([[-12,-34],[12,-34],[8,-22],[-8,-22]],hi);return}
+    if(k==='amulet'){x.lineWidth=2;x.strokeStyle=hi;x.beginPath();x.arc(0,-34,46,.2,Math.PI-.2,true);x.stroke();x.lineWidth=1.4;x.strokeStyle='rgba(8,6,5,.9)';poly([[0,-22],[24,4],[0,40],[-24,4]],body);poly([[0,-8],[10,4],[0,22],[-10,4]],hi);return}
+    if(k==='gem'){x.scale(.8,.8);poly([[-30,-14],[-14,-30],[14,-30],[30,-14],[0,34]],body);x.strokeStyle=dk;x.lineWidth=1;x.beginPath();x.moveTo(-30,-14);x.lineTo(30,-14);x.moveTo(-14,-30);x.lineTo(-6,-14);x.lineTo(0,34);x.moveTo(14,-30);x.lineTo(6,-14);x.lineTo(0,34);x.stroke();poly([[-12,-26],[0,-28],[-4,-18]],'rgba(255,255,255,.7)');return}
     if(k==='cloth'){poly([[-90,-34],[90,-30],[96,34],[-86,38]],body);x.strokeStyle=dk;x.lineWidth=1;for(let i=0;i<5;i++){x.beginPath();x.moveTo(-80+i*38,-32);x.quadraticCurveTo(-70+i*38,0,-80+i*38,36);x.stroke()}x.fillStyle=hi;x.fillRect(-88,-32,176,3);return}
     poly([[-96,-14],[96,-14],[78,14],[-78,14]],body);x.fillStyle=hi;x.fillRect(-90,-12,176,3);x.fillStyle=dk;x.fillRect(-70,6,140,3)}
 
