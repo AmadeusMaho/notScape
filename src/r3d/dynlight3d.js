@@ -52,5 +52,12 @@ export class DynLight{
    const fl=hero_?1+Math.sin(t*9)*.03:fire?1+.05*Math.sin(t*1.7+s.ph)+.035*Math.sin(t*3.1+s.ph*1.9):1+.015*Math.sin(t*.9+s.ph);
    c.set(d[0]);const I=d[1]*o.v*lvl*fl*this.k;LP[n].set(s.p.x,s.p.y,s.p.z,d[2]*1.3*this.r);LC[n].set(c.r*I,c.g*I,c.b*I,0);n++;if(!hero_)this.act.add(s)}
   U.uLN.value=n;this.n=n}
+ // LUCES DE UNA SALA (28 oct 2026): mismo shader con oclusión por ALTURA, pero con las cajas de los muebles y las paredes de la sala (`room.dyn = {srcs:[{p,d,ph}], boxes:[[x0,z0,x1,z1,top]], cx, cz}`) en vez del mapa del exterior. Cada fuente lleva su descriptor `d` = [color, intensidad, radio, _, 'fire'|'win'].
+ updateRoom(t,dt,R,p,hero){const U=G;if(!this.on||!R){U.uLN.value=0;return false}
+  if(this.rsig!==R.boxes.sig||this.rcx!==R.cx||this.rcz!==R.cz){this.rsig=R.boxes.sig;this.rcx=R.cx;this.rcz=R.cz;this.cx=R.cx;this.cz=R.cz;this.ox=R.cx-WT/2;this.oz=R.cz-WT/2;this.data.fill(0);for(const b of R.boxes)this.box(0,b[0],b[1],b[2],b[3],b[4]);this.tex.needsUpdate=true;U.uLW.value.set(this.ox,this.oz,1/WT,1);this.sig='room'}
+  const LP=U.uLP.value,LC=U.uLC.value,c=this.col;let n=0;this.act.clear();
+  for(const s of R.srcs){if(n>=LMAX)break;const d=s.d,fire=d[4]==='fire',lvl=fire?p.fire:p.win,fl=fire?1+.07*Math.sin(t*9+s.ph)+.05*Math.sin(t*23+s.ph*1.9):1+.02*Math.sin(t*.9+s.ph);c.set(d[0]);const I=d[1]*lvl*fl*this.k;LP[n].set(s.p.x,s.p.y,s.p.z,d[2]*this.r);LC[n].set(c.r*I,c.g*I,c.b*I,0);n++}
+  if(hero&&hero.i>.02&&n<LMAX){const I=HERO_K[1]*hero.i*(1+Math.sin(t*9)*.03)*this.k;c.set(HERO_K[0]);LP[n].set(hero.x,hero.y,hero.z,HERO_K[2]*1.3*this.r);LC[n].set(c.r*I,c.g*I,c.b*I,0);n++}   // el farol del héroe (el de la noche) también alumbra cuevas y salas
+  U.uLN.value=n;this.n=n;return true}
  stats(){return{luces:this.n,reconstrucciones:this.nrb,msUltima:+this.ms.toFixed(2),centro:[this.cx,this.cz]}}
 }

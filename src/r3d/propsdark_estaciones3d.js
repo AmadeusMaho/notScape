@@ -147,12 +147,12 @@ const MODELS={
 
  // YUNQUE (≈1,12 × 0,65 × 0,42): yunque de hierro con cuerno sobre un tocón, martillo, cubo de temple con agua y herraduras.
  yunque(o){const b=new B(751),a=A({bk:K(o)}),X=-.1;
-  b.cyl(X,0,0,.26,.22,.34,9,a.wood,{seg:2,j:.07,v:.14});b.cyl(X,.34,0,.22,.22,.015,9,mix(a.wood2,col('#c8a070'),.3),{nb:1});
+  b.cyl(X,.05,0,.26,.22,.29,9,a.wood,{seg:2,j:.03,v:.14});   /* base a y .04: con el jitter .07 los vértices de abajo se hundían 4 cm en el suelo (interior_check) */b.cyl(X,.34,0,.22,.22,.015,9,mix(a.wood2,col('#c8a070'),.3),{nb:1});
   b.box(X,.35,0,.34,.06,.2,PAL.iron,{t:.8});b.box(X,.41,0,.17,.08,.14,PAL.ironL,{t:.85});b.box(X,.49,0,.46,.07,.21,PAL.ironL,{v:.06});b.box(X+.04,.56,0,.4,.012,.19,mul(PL(),1.1),{nb:1});
   tube(b,[X+.23,.525,0],[X+.46,.51,0],.075,.012,6,PAL.ironL,{nb:1});b.box(X-.12,.49,.04,.04,.075,.04,col('#16171a'),{nb:1});   // cuerno y agujero
   tube(b,[X-.2,.58,.05],[X+.0,.58,.12],.016,.016,5,a.wood2,{nb:1});b.box(X-.04,.56,.1,.14,.07,.07,PL(),{nb:1,v:.1});   // martillo sobre el yunque
-  b.cyl(.6,0,.02,.17,.2,.24,8,a.wood2,{seg:2,v:.1,bulge:.02});b.cyl(.6,.16,.02,.2,.2,.02,8,PAL.iron,{nb:1});b.cyl(.6,.2,.02,.17,.17,.02,8,WATER(),{nb:1});b.cyl(.6,.07,.02,.2,.2,.02,8,PAL.iron,{nb:1});
-  [[.55,.17,.9],[.35,-.17,.2]].forEach(([x,z,r],i)=>tube(b,[x,.01,z],[x+.04,.014,z+.03],.05,.05,8,PAL.ironL,{nb:1}));lump(b,-.36,0,.14,.16,.05,.12,col('#2a2422'),3);return b},
+  b.cyl(.6,.035,.02,.17,.2,.205,8,a.wood2,{seg:2,v:.1,bulge:.02});b.cyl(.6,.16,.02,.2,.2,.02,8,PAL.iron,{nb:1});b.cyl(.6,.2,.02,.17,.17,.02,8,WATER(),{nb:1});b.cyl(.6,.07,.02,.2,.2,.02,8,PAL.iron,{nb:1});
+  [[.55,.17,.9],[.35,-.17,.2]].forEach(([x,z,r],i)=>tube(b,[x,.052,z],[x+.04,.056,z+.03],.05,.05,8,PAL.ironL,{nb:1}));lump(b,-.36,.03,.14,.16,.05,.12,col('#2a2422'),3);return b},
 
  // ARMERO (≈0,8 × 1,24 × 0,78): maniquí de armadura sobre pie de madera (coraza, hombreras, yelmo con cimera), escudo y espada apoyados.
  armero(o){const b=new B(761),a=A({bk:K(o)}),pl=PL();

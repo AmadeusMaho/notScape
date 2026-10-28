@@ -241,6 +241,29 @@ Object.assign(MODELS,{
   lump(b,0,.44,0,.4,.16,.14,dirty('#b0583a',.5,.7,.2),2);b.box(0,0,0,.5,.03,.18,col('#3a2a22'),{nb:1});b.box(0,.03,0,.36,.02,.1,col('#ff7a2a'),{em:2,nb:1});tube(b,[.52,.52,0],[.52,.52,.14],.012,.012,4,a.metal,{nb:1});return b},
  olla(o){const b=new B(481),a=A(o);[[-.17,-.12],[.17,-.12],[0,.19]].forEach(([x,z],i)=>tube(b,[x,0,z],[x*.4,.62,z*.4],.025,.018,5,a.wood,{nb:1}));
   b.cyl(0,.12,0,.2,.2,.0,8,col('#2a2422'),{});b.cyl(0,.16,0,.22,.26,.2,8,mix(a.metal,col('#3a3430'),.5),{seg:2,bulge:.03,v:.1});b.cyl(0,.35,0,.22,.22,.02,8,dirty('#c8742a',.5,.5,.3),{nb:1});b.box(0,.04,0,.2,.02,.2,col('#ff7a2a'),{em:2,nb:1});return b},
+ // ── BOTICA (28 oct 2026; instalación de Alquimia, props EXTERIORES únicos: no reutilizan nada de los puestos de arriba) ──
+ // caldero grande de alquimista: aro de piedra con brasas, trípode de madera, cadena, caldero de hierro con el brebaje que burbujea y un cucharón apoyado; el color del brebaje cambia por bioma (BREW)
+ calderoAlq(o){const b=new B(601),a=A(o),k=clamp((o&&o.bk)|0,0,8),BREW=['#5ac864','#7adf9a','#8ad05a','#4ab8a0','#a8e0ff','#ff9a4a','#b48aff','#e8c860','#5ad8d0'];
+  [0,1,2,3,4,5].forEach(i=>{const an=i/6*TAU;lump(b,Math.cos(an)*.34,0,Math.sin(an)*.34,.24,.17+(i%2)*.04,.22,col(i%2?'#4a4540':'#5a554e'),i)});b.box(0,.02,0,.34,.02,.34,col('#ff7a2a'),{em:2,nb:1});
+  [[-.3,-.22],[.3,-.22],[0,.34]].forEach(([x,z])=>tube(b,[x,0,z],[x*.12,1.18,z*.12],.032,.022,5,a.wood,{v:.1,nb:1}));b.box(0,1.16,0,.1,.06,.1,a.metal,{nb:1});tube(b,[0,1.15,0],[0,.62,0],.012,.012,4,a.metal,{nb:1});
+  b.cyl(0,.3,0,.2,.3,.3,10,mix(a.metal,col('#2e2c2c'),.6),{seg:2,bulge:.05,v:.1});b.cyl(0,.58,0,.31,.31,.025,10,mix(a.metal,col('#4a4644'),.5),{nb:1});b.cyl(0,.585,0,.27,.27,.02,10,col(BREW[k]),{em:2,nb:1});
+  [[-.08,.05],[.1,-.06],[.02,.12]].forEach(([x,z],i)=>b.box(x,.6+(i%2)*.02,z,.045,.045,.045,mix(col(BREW[k]),col('#ffffff'),.45),{em:2,nb:1}));
+  tube(b,[.3,.1,.34],[.12,.66,.12],.014,.01,4,a.wood2,{nb:1});b.cyl(.1,.6,.1,.045,.06,.03,6,a.wood2,{nb:1});return b},
+ // estante de hierbas colgantes: bastidor con travesaño y ramilletes de colores a distinta altura, cesto de hierbas a un lado y etiquetas de tela
+ hierbasColgadas(o){const b=new B(602),a=A(o),HC=['#5a8a4a','#7a5aa0','#c8a838','#4a7aa8','#8aa850','#a85a6a','#6aa090'];
+  [-1,1].forEach(sg=>tube(b,[sg*.5,0,0],[sg*.5,1.1,0],.04,.034,5,a.wood,{v:.1,nb:1}));b.box(0,1.04,0,1.1,.05,.06,a.wood2,{nb:1});b.box(0,.66,0,1.0,.035,.04,a.wood2,{nb:1});
+  for(let i=0;i<7;i++){const x=-.42+i*.14,top=i%2?1.02:.64,h=.22+(i*37%5)*.035;tube(b,[x,top,0],[x,top-.05,0],.006,.006,4,a.wood2,{nb:1});b.box(x,top-.05-h,0,.075,h,.05,dirty(HC[i%7],.35,.6,.15),{nb:1,v:.12,t:.7});b.box(x,top-.05-h-.03,0,.05,.05,.04,mul(col(HC[i%7]),.7),{nb:1})}
+  b.cyl(.72,0,.04,.14,.17,.18,8,mix(a.wood2,col('#8a6a3a'),.4),{seg:2,v:.15,j:.04});[[.7,.0],[.75,.06],[.68,.07]].forEach(([x,z],i)=>b.box(x,.17,z,.09,.07,.05,dirty(HC[(i*2)%7],.35,.6,.15),{nb:1}));return b},
+ // mesa de alquimista: tablero con almirez, balanza, libro abierto y frascos de colores (brillan de noche), patas cruzadas y estante bajo
+ mesaAlq(o){const b=new B(603),a=A(o),VC=['#5ac864','#5a9ae0','#e0584a','#d8b83a'];
+  b.box(0,.58,0,1.0,.05,.46,a.wood2,{v:.1,jit:.01});[-1,1].forEach(sx=>[-1,1].forEach(sz=>tube(b,[sx*.44,0,sz*.18],[sx*.44,.58,sz*.18],.03,.03,5,a.wood,{v:.1,nb:1})));b.box(0,.2,0,.86,.03,.34,a.wood,{nb:1});
+  b.cyl(-.3,.63,.05,.07,.05,.07,8,col('#8a867c'),{nb:1});tube(b,[-.3,.7,.05],[-.24,.82,.02],.012,.016,5,col('#6a4a30'),{nb:1});
+  b.box(.04,.63,.08,.26,.025,.18,col('#cfc4a0'),{nb:1});b.box(.04,.655,.08,.12,.012,.16,col('#e8e0c8'),{nb:1});b.box(.16,.655,.08,.12,.012,.16,col('#e8e0c8'),{nb:1});
+  VC.forEach((c,i)=>{const x=.28+i*.07;b.cyl(x,.63,-.1+(i%2)*.1,.026,.026,.1+(i%2)*.04,6,col(c),{em:1,nb:1,t:.7});b.cyl(x,.73+(i%2)*.04,-.1+(i%2)*.1,.012,.014,.03,5,a.wood2,{nb:1})});
+  tube(b,[-.05,.63,-.14],[-.05,.86,-.14],.01,.01,4,a.metal,{nb:1});b.box(-.05,.86,-.14,.22,.012,.02,a.metal,{nb:1});[-.14,.04].forEach(x=>b.cyl(x,.7,-.14,.03,.03,.012,6,a.metal,{nb:1}));return b},
+ // letrero de la Botica: poste con brazo, tablón colgante con un matraz verde y cadenitas (la señal de la casa de Alquimia)
+ letreroAlq(o){const b=new B(604),a=A(o);tube(b,[0,0,0],[0,1.05,0],.032,.028,5,a.wood,{v:.1,nb:1});tube(b,[0,.98,0],[.4,.98,0],.022,.02,5,a.wood2,{nb:1});[.1,.34].forEach(x=>tube(b,[x,.98,0],[x,.82,0],.006,.006,4,a.metal,{nb:1}));
+  b.box(.22,.5,0,.34,.32,.035,a.wood2,{v:.1,nb:1});b.cyl(.22,.54,.02,.08,.1,.12,8,col('#5ac864'),{em:1,nb:1});b.cyl(.22,.66,.02,.03,.03,.06,6,col('#c8d8c0'),{nb:1});b.cyl(.22,.5,.02,.07,.07,.04,8,mul(col('#5ac864'),.7),{nb:1});return b},
  secadero(o){const b=new B(491),a=A(o);[-1,1].forEach(sg=>tube(b,[sg*.5,0,0],[sg*.5,.8,0],.035,.03,5,a.wood,{v:.1,nb:1}));b.box(0,.74,0,1.04,.04,.05,a.wood2,{nb:1});
   for(let i=0;i<4;i++)b.box(-.37+i*.25,.4,0,.07,.34,.025,i%2?col('#6a8a9a'):col('#8aa4b0'),{nb:1,t:.7});return b},
  cestaPeces(o){const b=new B(501),a=A(o);b.cyl(0,0,0,.22,.2,.2,8,mix(a.wood2,col('#8a6a3a'),.4),{seg:2,v:.15,j:.04});b.cyl(0,.2,0,.21,.19,.02,8,a.wood,{nb:1});
@@ -278,7 +301,7 @@ Object.assign(MODELS,{
 // huella y altura de la malla ORG ACTUAL (ancho x, alto y, fondo z; medida con `node scratch measure_org.js` / `pradera_sheet.py --org` el 20 oct 2026)
 export const PR_FOOT={molino:[1.60,2.36,1.67],'iglesia:piedra':[2.84,3.72,1.88],'iglesia:troncos':[2.84,2.78,1.88],'iglesia:palafito':[2.86,4.60,2.59],'iglesia:stave':[3.72,4.04,2.02],
  puesto:[.93,.75,.63],banca:[.86,.29,.24],'banca:30':[1.29,.29,.24],empalizada:[.16,1.06,1.82],portonOrco:[.72,2.08,1.58],hoguera:[.86,.15,.84],estandarte:[.15,1.75,.53],carbon:[1.09,.42,.77],asador:[1.10,.69,.26],olla:[.57,.68,.57],
- secadero:[1.00,.82,.11],cestaPeces:[.46,.32,.46],pilaTroncos:[.84,.57,.60],tablones:[1.02,.35,.44],estanteria:[1.09,1.18,.32],atril:[.50,.67,.36],carreta:[.97,.57,.88],comedero:[.82,.35,.29],abrevadero:[.86,.34,.30],gallinero:[.81,.79,.91],
+ calderoAlq:[.94,1.23,.85],letreroAlq:[.43,1.05,.20],hierbasColgadas:[1.44,1.10,.34],mesaAlq:[1.02,.87,.46],secadero:[1.00,.82,.11],cestaPeces:[.46,.32,.46],pilaTroncos:[.84,.57,.60],tablones:[1.02,.35,.44],estanteria:[1.09,1.18,.32],atril:[.50,.67,.36],carreta:[.97,.57,.88],comedero:[.82,.35,.29],abrevadero:[.86,.34,.30],gallinero:[.81,.79,.91],
  espantapajaros:[.86,1.45,.39],huerto:[1.18,.28,.86],rack:[1.00,.98,.10],portillo:[.88,.52,.50],muroRuina:[1.39,.91,.50],'muroRuina:9':[1.39,.63,.50],columna:[.40,1.28,.43],'columna:broken':[.93,.94,.70]};
 // puertas: centro de la puerta en el marco local SIN rot (x a lo largo de la fachada, z = plano de la puerta), ancho y alto en tiles. Las lee DoorGlow (stations3d.js) vía DOOR_AT.
 export const PR_DOORY={palafito:.7};   // la puerta del palafito está elevada (tiles sin escalar)
@@ -293,7 +316,7 @@ export function PR_CASES(){const L=[],ST=['piedra','troncos','palafito','stave']
  for(const n of PR_NAMES){if(n==='iglesia')ST.forEach(s=>L.push([n,{style:s},'iglesia:'+s]));else if(PR_BK.has(n)){for(let k=0;k<9;k++){L.push([n,{bk:k},n]);const X=EXTRA[n];if(X)X.forEach(([oo,fk])=>L.push([n,{...oo,bk:k},fk]))}}else L.push([n,{},n])}
  return L}
 // nombres que reciben `bk` (bioma de la instancia) en props3d.js
-export const PR_BK=new Set(['puesto','banca','empalizada','portonOrco','hoguera','estandarte','carbon','asador','olla','secadero','cestaPeces','pilaTroncos','tablones','estanteria','atril','carreta','comedero','abrevadero','gallinero','espantapajaros','huerto','rack','portillo','muroRuina','columna']);
+export const PR_BK=new Set(['puesto','banca','empalizada','portonOrco','hoguera','estandarte','carbon','asador','olla','calderoAlq','letreroAlq','hierbasColgadas','mesaAlq','secadero','cestaPeces','pilaTroncos','tablones','estanteria','atril','carreta','comedero','abrevadero','gallinero','espantapajaros','huerto','rack','portillo','muroRuina','columna']);
 
 // Fase 5b (20 oct 2026): ayudantes y paleta compartidos con `propsdark_estaciones3d.js` (estaciones, tablón, fogata, brasero, tótem, monumento…).
 export {tube,lump,slab,stk,A,ARQ,stepCone,band,polar,TAU,clamp,fbox};

@@ -80,6 +80,7 @@ export function lookToSpec(look){look=look||{};const a=Object.assign({g:'m',hair
 export class MiniHero{
  constructor(){this.obj=new THREE.Group();this.obj.name='heroMini';this.cloth=[];this.rodTip=null;this.lookKey='';this.look=null;this.m=null;this.anim=null;this.last=null;this.face=0;this.faceT=0;this.t=0;this.HS=1}
  setLook(look){const key=JSON.stringify(look||{});if(key===this.lookKey)return;this.lookKey=key;this.look=look||{};
+  if(this.anim&&this.anim.ench){this.anim.ench.dispose();this.anim.ench=null}   // el aspecto del encantamiento cuelga de `obj` (que se conserva): sin esto se quedaban los del arma anterior
   if(this.m){this.obj.remove(this.m.obj);this.m.obj.traverse(o=>o.geometry&&o.geometry.dispose())}
   this.m=new Mini(lookToSpec(this.look));this.m.setInk(true);this.obj.add(this.m.obj);this.root=this.m.obj;this.anim=new HeroAnim(this.m,this.look)}
  update(st,dt){const m=this.m;if(!m)return;this.t=st.t||0;const pos=new THREE.Vector3(st.x,st.y,st.z);let dist=0;

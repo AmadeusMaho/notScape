@@ -47,12 +47,45 @@ function telStart(m,now){const sw=MSW[m.d.id];if(sw){const j=((sw.indexOf(mst(m)
  m.tn=now+(m.d.boss===1?7000:m.d.boss===2?8500:9500)*(m.asx||1);m.nt=now+1600}
 function telUpd(m,now){if(!m.tel)return false;m.f=P.x-m.x-(P.y-m.y)>=0?1:-1;if(now<m.tel.t1)return true;
  const T=m.tel,cx=T.cx==null?m.x:T.cx,cy=T.cy==null?m.y:T.cy,dp=Math.hypot(P.x-cx,P.y-cy),r=T.r;m.tel=null;m.nt=now+1200*(m.asx||1);snd('thunder');SHK=now+180;sp(cx,cy-4,'#ff6a3a',14,r*1.4,40,100);
- if(dp<=r&&P.hp>0&&!dashInv()){const g0=guardHit(m,Math.max(1,Math.round((m.dm||1)*(T.f||2.2)*STS.out(m))),now,1);if(g0.kind&&g0.d<=0)return true;const q=prMod(m,g0.d,1),d=STS.inP(q.d,now);if(q.blocked&&!d){fText('Absorbido','#6ab0ff',P.x,P.y,46);log('🙏 Tu oración absorbió el golpe pesado de '+m.d.n+'.');return true}P.hp-=d;splat(P.x,P.y,d,q.blocked?'#6ab0ff':'#d4261c',26);snd('hurt');HURT=now;P.pjM=m;P.pj=now+4800;bossHit(m,d,now);if(P.hp<=0)die()}
+ if(dp<=r&&P.hp>0&&!dashInv()){const g0=guardHit(m,Math.max(1,Math.round((m.dm||1)*(T.f||2.2)*STS.out(m))),now,1);if(g0.kind&&g0.d<=0)return true;const q=prMod(m,g0.d,1),d=STS.inP(q.d,now,m);if(q.blocked&&!d){fText('Absorbido','#6ab0ff',P.x,P.y,46);log('🙏 Tu oración absorbió el golpe pesado de '+m.d.n+'.');return true}P.hp-=d;splat(P.x,P.y,d,q.blocked?'#6ab0ff':'#d4261c',26);snd('hurt');HURT=now;P.pjM=m;P.pj=now+4800;bossHit(m,d,now);if(P.hp<=0)die()}
  else if(P.hp>0){if(dashInv()&&dp<=r*1.15)pdCheck(m,now);log('Esquivaste el golpe pesado de '+m.d.n+'.');if(dp<=r)fText('Esquiva','#9fe0ff',P.x,P.y,46)}return true}
 function drawTel(now){const s=ISO.scale();for(const m of M){if(!m.tel)continue;const u=Math.min(1,(now-m.tel.t0)/1200),r=m.tel.r,cx=m.tel.cx==null?m.x:m.tel.cx,cy=m.tel.cy==null?m.y:m.tel.cy;
   try{R3D.spell.tele(m.tel,cx,cy,0,r,7,u,SCOL[mst(m)])}catch(e){}   // círculo en el suelo = decal 3D de bordes suaves (spellfx3d.js); solo el rótulo sigue en 2D
   ctx.save();ctx.setTransform(1,0,0,1,0,0);
   const c=ISO.toCanvas(m.x,m.y,TER.standZ(m.x,m.y)),k2=SPR*s;ctx.globalAlpha=1;ctx.font='bold '+Math.round(14*s+8)+'px sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.strokeStyle='#8a1208';ctx.lineWidth=3;const ty=c.y-((m.d.h||20)+22)*k2;const lb=SEMO[mst(m)]+'!';ctx.strokeText(lb,c.x,ty);ctx.fillText(lb,c.x,ty);ctx.restore()}}
+
+// ── HABILIDADES DE ENEMIGO POR DATOS (28 oct 2026; buff de bandidos contra el kiteo con arco) ──
+// MD[id].sk = { lunge:{min,max,cd,wind,dur,sp,f}, knife:{min,max,cd,wind,sp,life,f} }  (distancias en px, tiempos en ms, sp en px/s, f = multiplicador de daño)
+// lunge = EMBESTIDA: avisa `wind` ms (ojos + brazo, como un golpe normal), corre en línea recta `dur` ms hacia donde estabas y golpea una vez al pasar a rango; ESPACIO la esquiva.
+// knife = CUCHILLO: avisa y lo lanza en línea recta (vuela `life` ms); ESPACIO lo atraviesa. Un enemigo nuevo con estas habilidades solo necesita la fila `sk` en MD (y `lh` si debe perseguir más lejos).
+const KNV=[];
+function skPick(m,now,dx,dy,dp){const s=m.d.sk;if(!s||STS.has(m,'silence')||m.dash||m.wind||m.stun>now||STS.frozen(m)||P.hp<=0)return false;const c=m.skc||(m.skc={});
+ for(const k of ['lunge','knife']){const o=s[k];if(!o||dp<o.min||dp>o.max)continue;
+  if(c[k]==null){c[k]=now+R(500,2000);continue}
+  if(now<c[k]||now<(m.skg||0))continue;
+  c[k]=now+o.cd*(.8+Math.random()*.4);m.skg=now+1500;
+  m.wind={t0:now,t1:now+o.wind,d:o.wind,ang:Math.atan2(dy,dx),big:false,slow:0,kind:'sk',sk:k};m.nt=Math.max(m.nt||0,now+o.wind+500);return true}
+ return false}
+function skFire(m,w,now,dx,dy,dp){const o=m.d.sk[w.sk],a=Math.atan2(dy,dx);m.flare=now;
+ if(w.sk==='lunge'){m.dash={t0:now,t1:now+o.dur,a,sp:o.sp,f:o.f,hit:0};snd('miss')}
+ else{KNV.push({x:m.x,y:m.y,a,sp:o.sp,t0:now,life:o.life,m,f:o.f,k:o.k||'knife'});m.at0=now;snd(o.k==='orb'?'magic':'bow')}}
+function skDash(m,now,dt,dx,dy,dp){const d=m.dash;if(now>=d.t1||P.hp<=0){m.dash=null;m.nt=Math.max(m.nt||0,now+450);return}
+ const nx=m.x+Math.cos(d.a)*d.sp*dt,ny=m.y+Math.sin(d.a)*d.sp*dt;if(inVilla(nx,ny)){m.dash=null;m.nt=Math.max(m.nt||0,now+450);return}
+ m.x=nx;m.y=ny;m.mv=now;m.f=Math.cos(d.a)-Math.sin(d.a)>=0?1:-1;if(Math.random()<.5)sp(m.x,m.y-2,'#b8a888',1,16,18,24);
+ if(!d.hit&&dp<=46+(m.d.w||16)*.3+10){d.hit=1;if(dashInv()){pdCheck(m,now);fText('Esquiva','#9fe0ff',P.x,P.y,46);inc('dodge')}else{const o=m.dm;m.dm=Math.max(1,Math.round(o*d.f));monHit(m,now);m.dm=o}m.dash=null;m.nt=Math.max(m.nt||0,now+700)}}
+function knTick(dt,now){for(let i=KNV.length-1;i>=0;i--){const n=KNV[i],m=n.m;n.x+=Math.cos(n.a)*n.sp*dt;n.y+=Math.sin(n.a)*n.sp*dt;
+ let dead=now>=n.t0+n.life||inVilla(n.x,n.y);
+ if(!dead&&P.hp>0&&Math.hypot(P.x-n.x,P.y-n.y)<16){dead=true;if(dashInv()){fText('Esquiva','#9fe0ff',P.x,P.y,46);inc('dodge')}else{const o=m.dm;m.dm=Math.max(1,Math.round(o*n.f));monHit(m,now);m.dm=o}}
+ if(dead)KNV.splice(i,1)}}
+function drawKnives(now){if(!KNV.length)return;const k=SPR*ISO.scale()*.9;ctx.save();
+ for(const n of KNV){ctx.setTransform(1,0,0,1,0,0);const c=ISO.toCanvas(n.x,n.y,TER.standZ(n.x,n.y)),c2=ISO.toCanvas(n.x+Math.cos(n.a)*10,n.y+Math.sin(n.a)*10,TER.standZ(n.x,n.y)),ang=Math.atan2(c2.y-c.y,c2.x-c.x);
+  ctx.globalAlpha=.25;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(c.x,c.y,5*k,2.2*k,0,0,6.283);ctx.fill();ctx.globalAlpha=1;
+  ctx.translate(c.x,c.y-22*k);ctx.lineWidth=Math.max(1,k*.5);ctx.strokeStyle='#2a2320';
+  if(n.k==='orb'){const r=ctx.createRadialGradient(0,0,0,0,0,7*k);r.addColorStop(0,'#eaffe0');r.addColorStop(.45,'#6ad070');r.addColorStop(1,'rgba(106,208,112,0)');ctx.fillStyle=r;ctx.beginPath();ctx.arc(0,0,(7+Math.sin(now*.02)*1.2)*k,0,6.283);ctx.fill()}
+  else if(n.k==='arrow'){ctx.rotate(ang);ctx.strokeStyle='#8a6a42';ctx.lineWidth=Math.max(1,k*.45);ctx.beginPath();ctx.moveTo(-11*k,0);ctx.lineTo(9*k,0);ctx.stroke();ctx.fillStyle='#c8ccd4';ctx.beginPath();ctx.moveTo(9*k,-2*k);ctx.lineTo(13*k,0);ctx.lineTo(9*k,2*k);ctx.closePath();ctx.fill();ctx.fillStyle='#c8402a';ctx.fillRect(-11*k,-2*k,4*k,1.4*k);ctx.fillRect(-11*k,.6*k,4*k,1.4*k)}
+  else{ctx.rotate((now-n.t0)*.03);ctx.fillStyle='#6a4a2a';ctx.fillRect(-12*k,-1.6*k,5*k,3.2*k);ctx.strokeRect(-12*k,-1.6*k,5*k,3.2*k);
+   ctx.fillStyle='#d4dae0';ctx.beginPath();ctx.moveTo(-7*k,-2.2*k);ctx.lineTo(5*k,-2.2*k);ctx.lineTo(11*k,0);ctx.lineTo(5*k,2.2*k);ctx.lineTo(-7*k,2.2*k);ctx.closePath();ctx.fill();ctx.stroke()}}
+ ctx.restore()}
 
 // ═══ LOTE B2 · MECÁNICAS DE JEFES Y CAPITANES ═══
 // Cada jefe (b0–b5) y capitán (k0–k5) tiene 2–4 mecánicas propias, además del cambio de estilo (MSW):

@@ -19,6 +19,7 @@ import * as THREE from 'three';
 import {glow} from './materials3d.js';
 import {shield as armorShield} from './armor3d.js';
 import {cultWeapon,SCAB_COL} from './weapons3d.js';
+import {EnchFx} from './enchfx3d.js';   // Lote ENCANTAMIENTO: aspecto de las armas encantadas
 
 const V3=THREE.Vector3,QT=THREE.Quaternion,M4=THREE.Matrix4,EU=THREE.Euler;
 const cl=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,u)=>a+(b-a)*u,TAU=Math.PI*2,ss=(a,b,x)=>{const t=cl((x-a)/(b-a),0,1);return t*t*(3-2*t)};
@@ -728,6 +729,7 @@ export class HeroAnim{
   const gL=cl(v[C.glowL],0,2.5),freeL=!(this.held&&[...this.held.values()].includes(1));
   this.orbL.visible=freeL&&gL>.04;if(this.orbL.visible){const s=.4+gL*.55;this.orbL.scale.setScalar(s);this.haloM.opacity=cl(gL*.35,0,.8)}
   if(M&&M.orb){const g=cl(v[C.glow],0,2.5);M.orbMat.color.copy(M.orbBase).multiplyScalar(1+g*.9);M.orb.scale.setScalar(1+g*.3);M.haloM.opacity=cl(g*.32,0,.75)}
+  try{(this.ench||(this.ench=new EnchFx(this))).update()}catch(e){if(!this.enchErr){this.enchErr=1;console.warn('[ENCH fx]',e)}}
   const rod=this.it.rod;if(rod&&rod.g.visible&&rod.tip){rod.g.updateWorldMatrix(true,false);this.rodTip=rod.g.localToWorld(this.tip.copy(rod.tip))}else this.rodTip=null;
   {const g0=this.m&&this.m.grips&&this.m.grips[0];if(g0){g0.updateWorldMatrix(true,false);(this.handR||(this.handR=new V3())).setFromMatrixPosition(g0.matrixWorld)}}   // D8: mano derecha en mundo (la interfaz de oficios le pone la pieza en la mano)
   this.track()}

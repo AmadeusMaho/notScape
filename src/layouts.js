@@ -94,13 +94,13 @@
   const DOC=sh(2077,768);old.props.filter(e=>(e.n==='portonOrco'||e.n==='empalizada')&&e.x===1900).forEach(e=>props.push(DOC.prop(e)));
   // ── guaridas: las ya decoradas, movidas a su anillo ──
   const sp={ing:sh(778,1440).spot(S0.ing),camp:sh(1503,345).spot(S0.camp),orc:sh(2077,768).spot(S0.orc),
-   pack:{id:'prado',t:'🐑 Prado de ovejas',z:[2960,3340,1360,1740],mobs:[['oveja',3040,1450],['oveja',3170,1410],['oveja',3270,1520],['oveja',3120,1610],['oveja',3020,1620]],
+   pack:{id:'prado',t:'🐑 Prado de ovejas y cabras',z:[2960,3340,1360,1740],mobs:[['oveja',3040,1450],['oveja',3170,1410],['oveja',3270,1520],['oveja',3120,1610],['oveja',3020,1620],['cabra',3210,1560],['cabra',3090,1560],['cabra',3250,1650],['conejo',3000,1530],['conejo',3030,1580],['conejo',3150,1480],['zorrorojo',3060,1700],['toro',3310,1705],['espantapajaros',2995,1395],['espantapajaros',3325,1395]],
     decor:[P('arbusto',3000,1400),P('arbusto',3300,1640),P('arbusto',3230,1380),P('heno',3090,1520),P('heno',3104,1530),P('roble',3330,1450,null,{fp:[6,6]})]}};   // 14 oct 2026: las ovejas, aparte del rancho
   const st=[],plaza=[[CX,CY,175],[CX+60,CY-395,105],[CX+345,CY+255,95],[CX-285,CY-230,85],[CX+285,CY-230,85]],routes=[],dirt=[];
   ['ing','camp','orc','pack'].forEach(k=>{sp[k].decor.forEach(e=>props.push(e));(sp[k].dirt||[]).forEach(d=>plaza.push(d));(sp[k].routes||[]).forEach(r=>routes.push(r));st.push(...(sp[k].stone||[]))});
   B.spots=sp;
   applyAdj(props,PRA_ADJ);   // lote D7: la Pradera tal como la dejó el dueño con el editor (F2)
-  B.village=Object.assign({},old,{props,stations:[['bank','Banco',CX-125,CY-105],['shop','Tienda',CX+125,CY-105],['fire','Fogata',CX+345,CY+255,['co']],['furnace','Horno',CX+77,CY-415,['sm']],['anvil','Yunque',CX+31,CY-373,['sm']],['bench','Taller',CX-285,CY-230,['cr','es']],['altar','Escritorio',CX+285,CY-230,['ins']],['shrine','Altar de oración',CX+100,CY+20]],
+  B.village=Object.assign({},old,{props,stations:[['bank','Banco',CX-125,CY-105],['shop','Tienda',CX+125,CY-105],['fire','Fogata',CX+345,CY+255,['co']],['furnace','Horno',CX+77,CY-415,['sm']],['anvil','Yunque',CX+31,CY-373,['sm']],['bench','Taller',CX-285,CY-230,['cr','es']],['altar','Mesa de encantamiento',CX+285,CY-230,['en']],['shrine','Altar de oración',CX+100,CY+20]],
    plaza,bridge:null,safe:[CX,CY,470,470],
    cobs:[{p:[[CX-95,CY],[CX+95,CY]],w:215},{p:[[CX,CY-170],[CX,CY-330]],w:24},{p:[[CX,CY+170],[CX,CY+340]],w:24},{p:[[CX-180,CY],[CX-410,CY]],w:24},{p:[[CX+180,CY],[CX+430,CY]],w:24},{p:[[CX+25,CY-385],[CX+125,CY-410]],w:70}].concat(st)});
   // ── caminos de tierra (aldea → cada nodo) ──
@@ -136,7 +136,7 @@
    q('hoguera',0,34);q('carpa',-70,-6,{col:'#8a5a38'},[10,10]);q('carpa',64,-14,{col:'#6a5a3a'},[10,10]);q('estandarte',-26,-52,{col:'#4a8a3a'});q('estandarte',44,-60,{col:'#4a8a3a'});q('barril',-48,46);q('caja',58,40);q('tronco',-20,86,{len:26});q('huesos',24,76);};
   camp('c1','Campamento goblin',620,400,1,[['goblin',-60,70],['goblin',70,60],['goblin',10,-40]]);
   camp('c2','Campamento del este',4250,1280,2,[['goblin',-60,70],['bandido',70,60],['bandido',10,-40],['orco',0,100]]);
-  camp('c3','Guarida de bandidos',2480,2440,2,[['bandido',-80,70],['bandido',80,60],['bandido',-40,-50],['bandido',50,-45],['k0',0,10]]);   // guarida del CAPITÁN de la Pradera: su Sello abre a Gruk (game.js sealed)
+  camp('c3','Guarida de bandidos',2480,2440,2,[['bandido',-80,70],['bandido',80,60],['bandido',-40,-50],['banasesino',50,-45],['k0',0,10]]);   // guarida del CAPITÁN de la Pradera: su Sello abre a Gruk (game.js sealed)
   [['s1','vig','Santuario del Vigor','#ff7a7a',1450,700],['s2','wis','Santuario de la Sabiduría','#7ad0ff',3320,2440],['s3','luck','Santuario de la Fortuna','#ffd23a',380,1950],['s4','trv','Santuario del Viajero','#9aff9a',4380,330]].forEach(([id,stat,n,col,x,y])=>{
    pois.push({id,k:'santuario',n,x,y,r:120,tier:2,stat,col});B.village.props.push(P('piedra',x-30,y+10,null,{fp:[7,6]}),P('piedra',x+34,y-8,null,{fp:[7,6]}))});
   [['h1',2100,2640],['h2',880,2580],['h3',4300,2560],['h4',3450,260],['h5',1300,300],['h6',4350,1850],['h7',700,1050]].forEach(([id,x,y])=>pois.push({id,k:'cofre',n:'Cofre escondido',x,y,r:90,tier:1}));
@@ -200,7 +200,7 @@
   B.spots=sp;const plaza=[[CX,CY,175],[CX+60,CY-395,105],[CX+345,CY+255,95],[CX-285,CY-230,85],[CX+285,CY-230,85]],routes=[],st=[];
   ['ing','pack','cap'].forEach(key=>{if(!sp[key])return;sp[key].decor.forEach(e=>props.push(e));(sp[key].dirt||[]).forEach(d=>plaza.push(d));(sp[key].routes||[]).forEach(r=>routes.push(r));st.push(...(sp[key].stone||[]))});
   layHouses(props,kit,k,CX,CY,plaza);   // lote D7: las 5 casas con instalación en la posición de la Pradera del dueño y el resto repartidas al azar (semilla por bioma)
-  B.village=Object.assign({},old,{props,stations:[['bank','Banco',CX-125,CY-105],['shop','Tienda',CX+125,CY-105],['fire','Fogata',CX+345,CY+255,['co']],['furnace','Horno',CX+77,CY-415,['sm']],['anvil','Yunque',CX+31,CY-373,['sm']],['bench','Taller',CX-285,CY-230,['cr','es']],['altar','Escritorio',CX+285,CY-230,['ins']],['shrine','Altar de oración',CX+100,CY+20]],
+  B.village=Object.assign({},old,{props,stations:[['bank','Banco',CX-125,CY-105],['shop','Tienda',CX+125,CY-105],['fire','Fogata',CX+345,CY+255,['co']],['furnace','Horno',CX+77,CY-415,['sm']],['anvil','Yunque',CX+31,CY-373,['sm']],['bench','Taller',CX-285,CY-230,['cr','es']],['altar','Mesa de encantamiento',CX+285,CY-230,['en']],['shrine','Altar de oración',CX+100,CY+20]],
    plaza,bridge:null,safe:[CX,CY,470,470],
    cobs:[{p:[[CX-95,CY],[CX+95,CY]],w:215},{p:[[CX,CY-170],[CX,CY-330]],w:24},{p:[[CX,CY+170],[CX,CY+340]],w:24},{p:[[CX-180,CY],[CX-410,CY]],w:24},{p:[[CX+180,CY],[CX+430,CY]],w:24},{p:[[CX+25,CY-385],[CX+125,CY-410]],w:70}].concat(st)});
   // ── caminos de tierra (plantilla de la Pradera, espejada) ──

@@ -88,7 +88,6 @@ function bakeProto(P,skin){return bake(P.obj,P.list,skin?new THREE.Color(skin).g
 // col/belly/leg/hoof/bx/by/len/lwid/hx/hy/hr/sn como en CRE (hx,hy relativos al centro del cuerpo, y hacia abajo). Extras: ear (point|round|none), eye (color brillante), s.
 const QUADS={
  vaca:{col:'#f4efe4',belly:'#ece2d0',bx:19,by:9,len:10,lwid:4.2,leg:'#f4efe4',hoof:'#4a3c36',hx:19.5,hy:2.2,hr:[7.6,6.6],sn:{x:5.8,y:2.4,rx:4,ry:3.4,col:'#f0a8a4'},ear:'side',earC:'#3a2e2a',head:'#f4efe4',horn:'#efe4c4',spots:'#3a2e2a',spotL:[[.45,.1,1,.5,'f'],[-.4,.05,-1,.55,'f'],[-.05,.9,0,.5,'t'],[.7,.2,-1,.35,'f'],[-.75,.15,1,.4,'f']],udder:'#f0a8a4',tail:'tuft'},
- oveja:{col:'#f1ede2',belly:'#e4ddcc',bx:17,by:10,len:6.4,lwid:3.8,leg:'#4a403c',hoof:'#2e2622',hx:18,hy:0,hr:[5.6,5.2],sn:{x:4.2,y:1.8,rx:3,ry:2.6,col:'#5a4e48'},ear:'floppy',head:'#5a4e48',wool:'#f1ede2',tail:'puff'},
  // CORDERO DE NUBE (22 oct 2026, tutorial del Cielo): cordero de lana de nube azul-blanca con pezuñas y morro dorados; neutral y pequeño.
  cordero:{col:'#e6f1fb',belly:'#d3e4f5',bx:15,by:9,len:5.6,lwid:3.4,leg:'#c8d6e6',hoof:'#c9a95e',hx:16,hy:0,hr:[5,4.8],sn:{x:3.8,y:1.6,rx:2.8,ry:2.4,col:'#e8cf94'},ear:'floppy',head:'#e8cf94',wool:'#eef6ff',tail:'puff'},
  jabali:{col:'#7a5440',belly:'#a07a5c',bx:15,by:9.4,len:6,lwid:4.4,hoof:'#3a2a22',hx:16,hy:2,hr:[7,6.4],sn:{x:6,y:2.4,rx:4.6,ry:3.4,col:'#9a6e58'},ear:'point',crest:'#4a3226',tusk:1,tail:'curl',eye:'#ffb040'},
@@ -158,6 +157,80 @@ function buildFrog(){const P=new Proto(),root=P.bone('root',null),body=P.bone('b
  P.part(box(.2,.012,.02),'#3a5a22',0,-.025,.11,{p:head,ink:0});
  [['legBL',-1,-1],['legBR',1,-1],['legFL',-1,1],['legFR',1,1]].forEach(([n,sx,sz])=>{const b=P.bone(n,body,sx*.17,-.08,sz*.12),big=sz<0;P.part(sph(1,.05,big?.13:.08,big?.1:.06,8),G1,0,-.04,big?-.04:.03,{p:b,ink:.01});P.part(sph(1,.06,.02,.08,8),G2,0,-.13,.03,{p:b,ink:.006})});
  const t=bakeProto(P,null);t.kind='frog';t.k=1;t.h=.4;t.rad=.45;t.cycle=.55;return t}
+
+// ═══════════════════════════════ FAUNA DE LA PRADERA (28 oct 2026): cada animal es un modelo ÚNICO con anatomía propia (regla del dueño: NO reutilizar assets; ver REGLAS_CREACION §1) ═══════════════════════════════
+// Comparten solo el ESQUELETO que anima animQuad (huesos root/body/legFL,FR,BL,BR/head/tail); toda la geometría es distinta. Medidas en px de modelo (×U).
+const seg=(P,p,a,b,r0,r1,col,ink=.008)=>{const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b),d=B.clone().sub(A),g=cyl(r1,r0,d.length(),6);g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize()));g.translate((A.x+B.x)/2,(A.y+B.y)/2,(A.z+B.z)/2);return P.part(g,col,0,0,0,{p,ink})};
+const hornC=(P,p,pts,r0,col,tipCol)=>{for(let i=0;i<pts.length-1;i++)seg(P,p,pts[i],pts[i+1],r0*(1-i/(pts.length-1)*.82),r0*(1-(i+1)/(pts.length-1)*.82),i===pts.length-2&&tipCol?tipCol:col)};
+const leg4=(P,body,sp)=>[['FL',1,1],['FR',-1,1],['BL',1,-1],['BR',-1,-1]].forEach(([n,sx,sz])=>{const o=sp(n,sx,sz),b=P.bone('leg'+n,body,sx*o.x,o.y,sz*o.z);o.build(b,sx,sz)});
+const finQ=(P,o)=>{const t=bakeProto(P,null);t.kind='quad';t.k=1;t.h=o.h*U;t.rad=o.rad*U;t.tilt=0;t.cycle=o.cyc*U;t.eye=P.eyePos;t.eyeCol=o.eye||'#ffd36a';return t};
+const eyeQ=(P,neck,x,y,z,r,col,glow)=>{P.eyes(neck,x,y,z,r,col,glow);P.eyePos=[x,y,z,r]};
+const PRA={
+ // CABRA: esbelta, patas largas con «calcetines» oscuros, cabeza en cuña con barba y cuernos echados hacia atrás, cola corta alzada
+ cabra(){const k=U,P=new Proto(),L=11*k,by=6.2*k,root=P.bone('root',null),body=P.bone('body',root,0,L+by*.7,0),C='#cdbfa6',D='#8a7a62',S='#3a2e26';
+  P.part(sph(1,5.2*k,by,13*k,16),C,0,0,0,{p:body,ink:.016});P.part(sph(1,1.3*k,.5*k,10*k,10),D,0,by*.9,0,{p:body,ink:0});P.part(sph(1,4.4*k,by*.6,10*k,12),'#e9e1d0',0,-by*.45,.5*k,{p:body,ink:0});
+  leg4(P,body,(n,sx,sz)=>({x:3.4*k,y:-by*.3,z:8*k*(sz>0?1:.95),build(b){P.part(cyl(1.5*k,1*k,L-.5*k,7).translate(0,-(L)/2,0),C,0,0,0,{p:b,ink:.012});P.part(cyl(1.05*k,.95*k,L*.38,7).translate(0,-L*.8,0),S,0,0,0,{p:b,ink:0});P.part(sph(1,1.2*k,.8*k,1.6*k,7),'#2a2018',0,-L+.4*k,.5*k,{p:b,ink:.008})}}));
+  const neck=P.bone('head',body,0,by*.55,11*k);P.part(sph(1,2.8*k,3.2*k,6*k,10),C,0,2*k,3*k,{p:neck,ink:.012});P.part(sph(1,2.9*k,3.1*k,4.4*k,12),C,0,5*k,7*k,{p:neck,ink:.014});P.part(sph(1,1.9*k,2*k,3.6*k,10),'#e9e1d0',0,3.7*k,10.6*k,{p:neck,ink:.01});P.part(sph(.55*k,1.3,.8,.8,6),'#2a2224',0,4.1*k,13.9*k,{p:neck,ink:0});
+  P.part(cone(1.1*k,4.4*k,5),'#f1ecdc',0,1.3*k,9.6*k,{p:neck,ink:.006,rot:[Math.PI+.35,0,0]});
+  [-1,1].forEach(q=>{hornC(P,neck,[[q*1.3*k,7.4*k,6*k],[q*2.3*k,10.4*k,4.4*k],[q*2.4*k,12*k,1.4*k],[q*1.8*k,11.6*k,-1.8*k]],1.15*k,'#7a6648','#e6dcc0');
+   P.part(sph(1,2.2*k,.45*k,1.2*k,7),D,q*3.9*k,6.1*k,5.2*k,{p:neck,ink:.008,rot:[0,0,-q*.28]})});
+  eyeQ(P,neck,2.5*k,5.9*k,8.4*k,.75*k,'#d8b040');
+  const tail=P.bone('tail',body,0,by*.75,-12.4*k);P.part(cone(1.5*k,4.6*k,5),C,0,2*k,-.8*k,{p:tail,ink:.008,rot:[-.45,0,0]});
+  return finQ(P,{h:30,rad:17,cyc:47,eye:'#e8c860'})},
+ // CERDO: barril rosado bajo y ancho, patas cortas, morro de disco con fosas, orejas triangulares caídas, rabo en espiral
+ cerdo(){const k=U,P=new Proto(),L=5.6*k,by=8.2*k,root=P.bone('root',null),body=P.bone('body',root,0,L+by*.75,0),C='#e9a8a0',C2='#d98a84',N='#f2bab2';
+  P.part(sph(1,7.6*k,by,14*k,18),C,0,0,0,{p:body,ink:.018});P.part(sph(1,.5*k,3*k,4.2*k,9),C2,7.5*k,2.2*k,3*k,{p:body,ink:0});P.part(sph(1,.5*k,2.4*k,3.4*k,9),C2,-7.5*k,.6*k,-4*k,{p:body,ink:0});P.part(sph(1,6.2*k,by*.5,11*k,12),'#f3c6bf',0,-by*.6,0,{p:body,ink:0});
+  leg4(P,body,(n,sx,sz)=>({x:4.6*k,y:-by*.4,z:8.2*k,build(b){P.part(cyl(2.5*k,1.9*k,L,8).translate(0,-L/2+.4*k,0),C,0,0,0,{p:b,ink:.012});P.part(sph(1,2.1*k,1*k,2.6*k,8),'#6a4a44',0,-L+.8*k,.3*k,{p:b,ink:.01})}}));
+  const neck=P.bone('head',body,0,by*.15,12.6*k);P.part(sph(1,5.4*k,5.4*k,5*k,14),C,0,-.6*k,4.2*k,{p:neck,ink:.016});P.part(cyl(3*k,3.3*k,2.4*k,12).rotateX(Math.PI/2),N,0,-1.8*k,9.2*k,{p:neck,ink:.012});
+  [-1,1].forEach(q=>{P.part(sph(.55*k,1,1.2,.8,6),'#5a3430',q*1.2*k,-1.8*k,10.5*k,{p:neck,ink:0});P.part(cone(2.7*k,4.6*k,3),C2,q*3.6*k,3.7*k,3.2*k,{p:neck,ink:.01,rot:[.95,0,q*.55]})});
+  eyeQ(P,neck,3.7*k,.9*k,6.6*k,.75*k,'#2a1a14');
+  const tail=P.bone('tail',body,0,by*.45,-13.6*k);P.part(new THREE.TorusGeometry(1.7*k,.5*k,6,10,Math.PI*1.55).rotateY(Math.PI/2),C2,0,1.4*k,-.8*k,{p:tail,ink:.006});
+  return finQ(P,{h:22,rad:19,cyc:50,eye:'#ffd36a'})},
+ // CONEJO: compacto, ancas enormes, patas traseras largas, orejas muy altas, cola de algodón y bigotes
+ conejo(){const k=U,P=new Proto(),L=3.8*k,by=3.8*k,root=P.bone('root',null),body=P.bone('body',root,0,L+by*.8,0),C='#b59a7a',W='#f3ecdc';
+  P.part(sph(1,3.5*k,by,5.4*k,14),C,0,0,1.2*k,{p:body,ink:.014});P.part(sph(1,4.2*k,4.3*k,3.8*k,14),C,0,.5*k,-3.4*k,{p:body,ink:.014});P.part(sph(1,2.6*k,by*.5,4.6*k,10),W,0,-by*.5,1.4*k,{p:body,ink:0});
+  [['FL',1,1],['FR',-1,1],['BL',1,-1],['BR',-1,-1]].forEach(([n,sx,sz])=>{const hind=sz<0,b=P.bone('leg'+n,body,sx*(hind?3.5:2.2)*k,hind?-1.2*k:-by*.5,sz*(hind?3.8:3.6)*k);
+   if(hind){P.part(sph(1,1.6*k,3.4*k,2.8*k,9),C,0,-1.2*k,-.4*k,{p:b,ink:.01});P.part(cyl(.9*k,.8*k,3.2*k,6).translate(0,-3*k,0),C,0,0,0,{p:b,ink:.008});P.part(sph(1,1.3*k,.7*k,3.8*k,8),W,0,-5*k,1.5*k,{p:b,ink:.01})}
+   else{P.part(cyl(.9*k,.75*k,L*.95,6).translate(0,-L*.5,0),C,0,0,0,{p:b,ink:.008});P.part(sph(1,1.1*k,.6*k,1.5*k,7),W,0,-L+.3*k,.4*k,{p:b,ink:.008})}});
+  const neck=P.bone('head',body,0,by*.6,5.2*k);P.part(sph(1,2.7*k,2.7*k,3.2*k,12),C,0,1.4*k,2*k,{p:neck,ink:.012});P.part(sph(1,1.7*k,1.5*k,1.9*k,10),W,0,.5*k,4.3*k,{p:neck,ink:.008});P.part(sph(.55*k,1.2,.8,.8,6),'#d88a8a',0,1.1*k,6*k,{p:neck,ink:0});
+  [-1,1].forEach(q=>{P.part(sph(1,.95*k,5*k,.6*k,9),C,q*1.3*k,6.2*k,1*k,{p:neck,ink:.01,rot:[-.28,0,q*.14]});P.part(sph(1,.5*k,3.8*k,.3*k,8),'#e8b0a8',q*1.3*k,6.3*k,1.4*k,{p:neck,ink:0,rot:[-.28,0,q*.14]});
+   [.4,-.5].forEach(dy=>P.part(box(.12*k,.12*k,2.4*k),'#f4ecd8',q*1.6*k,.8*k+dy*k,5.4*k,{p:neck,ink:0,rot:[0,q*.35,0]}))});
+  eyeQ(P,neck,2.3*k,2.1*k,3.2*k,.75*k,'#2a1a14');
+  const tail=P.bone('tail',body,0,by*.5,-6.6*k);P.part(sph(1.9*k,1,1,1,10),W,0,.4*k,-.6*k,{p:tail,ink:.01});
+  return finQ(P,{h:17,rad:11,cyc:16,eye:'#ffd36a'})},
+ // ZORRO ROJO: esbelto, hocico afilado con mejillas blancas, patas con medias negras, babero blanco y cola enorme con punta blanca
+ zorrorojo(){const k=U,P=new Proto(),L=9.5*k,by=4.6*k,root=P.bone('root',null),body=P.bone('body',root,0,L+by*.75,0),C='#d8622a',W='#fff2de',D='#2c2220';
+  P.part(sph(1,3.8*k,by,10.5*k,16),C,0,0,0,{p:body,ink:.015});P.part(sph(1,3.1*k,3.2*k,3.4*k,10),W,0,-.9*k,6.6*k,{p:body,ink:0});P.part(sph(1,3*k,by*.5,8*k,10),'#f6dcc0',0,-by*.5,0,{p:body,ink:0});
+  leg4(P,body,(n,sx,sz)=>({x:2.6*k,y:-by*.35,z:7*k,build(b){P.part(sph(1,2*k,3.2*k,2.8*k,8),C,0,-1*k,0,{p:b,ink:.01});P.part(cyl(1.2*k,.9*k,L-.6*k,7).translate(0,-L/2-.2*k,0),D,0,0,0,{p:b,ink:.01});P.part(sph(1,1.2*k,.7*k,1.7*k,7),D,0,-L+.4*k,.5*k,{p:b,ink:.008})}}));
+  const neck=P.bone('head',body,0,by*.35,9.2*k);P.part(sph(1,2.6*k,2.8*k,4*k,10),C,0,.4*k,1.6*k,{p:neck,ink:.012});P.part(sph(1,3.1*k,3.1*k,3.8*k,14),C,0,1.6*k,3.6*k,{p:neck,ink:.015});P.part(sph(1,3.3*k,1.7*k,2.4*k,10),W,0,-.1*k,4*k,{p:neck,ink:0});
+  P.part(cone(1.7*k,5.8*k,6),'#e8832e',0,.9*k,7.8*k,{p:neck,ink:.01,rot:[Math.PI/2,0,0]});P.part(sph(.75*k,1,.8,.9,7),D,0,.9*k,10.8*k,{p:neck,ink:0});
+  [-1,1].forEach(q=>{P.part(cone(1.5*k,4.4*k,4),C,q*2*k,5.8*k,2.2*k,{p:neck,ink:.01,rot:[-.15,0,-q*.15]});P.part(cone(.9*k,2.6*k,4),D,q*2*k,5.6*k,1.9*k,{p:neck,ink:0,rot:[-.15,0,-q*.15]})});
+  eyeQ(P,neck,2.3*k,2.7*k,5.2*k,.6*k,'#3a2410');
+  const tail=P.bone('tail',body,0,by*.3,-9.8*k);P.part(sph(1,3.1*k,3.1*k,8.2*k,12),C,0,-.6*k,-5*k,{p:tail,ink:.014,rot:[.35,0,0]});P.part(sph(1,2.5*k,2.5*k,3.4*k,10),W,0,-2.4*k,-10.4*k,{p:tail,ink:0,rot:[.35,0,0]});
+  return finQ(P,{h:25,rad:15,cyc:38,eye:'#f0a030'})},
+ // TORO BRAVO (élite): corpulento, giba de hombros, cabeza baja y ancha, cuernos adelantados, argolla en el morro, papada y ojos rojos
+ toro(){const k=U,P=new Proto(),L=10*k,by=11.5*k,root=P.bone('root',null),body=P.bone('body',root,0,L+by*.7,0),C='#4a2e22',D='#3a2418',H='#efe4c4';
+  P.part(sph(1,9.8*k,by,21*k,20),C,0,0,0,{p:body,ink:.02});P.part(sph(1,8*k,7*k,8.4*k,14),D,0,by*.7,8.6*k,{p:body,ink:.014});P.part(sph(1,8*k,by*.5,16*k,12),'#5e3e30',0,-by*.55,0,{p:body,ink:0});
+  leg4(P,body,(n,sx,sz)=>({x:6*k,y:-by*.35,z:12.5*k,build(b){P.part(cyl(3.6*k,2.7*k,L,9).translate(0,-L/2,0),C,0,0,0,{p:b,ink:.014});P.part(sph(1,3*k,1.1*k,3.4*k,8),'#1e1410',0,-L+.8*k,.5*k,{p:b,ink:.01})}}));
+  const neck=P.bone('head',body,0,by*.25,18.4*k);P.part(sph(1,6*k,6.5*k,8*k,14),C,0,0,3*k,{p:neck,ink:.018});P.part(sph(1,2.4*k,4.4*k,5*k,10),D,0,-6.4*k,3.4*k,{p:neck,ink:0});
+  P.part(sph(1,5.6*k,6*k,6.4*k,16),C,0,-3*k,8.2*k,{p:neck,ink:.018});P.part(sph(1,4.6*k,3.6*k,4.2*k,12),'#d8b898',0,-5.6*k,12.4*k,{p:neck,ink:.012});P.part(sph(1,1.5*k,3.2*k,.5*k,8),'#f2e6d0',0,-1.2*k,12.4*k,{p:neck,ink:0,rot:[-.5,0,0]});
+  [-1,1].forEach(q=>{P.part(sph(.8*k,1.2,.8,.8,6),'#1e1410',q*1.7*k,-6.2*k,14.6*k,{p:neck,ink:0});
+   hornC(P,neck,[[q*4.8*k,2.8*k,6.2*k],[q*8.8*k,3.2*k,6*k],[q*11.4*k,6.2*k,7.2*k],[q*11*k,9.8*k,9.8*k]],1.9*k,H,'#2a2018');
+   P.part(sph(1,2.8*k,.55*k,1.4*k,8),D,q*6.6*k,2.2*k,5.2*k,{p:neck,ink:.008,rot:[0,0,-q*.2]})});
+  P.part(new THREE.TorusGeometry(1.7*k,.38*k,6,12),'#e8cf94',0,-7.4*k,14*k,{p:neck,ink:.006});
+  eyeQ(P,neck,4.4*k,-1.4*k,10.8*k,.95*k,'#ff5a3a',true);
+  const tail=P.bone('tail',body,0,by*.5,-20.6*k);P.part(cyl(.8*k,.6*k,9*k,6).translate(0,-4.5*k,-.6*k),D,0,0,0,{p:tail,ink:.008});P.part(sph(1,1.8*k,3.4*k,1.8*k,8),'#1e1410',0,-10.2*k,-.6*k,{p:tail,ink:.008});
+  return finQ(P,{h:40,rad:28,cyc:76,eye:'#ff6a3a'})},
+ // OVEJA (rehecha): vellón de grumos esponjosos, cara y patas oscuras, copete sobre la frente y rabo de lana
+ oveja(){const k=U,P=new Proto(),L=7*k,by=6.6*k,root=P.bone('root',null),body=P.bone('body',root,0,L+by*.8,0),W='#f1ede2',F='#4a3e38';
+  P.part(sph(1,6.4*k,by*.95,10*k,16),W,0,0,0,{p:body,ink:.016});
+  for(let i=0;i<20;i++){const a=hash(i,5,1)*6.283,u=hash(i,7,2)*2-1,r=Math.sqrt(1-u*u);P.part(sph(3.2*k+hash(i,9,3)*1.2*k,1,1,1,8),i%3?W:'#e6dfcf',r*Math.cos(a)*6.2*k,u*by*.85,r*Math.sin(a)*9.6*k,{p:body,ink:.006})}
+  leg4(P,body,(n,sx,sz)=>({x:3.4*k,y:-by*.45,z:6.2*k,build(b){P.part(cyl(1.5*k,1.2*k,L,7).translate(0,-L/2+.6*k,0),F,0,0,0,{p:b,ink:.01});P.part(sph(1,1.6*k,.8*k,1.9*k,7),'#2a2420',0,-L+.8*k,.4*k,{p:b,ink:.008})}}));
+  const neck=P.bone('head',body,0,by*.3,8.6*k);P.part(sph(3.6*k,1,1,1.3,10),W,0,.4*k,1.4*k,{p:neck,ink:.01});P.part(sph(1,2.7*k,3.1*k,4*k,12),F,0,.8*k,5.2*k,{p:neck,ink:.014});P.part(sph(1,1.9*k,1.9*k,2.5*k,10),'#5e5048',0,-.6*k,8*k,{p:neck,ink:.01});P.part(sph(2.6*k,1,.8,1,9),W,0,4*k,4.4*k,{p:neck,ink:.008});
+  [-1,1].forEach(q=>P.part(sph(1,2.6*k,.55*k,1.1*k,8),F,q*3.7*k,2.2*k,4.2*k,{p:neck,ink:.008,rot:[0,0,q*.35]}));
+  eyeQ(P,neck,2.3*k,1.9*k,7*k,.65*k,'#e8d070');
+  const tail=P.bone('tail',body,0,by*.35,-9.6*k);P.part(sph(2.8*k,1,1,1.2,9),W,0,-.4*k,-1.6*k,{p:tail,ink:.01});
+  return finQ(P,{h:28,rad:17,cyc:36,eye:'#e8d070'})}};
 
 // ═══════════════════════════════ HUMANOIDES (spec Mini por criatura) ═══════════════════════════════
 const byId=id=>MINI.find(m=>m.id===id);
@@ -242,6 +315,7 @@ const RU={id:'ru',H:52,spec:{ph:2,dress:true,hem:.17,flare:1.1,robe:'#8a5a4a',tr
 const spearW=(L=1.7)=>(F,h,p)=>{p(cyl(.017,.017,L,6),'#6a4a2e',0,L*.3,0,{p:h,ink:.012});p(cone(.045,.22,6),'#cfd4dc',0,L*.3+L/2+.08,0,{p:h,ink:.01});p(cyl(.03,.03,.03,8),'#8a8e96',0,L*.3+L/2-.02,0,{p:h,ink:.008})};
 const hammerW=(F,h,p)=>{p(cyl(.022,.026,.42,6),'#5a3e2c',0,.1,0,{p:h,ink:.012});p(box(.2,.1,.1),'#6a6e76',0,.34,0,{p:h,ink:.012});p(box(.06,.07,.08),'#4a4e56',.13,.34,0,{p:h,ink:.01})};
 const elderBeard=(c,L=.3,R=.12)=>(F,head,part)=>{part(cone(R,L,8).rotateX(Math.PI),c,0,-.2-L*.1,.13,{p:head,ink:.01});part(sph(.1,1.15,.7,.7,10),c,0,-.1,.17,{p:head,ink:.008})};
+const alqLadle=(F,h,p)=>{p(cyl(.016,.02,.62,6),'#6a4a2e',0,.12,0,{p:h,ink:.012});p(new THREE.SphereGeometry(.07,8,4,0,6.3,0,1.7).rotateX(Math.PI),'#5a4630',0,.46,.03,{p:h,ink:.01});p(cyl(.05,.05,.012,8),'#6ad070',0,.455,.03,{p:h,ink:0,mat:glow('#6ad070',1.2)})};   // cucharón largo de alquimista (botica de la Pradera)
 const elderStaff=(F,h,p)=>{const L=1.75;p(cyl(.02,.026,L,6),'#5a4030',0,L*.3,0,{p:h,ink:.012});p(new THREE.TorusGeometry(.07,.016,6,12),'#6a4a30',0,L*.3+L/2-.02,0,{p:h,ink:.008});p(sph(.065,1,1,1,10),'#8ec6ff',0,L*.3+L/2+.01,0,{p:h,ink:0,mat:glow('#6aaef0',1.15)})};
 // ── ALDEANOS GENERADOS (Fase 25 · B2, 20 oct 2026): `src/villagers.js` (global NPCLK) describe CADA PNJ de aldea de los 9 biomas (cultura, oficio, colores, peinado, sombrero, herramienta); aquí se traduce al spec de Mini.
 //    Clave de plantilla = id del PNJ (`v:<bioma>:<oficio><n>`). Herramientas de oficio en la mano (F.hold) y sombreros de cultura: tablas de datos, nada de ifs por personaje.
@@ -284,7 +358,10 @@ const NPC_DEF={
   acc:(F,g,part)=>{flap(F,g,part,.34,.44,'#4a3426',0,.58,.2,{ink:.012,rx:.1});part(box(.2,.22,.025),'#4a3426',0,.62,.2,{p:g,ink:.01});part(box(.09,.07,.06),'#6a4a30',-.19,.34,.14,{p:g,ink:.012});F.hold(1,-.9,hammerW)}}},
  anciano:{id:'anciano',H:47,wave:false,spec:{ph:4.2,dress:true,hem:.06,flare:1.08,robe:'#33335a',trim:'#8a7a5a',belt:'#8a7a5a',skin:'#e0bc9a',sleeve:'#33335a',w:.95,lean:.22,brow:'#c8c4bc',
   top:mix(hairFn('mane','#d8d4cc'),elderBeard('#d8d4cc',.32,.12)),
-  acc:(F,g,part)=>{part(new THREE.CylinderGeometry(.15,.3,.26,18,1,true).translate(0,.8,0),'#2a2a44',0,0,0,{p:g,ink:.014,t:{side:THREE.DoubleSide}});F.hold(0,0,elderStaff)}}}};
+  acc:(F,g,part)=>{part(new THREE.CylinderGeometry(.15,.3,.26,18,1,true).translate(0,.8,0),'#2a2a44',0,0,0,{p:g,ink:.014,t:{side:THREE.DoubleSide}});F.hold(0,0,elderStaff)}}},
+ alquimista:{id:'alquimista',H:50,wave:false,spec:{ph:2.3,robe:'#3f6a5a',trim:'#c8b878',belt:'#4a3426',skin:'#c8946a',sleeve:'#3f6a5a',pants:'#3a3a44',boot:'#2e2218',w:.97,chestW:1.0,brow:'#5a2a18',
+  top:mix(hairFn('bun','#7a3a20'),(F,head,part)=>{part(new THREE.TorusGeometry(.05,.014,4,8),'#b08a3a',-.085,.13,.17,{p:head,ink:.008});part(new THREE.TorusGeometry(.05,.014,4,8),'#b08a3a',.085,.13,.17,{p:head,ink:.008});part(cyl(.03,.03,.02,6).rotateX(Math.PI/2),'#8ad0c0',-.085,.13,.178,{p:head,ink:0});part(cyl(.03,.03,.02,6).rotateX(Math.PI/2),'#8ad0c0',.085,.13,.178,{p:head,ink:0});part(new THREE.TorusGeometry(.205,.012,4,12).rotateX(Math.PI/2),'#4a3426',0,.115,0,{p:head,ink:.006})}),
+  acc:(F,g,part)=>{flap(F,g,part,.34,.5,'#6a5a3a',0,.58,.2,{ink:.012,rx:.08});part(box(.34,.05,.24),'#4a3426',0,.5,0,{p:g,ink:.01});[['#5ac864',-.11],['#5a9ae0',-.04],['#e0584a',.03],['#d8b83a',.1]].forEach(([c,x])=>part(cyl(.022,.022,.07,5),c,x,.52,.15,{p:g,ink:.006,mat:glow(c,.7)}));F.hold(1,-.9,alqLadle)}}}};
 // ── CAJEROS y TENDEROS de los interiores (Lote R3D-F15b-PULIDO, 20 oct 2026): 2 oficios × 6 civilizaciones (`cajero@k`, `tendero@k`; k = índice de PALS 0..5). Solo los usa `interiors3d.js` (makeActor): no son PNJ con diálogo todavía (Fase 25).
 //    Ropa de la cultura (ROBE), delantal o chaleco de oficio; pelo corto (cajero) o moño (tendera). Sin capucha, con pantalones, sin mejillas rosadas (reglas de PNJ).
 const ROBE=['#4f7a4a','#3f7a46','#8a7a3a','#3a5a8a','#b8302a','#8a2a1a'],HAIR=['#6a4a2a','#3a2a1a','#2a1a12','#d8c8a0','#1a1410','#2a1a14'],SKINS=['#e0b690','#d8a878','#b5764a','#f0d0b8','#e8c8a0','#c08a60'];
@@ -293,6 +370,31 @@ for(let k=0;k<6;k++){const rb=ROBE[k];
   acc:(F,g,part)=>{flap(F,g,part,.3,.36,'#e8dcc0',0,.6,.2,{ink:.012});part(box(.09,.07,.04),'#d8b050',.12,.5,.215,{p:g,ink:0})}}};
  NPC_DEF['tendero@'+k]={id:'tendero@'+k,H:48,wave:false,spec:{ph:k*1.7+1,robe:'#7a5a46',trim:rb,belt:rb,skin:SKINS[(k+2)%6],sleeve:'#7a5a46',pants:'#4a3a32',boot:'#2e2218',w:.98,chestW:1.04,brow:'#2a1a12',top:hairFn('bun',HAIR[(k+3)%6]),
   acc:(F,g,part)=>{flap(F,g,part,.34,.46,rb,0,.6,.2,{ink:.012});part(box(.2,.2,.025),mix2(rb),0,.62,.2,{p:g,ink:.01})}}}}
+
+// ── PNJ DE INTERIOR (28 oct 2026): gente con oficio dentro de cada casa, cada rol con su propio aspecto y objetos; 6 culturas (`rol@k`, k = índice de PALS 0..5). Los coloca interiors3d.js (`R.np`) y los anima `animHuman` con `job`.
+const FOODB=(F,h,p)=>{p(cyl(.07,.045,.045,9),'#d8c8a8',0,-.04,0,{p:h,ink:.01});p(cyl(.062,.062,.01,9),'#9a5a2a',0,-.015,0,{p:h,ink:0})};
+const SPOONW=(F,h,p)=>{p(cyl(.009,.009,.18,4),'#8a6a42',0,.03,0,{p:h,ink:.006});p(sph(.025,1,.4,1,6),'#8a6a42',0,.13,0,{p:h,ink:.006})};
+const TANKW=(F,h,p)=>{p(cyl(.05,.045,.1,9),'#8a6a3a',0,-.03,0,{p:h,ink:.01});p(cyl(.047,.047,.015,9),'#f0e0a0',0,.02,0,{p:h,ink:0});p(new THREE.TorusGeometry(.03,.008,4,8).rotateY(Math.PI/2),'#6a4a2a',.055,-.03,0,{p:h,ink:0})};
+const MORTARW=(F,h,p)=>{p(cyl(.08,.05,.07,9),'#8a867c',0,-.03,0,{p:h,ink:.01});p(cyl(.065,.065,.01,9),'#5a8a4a',0,.005,0,{p:h,ink:0})};
+const PESTLEW=(F,h,p)=>{p(cyl(.015,.022,.17,6),'#6a5a4a',0,.04,0,{p:h,ink:.008});p(sph(.028,1,1,1,6),'#8a867c',0,-.05,0,{p:h,ink:.006})};
+const HERBBW=(F,h,p)=>{['#5a8a4a','#7a5aa0','#c8a838'].forEach((c,i)=>p(cone(.03,.15,4),c,(i-1)*.03,.03,0,{p:h,ink:.004}));p(cyl(.01,.01,.04,4),'#6a4a2a',0,-.04,0,{p:h,ink:0})};
+const PLANEW=(F,h,p)=>{p(box(.05,.04,.22),'#8a6a3a',0,0,.05,{p:h,ink:.008});p(box(.03,.07,.04),'#5a3e28',0,.05,-.03,{p:h,ink:.006})};
+const CLOTHW=(F,h,p)=>{p(box(.15,.02,.13),'#b0463c',0,-.02,.02,{p:h,ink:.006});p(cyl(.004,.004,.1,3),'#c8c8d0',.05,.02,.03,{p:h,ink:0})};
+const BUCKETW=(F,h,p)=>{p(cyl(.07,.055,.1,8),'#4a3a30',0,-.08,0,{p:h,ink:.01});p(box(.01,.07,.01),'#2a2018',0,.01,0,{p:h,ink:0})};
+const SCROLLW=(F,h,p)=>{p(cyl(.025,.025,.17,7).rotateZ(Math.PI/2),'#e0d4b0',0,0,.04,{p:h,ink:.006})};
+const INTROLE={
+ comensal:(k,r,c)=>({H:48,spec:{ph:k*.9+.4,robe:r,trim:'#e8dcc0',belt:'#4a3426',skin:SKINS[(k+1)%6],sleeve:r,pants:'#4a3a32',boot:'#2e2218',w:1.04,chestW:1.05,brow:c,top:hairFn('cut',c),acc:(F,g,part)=>{part(box(.12,.1,.02),'#e8dcc0',0,.74,.2,{p:g,ink:0});F.hold(0,-1,SPOONW);F.hold(1,-1,FOODB)}}}),
+ bebedor:(k,r,c)=>({H:49,spec:{ph:k*1.1+1,robe:r,trim:'#8a6a3a',belt:'#3a2a20',skin:SKINS[(k+3)%6],sleeve:r,pants:'#3a3a44',boot:'#2e2218',w:1.12,chestW:1.1,belly:.05,brow:c,top:mix(hairFn('mane',c),(F,head,part)=>part(sph(.1,1.3,.55,.6,8),c,0,-.11,.17,{p:head,ink:.008})),acc:(F,g,part)=>{part(box(.34,.05,.24),'#5a3e26',0,.48,0,{p:g,ink:.008});F.hold(0,-1,TANKW)}}}),
+ tabernero:(k,r,c)=>({H:50,spec:{ph:k*1.3,robe:'#8a7a5a',trim:r,belt:r,skin:SKINS[(k+4)%6],sleeve:'#8a7a5a',pants:'#3a2e24',boot:'#2e2218',w:1.08,chestW:1.06,belly:.07,brow:c,top:hairFn('bun',c),acc:(F,g,part)=>{flap(F,g,part,.4,.5,'#efe8d4',0,.6,.21,{ink:.012,rx:.06});part(box(.16,.05,.06),'#efe8d4',-.16,.84,.04,{p:g,ink:.006});F.hold(1,-1,TANKW)}}}),
+ pulidor:(k,r,c)=>({H:46,spec:{ph:k*.7+2,robe:'#4a6a50',trim:'#d8c890',belt:'#6a5236',skin:SKINS[(k+2)%6],sleeve:'#4a6a50',pants:'#3a3a40',boot:'#2e2218',w:.94,chestW:1,brow:c,top:hairFn('bun',c),acc:(F,g,part)=>{flap(F,g,part,.34,.46,'#6a7a4a',0,.6,.2,{ink:.012,rx:.08});F.hold(0,-1,PESTLEW);F.hold(1,-1,MORTARW)}}}),
+ aprendiz:(k,r,c)=>({H:44,spec:{ph:k*1.6,robe:'#6a6a8a',trim:'#d8c890',belt:'#8a5a3a',skin:SKINS[(k+5)%6],sleeve:'#6a6a8a',pants:'#4a4a52',boot:'#3a2e24',w:.9,chestW:.96,brow:c,top:hairFn('cut',c),acc:(F,g,part)=>{part(box(.3,.05,.22),'#8a5a3a',0,.46,0,{p:g,ink:.008});[['#5ac864',-.1],['#5a9ae0',0],['#e0584a',.1]].forEach(([cc,x])=>part(cyl(.022,.022,.07,5),cc,x,.5,.17,{p:g,ink:.005,mat:glow(cc,.7)}));F.hold(0,-1,HERBBW)}}}),
+ carpintero:(k,r,c)=>({H:49,spec:{ph:k*1.2+.5,robe:'#8a6a46',trim:'#4a3426',belt:'#3a2a20',skin:SKINS[k%6],sleeve:'#8a6a46',pants:'#5a4a38',boot:'#3a2c20',w:1.08,chestW:1.08,brow:c,top:mix(hairFn('cut',c),(F,head,part)=>{part(cyl(.2,.2,.04,10),'#c8b890',0,.2,0,{p:head,ink:.008})}),acc:(F,g,part)=>{flap(F,g,part,.36,.5,'#5a3e2c',0,.6,.2,{ink:.012});part(box(.04,.2,.03),'#a8a8b0',.18,.5,.12,{p:g,ink:.005});F.hold(0,-1,PLANEW)}}}),
+ costurera:(k,r,c)=>({H:46,spec:{ph:k*.8+3,robe:'#7a4a6a',trim:'#e8dcc0',belt:'#4a3a2a',skin:SKINS[(k+1)%6],sleeve:'#7a4a6a',dress:true,hem:.1,flare:1.06,w:.92,brow:c,top:mix(hairFn('bun',c),(F,head,part)=>{part(new THREE.TorusGeometry(.2,.02,4,12).rotateX(Math.PI/2),'#e8dcc0',0,.12,0,{p:head,ink:.006})}),acc:(F,g,part)=>{part(sph(.04,1,1,1,6),'#e0584a',.15,.5,.2,{p:g,ink:.005});F.hold(0,-1,CLOTHW)}}}),
+ herreroap:(k,r,c)=>({H:48,spec:{ph:k*1.4,robe:'#6a5a4a',trim:'#2a2018',belt:'#2a2018',skin:SKINS[(k+3)%6],sleeve:'#6a5a4a',pants:'#3a3030',boot:'#2a2018',w:1.1,chestW:1.12,armW:1.15,brow:'#14100c',top:hairFn('cut','#2a1a10'),acc:(F,g,part)=>{flap(F,g,part,.38,.58,'#3a2a20',0,.62,.21,{ink:.012});part(box(.1,.07,.012),'#14100c',.04,.86,.2,{p:g,ink:0});F.hold(0,-.9,hammerW)}}}),
+ carbonero:(k,r,c)=>({H:44,spec:{ph:k*1.1+2,robe:'#4a4440',trim:'#2a2624',belt:'#2a2018',skin:SKINS[(k+2)%6],sleeve:'#4a4440',pants:'#2e2a28',boot:'#1e1a18',w:.96,chestW:1,brow:'#14100c',top:mix(hairFn('cut','#2a1a10'),(F,head,part)=>{part(box(.1,.03,.01),'#14100c',0,-.02,.21,{p:head,ink:0})}),acc:(F,g,part)=>{F.hold(0,-.4,BUCKETW)}}}),
+ devoto:(k,r,c)=>({H:44,spec:{ph:k*.6+1.5,robe:'#6a6a7a',trim:'#c8b878',belt:'#8a7a5a',skin:SKINS[(k+4)%6],sleeve:'#6a6a7a',dress:true,hem:.06,flare:1.08,w:.92,brow:c,top:hairFn('cut',c),acc:(F,g,part)=>{for(let i=0;i<6;i++)part(sph(.014,1,1,1,4),'#8a5a3a',(i-2.5)*.03,.66-Math.abs(i-2.5)*.01,.2,{p:g,ink:0})}}}),
+ cliente:(k,r,c)=>({H:48,spec:{ph:k*1.5+.8,robe:r,trim:'#d8c890',belt:'#4a3426',skin:SKINS[(k+5)%6],sleeve:r,pants:'#4a3a32',boot:'#2e2218',w:1,chestW:1.02,brow:c,top:hairFn('bun',c),acc:(F,g,part)=>{F.hold(0,-1,SCROLLW)}}})};
+for(let k=0;k<6;k++)for(const role in INTROLE){const r=ROBE[(k+(role.length%4)+1)%6],c=HAIR[(k+role.length)%6],d=INTROLE[role](k,r,c);if(d.spec.dress&&!Mini.DRESS_OK.includes(role+'@'+k))Mini.DRESS_OK.push(role+'@'+k);NPC_DEF[role+'@'+k]={id:role+'@'+k,H:d.H,wave:false,spec:d.spec}}
 const mix2=c=>c;
 // ── GABRIEL (Lote CINE-2, 21 oct 2026): ángel caído, jefe del tutorial y protagonista de la cinemática «La caída de Gabriel» (docs/GUION_TUTORIAL.md, docs/PROMPT_INVIDEO_CINEMATICA_GABRIEL.md).
 //    ≈1,2× el héroe (H=64). Túnica blanca-gris rasgada (con pantalones: regla de PNJ), faja y hombrera dorada gastadas, pelo largo blanco-dorado, ALAS ROTAS horneadas (`angelWings`, wings3d.js: ala derecha alzada y la izquierda caída, con plumas que faltan y puntas quemadas). El HALO agrietado NO se hornea: es una malla emisiva aparte colgada del hueso de la cabeza (`gabriel3d.js`) para poder apagarlo.
@@ -332,12 +434,61 @@ function buildHuman(def){const s=Object.assign({},def.spec);s.k=1;s.id=def.id;Mi
  // las órbitas (Morgana) y otros objetos independientes no se hornean: quedan en m; no se usan (se animan sólo con huesos)
  m.obj.traverse(o=>{if(o.geometry)o.geometry.dispose()});return t}
 
+// ═══════════════════════════════ ENEMIGOS DE LA PRADERA REHECHOS (28 oct 2026; regla del dueño: cada enemigo ÚNICO, sin reutilizar piezas) ═══════════════════════════════
+// Cada uno lleva su propio `top` (cabeza), `acc` (cuerpo) y arma/objeto de mano, escritos solo para él. Sustituyen a goblin, orco, b0 (Gruk) y k0 (Rufo) y añaden goblinarq, goblinsha, espantapajaros, banasesino, orcocampeon y slime.
+Object.assign(HUM,{
+ // GOBLIN LADRONZUELO: gorro de cuero remendado, orejas con aro, nariz ganchuda, saco al hombro, tarugo de madera y cuchillo oxidado
+ goblin:unit('goblin',{eye:'#e8d040',robe:'#7a5a38',trim:'#4a3a28',belt:'#3a2a1c',skin:'#7a9a3a',pants:'#4a3a28',boot:'#2c2016',w:.8,chestW:.95,waist:.9,armW:.85,legW:.9,headK:1.18,lean:.38,stance:1.12,strap:'#3a2a1c',brow:'#1c140c',
+  top:mix(ears('#7a9a3a',.2),nose('#6a8a30'),(F,head,part)=>{part(new THREE.SphereGeometry(.215,10,6,0,6.3,0,1.2).scale(1,.9,1.04),'#5a4026',0,.07,-.02,{p:head,ink:.012});part(box(.07,.06,.012),'#8a6a40',.1,.17,.17,{p:head,ink:0});part(new THREE.TorusGeometry(.03,.008,4,8),'#d8b050',.23,-.02,0,{p:head,ink:0})}),
+  acc:mix((F,g,part)=>{part(sph(.14,1,1.15,.85,8),'#8a7a58',.02,.52,-.24,{p:g,ink:.012});part(cone(.04,.08,5),'#6a5a3a',.02,.7,-.26,{p:g,ink:.006});part(new THREE.TorusGeometry(.19,.014,4,12).rotateX(Math.PI/2),'#b8a070',0,.44,0,{p:g,ink:.006})},(F)=>F.hold(0,-1.2,(F2,h,p)=>{p(cyl(.016,.016,.1,5),'#4a3422',0,0,0,{p:h,ink:.008});p(box(.09,.02,.03),'#7a6a4a',0,.06,0,{p:h,ink:.006});p(box(.04,.3,.012),'#8a7a64',0,.22,0,{p:h,ink:.008});p(box(.02,.05,.012),'#6a3a22',.01,.2,0,{p:h,ink:0})}),(F)=>F.hold(1,-1.2,(F2,h,p)=>{p(cyl(.13,.13,.03,9).rotateX(Math.PI/2),'#7a5a38',0,.04,.07,{p:h,ink:.012});p(sph(.04,1,1,.7,6),'#9a9aa0',0,.04,.1,{p:h,ink:.006});p(box(.02,.12,.02),'#5a3e26',.05,.04,.1,{p:h,ink:0})})) },34),
+ // GOBLIN ARQUERO: diadema con plumas, pinturas de guerra, carcaj de corteza con flechas, collar de huesos y arco corto de hueso
+ goblinarq:unit('goblinarq',{eye:'#f0e060',robe:'#5a6a3a',trim:'#3a4a2a',belt:'#4a3a22',skin:'#5a8a46',pants:'#4a4030',boot:'#2c2418',w:.76,chestW:.9,waist:.88,armW:.82,legW:.88,headK:1.2,lean:.46,stance:1.1,strap:'#4a3a22',brow:'#10180c',
+  top:mix(ears('#5a8a46',.17),nose('#4a7a38'),(F,head,part)=>{part(new THREE.TorusGeometry(.205,.014,4,14).rotateX(Math.PI/2),'#3a5a2a',0,.1,0,{p:head,ink:.006});[['#c8402a',-.12,.2],['#e8c040',-.17,.17],['#4a8ac0',-.07,.22]].forEach(([c,x,y],i)=>part(cone(.025,.16,4),c,x,y,-.02,{p:head,ink:.005}).rotation.z=.5+i*.12);[-1,1].forEach(q=>part(box(.075,.012,.01),'#efe8d0',q*.075,-.02,.205,{p:head,ink:0}))}),
+  acc:mix((F,g,part)=>{part(cyl(.05,.043,.34,7),'#5a3e2a',.1,.56,-.2,{p:g,ink:.01}).rotation.z=.28;[0,1,2].forEach(i=>{part(cyl(.006,.006,.12,4),'#c8c0a0',.07+i*.03,.78,-.2,{p:g,ink:0}).rotation.z=.28;part(cone(.02,.05,4),'#c8402a',.075+i*.03,.85,-.2,{p:g,ink:0})});for(let i=0;i<5;i++)part(cone(.014,.05,4),'#efe8d0',(i-2)*.05,.82-Math.abs(i-2)*.02,.2,{p:g,ink:0}).rotation.x=Math.PI},(F)=>F.hold(0,-.4,(F2,h,p)=>{p(new THREE.TorusGeometry(.25,.013,4,12,Math.PI).rotateZ(-Math.PI/2).rotateY(-Math.PI/2),'#d8d0b4',0,.1,0,{p:h,ink:.01});p(box(.006,.5,.006),'#6a5a3a',0,.1,0,{p:h,ink:0})})) },34),
+ // GOBLIN CHAMÁN: máscara de hueso con plumas y cornamenta, manto de pelo, collar de cráneos, túnica larga andrajosa y bastón de hueso con orbe verde
+ goblinsha:unit('goblinsha',{eye:'#80ff90',robe:'#4a3a5a',trim:'#2a2236',belt:'#8a7a5a',skin:'#6a9a40',sleeve:'#4a3a5a',dress:true,hem:.08,flare:1.06,w:.82,chestW:.95,waist:.9,headK:1.16,lean:.3,brow:'#10180c',
+  top:mix(ears('#6a9a40',.14),(F,head,part)=>{part(new THREE.SphereGeometry(.2,10,7,0,6.3,0,1.35).rotateX(.35).scale(1,1.05,1),'#e8e0c8',0,.04,.07,{p:head,ink:.012});[-1,1].forEach(q=>{part(cone(.028,.06,4),'#1a1410',q*.075,.05,.195,{p:head,ink:0});part(cone(.02,.2,4),'#c8a838',q*.12,.24,0,{p:head,ink:.005}).rotation.z=-q*.5;part(cone(.018,.16,4),'#3a8a5a',q*.05,.28,0,{p:head,ink:.005}).rotation.z=-q*.2;part(cone(.02,.13,4),'#d8d0b8',q*.14,.2,-.02,{p:head,ink:.005}).rotation.z=-q*1.0})}),
+  acc:mix((F,g,part)=>{part(new THREE.TorusGeometry(.2,.07,5,12).rotateX(Math.PI/2),'#6a5a4a',0,.82,0,{p:g,ink:.012});for(let i=0;i<5;i++){part(sph(.03,1,1,1,5),'#efe8d0',(i-2)*.055,.72-Math.abs(i-2)*.025,.22,{p:g,ink:.005})}},(F)=>F.hold(0,-.9,(F2,h,p)=>{const L=1.5;p(cyl(.018,.024,L,6),'#8a7a5a',0,L*.3,0,{p:h,ink:.01});p(sph(.06,1,1.1,1,7),'#efe8d0',0,L*.3+L/2+.02,0,{p:h,ink:.01});[-1,1].forEach(q=>p(sph(.014,1,1,1,4),'#10080a',q*.025,L*.3+L/2+.04,.05,{p:h,ink:0}));p(sph(.07,1,1,1,8),'#6ad070',0,L*.3+L/2+.17,0,{p:h,ink:0,mat:glow('#6ad070',1.3)});[-1,1].forEach(q=>p(cone(.01,.1,4),'#d8d0b8',q*.04,L*.3+L/2-.09,0,{p:h,ink:0}))})) },40),
+ // ESPANTAPÁJAROS EMBRUJADO: cabeza de saco cosida con ojos de brasa, sombrero de paja, estaca a la espalda, remiendos y horca
+ espantapajaros:unit('espantapajaros',{eye:'#ff8a2a',robe:'#8a7a4a',trim:'#5a4a30',belt:'#6a5236',skin:'#c8b070',sleeve:'#7a6a44',pants:'#5a4a3a',boot:'#3a2e24',w:.88,chestW:.98,waist:.95,armW:.9,legW:.85,headK:1.08,lean:.12,brow:'#3a2a18',
+  top:mix((F,head,part)=>{part(sph(.235,1,1.05,1,10),'#c8b070',0,.02,0,{p:head,ink:.014});for(let i=0;i<6;i++)part(box(.012,.04,.01),'#3a2a18',(i-2.5)*.032,-.1-Math.abs(i-2.5)*.006,.225,{p:head,ink:0});part(cyl(.34,.34,.025,12),'#c8a850',0,.17,0,{p:head,ink:.01});part(cyl(.14,.17,.15,10),'#d4b860',0,.26,0,{p:head,ink:.01});part(cyl(.17,.17,.03,10),'#7a3a22',0,.2,0,{p:head,ink:0});[-1,1].forEach(q=>part(cone(.03,.14,4),'#d4b860',q*.3,.15,0,{p:head,ink:0}).rotation.z=-q*1.4)}),
+  acc:mix((F,g,part)=>{part(cyl(.02,.02,1.25,5),'#5a3e28',0,.5,-.2,{p:g,ink:.01});part(box(.5,.03,.03),'#5a3e28',0,.74,-.2,{p:g,ink:.01});part(box(.12,.12,.012),'#6a8a5a',-.08,.58,.205,{p:g,ink:0});part(box(.1,.1,.012),'#a85a4a',.1,.44,.2,{p:g,ink:0});for(let i=0;i<4;i++)part(cone(.02,.1,4),'#d4b860',(i-1.5)*.07,.28,.2,{p:g,ink:0}).rotation.x=Math.PI},(F)=>F.hold(0,-.9,(F2,h,p)=>{p(cyl(.018,.02,.9,5),'#6a4a2e',0,.3,0,{p:h,ink:.01});p(box(.2,.02,.02),'#8a8e96',0,.78,0,{p:h,ink:.008});[-1,0,1].forEach(q=>p(cone(.012,.16,4),'#9aa0a8',q*.09,.88,0,{p:h,ink:.006}))})) },52),
+ // ORCO SAQUEADOR: cresta de pelo negro, colmillos de abajo arriba, argolla en la nariz, cicatriz, arnés con púas, hombrera de hierro en un solo hombro y hacha de piedra atada con cuero
+ orco:unit('orco',{eye:'#ffcc30',robe:'#7a8a48',trim:'#2a2018',belt:'#3a2a1e',skin:'#7a8a48',sleeve:'#7a8a48',w:1.25,chestW:1.15,waist:.84,armW:1.35,legW:1.2,stance:1.15,headK:.95,lean:.08,spikes:3,spikeC:'#cfcfc4',strap:'#3a2a1e',pants:'#5a4a38',boot:'#3e3026',brow:'#10100c',
+  top:mix(ears('#7a8a48',.12),(F,head,part)=>{for(let i=0;i<7;i++)part(box(.035,.07+Math.sin(i/6*3.14)*.07,.04),'#14100c',0,.2+Math.sin(i/6*3.14)*.02,.14-i*.045,{p:head,ink:.006});[-1,1].forEach(q=>part(cone(.026,.1,5),'#e8e0c0',.07*q,-.1,.2,{p:head,ink:.008}));part(new THREE.TorusGeometry(.025,.007,4,8),'#b8b0a0',0,-.03,.235,{p:head,ink:0});part(box(.012,.1,.01),'#4a2a22',-.07,.04,.2,{p:head,ink:0}).rotation.z=.5}),
+  acc:mix((F,g,part)=>{part(sph(.13,1,.7,1,8),'#5a5e66',-.24,.84,0,{p:g,ink:.012});[0,1,2].forEach(i=>part(cone(.018,.07,4),'#cfcfc4',-.24+(i-1)*.05,.9,0,{p:g,ink:0}));part(box(.06,.5,.04),'#3a2a1e',.1,.62,.2,{p:g,ink:.006}).rotation.z=.5},(F)=>F.hold(0,-.9,(F2,h,p)=>{p(cyl(.026,.03,.78,6),'#6a4a32',0,.25,0,{p:h,ink:.012});p(box(.06,.2,.14),'#8a8a80',0,.7,.04,{p:h,ink:.014}).rotation.x=.25;p(cone(.05,.14,4),'#9a9a90',0,.72,.16,{p:h,ink:.008}).rotation.x=Math.PI/2;[-1,1].forEach(q=>p(box(.07,.02,.02),'#4a2a1c',0,.62+q*.05,.03,{p:h,ink:0}))})) },46),
+ // ORCO CAMPEÓN (élite): yelmo de hierro con cuernos de toro y protector de nariz, coraza, tabardo desgarrado, cráneos en el cinto y gran hoja dentada
+ orcocampeon:unit('orcocampeon',{eye:'#ff5a2a',robe:'#566a3a',trim:'#1a1a14',belt:'#8a2a1c',skin:'#566a3a',sleeve:'#566a3a',w:1.4,chestW:1.2,waist:.82,armW:1.45,legW:1.25,stance:1.18,headK:.92,lean:.06,plate:'#7a7e86',pauld:'#7a7e86',spikes:2,spikeC:'#d8d0b8',pants:'#3a2e22',boot:'#2a2218',brow:'#0c0c08',
+  top:mix(ears('#566a3a',.1),(F,head,part)=>{part(new THREE.SphereGeometry(.225,12,8,0,6.3,0,1.45).scale(1,1.02,1.03),'#7a7e86',0,.07,-.02,{p:head,ink:.014});part(box(.035,.16,.03),'#6a6e76',0,0,.215,{p:head,ink:.01});[-1,1].forEach(q=>{part(cone(.045,.28,6),'#e8dcc0',q*.2,.22,0,{p:head,ink:.01}).rotation.z=-q*.9;part(cone(.04,.14,6),'#d8ccb0',q*.34,.34,0,{p:head,ink:.008}).rotation.z=q*.4})}),
+  acc:mix((F,g,part)=>{flap(F,g,part,.3,.5,'#7a1c14',0,.56,.2,{ink:.012,rx:.06});flap(F,g,part,.26,.4,'#3a2a1e',.14,.5,-.2,{ink:.012,dir:-1});[-.12,0,.12].forEach(x=>part(sph(.045,1,1.1,.9,6),'#efe8d0',x,.46,.2,{p:g,ink:.006}))},(F)=>F.hold(0,-.9,(F2,h,p)=>{p(cyl(.026,.03,.3,6),'#4a3226',0,.05,0,{p:h,ink:.01});p(box(.03,.9,.16),'#9a9ea6',0,.62,.05,{p:h,ink:.014});for(let i=0;i<5;i++)p(box(.032,.07,.05),'#7a7e86',0,.34+i*.15,.15,{p:h,ink:.006});p(box(.14,.04,.05),'#8a8e96',0,.2,0,{p:h,ink:.01})})) },58),
+ // BANDIDO ASESINO (élite): esbelto, de oscuro con carmesí, pañuelo sobre la cara y cinta con colas, bandolera de cuchillos arrojadizos, capa corta andrajosa y dos krises ondulados
+ banasesino:unit('banasesino',{eye:'#ff4a3a',robe:'#26262e',trim:'#8a1c22',belt:'#8a1c22',skin:'#c8946a',sleeve:'#26262e',pants:'#1e1e26',boot:'#16161c',w:.88,chestW:.96,waist:.86,armW:.9,legW:.95,lean:.2,stance:1.08,brow:'#10100c',
+  top:mix((F,head,part)=>{part(new THREE.SphereGeometry(.215,10,6,0,6.3,0,1.25).scale(1,.95,1.03),'#14141a',0,.06,-.02,{p:head,ink:.01});part(cyl(.2,.2,.14,12,1,true).translate(0,-.07,.01),'#7a1a22',0,0,0,{p:head,ink:.008,t:{side:THREE.DoubleSide}});part(new THREE.TorusGeometry(.21,.016,4,14).rotateX(Math.PI/2),'#8a1c22',0,.1,0,{p:head,ink:.005});[-1,1].forEach(q=>part(cone(.025,.2,4),'#8a1c22',q*.08,.08,-.24,{p:head,ink:0}).rotation.x=-2.4);for(let i=0;i<4;i++)part(cone(.03,.1,4),'#14141a',(i-1.5)*.06,.2,-.06,{p:head,ink:0})}),
+  acc:mix((F,g,part)=>{part(box(.06,.62,.04),'#5a3a22',0,.62,.2,{p:g,ink:.008}).rotation.z=.6;for(let i=0;i<4;i++){part(box(.02,.09,.012),'#b8bcc4',-.12+i*.08,.55+i*.07,.225,{p:g,ink:0}).rotation.z=.6}flap(F,g,part,.4,.4,'#2a2a32',0,.78,-.2,{ink:.012,dir:-1})},(F)=>F.hold(0,-1.1,kris),(F)=>F.hold(1,-1.1,kris)) },52),
+ // RUFO (capitán bandido): sombrero emplumado de ala ancha, parche en el ojo, bigote, aro de oro, levita carmesí, bolsa de monedas, pistolas al cinto y sable curvo
+ k0:unit('k0',{eye:'#e8b040',robe:'#8a2e2a',trim:'#d8b040',belt:'#2a1a12',skin:'#c89868',sleeve:'#8a2e2a',w:1.15,chestW:1.1,waist:.88,armW:1.15,legW:1.1,strap:'#e8c040',pants:'#3a3a44',boot:'#2a2018',brow:'#2a1c12',
+  top:mix((F,head,part)=>{part(cyl(.3,.3,.02,14),'#3a2a20',0,.15,0,{p:head,ink:.01}).rotation.z=.08;part(cyl(.15,.18,.16,10),'#4a3426',0,.24,0,{p:head,ink:.012});part(cyl(.18,.18,.03,10),'#d8b040',0,.19,0,{p:head,ink:.005});for(let i=0;i<4;i++)part(cone(.02-i*.003,.12,4),'#f4f0e0',-.17-i*.035,.3+Math.sin(i*.9)*.06,-.02,{p:head,ink:.004}).rotation.z=1.1+i*.2;part(box(.09,.07,.012),'#10100c',.075,.04,.215,{p:head,ink:0});part(box(.2,.012,.01),'#10100c',0,.1,.2,{p:head,ink:0}).rotation.z=-.5;[-1,1].forEach(q=>part(cone(.022,.12,4),'#2a1c12',q*.09,-.095,.215,{p:head,ink:.004}).rotation.z=-q*1.3);part(new THREE.TorusGeometry(.028,.007,4,8),'#e8c040',-.22,-.02,0,{p:head,ink:0})}),
+  acc:mix((F,g,part)=>{part(sph(.07,1,1.1,.8,7),'#6a4a2a',.2,.42,.14,{p:g,ink:.01});part(box(.07,.1,.04),'#3a2a20',-.2,.4,.12,{p:g,ink:.008});part(box(.07,.1,.04),'#3a2a20',-.12,.4,.18,{p:g,ink:.008});for(let i=0;i<3;i++)part(sph(.022,1,1,.5,5),'#e8c040',(i-1)*.1,.7,.205,{p:g,ink:0});cape('#6a1c1c',.85,.2)(F,g,part)},(F)=>F.hold(0,-1.1,(F2,h,p)=>{p(cyl(.018,.02,.14,5),'#5a3a22',0,0,0,{p:h,ink:.008});p(box(.1,.02,.04),'#d8b040',0,.08,0,{p:h,ink:.006});for(let i=0;i<6;i++)p(box(.03,.1,.012),'#c8ccd4',0,.14+i*.09,.012*i*i*.35,{p:h,ink:.006}).rotation.x=-.06*i})) },62),
+ // GRUK (jefe orco): casco de cráneo de jabalí con colmillos, manto de pelo, estandarte de guerra a la espalda, trofeos en el cinto y gran hacha de doble filo
+ b0:unit('b0',{eye:'#ffcc30',robe:'#2f5a2a',trim:'#1a1a14',belt:'#d8a24a',skin:'#3f7a38',sleeve:'#3f7a38',w:1.35,chestW:1.12,waist:.82,armW:1.4,legW:1.22,stance:1.15,plate:'#6a6e76',pauld:'#6a6e76',spikes:3,spikeC:'#d8d0b8',pants:'#3a2e22',boot:'#2a2218',brow:'#0c0c08',
+  top:mix(ears('#3f7a38',.1),(F,head,part)=>{part(new THREE.SphereGeometry(.235,12,8,0,6.3,0,1.5).scale(1,1.1,1.2),'#d8d0b8',0,.07,.0,{p:head,ink:.014});[-1,1].forEach(q=>{part(sph(.04,1,1,.6,6),'#0c0806',q*.09,.07,.215,{p:head,ink:0});part(cone(.045,.22,6),'#efe6cc',q*.1,-.1,.24,{p:head,ink:.01}).rotation.set(-.5,0,-q*.4);part(cone(.04,.2,6),'#8a8068',q*.22,.2,0,{p:head,ink:.008}).rotation.z=-q*.9})}),
+  acc:mix((F,g,part)=>{part(new THREE.TorusGeometry(.24,.09,5,12).rotateX(Math.PI/2),'#4a3a2a',0,.86,0,{p:g,ink:.014});part(cyl(.022,.022,1.5,5),'#4a3426',-.12,.62,-.22,{p:g,ink:.01});const fl=flap(F,g,part,.42,.55,'#7a1c14',-.12,1.15,-.22,{ink:.012,dir:-1});[-.1,0,.1].forEach(x=>part(sph(.05,1,1.1,.9,6),'#efe8d0',x,.44,.21,{p:g,ink:.006}))},(F)=>F.hold(0,-.9,(F2,h,p)=>{p(cyl(.03,.034,1.05,6),'#5a3e2a',0,.4,0,{p:h,ink:.014});[-1,1].forEach(q=>{p(box(.03,.3,.24),'#b8bcc6',0,.88+q*.0,q*.15,{p:h,ink:.014});p(cone(.06,.1,4),'#c8ccd4',0,.88,q*.3,{p:h,ink:.006}).rotation.x=q*Math.PI/2})})) },77)
+});
+const kris=(F,h,p)=>{p(cyl(.015,.015,.1,5),'#2a1a12',0,0,0,{p:h,ink:.008});p(box(.08,.018,.03),'#8a1c22',0,.06,0,{p:h,ink:.005});for(let i=0;i<6;i++)p(box(.03,.07,.01),'#c8ccd4',(i%2?.012:-.012),.1+i*.06,0,{p:h,ink:.004})};   /* kris: hoja ondulada de zigzag (los asesinos) */
+// SLIME: gelatina verde con brillo, bulto superior, gotas en la base, ojos brillantes y boca; un hueso tragado asoma. Reutiliza solo el ESQUELETO de animQuad (patas vacías).
+PRA.slime=function(){const k=U,P=new Proto(),root=P.bone('root',null),body=P.bone('body',root,0,4.2*k,0);['FL','FR','BL','BR'].forEach(n=>P.bone('leg'+n,body,0,0,0));
+ P.part(sph(1,7.4*k,5.2*k,7.4*k,16),'#6fd86a',0,0,0,{p:body,ink:.02});P.part(sph(1,5.2*k,3.2*k,5.2*k,12),'#8ef08a',0,2.4*k,-.6*k,{p:body,ink:0});P.part(sph(1.4*k,1,.7,1,8),'#d8ffd0',-2.4*k,3.8*k,1.6*k,{p:body,ink:0});
+ [[-6,-3.6,2.4],[5.6,-4,1.6],[1,-4.4,-6.2],[-4.8,-4,-4]].forEach(([x,y,z],i)=>P.part(sph((1.5+(i%2)*.8)*k,1,.6,1,7),'#58c458',x*k,y*k,z*k,{p:body,ink:.008}));
+ P.part(box(2.6*k,.7*k,1.6*k),'#efe8d0',3.4*k,-.4*k,-1.8*k,{p:body,ink:0,rot:[0,.5,.4]});P.part(sph(.9*k,1,.8,.8,6),'#efe8d0',4.8*k,.6*k,-1.2*k,{p:body,ink:0});
+ const head=P.bone('head',body,0,.6*k,6.4*k);[-1,1].forEach(q=>{P.part(sph(1.5*k,1,1.1,.5,9),'#ffffff',q*2.7*k,1.6*k,.6*k,{p:head,ink:.008});P.part(sph(.75*k,1,1,.5,7),'#14301c',q*2.7*k,1.4*k,1.2*k,{p:head,ink:0})});P.eyePos=[2.7*k,1.6*k,1.2*k,.75*k];
+ P.part(box(3.4*k,.45*k,.5*k),'#1e5a2c',0,-1.4*k,.5*k,{p:head,ink:0});P.bone('tail',body,0,0,-7*k);
+ return finQ(P,{h:20,rad:11,cyc:14,eye:'#c8ffc0'})}
 const TPL=new Map();
 function tplFor(key){if(TPL.has(key))return TPL.get(key);let t=null;try{
   if(key==='ru')t=buildHuman(RU);else if(key.startsWith('v:')&&typeof NPCLK!=='undefined'&&NPCLK[key]){t=buildHuman(vdef(key));t.nowave=!NPCLK[key].wave}else if(NPC_DEF[key]){t=buildHuman(NPC_DEF[key]);t.nowave=NPC_DEF[key].wave===false}else if(HUM[key]){const d=HUM[key];const sp=Object.assign({},d.spec);t=buildHuman({id:key,H:d.H,spec:Object.assign(sp,{top:d.spec.top,acc:d.spec.acc})})}
-  else if(QUADS[key])t=buildQuad(key);else if(key==='gallina')t=buildBird();else if(key==='rana')t=buildFrog()}catch(e){console.warn('[R3D actors]',key,e);t=null}
+  else if(PRA[key])t=PRA[key]();else if(QUADS[key])t=buildQuad(key);else if(key==='gallina')t=buildBird();else if(key==='rana')t=buildFrog()}catch(e){console.warn('[R3D actors]',key,e);t=null}
  if(t)console.info('[R3D actors]',key,t.kind,t.tris+' tris');TPL.set(key,t);return t}
-export const ACTOR_IDS=[...Object.keys(HUM),...Object.keys(QUADS),'gallina','rana'];
+export const ACTOR_IDS=[...Object.keys(HUM),...Object.keys(QUADS),...Object.keys(PRA),'gallina','rana'];
 
 // ═══════════════════════════════ ACTOR (instancia) ═══════════════════════════════
 const AX=new THREE.Vector3(1,0,0);
@@ -365,9 +516,9 @@ export class Actor{
 }
 class Euler0{constructor(){this.e=new THREE.Euler(0,0,0,'YXZ');this._q=new QT()}set(x,y,z){this.e.set(x,y,z,'YXZ');this._q.setFromEuler(this.e)}q(){return this._q}}
 
-const JOBF={hammer:5.2,chop:2.4,hoe:2.2,fish:1,knead:3,sweep:2.4,lute:2.4,read:1,carry:1,sweat:2,pose:1};   // rad/s de cada oficio (ver animHuman)
+const JOBF={eat:2.2,drink:1.1,grind:4,sort:2.2,wipe:3,saw:5,sew:3.5,pray:1,hammer:5.2,chop:2.4,hoe:2.2,fish:1,knead:3,sweep:2.4,lute:2.4,read:1,carry:1,sweat:2,pose:1};   // rad/s de cada oficio (ver animHuman)
 // ── animación humanoide: andar por distancia, respiración, ataque (anticipación → golpe → recuperación), saludo (Ru) ──
-function animHuman(A,s){const {t,mv,at,wave,look,job}=s,ph=A.ph,sn=Math.sin(ph),cs=Math.cos(ph),a=mv,br=Math.sin(t*1.9+A.seed)*.5+.5;
+function animHuman(A,s){const {t,mv,at,wave,look,job,seat}=s,ph=A.ph,sn=Math.sin(ph),cs=Math.cos(ph),a=mv,br=Math.sin(t*1.9+A.seed)*.5+.5;
  const lean=A.tpl.lean||0;
  // piernas: oscilan en oposición; la rodilla se dobla cuando la pierna pasa hacia delante
  A.rot('legR',-sn*.62*a,0,0);A.rot('legL',sn*.62*a,0,0);A.rot('kneeR',Math.max(0,cs)*.9*a+.04,0,0);A.rot('kneeL',Math.max(0,-cs)*.9*a+.04,0,0);A.rot('ankR',-.2*Math.max(0,-sn)*a,0,0);A.rot('ankL',-.2*Math.max(0,sn)*a,0,0);
@@ -390,7 +541,20 @@ function animHuman(A,s){const {t,mv,at,wave,look,job}=s,ph=A.ph,sn=Math.sin(ph),
   else if(job==='read'){ar=-.9;al=-.9;er=.9;el=.9;cx+=.12;hx=.25}
   else if(job==='carry'){ar=-.8;al=-.8;er=1.0;el=1.0}
   else if(job==='sweat'){ar=-.5+Math.sin(ph2)*.1;er=.2}
-  else if(job==='pose'){ar=-.25;al=-.25;er=.15;el=.15}}
+  else if(job==='pose'){ar=-.25;al=-.25;er=.15;el=.15}
+  /* PNJ DE INTERIOR (28 oct 2026): comer, beber, moler hierbas, clasificar, secar jarras, serrar, coser y rezar. `SIT`/`KNEEL` doblan caderas y rodillas (sentado en silla o de rodillas). */
+  else if(job==='eat'||job==='drink'||job==='grind'||job==='sort'||job==='wipe'||job==='saw'||job==='sew'||job==='pray'){
+   const SIT=d=>{A.b.pelvis.position.y=A.restP.pelvis.y-d;A.rot('legR',-1.5,0,0);A.rot('legL',-1.5,0,0);A.rot('kneeR',1.5,0,0);A.rot('kneeL',1.5,0,0);A.rot('ankR',.1,0,0);A.rot('ankL',.1,0,0)},
+    KNEEL=()=>{A.b.pelvis.position.y=A.restP.pelvis.y-.3;A.rot('legR',-.15,0,0);A.rot('legL',-.15,0,0);A.rot('kneeR',2.3,0,0);A.rot('kneeL',2.3,0,0);A.rot('ankR',.5,0,0);A.rot('ankL',.5,0,0)};
+   if(job==='eat'){const u=(Math.sin(ph2)+1)/2;SIT(.1);ar=-.9-u*1.15;er=1+u*.55;al=-.85;el=1.05;cx+=.1;hx=.1*(1-u)-.05}
+   else if(job==='drink'){const w=Math.pow(Math.max(0,Math.sin(ph2)),.6);SIT(.1);ar=-.55-w*1.9;er=.6+w*.9;al=-.3;el=.3;hx=-.22*w;cx-=.04*w}
+   else if(job==='grind'){ar=-1+Math.sin(ph2)*.2;arz=Math.cos(ph2)*.25;er=.95;al=-1;el=1;cx+=.16;cy=Math.sin(ph2)*.1;hx=.32}
+   else if(job==='sort'){ar=-1.05+Math.sin(ph2)*.14;al=-1+Math.cos(ph2*1.3)*.14;er=.8;el=.8;cx+=.06;hx=.12;cy=Math.sin(ph2*.5)*.15}
+   else if(job==='wipe'){ar=-1.05+Math.sin(ph2)*.28;arz=Math.cos(ph2)*.2;er=.85;al=-.95;el=1;cx+=.05;hx=.1;cy=Math.sin(t*.5+A.seed)*.2}
+   else if(job==='saw'){const s2=Math.sin(ph2);ar=-1+s2*.45;er=.5+s2*.35;al=-.7;el=.6;cx+=.22+s2*.06;hx=.28}
+   else if(job==='sew'){ar=-1+Math.sin(ph2)*.18;al=-.95;er=.95+Math.sin(ph2*.5)*.1;el=.95;cx+=.2;hx=.34}
+   else if(job==='pray'){KNEEL();ar=-1.05;al=-1.05;er=1.45;el=1.45;arz=-.1;cx+=.18+Math.sin(t*.5+A.seed)*.02;hx=.38}}}
+ if(seat&&job){A.b.pelvis.position.y=A.restP.pelvis.y-.1;A.rot('legR',-1.5,0,0);A.rot('legL',-1.5,0,0);A.rot('kneeR',1.5,0,0);A.rot('kneeL',1.5,0,0);A.rot('ankR',.1,0,0);A.rot('ankL',.1,0,0)}
  if(wave>0){ar=-2.7+Math.sin(t*9)*.25;arz=-.5;er=.5+Math.sin(t*9)*.3}
  A.rot('chest',cx,cy,0);A.rot('armR',ar,0,arz);A.rot('armL',al,0,0);A.rot('elbR',-er,0,0);A.rot('elbL',-el,0,0);
  // cabeza: sigue al objetivo (look = giro relativo al cuerpo, rad) y respira

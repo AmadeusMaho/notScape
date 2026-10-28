@@ -15,7 +15,17 @@ const POIGEN=(()=>{
    dec:[['columna',-50,-20,{broken:1},[7,7]],['columna',46,-26,null,[7,7]],['columna',-24,44,{broken:1},[7,7]],['muroRuina',10,60,{len:40},[29,4]],['lapida',60,36,null,[6,3]],['huesos',-70,40]],
    mobs:t=>[[0,-60],[40,50]].slice(0,t)},
   cofre:{w:.4,r:90,n:()=>'Cofre escondido',
-   dec:[['piedra',-30,10,null,[7,6]],['piedra',34,-8,null,[7,6]]],mobs:()=>[]}};
+   dec:[['piedra',-30,10,null,[7,6]],['piedra',34,-8,null,[7,6]]],mobs:()=>[]},
+  // E3 (27 oct 2026): MINA abandonada = boca de roca con puntales, carreta y cofre del capataz; los guardias son mineros/humanoides del bioma y junto a la boca hay una VETA extra de su propio bioma (`vein`).
+  mina:{w:.18,r:170,vein:1,n:t=>t>1?'Mina profunda':'Mina abandonada',
+   dec:[['piedra',-44,-30,null,[7,6]],['piedra',-8,-46,null,[7,6]],['piedra',34,-30,null,[7,6]],['tronco',-30,-4,{len:30}],['tronco',22,-4,{len:30}],['carreta',-70,40,null,[16,10]],['barril',60,34],['caja',44,52],['hoguera',-10,86]],
+   mobs:t=>[[-50,60],[60,70],[0,-70],[10,110]].slice(0,2+t)},
+  // E3 (27 oct 2026): CUEVA REAL = la BOCA (prop `bocaCueva`: farallón con arco, 3,6×2,4 tiles, hueco hacia el sur) con rocas, setas, huesos y charco + una puerta en el hueco; dentro hay una cueva generada (src/cavegen.js, src/caves.js) con menas del bioma, a veces criaturas y cofre.
+  cueva:{w:.2,r:150,cave:1,n:()=>'Cueva',
+   dec:[['bocaCueva',0,-42,null,[46,18]],['roca',-92,-8,null,[10,8]],['roca',88,-12,null,[10,8]],['piedra',-70,30,null,[7,6]],['piedra',66,34,null,[7,6]],['seta',-34,44],['seta',36,42],['charco',0,82,{col:'#3a3a2a',water:'#5a6a60'}],['huesos',-48,74]],mobs:()=>[]},
+  // E3: ATALAYA = HITO visible desde lejos (columnas, estandarte y fuego). Sin guardias ni cofre: al llegar se descubre y REVELA el mapa de alrededor (E4: orientarse).
+  atalaya:{w:.14,r:120,hito:1,n:()=>'Atalaya antigua',
+   dec:[['columna',-26,-12,null,[7,7]],['columna',26,-12,null,[7,7]],['columna',0,-34,{broken:1},[7,7]],['estandarte',0,-6,{col:'#6a4a3a'}],['hoguera',0,40],['piedra',-50,30,null,[7,6]],['piedra',48,26,null,[7,6]]],mobs:()=>[]}};
  const KINDS=Object.keys(TPL),WSUM=KINDS.reduce((a,k)=>a+TPL[k].w,0);
  const pick=r=>{let a=r*WSUM;for(const k of KINDS){a-=TPL[k].w;if(a<=0)return k}return KINDS[0]};
  const stats={por:{},tot:0,rech:0};
@@ -27,7 +37,7 @@ const POIGEN=(()=>{
    const tx=Math.floor(wx/T),ty=Math.floor(wy/T);return TER.isLand(TER.tileH(tx,ty))&&!TER.cliffNear(wx,wy,r*.5)&&TER.sandAt(tx,ty)<.35&&!TER.seaAt(tx,ty)&&!TER.mtnAt(wx,wy)};
   BIOMES.list.forEach((B,k)=>{
    if(B===BIOMES.zone||B.noPoi||!B.village||!B.w||!B.h)return;
-   const pois=B.pois||(B.pois=[]),props=B.village.props,ids=ks=>[...new Set(ks.flatMap(q=>((B.spots||{})[q]||{mobs:[]}).mobs.map(m=>m[0])).filter(id=>!/^[kb]\d/.test(id)))],all=ids(Object.keys(B.spots||{})),POOL={camp:ids(['camp','orc','cap']),ruina:ids(['pack','ing'])},L=B.lay||{};
+   const pois=B.pois||(B.pois=[]),props=B.village.props,ids=ks=>[...new Set(ks.flatMap(q=>((B.spots||{})[q]||{mobs:[]}).mobs.map(m=>m[0])).filter(id=>!/^[kb]\d/.test(id)))],all=ids(Object.keys(B.spots||{})),POOL={camp:ids(['camp','orc','cap']),mina:ids(['camp','orc','cap']),cueva:ids(['pack','ing']),ruina:ids(['pack','ing'])},L=B.lay||{};
    const rects=[];Object.values(B.spots||{}).forEach(s=>rects.push([s.z[0]-90,s.z[1]+90,s.z[2]-90,s.z[3]+90]));
    ['wc','mi','fi'].forEach(t=>(L[t]||[]).forEach(it=>{rects.push([it.z[0]-60,it.z[1]+60,it.z[2]-60,it.z[3]+60])}));
    const sf=B.village.safe||[B.w/2,B.h/2,700,600],core=[B.cen||[B.w/2,B.h/2],B.spawn||[B.w/2,B.h/2],B.bossPos||[B.w/2,B.h/2]];
@@ -39,8 +49,11 @@ const POIGEN=(()=>{
     const kind=pick(H(k*131+i,j,1)),tp=TPL[kind];let put=false;
     for(let a=0;a<6&&!put;a++){const lx=gx+(i+.15+H(k*131+i,j,10+a)*.7)*cw,ly=gy+(j+.15+H(k*131+i,j,30+a)*.7)*ch;
      if(bad(lx,ly,tp.r)||!ok(B.ox+lx,B.oy+ly,Math.min(tp.r,110),k))continue;
-     const dv=Math.hypot(lx-sf[0],ly-sf[1]),tier=dv>cs*1.7?2:1,id='g'+i+'_'+j,p={id,k:kind==='ruina'?'cofre':kind,n:tp.n(tier),x:Math.round(lx),y:Math.round(ly),r:tp.r,tier};
+     const dv=Math.hypot(lx-sf[0],ly-sf[1]),tier=dv>cs*1.7?2:1,id='g'+i+'_'+j,p={id,k:kind==='ruina'||kind==='mina'?'cofre':kind==='atalaya'?'hito':kind,n:tp.n(tier),x:Math.round(lx),y:Math.round(ly),r:tp.r,tier};
      const pool=(POOL[kind]&&POOL[kind].length?POOL[kind]:all);if(tp.mobs&&pool.length){const sl=tp.mobs(tier);if(sl.length)p.mobs=sl.map(([dx,dy],m)=>[pool[Math.floor(H(k*131+i,j,50+m)*pool.length)],dx,dy])}   // campamentos: guardias humanoides; ruinas: fieras
+     if(tp.cave){const rr=H(k*131+i,j,90),ty=rr<.35?'tranquila':rr<.8||tier<2?'guarida':'profunda',small=k===0,ch=small?(ty==='profunda'?3:2):(ty==='profunda'?5:3+Math.floor(H(k*131+i,j,91)*2)),mi=((B.res||{}).mi||[]).flat().map(a=>a[0]);   // Pradera: cuevas pequeñas (2–3 cámaras, 38×32); el resto 3–5 cámaras
+      p.cave={seed:1000+k*977+i*31+j*7,type:ty,ch,W:small?38:ty==='profunda'?64:56,H:small?32:ty==='profunda'?52:46,r0:small?5.2:6.5,ores:[...new Set(mi)],mobs:ids(['pack','ing','camp','orc','cap'])};p.n=CAVEGEN.TYPES[ty].nm;stats.cuevas=(stats.cuevas||0)+1}
+     if(tp.vein){const mt=((B.res||{}).mi||[]),lt=L.mi||[];if(mt.length&&lt.length){const q=Math.floor(H(k*131+i,j,70)*mt.length),rc=[p.x-110,p.x+110,p.y+10,p.y+190];if(lt[q]){B.res.mi.push(mt[q].map(([a,m])=>[a,Math.max(2,Math.min(6,Math.round(m*.5)))]));L.mi.push({r:[rc],z:rc});stats.vetas=(stats.vetas||0)+1}}}   // veta del propio bioma pegada a la boca (misma plantilla que sus vetas; game.js la siembra en res.mi/lay.mi)
      pois.push(p);tp.dec.forEach(([nm,dx,dy,o,fp])=>props.push(P(nm,p.x+dx,p.y+dy,o||null,fp?{fp}:undefined)));put=true;n++}
     if(!put)stats.rech++}
    stats.por[B.n||k]=n;stats.tot+=n});

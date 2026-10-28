@@ -33,7 +33,11 @@
   // 4 · props: se buscan por nombre y posición (relativa a la plaza, tras ×1,5); si no se encuentran se avisa (no se rompe nada)
   for(const [n,a,b,o] of (spec.mv||[])){const p=find(n,a[0],a[1],44);if(!p){warn.push(n+' @'+a+' no encontrado');continue}
    p.x=Math.round(C[0]+b[0]);p.y=Math.round(C[1]+b[1]);p._vb=1;
-   if(o&&o.rot!=null){const q=Object.assign({},p.o||{});if(o.rot)q.rot=1;else delete q.rot;p.o=Object.keys(q).length?q:null}}
+   if(o&&o.rot!=null){const q=Object.assign({},p.o||{});if(o.rot)q.rot=1;else delete q.rot;p.o=Object.keys(q).length?q:null}
+   if(o&&o.o)p.o=Object.assign({},p.o||{},o.o);if(o&&o.room)p.room=o.room}   // o.o = opciones del modelo (color de tejado…) · o.room = casa de una instalación (interiors.js)
+  // 5 · quitar props (spec.del: [[nombre,[x,y]]]) y añadir los nuevos (spec.add: [[nombre,[x,y],opciones|null,[fpx,fpy]|null]]; 28 oct 2026, Botica)
+  for(const [n,a] of (spec.del||[])){const p=find(n,a[0],a[1],44);if(!p){warn.push(n+' @'+a+' no encontrado (del)');continue}V.props.splice(V.props.indexOf(p),1)}
+  for(const [n,a,o,fp] of (spec.add||[])){const q={n,x:Math.round(C[0]+a[0]),y:Math.round(C[1]+a[1])};if(o)q.o=o;if(fp)q.fp=fp;V.props.push(q)}
   V.props.forEach(p=>{delete p._vb});
   VB.done.push(k);VB.warn.push(...warn.map(w=>'['+k+'] '+w));return warn}
 
@@ -48,7 +52,10 @@
    {p:[[0,165],[0,520]],w:30},                 // avenida sur (hasta el camino del rancho)
    {p:[[-610,-330],[610,-330]],w:24},          // calle de los oficios (radio 24 = 1,5 tiles)
    {p:[[-610,470],[230,470]],w:24}],           // calle sur (taberna, iglesia, vecinos)
-  dirt:{1:[150,-450,140],3:[-420,-430,115],4:[330,-430,115]},   // patios de herrería, taller y escritorio
+  dirt:{1:[150,-450,140],3:[-420,-430,115],4:[330,-430,115]},   // patios de herrería, taller y BOTICA (antes escritorio del escriba)
+  // BOTICA (28 oct 2026): la casa de Alquimia (la del este de la calle de los oficios, tejado verde musgo). Fuera: caldero grande de alquimista, hierbas colgadas y mesa de frascos; el PNJ Nerys (npcs.js) se coloca junto a la puerta.
+  del:[['atril',[186,-282]],['estanteria',[234,-282]]],
+  add:[['calderoAlq',[408,-388],null,[12,10]],['hierbasColgadas',[242,-396],null,[19,5]],['mesaAlq',[452,-424],null,[14,6]],['letreroAlq',[386,-362],null,[6,4]]],
   st:{bank:[-232,-150],shop:[262,-150],furnace:[110,-470],anvil:[70,-450],bench:[-420,-450],altar:[330,-450]},
   mv:[
    // FILA NORTE DE LA CALLE MAYOR (puertas al sur, a la plaza y a la calle mayor): banco y tienda a los lados de la plaza, vecinos hacia fuera
@@ -58,7 +65,7 @@
    // CALLE DE LOS OFICIOS (puertas al sur, a la calle): taller · herrería (patio con carbón y brasero) · escritorio del escriba; cabañas-almacén detrás
    ['casa',[-438,-354],[-420,-410],{rot:0}],['pilaTroncos',[-505,-294],[-545,-420]],['tablones',[-360,-412],[-330,-440]],
    ['casa',[90,-606],[110,-430],{rot:0}],['carbon',[176,-589],[215,-430]],['brasero',[173,-652],[215,-470]],['barril',[-7,-630],[40,-500]],
-   ['casa',[414,-378],[330,-410],{rot:0}],['atril',[186,-282],[410,-380]],['estanteria',[234,-282],[430,-455]],
+   ['casa',[414,-378],[330,-410],{rot:0,room:'botica',o:{roof:'#3f8a56',vivid:1}}],
    ['cabana',[-198,-582],[-250,-545],{rot:0}],['cabana',[-150,-414],[-80,-545],{rot:0}],['banca',[54,-414],[80,-285]],
    // CALLE SUR (puertas al sur, a la calle): taberna al oeste de la avenida (puerta al este), iglesia y casas
    ['taberna',[-174,66],[-110,300]],['iglesia',[-219,260],[-400,400],{rot:0}],

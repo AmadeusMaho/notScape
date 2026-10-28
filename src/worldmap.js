@@ -35,6 +35,8 @@ const WMAP=(()=>{
  // llamado por fotograma/zona: revela las celdas a ≤ RV celdas del héroe (≈ 53 tiles = 1 700 px: más que la ventana del minimapa)
  function tick(x,y){if(!fog)return;const cx=Math.floor(x/T/CELL),cy=Math.floor(y/T/CELL),id=cy*CX+cx;if(id===last)return;last=id;let n=0;
   for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++)if(dx*dx+dy*dy<=RV*RV&&rv(cx+dx,cy+dy))n++;if(n)save()}
+ // E3/E4: un hito (atalaya) revela de golpe un círculo de `r` celdas alrededor
+ function revealAt(x,y,r){if(!fog)return;const cx=Math.floor(x/T/CELL),cy=Math.floor(y/T/CELL);let n=0;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++)if(dx*dx+dy*dy<=r*r&&rv(cx+dx,cy+dy))n++;if(n)save()}
  const revealed=(x,y)=>{if(!fog)return false;const cx=Math.floor(x/T/CELL),cy=Math.floor(y/T/CELL);return cx>=0&&cy>=0&&cx<CX&&cy<CY&&!!fog[cy*CX+cx]};
  function trees(){treeB=new Map();E.N().forEach(e=>{if(PAINTED?e.t!=='wc':!e.fix)return;const cx=Math.floor(e.x/T/CELL),cy=Math.floor(e.y/T/CELL),k=cy*CX+cx;let a=treeB.get(k);if(!a)treeB.set(k,a=[]);a.push(e.x,e.y)})}
  // -------- pintado de una celda (terreno + árboles + caminos + aldea) --------
@@ -46,6 +48,7 @@ const WMAP=(()=>{
  const hsh=(x,y,s)=>{let h=Math.imul(x|0,374761393)+Math.imul(y|0,668265263)+Math.imul(s|0,1442695041);h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296};
  const mx=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t],pk=(r,g,b)=>(255<<24|(b<0?0:b>255?255:b|0)<<16|(g<0?0:g>255?255:g|0)<<8|(r<0?0:r>255?255:r|0))>>>0;
  function paintCellP(i,q,PX,ox,oy,det){const cx=i%CX,cy=(i/CX)|0,tx0=cx*CELL,ty0=cy*CELL,tx1=Math.min(NX,tx0+CELL),ty1=Math.min(NY,ty0+CELL),TER=E.TER,w=tx1-tx0,h=ty1-ty0,gw=w*PX,gh=h*PX,cD=TER.coastD;
+  if(!(gw>0&&gh>0))return;   /* 28 oct 2026: celda fuera del mundo (el héroe dentro de una sala/cueva) → antes lanzaba «createImageData … not of type long» */
   let bI,b32;if(det){bI=q.createImageData(gw,gh);b32=new Uint32Array(bI.data.buffer)}else{if(!cbuf||cbuf.width!==gw||cbuf.height!==gh){cbuf=q.createImageData(gw,gh);cb32=new Uint32Array(cbuf.data.buffer)}bI=cbuf;b32=cb32}
   // clase de cada tile de la celda y su vecindad (1 tile de margen): 0 vacío · 1 mar · 2 agua interior (río/lago) · 3 tierra · 4 montaña
   const kls=new Uint8Array((w+2)*(h+2)),hh=new Float32Array((w+2)*(h+2));
@@ -95,7 +98,7 @@ const WMAP=(()=>{
  function paintCell(i){if(PAINTED)return paintCellP(i,q,PX,0,0,0);const cx=i%CX,cy=(i/CX)|0,tx0=cx*CELL,ty0=cy*CELL,tx1=Math.min(NX,tx0+CELL),ty1=Math.min(NY,ty0+CELL),TER=E.TER,mix=E.mix,BI=E.BI;
   // FLUIDEZ (26 oct 2026): el suelo de la celda va a un BÚFER DE PÍXELES y se sube con un putImageData (antes 256 fillRect con un fillStyle distinto cada uno ≈ 9 ms por celda,
   // y al explorar se pintaba una celda en CADA fotograma = tirones al caminar). Mismos colores; la conversión hex→píxel se cachea.
-  const gw=(tx1-tx0)*PX,gh=(ty1-ty0)*PX;if(!cbuf||cbuf.width!==gw||cbuf.height!==gh){cbuf=q.createImageData(gw,gh);cb32=new Uint32Array(cbuf.data.buffer)}
+  const gw=(tx1-tx0)*PX,gh=(ty1-ty0)*PX;if(!(gw>0&&gh>0))return;if(!cbuf||cbuf.width!==gw||cbuf.height!==gh){cbuf=q.createImageData(gw,gh);cb32=new Uint32Array(cbuf.data.buffer)}
   q.save();q.beginPath();q.rect(tx0*PX,ty0*PX,(tx1-tx0)*PX,(ty1-ty0)*PX);q.clip();
   let lk=-2,Pk=null;
   for(let ty=ty0;ty<ty1;ty++)for(let tx=tx0;tx<tx1;tx++){const wx=(tx+.5)*T,wy=(ty+.5)*T,k=E.biomeAt(wx,wy);let col;
@@ -185,4 +188,4 @@ const WMAP=(()=>{
  const stats=()=>({cells:CX*CY,revealed:fog?fog.reduce((a,b)=>a+b,0):0,queued:queue.length,painted,paintMs:Math.round(paintMs),cv:cv?[cv.width,cv.height]:null,fog:lastEnc.length});
  function revealAll(){for(let i=0;i<fog.length;i++)if(!fog[i]){fog[i]=1;queue.push(i)}save()}
  function reset(){fog.fill(0);pdone.fill(0);DCACHE.clear();queue=[];q.fillStyle=FOGC;q.fillRect(0,0,cv.width,cv.height);last=-1;lastEnc='';delete E.S().fog}
- return{init,tick,paint,local,big,cartouche,FB,get painted(){return PAINTED},revealed,stats,revealAll,reset,get ready(){return!!fog},get canvas(){return cv},CELL,get PX(){return PX},LOCAL_R}})();
+ return{init,tick,paint,local,big,cartouche,FB,get painted(){return PAINTED},revealed,stats,revealAll,revealAt,reset,get ready(){return!!fog},get canvas(){return cv},CELL,get PX(){return PX},LOCAL_R}})();

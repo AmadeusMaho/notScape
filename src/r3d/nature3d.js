@@ -113,7 +113,7 @@ export function stumpGeo(){const g=jit(new THREE.CylinderGeometry(.13,.18,.2,8).
 
 // ───────── capa de recursos 3D (árboles talables y menas) ─────────
 const CELL=24,NVAR=3,CS=256;
-const ORECOL=['#c8742a','#e8e8f8','#c0603a','#9a9aa2','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff','#e8c24a','#ff4a2a','#d8d0b8','#9a9aa2','#d4a468','#55525a','#f2ece2','#4a3a5a','#9aaaf0'];   // 12–18: piedras de Escultor (ESC-JOY)
+export const ORECOL=['#c8742a','#e8e8f8','#c0603a','#9a9aa2','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff','#e8c24a','#ff4a2a','#d8d0b8','#9a9aa2','#d4a468','#55525a','#f2ece2','#4a3a5a','#9aaaf0'];   // 12–18: piedras de Escultor (ESC-JOY)
 const GOLDTEX=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,246,200,1)');r.addColorStop(.25,'rgba(255,214,90,.7)');r.addColorStop(.6,'rgba(255,170,40,.22)');r.addColorStop(1,'rgba(255,150,20,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();   // CS: celda (px de mundo) del índice de recursos para update()
 // El Cielo (ISLA-4): todo lo que está en la columna de la zona (x ≥ BIOMES.zone.x0) usa ÁRBOLES DEL MUNDO (hojas azules) y menas en mármol claro
 const inZone=x=>{try{const z=BIOMES.zone;return !!z&&x>=z.x0}catch(e){return false}};
@@ -126,11 +126,11 @@ export class Resources{
  kindOf(e,dead){if(e.t==='wc'){let sp=TREES[e.i]||'roble';if(inZone(e.x))sp='mundo';let bk=0;try{bk=inZone(e.x)?9:Math.max(0,BIOMES.at(e.x,e.y))}catch(x){}return dead?'tocon':sp+'@'+bk+'#'+(Math.floor(hash(Math.round(e.x),Math.round(e.y),5)*NVAR))}
   if(e.t==='mi')return 'mena'+e.i+(inZone(e.x)?'z':'')+(dead?'d':'');if(e.t==='he')return 'hierba'+e.i+(dead?'d':'');return null}
  parts(kind){if(this.geo[kind])return this.geo[kind];let P=[];
-  if(kind==='tocon'){const g=stumpGeo();P=[{g,mat:toon('#4a3626',{moss:1,tex:'madera',texS:30}),ink:hull(g,.012,inkFor('#4a3626')).geometry,inkM:inkFor('#4a3626')}]}
+  if(kind==='tocon'){const g=stumpGeo();P=[{g,mat:toon('#4a3626',{moss:1,soft:1,tex:'madera',texS:12,texA:.7,texB:.2}),ink:hull(g,.012,inkFor('#4a3626')).geometry,inkM:inkFor('#4a3626')}]}
   else if(kind.startsWith('hierba')){const dead=kind.endsWith('d'),i=+kind.slice(6).replace('d',''),g=herbGeo(i,dead);P=[{g,mat:toon('#ffffff',{vc:1,soft:1}),ink:hull(g,.008).geometry,inkM:inkFor('#2a3a22')}]}
   else if(kind.startsWith('mena')){const i=+kind.slice(4).replace(/[dz]/g,''),dead=kind.endsWith('d'),zm=kind.includes('z'),MBA=['#8a5a3a','#9a9aa8','#6a4a3a','#3a3a40','#8a9aa8','#3a4a6a','#2a4a3a','#2a4a52','#5a3a2a','#3a3a5a','#6a5a3a','#2a1414','#b8b098','#6a6a72','#b08450','#2c2a30','#d8d2c6','#1e1626','#4a5280'],MOR=['#c8742a','#e8e8f8','#c0603a','#6a6a72','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff','#e8c24a','#ff4a2a','#d8d0b8','#8a8a92','#d4a468','#3c3a40','#ece6dc','#3a2a4a','#8a9ae0'];
-   const G=propGeo('mena',{base:zm?'#d6cfbb':MBA[i]||MBA[0],ore:MOR[i]||MOR[0],crystal:i>=5&&i!==10&&i<12||i===18,dead},null);if(G){const m=toon('#ffffff',{vc:1,moss:.7,emit:1,soft:1});P=[{g:G.g,mat:m,ink:hull(G.g,.013).geometry,inkM:inkFor('#5a5560')}]}}
-  else{const[spb,v]=kind.split('#'),[sp,bk]=spb.split('@'),T=treeGeo(sp,+v*17+3,+bk),wm=toon(T.tr,{moss:1,tex:'madera',texS:30,texB:.6});
+   const G=propGeo('mena',{base:zm?'#d6cfbb':MBA[i]||MBA[0],ore:MOR[i]||MOR[0],crystal:i>=5&&i!==10&&i<12||i===18,stone:i>=12&&i<=17,gold:i===10,i,dead},null);if(G){const m=toon('#ffffff',{vc:1,moss:.7,emit:1,soft:1});P=[{g:G.g,mat:m,ink:hull(G.g,.013).geometry,inkM:inkFor('#5a5560')}]}}
+  else{const[spb,v]=kind.split('#'),[sp,bk]=spb.split('@'),T=treeGeo(sp,+v*17+3,+bk),wm=toon(T.tr,{moss:1,soft:1,tex:'madera',texS:12,texA:.7,texB:.2});
    P=[{g:T.wood,mat:wm,ink:hull(T.wood,.016).geometry,inkM:inkFor(T.tr)},{g:T.cards,mat:folMat(T.tex),fol:T.tex}]}
   return this.geo[kind]=P}
  sign(){return N.length+'|'+(N[0]?N[0].x:0)+'|'+(N.length?N[N.length-1].x+N[N.length-1].y:0)}
@@ -144,6 +144,8 @@ export class Resources{
    [0,1].forEach(dead=>{const kind=this.kindOf(e,dead),ck=kind+'@'+cx+','+cy;let a=S.g.get(ck);if(!a)S.g.set(ck,a={kind,list:[],cx,cy});a.list.push(e)})}
   const ks=new Set();this.sd.forEach(S=>S.g.forEach(a=>ks.add(a.kind)));ks.forEach(k=>this.parts(k));   // geometrías/materiales de todas las especies ya en la carga (warmShaders las precompila)
   this.on=this.sd.size>0;this.sig2=this.sign();this.sq=[];console.info('[R3D recursos]',{sectores:this.sd.size,recursos:N.length})}
+ // CUEVAS: vacía por completo esta instancia (la de las menas de una cueva se reutiliza entre cuevas)
+ clear(){[this.grp,this.ogrp].forEach(g=>{while(g.children.length){const c=g.children.pop();c.dispose&&c.dispose()}g.userData.sec=null});this.idx.clear();this.sd=new Map();this.built=new Set();this.cells=new Map();this.pend=new Set();this.on=false;if(this.ck){this.scene.remove(this.ck.g);this.ck=null}this.gs.forEach(g=>this.scene.remove(g.sp));this.gs.clear()}
  // construye las mallas de UN sector
  mk(S){const o3=new THREE.Object3D();
   S.g.forEach(({kind,list,cx,cy})=>{const P=this.parts(kind);if(!P.length)return;const ms=[];

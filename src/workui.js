@@ -220,7 +220,7 @@ const WKUI=(()=>{
   // ¿este oficio usa la hoja de trabajo en esta estación? (lo llama el arranque de la acción en game.js)
   const on=(sk,stn)=>{const r=REG[sk];return !!r&&!!stn&&r.stn.includes(stn.id)};
   const reg=(sk,o)=>{REG[sk]=Object.assign({n:SK[sk]&&SK[sk][0]||sk,stn:[],clip:'sm'},o)};
-  reg('cr',{stn:['bench'],skin:'carp'});reg('pe',{stn:['curtidor'],skin:'tan'});reg('sa',{stn:['bench'],skin:'sew'});reg('es',{stn:['cantero'],skin:'stone'});reg('jo',{stn:['joyero'],skin:'jewel'});   // ESC-JOY (27 oct 2026)   // D6: Artesanía (Taller) y Peletería (Banco de curtidor); animación genérica 'sm' hasta que tengan clip propio
+  reg('cr',{stn:['bench'],skin:'carp'});reg('pe',{stn:['curtidor'],skin:'tan'});reg('sa',{stn:['bench'],skin:'sew'});reg('es',{stn:['cantero'],skin:'stone'});reg('jo',{stn:['joyero'],skin:'jewel'});reg('en',{stn:['altar'],skin:'arcane'});   // ESC-JOY (27 oct 2026)   // D6: Artesanía (Taller) y Peletería (Banco de curtidor); animación genérica 'sm' hasta que tengan clip propio
   // teclas 1..0 y Mayús+1..0 → casillas (en captura para que el '1' no seleccione habilidad de combate)
   addEventListener('keydown',ev=>{
     if(!A||!A.wk||ev.repeat||ev.ctrlKey||ev.metaKey||ev.altKey)return;

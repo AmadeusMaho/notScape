@@ -27,7 +27,8 @@ const FOOT=(()=>{
  // [forma ('c' círculo radio / 'r' rectángulo medio ancho×medio fondo), medidas en tiles SIN escalar] × PROP_K × 32 px; se miden de las huellas del módulo (CI_FOOT).
  const FLOORS={agora:['c',2.6],arenaG:['c',3.95],propileos:['r',3.96,3.23],temploG:['r',1.83,3.1],estatuaAlada:['r',.62,.62],estelaG:['r',.3,.2]};let FL=null,FLn=-1;
  // SUELO DE LOS INTERIORES: manda la cultura (tatami del Oriental, basalto del Volcán, troncos del Bosque y cañas del Pantano) y, en las demás, la sala (forja de piedra, banco y templo de mármol, el resto de madera que cruje).
- const INTFLOOR=I=>{const st=I.so&&I.so.style;return st==='shoji'?'rug':st==='basalto'?'stone':st==='troncos'||st==='cana'?'bluntwood':I.id==='herreria'?'concrete':I.id==='banco'||I.id==='temploG'?'marble':'squeakywood'};
+ /* 28 oct 2026: el sonido sigue al SUELO que dibuja interiors3d.js `floorOf`: tatami (Oriental) y basalto (Volcán) mandan por cultura; en las demás, banco = mármol, taller/herrería/templo = PIEDRA, y taberna/botica/tienda = madera (bluntwood en Bosque y Pantano). Si cambias el suelo de una sala, cambia aquí su superficie. */
+ const INTFLOOR=I=>{const st=I.so&&I.so.style,id=I.id;if(st==='shoji')return 'rug';if(st==='basalto')return 'stone';if(id==='banco')return 'marble';if(id==='taller'||id==='herreria'||id==='templo')return 'stone';return st==='troncos'||st==='cana'?'bluntwood':'squeakywood'};
  function floorAt(x,y){try{const L=PROPS.list;if(FLn!==L.length){FLn=L.length;FL=L.filter(e=>FLOORS[e.n]);}if(!FL||!FL.length)return null;const K=(window.PROP_K||1)*32;
   for(const e of FL){const f=FLOORS[e.n],dx=Math.abs(x-e.x),dy=Math.abs(y-e.y);if(f[0]==='c'?Math.hypot(dx,dy)<f[1]*K:dx<f[1]*K&&dy<f[2]*K)return 'marble'}}catch(err){}return null}
  function surface(x,y){try{

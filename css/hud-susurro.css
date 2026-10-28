@@ -1132,3 +1132,17 @@ body.hs-on #gfxadv .gfxpre button.bt{flex:1 1 45%;text-align:center;font-size:.7
 #alq .aq-rc{flex-direction:row;align-items:center;gap:6px;padding:3px 10px}#alq .aq-rc small{display:none}
 #alq .aq-go2{margin:4px 0 0 88px;font-size:12px;color:#c8b888;font-style:italic}#alq .aq-go2.on{color:#ffe58a;font-style:normal;animation:aqpulse 1.4s ease-in-out infinite}
 @keyframes aqpulse{0%,100%{opacity:.75}50%{opacity:1}}
+
+/* ═══ ENCANTAMIENTO (28 oct 2026): texto de efecto «¡Quemadura!» y estados sobre el nameplate ═══ */
+.ftx.ench{font-size:1.45em;font-weight:900;letter-spacing:.08em;-webkit-text-stroke:.04em #1a0c06;paint-order:stroke fill;text-shadow:0 0 .5em currentColor,0 0 1.2em currentColor,0 .08em 0 #000;animation:ftxe 1.5s cubic-bezier(.2,1.4,.4,1) forwards}
+@keyframes ftxe{0%{opacity:0;transform:translate(-50%,-60%) scale(.3) rotate(-8deg)}14%{opacity:1;transform:translate(-50%,-110%) scale(1.45) rotate(3deg)}28%{transform:translate(-50%,-120%) scale(1.1) rotate(-1deg)}75%{opacity:1;transform:translate(-50%,-190%) scale(1)}100%{opacity:0;transform:translate(-50%,-240%) scale(.9)}}
+.np .npd{position:absolute;left:50%;bottom:calc(100% + .25em);transform:translateX(-50%);display:flex;gap:.2em;pointer-events:none}
+.np .npd1{position:relative;width:1.7em;height:1.7em;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--c) calc(var(--p,1)*1turn),rgba(0,0,0,.65) 0);box-shadow:0 0 0 1px #000,0 0 .5em var(--c)}
+.np .npd1::before{content:"";position:absolute;inset:.18em;border-radius:50%;background:rgba(16,13,10,.92)}
+.np .npd1 i{position:relative;font-style:normal;font-size:.95em;line-height:1}
+.np .npd1 sup{position:absolute;right:-.15em;top:-.2em;font:700 .6em Cinzel,serif;color:#fff;text-shadow:0 0 2px #000,0 0 2px #000}
+.np .npd1 b{position:absolute;bottom:-.55em;left:50%;transform:translateX(-50%);font:700 .62em Cinzel,serif;color:#fff;text-shadow:0 0 3px #000,0 0 3px #000}
+
+/* ENCANT-ICONO (28 oct 2026): casilla de un arma ENCANTADA (`data-en`, sfx en game.js): el aura de fondo (::before, color --ac = color del efecto) late siempre, sea cual sea el grado */
+body.hs-on .slot[data-en]::before{opacity:.85!important;animation:slotbreath 2.6s ease-in-out infinite!important}
+body.hs-on .slot[data-en]{box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 0 1.1em color-mix(in srgb,var(--ac) 50%,transparent),0 0 .55em -.1em var(--ac)!important}

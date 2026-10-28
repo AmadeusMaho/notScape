@@ -14,7 +14,7 @@ import {B,hash,vary,mix,mul,col,dirty} from './propsdark3d.js';
 
 export const TOL=.22;
 // huella y altura de la malla ORG ACTUAL (medida con Chromium el 20 oct 2026 con `?props=old`, PROP_K aparte): [ancho x, alto y, fondo z]
-export const NAT_FOOT={roca:[.70,.27,.47],piedra:[1.06,.46,.78],arbusto:[.85,.56,.81],tocon:[.43,.25,.44],seta:[.65,.39,.54],huesos:[.74,.32,.6],charco:[1.13,.06,.75],carpa:[1.09,1.25,.98],tronco:[1.06,.33,.3],mena:[.79,.36,.59]};
+export const NAT_FOOT={roca:[.70,.27,.47],piedra:[1.06,.46,.78],arbusto:[.85,.56,.81],tocon:[.43,.25,.44],seta:[.65,.39,.54],huesos:[.74,.32,.6],charco:[1.13,.06,.75],carpa:[1.09,1.25,.98],tronco:[1.06,.33,.3],mena:[.79,.36,.59],bocaCueva:[2.48,1.44,1.9]};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 // cuadrilátero con 4 colores de vértice (B.quad repite los 3 primeros en el segundo triángulo)
 const Q=(b,p,q,r,s,cs,em,ctr)=>{b.tri(p,q,r,[cs[0],cs[1],cs[2]],em,ctr);b.tri(p,r,s,[cs[0],cs[2],cs[3]],em,ctr)};
@@ -198,12 +198,49 @@ const MODELS={
   const PR={rock:hx(base,.78),rockL:hx(base,1.18),moss:marble?0:.18,mossC:'#44583a',snow:0,ember:0};
   if(o.dead)return rockOf([[0,.07,0,.3,.13,.24,2,0,{cr:[.05,.07]}],[.26,.03,.1,.12,.06,.1,1],[-.2,.025,-.14,.09,.05,.08,1]],{...PR,rock:hx(base,.6),rockL:hx(base,.9)},sd);
   const G=[];
-  if(o.crystal){G.push(rockOf([[0,.07,0,.32,.14,.26,2,0,{cr:[.05,.06]}],[.27,.03,.1,.12,.07,.1,1]],PR,sd).geo());
-   const b=new B(sd+9),oc=C(ore);[[0,0,.62,.075],[-.12,.06,.4,.06],[.13,.04,.46,.065],[.04,-.12,.3,.05],[-.06,-.1,.26,.045]].forEach(([x,z,h,r],i)=>{const t=mix(oc,C('#ffffff'),.12+.1*hash(sd,i,4));b.cyl(x,.1,z,r,r*.2,h,6,mul(t,.85+.3*hash(sd,i,5)),{v:.05})});
+  const oc=C(ore),h=(k,m)=>hash(sd,k,m);
+  // pintor de mineral: tono del mineral, más claro en las caras que miran arriba (reflejo), oscuro abajo; `em` = brillo propio
+  const mp=(c,em,sd2)=>(ny,yn,i)=>{const k=.62+.5*yn+.25*clamp(ny,0,1),t=mul(vary(mix(c,C('#ffffff'),.1+.28*clamp(ny,0,1)*hash(sd2,i,3)),.1,sd2,i),k);return em?[t,em]:t};
+  if(o.crystal){   // GEMAS: gemas en bruto de contorno orgánico y caras facetadas irregulares (nada de prismas): matriz de roca + 7 nódulos alargados e inclinados que brillan
+   G.push(rockOf([[0,.07,0,.36,.15,.3,2,0,{cr:[.05,.06]}],[.3,.03,.12,.13,.07,.1,1],[-.28,.03,-.1,.1,.06,.09,1]],PR,sd).geo());
+   const b=new B(sd+9);[[0,.1,0,.1,.3,.09,0],[-.15,.07,.05,.075,.2,.07,.35],[.16,.07,.03,.08,.23,.075,-.3],[.04,.06,-.15,.065,.15,.06,.2],[-.08,.05,-.12,.055,.12,.05,-.25],[.2,.05,-.1,.05,.1,.05,.4],[-.2,.05,-.05,.05,.11,.05,-.4]].forEach(([x,y,z,rx,ry,rz,tl],i)=>{
+    lump(b,x,y+ry*.9,z,rx,ry,rz,sd+30+i,mp(oc,1.5+.5*(i%2),sd+i),{R:4,S:6,amp:.3,clip:.04});   // núcleo facetado
+    lump(b,x+tl*.1,y+ry*1.55,z,rx*.55,ry*.5,rz*.55,sd+50+i,mp(mix(oc,C('#ffffff'),.3),2.4,sd+i),{R:3,S:5,amp:.22})});   // punta más clara y luminosa
+   for(let i=0;i<4;i++){const a2=i*1.6+h(i,1)*2;lump(b,Math.cos(a2)*.3,.03,Math.sin(a2)*.3,.04,.045,.04,sd+70+i,mp(oc,1.1,sd+i),{R:3,S:5,amp:.3,clip:.0})}
    G.push(b.geo());return {geo:()=>cat(G,['position','normal','color','aEmit'])}}
-  const OP={rock:hx(ore,.72),rockL:hx(ore,1.2),moss:0,mossC:'#000000',snow:0,ember:0};
-  G.push(rockOf([[0,.12,0,.34,.23,.28,2,0,{st:[3,.55,.08]}],[.3,.04,.12,.14,.1,.12,1],[-.27,.03,-.13,.1,.07,.09,1]],PR,sd).geo());
-  G.push(rockOf([[-.13,.2,.09,.1,.075,.09,1],[.14,.17,-.09,.085,.07,.08,1],[.06,.27,.12,.065,.055,.065,1],[-.04,.1,-.2,.07,.055,.065,1]],OP,sd+17).geo());
+  if(o.stone){   // PIEDRAS DE ESCULTOR: peñasco grande de roca CLARA en estratos (lajas redondeadas apiladas, cada una de otro tono), una cara pulida y cascotes
+   const L=C(ore),l2=hx(ore,1.0),Pl={rock:hx(ore,.72),rockL:hx(ore,1.22),moss:0,mossC:'#000000',snow:0,ember:0},k=1.25;
+   G.push(rockOf([[0,.2*k,0,.4*k,.3*k,.36*k,3,0,{st:[6,.9,.1],cr:[.05,.08]}],[.06*k,.46*k,-.02,.27*k,.2*k,.25*k,2,0,{st:[4,.85,.08]}],[.3*k,.06,.14*k,.17*k,.11*k,.14*k,2,0,{st:[3,.8,.08]}],[-.32*k,.05,-.1*k,.13*k,.09*k,.11*k,1],[.0,.05,.34*k,.12*k,.07*k,.1*k,1]],Pl,sd).geo());
+   const b=new B(sd+4);lump(b,-.08*k,.26*k,.26*k,.17*k,.2*k,.07*k,sd+8,mp(mix(L,C('#ffffff'),.12),0,sd),{R:3,S:6,amp:.1});   // cara pulida, más clara
+   G.push(b.geo());return {geo:()=>cat(G,['position','normal','color','aEmit'])}}
+  // METALES: peñasco con un FILÓN: pepitas de contorno irregular y brillo metálico incrustadas en la cara delantera y ramales de veta; el oro brilla más
+  const OP={rock:hx(ore,.74),rockL:hx(ore,1.28),moss:0,mossC:'#000000',snow:0,ember:0},em=o.gold?1.6:.5;
+  G.push(rockOf([[0,.14,-.04,.4,.27,.32,2,0,{st:[3,.55,.08]}],[.32,.05,.1,.15,.11,.12,1],[-.3,.04,-.14,.11,.08,.1,1],[.04,.28,-.1,.2,.14,.17,1]],PR,sd).geo());
+  {const b=new B(sd+21);[[-.16,.2,.15,.13,.1,.11],[.15,.15,.14,.11,.09,.1],[.02,.3,.12,.09,.075,.085],[-.05,.1,.2,.1,.07,.09],[.22,.27,.05,.07,.06,.07],[-.24,.1,.02,.06,.05,.06]].forEach(([x,y,z,rx,ry,rz],i)=>
+    lump(b,x,y,z,rx,ry,rz,sd+17+i,mp(oc,em,sd+i),{R:3,S:6,amp:.28}));
+   for(let i=0;i<7;i++)lump(b,-.25+.5*hash(sd,i,31),.08+.26*hash(sd,i,32),.16+.08*hash(sd,i,33),.022,.018,.02,sd+90+i,mp(mix(oc,C('#ffffff'),.5),o.gold?3:1.2,sd+i),{R:2,S:5,amp:.2});   // destellos
+   [[-.16,.2,.2],[.15,.15,.2],[.02,.3,.18],[-.05,.1,.26]].forEach(([x,y,z],i)=>b.beam([x,y,z],[x+(i%2?.1:-.08),y+.06,z-.02],.014,mul(oc,1.1),{em}));
+   G.push(b.geo())}
+  return {geo:()=>cat(G,['position','normal','color','aEmit'])}},
+ // BOCA DE CUEVA (Lote CUEVAS-BOCA, 27 oct 2026; ≈2,5 × 1,45 × 1,9 → ×1,5 de PROP_K = 3,7 × 2,2 × 2,9 tiles ≈ 6 m de ancho): farallón de roca con un ARCO de dovelas y la entrada a oscuras, hacia +z (sur).
+ //  Macizo trasero + dos jambas + 7 dovelas + tapón oscuro recesado dentro del hueco (el hueco libre mide ≈ 0,86 × 0,98 → 1,3 × 1,5 tiles, más que el héroe) + dientes de estalactita bajo el arco.
+ //  Misma técnica y paleta de bioma que `roca` (se dibuja con `matRock`: props3d.js lo cuenta como roca). La mena y la veta de la cueva no se ven aquí: dentro es otra sala (cave3d.js).
+ bocaCueva(o){const P=PB(o),sd=701+(o.bk|0)*13,Z=.43,G=[],hx=(c,k)=>'#'+C(c).multiplyScalar(k).getHexString();
+  const RP={rock:P.rock,rockL:P.rockL,moss:Math.max(.3,P.moss),mossC:P.mossC,snow:P.snow,ember:0};
+  const zs=a=>a.map(q=>{const r=q.slice();r[2]+=Z;return r});
+  G.push(rockOf(zs([[0,.62,-.74,1.1,.8,.64,3],[-.86,.34,-.3,.38,.4,.44,2],[.86,.32,-.28,.4,.38,.44,2]]),RP,sd).geo());   // macizo y contrafuertes
+  G.push(rockOf(zs([[-.78,.52,.12,.37,.6,.46,2],[.78,.5,.14,.37,.56,.44,2]]),RP,sd+5).geo());                              // jambas
+  const arc=[];for(let i=0;i<7;i++){const a=Math.PI*i/6,x=Math.cos(a)*.6,y=.55+Math.sin(a)*.6;arc.push([x,y,.13,.17,.17,.42,1,0,{}])}
+  G.push(rockOf(zs(arc),{...RP,rock:hx(P.rock,.9),rockL:hx(P.rockL,.92)},sd+9).geo());                                      // dovelas del arco
+  const b=new B(sd+3);
+  {const f=.34+Z,bk=-.02+Z,hw=.4,y0=.26,tp=.94,d0=mul(C(P.rock),.07),d1=mul(C(P.rock),.008),fl=mul(C(P.rock),.05),mid=(f+bk)/2;   // TÚNEL oscuro hacia dentro (suelo a y .26: por debajo el musgo del material de roca lo teñía de verde)
+   Q(b,[-hw,y0,f],[hw,y0,f],[hw,y0,bk],[-hw,y0,bk],[fl,fl,d1,d1],0,[0,-1,mid]);
+   Q(b,[-hw,tp,f],[hw,tp,f],[hw,tp,bk],[-hw,tp,bk],[d0,d0,d1,d1],0,[0,tp+1,mid]);
+   Q(b,[-hw,y0,f],[-hw,y0,bk],[-hw,tp,bk],[-hw,tp,f],[d0,d1,d1,d0],0,[-hw-1,.5,mid]);
+   Q(b,[hw,y0,f],[hw,y0,bk],[hw,tp,bk],[hw,tp,f],[d0,d1,d1,d0],0,[hw+1,.5,mid]);
+   Q(b,[-hw,y0,bk],[hw,y0,bk],[hw,tp,bk],[-hw,tp,bk],[d1,d1,d1,d1],0,[0,.5,bk-1])}   // (frente en z=.34+Z, tapado por las jambas y el arco; colores casi negros: lo que se lee es un hueco)
+  for(let i=0;i<7;i++){const x=-.36+i*.12+(hash(sd,i,1)-.5)*.05,top=.55+Math.sqrt(Math.max(.01,.43*.43-x*x))-.02,h=.1+.13*hash(sd,i,2);b.cyl(x,top-h,.2+Z,.0,.03+.015*hash(sd,i,3),h,5,mul(mix(C(P.rock),C(P.rockL),.5),.9),{v:.08})}   // dientes bajo el arco
+  G.push(b.geo());
   return {geo:()=>cat(G,['position','normal','color','aEmit'])}},
  // ARBUSTO (≈0,85 × 0,56 × 0,81): una forma por bioma (ver cabecera). Siempre oscuro, el acento (flor/baya/brasa/cristal) es pequeño.
  arbusto(o){const P=PB(o),b=new B(251+(o.bk|0)*11),sd=b.seed;SHRUB[P.shrub](b,P,sd);return b},

@@ -79,6 +79,12 @@ const WK=(()=>{
     hum:{of:'es',n:'Humedecer la piedra',lv:30,po:20,t:'b',fn:s=>{s.cond='buena'}},
     esq:{of:'es',n:'Escuadrar',lv:40,po:32,t:'r',fn:s=>{s.dur=Math.min(s.durMax,s.dur+15);s.b.wn=2;s.b.wn2=0}},
     plp:{of:'es',n:'Pulir la piedra',lv:52,po:40,t:'q',e:175,ok:s=>s.iq>=2},
+    // ---- exclusivas de ENCANTAMIENTO (of:'en', esencias y runas; 28 oct 2026) ----
+    trz:{of:'en',n:'Trazar runa',lv:10,po:22,t:'p',e:200,d:1.5},
+    cnl:{of:'en',n:'Canalizar',lv:22,po:26,t:'q',e:150,ok:s=>s.iq>=1},
+    inv:{of:'en',n:'Invocar esencia',lv:34,po:30,t:'b',fn:s=>{s.b.inn=4;s.iq=Math.min(MAXIQ,s.iq+1)}},
+    sel:{of:'en',n:'Sellar el círculo',lv:46,po:36,t:'r',fn:s=>{s.dur=Math.min(s.durMax,s.dur+20);s.b.wn=3;s.b.wn2=0}},
+    rsn:{of:'en',n:'Resonancia',lv:58,po:44,t:'q',e:185,ok:s=>s.iq>=2},
     // ---- exclusivas de JOYERÍA (of:'jo', metal fino y gemas; ESC-JOY 27 oct) ----
     sld:{of:'jo',n:'Soldar',lv:12,po:22,t:'p',e:180,fn:s=>{s.iq=Math.min(MAXIQ,s.iq+1)}},
     egs:{of:'jo',n:'Engastar',lv:24,po:26,t:'q',e:150,ok:s=>s.iq>=1},

@@ -127,7 +127,7 @@ const VIEW=new THREE.Vector3(0,.22,1);
 function dropModel(b){if(scene)scene.remove(b.root.parent&&b.root.parent!==scene?b.root.parent:b.root);b.root.traverse(o=>{if(o.geometry)o.geometry.dispose()});R&&R.renderLists.dispose()}
 function renderOne(info){const b=build(info.kind,info);if(!b)return null;if(!ensure())return null;setRim(info.rc);
  scene.add(b.root);b.root.updateMatrixWorld(true);let url=null;
- withG(()=>{try{if(fit(b,b.keep,VIEW)){R.setClearColor(0,0);R.clear();R.render(scene,cam);url=R.domElement.toDataURL('image/png')}}catch(e){console.warn('[ICON3D]',info.id,e)}});
+ withG(()=>{try{if(fit(b,b.keep,VIEW)){R.setClearColor(0,0);R.clear();R.render(scene,cam);const ei=String(info.id||'').includes('@')&&typeof ITEMICON!=='undefined'&&ITEMICON.ench;url=(ei?ITEMICON.ench(R.domElement,info.id):R.domElement).toDataURL('image/png')}}catch(e){console.warn('[ICON3D]',info.id,e)}});
  dropModel(b);return url}
 
 // ── HOVER VIVO (plan H3): al pasar el ratón por una casilla con icono 3D, un lienzo FIJO (fuera del layout: ninguna casilla cambia de tamaño) muestra el modelo girando; al salir se libera todo.
@@ -147,7 +147,7 @@ function hoverStart(img,id){const e=CACHE.get(id);if(!e||e.st!=='ok'||!e.i||!API
   cv.style.left=(r.left+r.width/2-z/2)+'px';cv.style.top=(r.top+r.height/2-z/2)+'px';cv.style.width=cv.style.height=z+'px';
   piv.rotation.y=Math.sin((now-t0)/1000*1.7)*.75;
   if(pl){const T=(now-t0)/1000,k=rn===4?.8+.12*Math.sin(T*9.1)+.08*Math.sin(T*23.7+1):rn===3?.8+.2*Math.sin(T*3.2):.94+.06*Math.sin(T*1.8),a=Math.min(1,T*4);pl.intensity=a*k*(rn===4?9:rn===3?7:5)*hh;rim.intensity=2.3+a*k*(rn-1)*.5}
-  withG(()=>{R.setClearColor(0,0);R.clear();R.render(scene,cam)});x.clearRect(0,0,SIZE,SIZE);x.drawImage(R.domElement,0,0);live.raf=requestAnimationFrame(loop)})(t0)}
+  withG(()=>{R.setClearColor(0,0);R.clear();R.render(scene,cam)});x.clearRect(0,0,SIZE,SIZE);const eid=img.dataset.i3;x.drawImage(eid&&eid.includes('@')&&typeof ITEMICON!=='undefined'&&ITEMICON.ench?ITEMICON.ench(R.domElement,eid,(now-t0)/1000):R.domElement,0,0);live.raf=requestAnimationFrame(loop)})(t0)}
 if(typeof document!=='undefined'){
  document.addEventListener('mouseover',ev=>{if(!API.on||ev.pointerType==='touch'||(window.matchMedia&&matchMedia('(hover:none)').matches))return;const t=ev.target;if(!t||!t.closest)return;
   const img=t.tagName==='IMG'&&t.dataset&&t.dataset.i3?t:(t.closest('.slot,.eqc')||{}).querySelector&&t.closest('.slot,.eqc').querySelector('img[data-i3]');

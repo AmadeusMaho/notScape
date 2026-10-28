@@ -64,14 +64,14 @@
  const SPOTS=[];
  // ── Pradera · Rancho (vacas y gallinas) ──
  SPOTS[0]={ing:{id:'rancho',t:'🐄 Rancho',z:[760,985,455,665],
-  mobs:[['vaca',810,540],['vaca',850,525],['vaca',820,580],['vaca',860,575],['oveja',885,603],['oveja',838,553],['oveja',905,628],['gallina',915,545],['gallina',945,560],['gallina',920,590],['gallina',950,600]],
+  mobs:[['vaca',810,540],['vaca',850,525],['vaca',820,580],['vaca',860,575],['oveja',885,603],['oveja',838,553],['oveja',905,628],['gallina',915,545],['gallina',945,560],['gallina',920,590],['gallina',950,600],['cerdo',830,612],['cerdo',872,618],['cerdo',905,598],['slime',790,640],['slime',930,640],['slime',860,655]],
   dirt:[[870,560,98]],routes:[[[870,705],[870,650],[870,615]]],
   decor:flat([fenceX(770,978,470),fenceX(770,822,650),fenceX(918,978,650),fenceY(496,626,770),fenceY(496,626,970)]).concat([
    P('portillo',870,650),P('gallinero',935,500),P('comedero',805,497),P('abrevadero',820,627),P('heno',790,596),P('heno',804,606),P('comedero',950,625,{dir:'y'}),
    P('granero',725,529,{rot:1},{fp:[46,34]}),P('heno',700,605),P('heno',714,616),P('heno',728,608),P('espantapajaros',880,438),P('roble',735,455,null,{fp:[6,6]}),P('arbusto',760,665),P('arbusto',990,680),P('barril',748,600),P('caja',758,610)])},
   // Ruinas goblin (junto al camino, antes del portón orco)
   camp:{id:'ruinas',t:'🏚️ Ruinas goblin',z:[1495,1800,545,865],
-  mobs:[['goblin',1560,632],['goblin',1618,654],['goblin',1668,642],['goblin',1715,640],['goblin',1742,648],['goblin',1610,806],['goblin',1692,816]],
+  mobs:[['goblin',1560,632],['goblin',1618,654],['goblinarq',1668,642],['goblin',1715,640],['goblinsha',1742,648],['goblinarq',1610,806],['goblin',1692,816]],
   stone:[{p:[[1530,615],[1760,615]],w:44},{p:[[1555,818],[1730,818]],w:36}],dirt:[[1640,700,50]],
   decor:[P('arcoRuina',1498,718,{dir:'y',span:24}),
    P('muroRuina',1545,565),P('muroRuina',1597,565),P('muroRuina',1701,565,{h:9}),P('muroRuina',1753,565),P('muroRuina',1510,598,{dir:'y'}),P('muroRuina',1510,650,{dir:'y',h:9}),P('muroRuina',1790,598,{dir:'y'}),P('muroRuina',1790,650,{dir:'y'}),
@@ -82,7 +82,7 @@
    P('tronco',1600,818),P('tronco',1700,830,{len:20}),P('carreta',1766,808),P('roca',1520,700),P('roca',1780,725),P('roca',1490,760),P('roca',1800,780),P('arbusto',1500,600),P('arbusto',1800,560)]},
   // Campamento orco (detrás del portón)
   orc:{id:'campamento',t:'⛺ Campamento orco',z:[1912,2235,560,905],
-  mobs:[['orco',2000,650],['orco',2080,662],['orco',2005,830],['orco',2085,822]],dirt:[[2040,740,150],[2040,640,72],[2040,845,72]],
+  mobs:[['orco',2000,650],['orco',2080,662],['orco',2005,830],['orcocampeon',2085,822]],dirt:[[2040,740,150],[2040,640,72],[2040,845,72]],
   decor:[P('carpa',1985,612,{col:'#7a3a2a',trim:'#3a2a22'}),P('carpa',2092,616,{col:'#6a3a2a',trim:'#3a2a22'}),P('carpa',1992,878,{col:'#7a3a2a',trim:'#3a2a22'}),P('carpa',2097,872,{col:'#6a3a2a',trim:'#3a2a22'}),
    P('hoguera',2036,668),P('hoguera',2036,818),P('totem',1955,650,{col:'#8a2e2a'}),P('totem',1955,832,{col:'#8a2e2a'}),
    P('estandarte',1938,672,{col:'#8a2e2a',mark:'#e8d9a0'}),P('estandarte',1938,812,{col:'#8a2e2a',mark:'#e8d9a0'}),P('estandarte',2172,672,{col:'#8a2e2a',mark:'#e8d9a0'}),P('estandarte',2172,812,{col:'#8a2e2a',mark:'#e8d9a0'}),

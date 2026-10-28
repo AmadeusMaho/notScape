@@ -28,7 +28,7 @@ async def daemon(a):
   logs=[]
   async with async_playwright() as p:
     # --gpu: GPU REAL del PC (ventana visible, sin SwiftShader); por defecto software (sirve en cualquier sandbox)
-    b=await p.chromium.launch(headless=False,args=['--ignore-gpu-blocklist','--enable-precise-memory-info']) if a.gpu else await p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
+    b=await p.chromium.launch(headless=False,args=['--ignore-gpu-blocklist','--enable-precise-memory-info','--disable-backgrounding-occluded-windows','--disable-renderer-backgrounding','--disable-background-timer-throttling'])   # sin estas banderas, con la ventana tapada el juego va a ~1 fps (28 oct 2026) if a.gpu else await p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
     ctx=await b.new_context(viewport={'width':a.w,'height':a.h})
     await ctx.add_init_script("try{localStorage.setItem('ns_q','%s')}catch(e){}"%a.q)
     pg=await ctx.new_page()

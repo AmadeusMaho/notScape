@@ -187,7 +187,8 @@ const LM_PARS=`
 `;
 const MC=new Map();
 export function toon(c,o={}){const k=c+JSON.stringify(o);if(MC.has(k))return MC.get(k);
- const m=new THREE.MeshToonMaterial({color:c,side:o.side||THREE.FrontSide,vertexColors:!!o.vc});if(o.flat)m.defines={FLAT_SHADED:''};if(o.chr)m.defines=Object.assign(m.defines||{},{CHR:''},o.skin?{SKIN:''}:{});if(o.soft)m.defines=Object.assign(m.defines||{},{SOFT:''});   // soft = sombreado CONTINUO (sin bandas toon) para props de piedra/teja: la forma «Tiny Glade» (Lote R3D-TG-SUAVE)
+ const m=new THREE.MeshToonMaterial({color:c,side:o.side||THREE.FrontSide,vertexColors:!!o.vc});m.userData.ns={tex:o.tex==null?null:String(o.tex),soft:!!o.soft,chr:!!o.chr,ground:!!o.ground,fol:!!o.fol,texB:o.texB==null?null:o.texB};   /* etiqueta para tools/r3d/smooth_check.py: qué materiales llevan textura de clase SIN `soft` (la textura rugosa de la forma antigua) */
+ if(o.flat)m.defines={FLAT_SHADED:''};if(o.chr)m.defines=Object.assign(m.defines||{},{CHR:''},o.skin?{SKIN:''}:{});if(o.soft)m.defines=Object.assign(m.defines||{},{SOFT:''});   // soft = sombreado CONTINUO (sin bandas toon) para props de piedra/teja: la forma «Tiny Glade» (Lote R3D-TG-SUAVE)
      // chr = personaje estilo NRftW (ver CHR_* abajo); skin = piel (relleno cálido para que la CARA se lea)
  const U={uMoss:{value:o.moss||0},uMossUp:{value:o.mossUp||0},uFol:{value:o.fol||0},uMossC:{value:new THREE.Color('#3f5a2c')},uMeadow:{value:o.meadow||0},uTrail:G.uTrail,uRim:{value:o.rim||0},uAO:{value:o.ao??0},uWet:{value:o.wet||0}};
  m.onBeforeCompile=s=>{Object.assign(s.uniforms,G,U);

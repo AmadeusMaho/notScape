@@ -84,6 +84,10 @@ Además: objetos en la escena ≤ **21 000** (hoy ≈ 19 700), en la escena del 
 | **Estilo objetivo «óleo oscuro»** (NRftW), sin grano ni «puntitos»; la intensidad puede bajarse por legibilidad | `docs/GUIA_3D_PORTEO.md` §4.9 |
 | **Frontera abierta y jefes = hito, no llave** (en el 3D) | `docs/PLAN_MUNDO_ABIERTO.md` |
 | **Varios PNJ DISTINTOS por bioma** (incluida Ru): otro modelo, nombre, ropa y diálogo | `villagers.js`, `npcs.js` |
+| **Suelos y materiales (28 oct):** todo `toon()` con `tex:` lleva `soft:1` (`tools/r3d/smooth_check.py`); el suelo de una sala termina en y 0, lleva losa de fondo y juntas ≤ .03 y su sonido de pasos sale de `INTFLOOR` en `footsteps.js`; un PNJ con tarea se declara con su OBJETIVO real en `INPC` (`interiors.js`) y debe pasar `tools/r3d/interior_check.py` | `interiors3d.js`, `footsteps.js`, `materials3d.js` |
+| **`F.hold(i,rx,fn)` (Mini):** `rx` NEGATIVO = el arma apunta hacia DELANTE (el +y del arma = hoja/mango); no lo escribas positivo · **Interiores:** cada sala lleva suelo propio (`floorOf(...,id)`) y `R.np` con 2–3 PNJ con tarea (`job` de animHuman); una tarea nueva = rama en `animHuman` + fila en `JOBF` | `mini3d.js`, `interiors3d.js`, `interiors.js` |
+| **Habilidades de enemigo por DATOS (28 oct):** `MD[id].sk` (embestida `lunge`, cuchillo `knife`; ver lote FAUNA-PRADERA en AGENTS.md) y `fl` (presa que huye) / `el` (élite) / `an` (animal); nunca un `if` por id en game.js · **Botica (Alquimia):** un bioma entra en `BOTICA_K` (interiors.js) cuando su casa tiene `room:'botica'` + props exteriores propios | `combat.js`, `interiors.js`, `village-barrios.js` |
+| **NO REUTILIZAR ASSETS (dueño, 28 oct 2026):** todo enemigo, animal, jefe, capitán, PNJ y objeto de contenido se diseña ÚNICO (silueta, paleta, rasgos y animación propios); prohibido recolorear/derivar con `mix`/`byId` de otra plantilla. Única excepción con sentido: estructuras genéricas (casas, muros, farolas). Las **casas de instalación** (Taller, Herrería, Botica, Templo arcano…) llevan además variaciones propias POR BIOMA/cultura y detalles que cuentan su oficio (p. ej. Botica: PNJ y olla/caldero en el exterior, hierbas secándose) | `actors3d.js`, `propsdark*.js`, `interiors.js` |
 | **Pisadas ligadas a la FASE del pie**, nunca a un temporizador; solo audios con licencia clara (créditos en `docs/CREDITOS.md`) | `footsteps.js` |
 | **Reglas de sonido/música:** pistas provisionales hasta el «recheck final» | `docs/MUSICA.md` |
 
@@ -174,7 +178,21 @@ Se comprueba y se cuenta en la entrega: (1) **ESCALA** vs. héroe (≈1 unidad �
 | Mundo | `tools/r3d/continent_check.py`, `coast_check.py`, `map_check.py`, `speed_check.py` | OK (speed_check sale bajo en SwiftShader) |
 | HUD | `tools/r3d/hud_game_check.py`, `icons_sheet.py` | OK |
 | Matemática iso | `node tools/iso_test.js` | OK (falla ~1/3 veces por 2 puntos aleatorios conocidos) |
+| Interiores (GPU real, servidor en 8811) | `tools/r3d/interior_check.py [k,k]` (huecos del suelo, clipping, PNJ en su sitio) | `RESULTADO: OK` |
+| Materiales rugosos (GPU real) | `tools/r3d/smooth_check.py` | `RESULTADO: OK` |
+| Cuevas (GPU real; arranca su propia sesión: PARA antes la tuya) | `tools/cave_check.py` | `RESULTADO: OK` |
+| Armas/cascos/vigas | `tools/r3d/weapon_check.py`, `helmet_check.py`, `beam_check.py` | `RESULTADO: OK` |
 | Rápido | `tools/fast/ns.py start --no3d` + `ns.py eval/logs` | sin errores |
+
+## 12 · INTERIORES, MATERIALES Y LUZ (28 oct 2026; lotes INTERIORES-2/3) — reglas para NO repetir errores
+1. **Texturas SUAVES.** Todo `toon()` con `tex:` lleva `soft:1` (+ `texB` ≈ .2, `texA` ≈ .7): la textura de clase sin `soft` es la forma ANTIGUA (rugosa, «pixel-art»). Vale para props, interiores, madera, terreno. Excepciones: personajes (`chr`), suelo (`ground`), follaje (`fol`), roca pintada (`tex:'montana'`). Lo vigilan `tools/r3d/smooth_check.py` (en escena, GPU) y `rules_check.py` (estático).
+2. **Suelos de sala (`interiors3d.js floorOf`).** Techo del suelo = **y 0** (nada puede empezar por debajo: hunde alfombras y pies de muebles), **losa de fondo** bajo todo el dibujo, juntas ≤ .03, un dibujo distinto por sala/cultura, y su sonido de pasos en `footsteps.js INTFLOOR` (piedra para taller/herrería/templo, mármol banco, madera el resto). Antes de entregar: `tools/r3d/interior_check.py` (huecos, clipping con el suelo, PNJ) = OK.
+3. **PNJ de interior.** Se declaran en `INPC` (`interiors.js`) con su OBJETIVO real (mueble o estación), lado y tarea; nunca coordenadas sueltas. El objeto debe existir y ser visible (vajilla, almirez, jarras…). Una tarea nueva = rama en `animHuman` + fila en `JOBF`. `interior_check` falla si el PNJ queda lejos o de espaldas a su objetivo («moviéndose al aire»).
+4. **Todo prop que produce luz ALUMBRA.** Fuego (hogar, cocina, horno, yunque), velas (`sconce`, `candelabro`), farolillos, lámparas y cristales/setas de cueva: se registran en `this.glows` y de ahí pasan a `this.dyn.srcs` = luces dinámicas por fragmento con OCLUSIÓN por altura (`DynLight.updateRoom`: muebles y paredes como cajas). Un prop nuevo que alumbre añade su `glows.push({x,y,z,r,ph,fire,col})`; sin eso se ve encendido pero no ilumina. Las `lt` de la sala y las PointLight son solo relleno (bajan al .22 con la dinámica activa).
+5. **Luz de interiores = hora del exterior** (`intTp` en `r3d.js`): sol/luna, color y oscuridad siguen `todAt`; las ventanas proyectan **recortes en el suelo con la forma del marco (cruz de travesaños)** y haces tenues (`updBeams`), que se mueven y se alargan con la hora. Nada de cuadrados blancos pintados. Las **cuevas** usan las mismas luces dinámicas con el **farol del héroe** (el de la noche) + sus cristales/antorchas.
+6. **Armas en la mano.** `F.hold(i,rx,fn)`: `rx` NEGATIVO = el arma apunta hacia DELANTE (el +y del arma es hoja/mango). `Mini.hold` invierte el signo; no lo toques ni escribas `rx` positivo.
+7. **Tejados.** Solo las casas de INSTALACIÓN (`ROOFC` en `interiors.js`, Botica) llevan `vivid` (color propio, bandas, cumbrera con remate); el resto no se toca salvo que el dueño lo pida.
+8. **Modelos únicos.** Nada de recolorear/derivar `mix(byId(...))` para enemigos, fauna, PNJ ni jefes (ver §1).
 
 ## 11 · Lecciones aprendidas y decisiones de diseño (sesión 21–22 oct 2026: Gabriel, bloqueo, tutorial de armas)
 **Errores que ya costaron tiempo — NO repetir**
@@ -284,3 +302,9 @@ Un `const X=…` o `let X=…` en lo alto de un script clásico (`src/*.js`, car
 
 ## Botones de un minijuego: fuera de la zona de juego (27 oct 2026)
 En un lienzo de minijuego un botón (SERVIR, ENCENDER…) nunca se superpone a la zona donde el jugador arrastra o pulsa piezas, y su zona de pulsación es el rectángulo del botón (no un círculo más grande): el SERVIR de la parrilla estaba encima de la rejilla y pulsar un trozo de la esquina servía el plato crudo. Las piezas que caen en una estación ocupan huecos distintos también si se lanzan seguidas (cuenta las que siguen en vuelo).
+
+
+## Cuevas e interiores con combate (27 oct 2026)
+- `INT` = «hay una sala activa» (casa o cueva). Para decidir si se puede combatir, picar o lanzar algo usa **`inRoom()`** (solo casas), nunca `INT` a pelo; una cueva (`INT.cave`) SÍ permite combate y recolección. El contenido de una cueva sale de `CAVEGEN.gen(seed,…)` (puro y determinista: ni `Math.random` ni `window` ahí); cueva nueva = un POI con `p.cave`, sin código. La malla de una sala/cueva usa el material `toon` de las salas (sin programas nuevos) y paredes divididas por orientación y trozo para el corte de maqueta. Antes de entregar cambios en cuevas: `python tools/cave_check.py` → `RESULTADO: OK`.
+
+- **Techo, estalactitas y texturas (lote CUEVAS-TECHO):** la cueva lleva un techo (`cave3d.js roof`) que solo se ve por arriba y `Rooms3D` le abre un agujero con trama alrededor del héroe (`uRoof`); nada que cuelgue «en el aire» (las estalactitas cuelgan del labio de las paredes, no de un techo invisible). Pared y suelo usan MATERIALES DISTINTOS, ambos `soft` (clase de textura 9 «montaña» en la pared, 8 «yeso» en el suelo); el color del suelo va por esquina (interpolado), nunca por celda. Un prop de entrada a una zona oscura necesita PROFUNDIDAD (túnel con caras hacia la boca y colores ≈ negro) y su suelo por encima de y .24 si usa `matRock` (el musgo lo tiñe de verde).

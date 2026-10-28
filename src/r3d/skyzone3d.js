@@ -126,7 +126,7 @@ export class SkyZone{
   {const V=[0,1,2].map(v=>treeGeo('colgante',v*17+3)),NV=V.length,NT=96,cnt=[0,0,0],lst=[[],[],[]];
    for(let k=0;k<NT;k++){const a=hash(k,1,31)*6.2832;if(this.calm(a)<.4)continue;const v=k%NV;lst[v].push({a,off:-.15-hash(k,2,31)*.55,sc:.85+hash(k,5,31)*.8,ry:hash(k,3,31)*6.28})}
    const m=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),sc=new THREE.Vector3(),ps=new THREE.Vector3();this.veg=[];
-   V.forEach((T2,v)=>{const L=lst[v];if(!L.length)return;const wm=toon(T2.tr,{moss:1,tex:'madera',texS:30,texB:.6}),wood=new THREE.InstancedMesh(T2.wood,wm,L.length),ink=new THREE.InstancedMesh(hull(T2.wood,.016).geometry,INK,L.length),fol=new THREE.InstancedMesh(T2.cards,folMat(T2.tex),L.length);
+   V.forEach((T2,v)=>{const L=lst[v];if(!L.length)return;const wm=toon(T2.tr,{moss:1,soft:1,tex:'madera',texS:12,texA:.7,texB:.2}),wood=new THREE.InstancedMesh(T2.wood,wm,L.length),ink=new THREE.InstancedMesh(hull(T2.wood,.016).geometry,INK,L.length),fol=new THREE.InstancedMesh(T2.cards,folMat(T2.tex),L.length);
     L.forEach((o,k)=>{const p=this.pt(o.a,o.off,0);ps.set(p[0],p[1],p[2]);e.set(0,o.ry,0);q.setFromEuler(e);sc.setScalar(o.sc);m.compose(ps,q,sc);wood.setMatrixAt(k,m);ink.setMatrixAt(k,m);fol.setMatrixAt(k,m)});
     wood.castShadow=true;fol.castShadow=true;for(const o of[wood,ink,fol]){o.frustumCulled=false;this.grp.add(o)}this.veg.push(wood,ink,fol)})}
   // ROCAS en la boca de cada río (3–5 por cascada, a ambos lados del cauce): piedra clara con musgo azulado arriba

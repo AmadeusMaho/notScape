@@ -18,6 +18,7 @@ const ALQ=(()=>{
   // drops de monstruos (cuero, huesos, colmillos, carne, plumas, gemas…)
   cuero:{vig:1},hueso:{pur:2,vit:1},hueso_g:{pur:3,vig:2},hueso_a:{pur:4,som:1},hueso_r:{ess:4,som:2,pur:2},corona:{ess:2,vig:1},colmillo:{vig:3,tox:1},dientorco:{vig:4,tox:1},calavera:{som:4,ess:2},garrote:{vig:2},cuerno:{fue:3,vig:3,som:1},
   carne:{vit:1},carne_jab:{vig:2,vit:1},carne_yak:{vig:3,hie:1},carne_lag:{fue:3,vig:1},carne_oso:{vig:3,vit:2},carne_gig:{vig:4,vit:2},pollo:{vit:1},huevo:{vit:2,ess:1},ancas:{tox:3,rap:1},
+  gelatina:{vit:1,cal:2},paja_emb:{som:1,rap:1},amuleto_hueso:{pur:2,som:1},panuelo_carmesi:{rap:2,tox:1},jamon:{vit:1,cal:1},pata_conejo:{rap:2,vit:1},cola_zorro:{rap:2,fue:1},
   pluma:{rap:3,cal:1},grasa:{vit:1,cal:1},lana:{cal:2},hongo:{tox:3,som:2,vit:1},sombrero:{som:3,ess:3},maza_hielo:{hie:5,vig:1},arroz:{vit:1,cal:1},sal_vol:{pur:3,fue:2},shuriken:{rap:3,vig:2},gema:{ess:4,pur:2},nucleo:{fue:5,ess:3},antifaz:{som:2,rap:1},
   carbon:{fue:3},
   // pieles por tier (piel_<tier>)

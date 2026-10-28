@@ -98,7 +98,8 @@ export class Mini{
   s.acc&&s.acc(this,body,part);g.scale.setScalar(k);this.base=this.arms.map(a=>a.rotation.z)}
  // agarra un objeto con la MANO i (0 = derecha/principal, 1 = izquierda): grupo en el grip (centro de la mano), rotado rx. Con el brazo colgando,
  // rx=0 → el +y del objeto apunta hacia el codo (arriba); rx=π/2 → hacia delante. fn(F,grupo,part) construye con part(...,{p:grupo})
- hold(i,rx,fn){const h=new THREE.Group();h.rotation.x=rx;this.grips[i].add(h);fn(this,h,this.part);return h}
+ /* CONVENCIÓN (28 oct 2026, corrige «el arma se toma del mango hacia atrás»): `rx` se escribe NEGATIVO en los datos (−0,9 … −1,2 = inclinación hacia DELANTE) y aquí se invierte: el eje +y del arma apunta hacia delante (+z del personaje) y algo hacia arriba. 0 = arma vertical (báculo, lanza). */
+ hold(i,rx,fn){const h=new THREE.Group();h.rotation.x=-rx;this.grips[i].add(h);fn(this,h,this.part);return h}
  setInk(on){this.inkOn=!!on;this.hulls.forEach(h=>h.visible=!!on)}
  tickSkirt(dt){if(this.skp)this.skp.update(dt);if(this.flaps&&this.flaps.length){if(!this.fkp)this.fkp=new SkirtPhys(flapRig({pelvis:this.pelvis,chest:this.chest,body:this.body,legs:this.legs,knees:this.knees,ankles:this.ankles,seed:this.ph},this.flaps,this.skRad));this.fkp.update(dt)}}   // falda ligera: la llaman MiniHero.update y (con huesos) actors3d.js
  update(t){const b=Math.sin(t*1.9+this.ph),root=this.root;root.position.y=Math.abs(b)*.006*this.k;this.head.rotation.y=Math.sin(t*.4+this.ph)*.14;this.head.rotation.x=Math.sin(t*.6+this.ph)*.03;

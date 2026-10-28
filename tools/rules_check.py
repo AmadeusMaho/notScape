@@ -225,6 +225,28 @@ _srcall = '\n'.join(rd(str(p.relative_to(R))) for p in src + r3d)
 _wbad = sorted(n for n in _cg_names if re.search(r'window\.' + n + r'\b(?!\s*=[^=])', _srcall) and not re.search(r'window\.' + n + r'\s*=[^=]', _srcall))
 (bad if _wbad else ok)('GLOBALES: ningún `window.X` lee una const/let de script clásico (usa typeof X)', ', '.join(_wbad))
 
+
+# 14. MATERIALES SUAVES, SUELOS, LUZ Y ARMAS (28 oct 2026, lotes INTERIORES-2 y ENEMIGOS-UNICOS): errores que ya costaron una pasada entera; no repetir.
+#  a) todo `toon(...)` con `tex:` lleva `soft` (textura rugosa = forma antigua); excepciones: personajes `chr`, suelo `ground`, follaje `fol` y la roca pintada `montana`. Runtime: tools/r3d/smooth_check.py
+_rough = []
+for p in r3d:
+    for i, l in enumerate(rd(str(p.relative_to(R))).split('\n'), 1):
+        for m in re.finditer(r"toon\([^;]*?tex\s*:\s*'[^']+'[^;]*", l):
+            t = m.group(0)
+            if not re.search(r"soft|chr\s*:|ground\s*:|fol\s*:|'montana'", t): _rough.append(f'{p.name}:{i}')
+(bad if _rough else ok)('MATERIALES: todo toon() con tex lleva soft:1 (sin textura rugosa antigua)', ', '.join(_rough[:6]))
+#  b) interiores: el suelo termina en y 0 (techo del suelo), lleva losa de fondo y su superficie de pasos coincide
+_i3 = rd('src/r3d/interiors3d.js'); _ft = rd('src/footsteps.js')
+(ok if "tile=(x,z,w,d,c,o)=>b.box(x,Y,z,w,H" in _i3 and "b.box(0,-.12,0,W+.7" in _i3 else bad)('INTERIORES: floorOf con techo en y 0 y losa de fondo (sin huecos ni muebles hundidos)', 'interiors3d.js floorOf')
+(ok if all(k in _ft for k in ("'taller'", "'herreria'", "'templo'", "'marble'")) else bad)('INTERIORES: INTFLOOR (footsteps.js) cubre taller/herrería/templo (piedra) y banco (mármol)', 'footsteps.js')
+#  c) todo prop de interior que alumbra es una FUENTE: velas/farolillos/fuegos entran en `glows` y de ahí en la luz dinámica con oclusión (DynLight.updateRoom); las cuevas llevan el farol del héroe
+_glow_need = [n for n in ('hogar', 'farolPapel', 'candelabro', 'sconce') if not re.search(r"glows\.push\([^)]*", _i3) or n not in _i3]
+(ok if 'for(const g of this.glows)srcs.push' in _i3 and 'updateRoom' in rd('src/r3d/dynlight3d.js') and 'rooms.on&&rooms.dyn&&dl.on' in rd('src/r3d/r3d.js') and not _glow_need else bad)('LUZ: props que alumbran (fuego, velas, farolillos) → glows → DynLight.updateRoom; cuevas con el farol del héroe', ', '.join(_glow_need))
+#  d) PNJ de interior con tarea: se declaran con su objetivo real (INPC) y existe la herramienta que lo comprueba
+(ok if 'const INPC=' in rd('src/interiors.js') and (R / 'tools/r3d/interior_check.py').exists() else bad)('PNJ DE INTERIOR: INPC con objetivo real + tools/r3d/interior_check.py', 'interiors.js')
+#  e) armas en la mano: `Mini.hold` invierte el signo (rx negativo = hacia delante); si alguien lo vuelve a quitar, las armas salen por la espalda
+(ok if 'h.rotation.x=-rx' in rd('src/r3d/mini3d.js') else bad)('ARMAS: Mini.hold apunta el arma hacia delante (rx negativo)', 'mini3d.js hold')
+
 for lv, r, d in res: print(f'{lv:7} {r}' + (f'  → {d}' if d else ''))
 nf = sum(1 for x in res if x[0] == 'FALLO'); nw = sum(1 for x in res if x[0] in ('AVISO', 'REVISAR'))
 print(f'\nRESULTADO: {"OK" if not nf else "FALLO"} ({nf} fallos, {nw} avisos)'); sys.exit(1 if nf else 0)

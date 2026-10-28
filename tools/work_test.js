@@ -22,5 +22,5 @@ const s6=WK.start({prog:10,qual:10,dur:60,lvl:1},{...st,lvl:60});WK.use(s6,'fa')
 // 8) sugerencia siempre válida
 const s7=WK.start(rec,{...st,lvl:60});n=0;while(!s7.over&&n++<80){const id=WK.suggest(s7);T(!WK.can(s7,id),'sugerencia válida '+id);WK.use(s7,id)}
 T(s7.over,'sugerencia termina');console.log('sugerencia:',s7.hist.join(','),'ok',s7.ok,'hq',WK.hq(s7));
-T(WK.IDS.length===65,'acciones: '+WK.IDS.length);
+T(WK.IDS.length===70,'acciones: '+WK.IDS.length);
 console.log(bad?'RESULTADO: FALLO':'RESULTADO: OK');process.exit(bad?1:0);

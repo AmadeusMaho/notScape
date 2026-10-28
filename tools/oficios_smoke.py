@@ -51,6 +51,7 @@ START = "(()=>{const st=ST.find(s=>WKUI.REG['%s'].stn.includes(s.id))||{id:WKUI.
 # ---- preparación común: estación + materiales de la 1.ª receta posible
 SETUP = r"""(sk=>{stopA();S.inv.length=0;const r=WKUI.REG[sk];const st=ST.find(s=>r.stn.includes(s.id))||{id:r.stn[0],x:P.x,y:P.y-30,sks:[sk],nodraw:1};
 S.stn=st;if(typeof ISLA!=='undefined')ISLA.lock=()=>false;S.xp[sk]=Math.max(S.xp[sk]||0,XT[30]);const L0=L(sk);
+if(sk==='en'){CHEAT.give('sw_cobre',1);ENCH.rebuild()}   /* Encantamiento: las recetas salen de las armas que llevas */
 let i=ACT[sk].findIndex(a=>a.length===6&&L0>=rq(a)&&!ownT(a));if(i<0)return JSON.stringify({err:'sin receta'});
 const a=ACT[sk][i];for(const g in a[1])CHEAT.give(g,12);
 return JSON.stringify({i,name:a[0],ing:a[1],lvl:L0,out:a[2]})})"""

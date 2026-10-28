@@ -122,6 +122,20 @@ Cada animal: nivel, piel del tier de SU bioma, carne propia, hueso, grasa y un o
 | Páramo | huargo, hiena, cuervo gigante, jabalí huesudo, ciervo demacrado, araña de páramo |
 | Cielo / Infierno | corderos y cabras de nube, aves de luz / murciélagos y cabras infernales, cachorros de cerbero |
 **★11 (decidido, ver §0):** ¿cuántos de estos son ENEMIGOS (combate) y cuántos pacíficos (caza/desollar/domar)? Propuesta: la mitad de cada bioma pacíficos (recolección) y la mitad hostiles + siempre 1 «élite» por bioma.
+
+### 4b · Reparto decidido el 28 oct 2026 (pacíficos / hostiles / élite)
+| Bioma | Pacíficos | Hostiles | Élite |
+|---|---|---|---|
+| Pradera | vaca, oveja, cabra, cerdo, conejo, gallina | zorro | toro bravo |
+| Bosque | ciervo, ardilla, tejón, búho | lobo, jabalí, oso pardo | oso pardo alfa |
+| Pantano | garza, rana gigante, rata de pantano | cocodrilo, serpiente, lagarto | cocodrilo anciano |
+| Cumbres | yak, cabra montés, zorro ártico, águila | lobo ártico, oso polar | oso polar mayor |
+| Oriental | ciervo sika, tanuki, macaco, grulla | tigre, jabalí de bambú | tigre blanco |
+| Volcán | lagarto ígneo | salamandra de lava, jabalí de ceniza, murciélago de fuego, escorpión volcánico | salamandra mayor |
+| Desierto | camello, gacela, buitre | chacal, escorpión, serpiente de cascabel | escorpión gigante |
+| Costa | foca, tortuga, gaviota | cangrejo gigante, lobo marino | cangrejo rey |
+| Páramo | ciervo demacrado, cuervo gigante | huargo, hiena, jabalí huesudo, araña | huargo alfa |
+- **Comportamiento pacífico (mixto):** presas huyen · ganado deambula · algunos se defienden si los golpeas. **Botín:** piel del tier del bioma + carne + hueso + grasa + 1 objeto único raro. **Alcance:** Pradera y Bosque primero. Cielo/Infierno al final.
 **Enemigos de combate nuevos por bioma** (humanoides/no-muertos/jefes, aparte de la fauna): hoy cada bioma tiene 3 + capitán + jefe; **objetivo: 9 tipos** (≈ 54 nuevos en 9 biomas). ★12 (decidido): 9 tipos por bioma con drops compartidos, capitán sí, jefe no en todos (ver §0).
 
 ## 5 · Estaciones por aldea (todos los oficios en TODAS las aldeas, repartidas por el bioma)

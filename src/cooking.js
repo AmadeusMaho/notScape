@@ -14,7 +14,7 @@ const COC=(()=>{
  const FXK=Object.keys(FX),FL={d:['Dulce','#f0a8c8'],s:['Salado','#e8e0d0'],a:['Amargo','#7ab058'],p:['Picante','#e8582a'],u:['Umami','#c88a4a']};
  const BUFK={vig:'dmg',vel:'spd',def:'def',sab:'xp',man:'mreg'};   // efectos que reutilizan los temporizadores S.buf del juego (la magnitud es fija; el nivel cambia duración y comparación)
  const ING={
-  carne:[5,'u',{hpm:1}],carne_jab:[6,'u',{hpm:2}],carne_yak:[7,'u',{abr:3,hpm:1}],carne_lag:[7,'p',{ign:3,hpm:1}],carne_oso:[8,'u',{hpm:2,def:2}],carne_gig:[9,'u',{abr:2,hpm:3}],
+  carne:[5,'u',{hpm:1}],jamon:[6,'s',{hpm:1,sta:1}],carne_jab:[6,'u',{hpm:2}],carne_yak:[7,'u',{abr:3,hpm:1}],carne_lag:[7,'p',{ign:3,hpm:1}],carne_oso:[8,'u',{hpm:2,def:2}],carne_gig:[9,'u',{abr:2,hpm:3}],
   pollo:[4,'s',{reg:1,sta:1}],huevo:[3,'s',{sab:1,reg:1}],ancas:[4,'u',{sta:2}],hongo:[2,'a',{sab:2,man:1}],grasa:[2,'s',{abr:1}],arroz:[3,'d',{reg:1,sta:1}],sal_vol:[0,'s',{ign:2,def:1}],
   camaron:[3,'s',{sta:1}],sardina:[3,'s',{reg:1}],arenque:[3,'s',{reg:1,abr:1}],trucha:[4,'u',{sta:1,reg:1}],salmon:[5,'u',{reg:2,sta:1}],atun:[6,'u',{hpm:2,reg:1}],lucio:[5,'u',{def:2}],pmagma:[6,'p',{ign:3}],
   pezespada:[8,'u',{hpm:3,sta:2}],manta:[8,'u',{sab:2,reg:2}],kraken:[10,'u',{sab:3,hpm:2}],

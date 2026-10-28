@@ -27,11 +27,12 @@ import {Water} from './water3d.js';   // Lote R3D-AGUA-IMPL: agua D con física 
 import {SunRays} from './rays3d.js';
 import {LampGlow} from './lampglow3d.js';
 import {DynLight} from './dynlight3d.js';   // Lote R3D-LUZ-DIN: luces con oclusión por altura (sustituye a las PointLight)   // Lote R3D-LUZ: halos y charcos de luz de faroles/fuegos   // Lote R3D-F7-RAYOS: haces de sol del Bosque
-import {Rooms3D,INT_TP} from './interiors3d.js';   // Lote R3D-F15b: interiores en 3D
+import {Rooms3D,INT_TP,CAVE_TP} from './interiors3d.js';   // Lote R3D-F15b: interiores en 3D
 import {Drops} from './drops3d.js';   // Lote R3D-DROPS-3D: objetos del suelo en 3D, recogida por LMB y estela de luz en los raros
 import {SkyZone} from './skyzone3d.js';   // Lote ISLA-2: acantilado, mar de nubes, anillo de nubes y cascadas de la zona del Cielo
 import {Fragment,Debris,Embers} from './cinefx3d.js';
 import {SkyFire} from './skyfire3d.js';   // 22 oct 2026: llamaradas alrededor de la isla mientras arde el cielo
+import {Impact} from './impact3d.js';   // lote ENCANT-IMPACTO: efectos de impacto de los encantamientos (R3D.impact)
 import {SpellFX} from './spellfx3d.js';import {FX} from './fx3d.js';   // 21 oct 2026: partículas suaves (R3D.fx)
    // 21 oct 2026: bola de fuego (R3D.spell)   // Lote CINE-3: fragmento del tiempo, escombros, brasas
 import {Gabriel} from './gabriel3d.js';   // Lote CINE-2: ángel caído de la cinemática (R3D.gabriel)
@@ -77,7 +78,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  const sta=new Stations(scene,aScene,W3,twin(props.mat),twin(props.ink)),fac=new DoorGlow(scene,W3);   // F2 cierre: estaciones y cofres/santuarios en 3D · las puertas de entrada ya no tienen fachada: solo se iluminan (DoorGlow, R3D-F2C-PUERTAS); `fac` se llama así por compatibilidad con `facOn`
  const parts=new Particles(scene);   // F3e: luciérnagas, hojas, pétalos, nieve, brasas, ceniza y lluvia en GPU (3 draw calls)
  const actors=new Actors(scene,W3,aScene);   // Lote R3D-ACTORES: enemigos, animales, jefes y Ru como SkinnedMesh en el mundo (copia de solo profundidad en aScene para que tapen al héroe)
- const res=new Resources(scene,aScene,W3);
+ const res=new Resources(scene,aScene,W3),cres=new Resources(scene,aScene,W3);cres.grp.userData.keepInt=true;   // CUEVAS REALES: `cres` = las menas de la cueva en la que estás (el mundo, `res`, se oculta; ver rooms.hook)
  const rays=new SunRays(scene,W3),glow=new LampGlow(scene),dl=new DynLight(W3);
  const drops=new Drops(scene,W3);
  const rooms=new Rooms3D(scene,aScene,W3);   // R3D-F15b: `R3D.rooms.enter(INT)` lo llama interiors.js al entrar en una sala; mientras `rooms.on` el exterior se oculta y no se actualiza   // Lote R3D-DROPS-3D: lee GD (game.js) cada fotograma; game.js deja de pintar el drop en 2D cuando R3D.dropsOn
@@ -128,6 +129,9 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  const BT=[[[1,1,.98],[0,0,0]],[[.95,.97,.94],[.002,.005,.002]],[[.94,1.03,.88],[0,.006,0]],[[.92,.99,1.09],[0,.002,.008]],[[1.01,.94,1.07],[.003,0,.006]],[[1.12,.93,.82],[.008,0,0]],[[.97,.93,1.09],[.004,0,.008]],[[1.09,1,.86],[.004,.002,0]],[[.95,1.02,1.05],[0,.003,.004]],[[1,1,1],[0,0,0]]];
  const BT_K=(()=>{try{const v=new URLSearchParams(location.search).get('btint');return v==null?1:Math.max(0,Math.min(1.5,+v||0))}catch(e){return 1}})();   // 21 oct 2026: .6→1 (el tinte de grado por bioma era casi imperceptible)
  const btC=new THREE.Vector3(1,1,1),btL=new THREE.Vector3(0,0,0),btT=new THREE.Vector3(),btTL=new THREE.Vector3();let btInit=false;const FT=new THREE.Vector3();
+ /* LUZ DE LOS INTERIORES DINÁMICA (28 oct 2026; «los interiores tienen otra iluminación y no se ve dinámica»): la fila de interior (INT_TP) se mezcla con la HORA REAL del exterior (`todAt`): el sol entra por las ventanas con su dirección y color (día, atardecer, noche) y de noche la sala queda más oscura y solo la sostienen las lámparas. `d` = noche 0..1 se pasa a `rooms.update` (lámparas, charcos de luz de ventana). */
+ const intTp=t=>{const e=todAt(t),d=e.nt||0,p=mixTod(INT_TP,e,.5-.12*d);{const night=(e.nt||0)>.5,ph=typeof dayP==='function'?dayP(t):.5,a=night?Math.PI/4:Math.max(0,Math.min(1,(ph-.25)/.5))*Math.PI/2,el=night?.55:Math.max(.16,typeof sunS==='function'?sunS(t):.7),h=8;p.sunP=[-Math.cos(a)*h,2+el*5,-Math.sin(a)*h]}   /* el sol (o la luna) entra SOLO por las ventanas (fondo e izquierda): de mañana por la izquierda, al atardecer por el fondo; bajo y largo al amanecer/atardecer, alto al mediodía */
+  p.night=Math.min(1,.4+.55*d);p.fire=1;   /* menos luz ambiente y más sol: el recorte de las ventanas se lee sobre el suelo */p.win=1;p.nt=0;p.d=d;return p};
  function todAt(t){const s=typeof sunS==='function'?sunS(t):1,d=Math.max(typeof WXD!=='undefined'?WXD:0,Math.max(0,Math.min(1,(.15-s)/.55))),w=Math.max(0,1-Math.abs(s)*4);
   let p=mixTod(TOD.dia,TOD.noche,d);p=mixTod(p,TOD.atardecer,Math.min(.85,w*(1-d*.4)));p.nt=d;return p}
  // CINE-3 · CIELO ARDIENDO: `R3D.skyBurn` (0..1, objetivo) funde la fila del día hacia una fila de fuego (naranja-rojo, sombras de ceniza, agua rojiza, viñeta cálida); la suavizada `burn` usa el dt VIRTUAL (se congela con el tiempo detenido)
@@ -135,7 +139,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  // hora dorada PERMANENTE en el Cielo (decisión del dueño, 21 oct 2026): dentro de la zona el reloj del día deja de mandar (mezcla día/atardecer fija, sin noche); fuera, todo igual
  const zoneTod=p=>{const w=sky&&sky.on?sky.w||0:0;if(w<.002)return p;const g=mixTod(TOD.dia,TOD.atardecer,.28);g.nt=0;g.sat=Math.min(1.35,g.sat*1.3);return mixTod(p,g,w)};
  let burn=0,burnT=0,fireSrc=null,fireRow=null,bem=null,skyFire=null;
- const spell=new SpellFX(scene,W3),fx=new FX(scene,W3);
+ const _n0=new Set(scene.children),spell=new SpellFX(scene,W3),fx=new FX(scene,W3),impact=new Impact(scene,W3,{actors,hero});rooms.keep=[actors.grp,drops.root,blood.decals,blood.drops,cres.grp,...scene.children.filter(c=>!_n0.has(c))];rooms.hook={enter:()=>{cres.build(performance.now());cres.fresh=true},leave:()=>{cres.clear()}};   // CUEVAS: lo que se mueve (criaturas, botín, sangre, efectos) sigue visible dentro de la cueva
  // ISLA-7: ARDE EL CIELO (suelo naranja, nubes de fuego y brasas persistentes alrededor de la cámara mientras `burn` > 0); lo activa `R3D.skyBurn=1` (isla.js, paso «Escapa»)
  function burnFx(t,dt,tgt){G.uBurn.value=burn;if(burn>.02||skyFire){if(!skyFire)try{skyFire=new SkyFire(scene,W3)}catch(e){skyFire=false}if(skyFire)skyFire.update(t,dt,burn)}   // llamaradas alrededor de la isla
  if(sky&&sky.tint)sky.tint(burn);if(burn>.02||bem){if(!bem)bem=new Embers(scene,360);bem.level=burn>.02?Math.min(1,burn*1.1):0;bem.at(tgt.x,tgt.z,0);bem.update(t,dt)}}
@@ -175,7 +179,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   const a=Math.min(1,dt*7);
   pool.forEach((l,i)=>{const o=slots[i];if(!o.s){l.intensity=0;return}o.v+=((o.out?0:1)-o.v)*a;if(o.out&&o.v<.01){o.s=null;l.intensity=0;return}
    const d=LK[o.s.k],ph=o.s.ph;l.position.copy(o.s.p);l.color.set(d[0]);l.distance=d[2];l.intensity=d[1]*o.v*(d[4]==='fire'?p.fire*(1+Math.sin(t*1.7+ph)*.05+Math.sin(t*3.1+ph*1.9)*.035):p.win)});
-  dl.update(t,dt,tgt,sources(),LK,p,heroL,rooms.on,props,typeof N!=='undefined'?N:null,typeof ST!=='undefined'?ST:null);glow.update(t,dt,tgt,R,sources(),LK,p,cam,(typeof gfx==='function'&&!gfx('lights'))?4:(typeof QL!=='undefined'?QL:2),dl.on?dl.act:null)}
+  if(rooms.on&&rooms.dyn&&dl.on)rooms.dynOn=dl.updateRoom(t,dt,rooms.dyn,p,heroL);else{rooms.dynOn=false;dl.update(t,dt,tgt,sources(),LK,p,heroL,rooms.on,props,typeof N!=='undefined'?N:null,typeof ST!=='undefined'?ST:null)}glow.update(t,dt,tgt,R,sources(),LK,p,cam,(typeof gfx==='function'&&!gfx('lights'))?4:(typeof QL!=='undefined'?QL:2),dl.on?dl.act:null)}
  // ── postproceso (guía §4.7): RenderPass → bloom → grado (sombras levantadas, viñeta) → salida. Sin grano. Calidad Baja/Mínima = sin post ──
  const composer=new EffectComposer(r,new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:({msaa2:2,msaa4:4})[typeof AA_MODE!=='undefined'?AA_MODE:'fxaa']||0}));composer.addPass(new RenderPass(scene,cam));
  // 17 oct 2026 (pedido del dueño): SIN NIEBLA. Se quitó el pase de niebla a ras de suelo (fogPass): invadía la pantalla de día. Ver «Lote R3D-NONIEBLA» en AGENTS.md.
@@ -294,7 +298,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   const w=ISO.unproj(ISO.cam.x,ISO.cam.y,1);tgt.set(w.x/ISO.TILE,0,w.y/ISO.TILE);const k=ppu();placeCam(cam,tgt,V.cw/2/k,V.ch/2/k);
   if(sky&&sky.on){sky.update(t,dt,tgt,cam,water);WU.uClear.value=sky.w||0}
   // noche → rim y ojos de la capucha (el oscurecido lo hace lighting() en 2D)
-  const IN=rooms.on,upd=!IN,tp=IN?INT_TP:fireMix(zoneTod(todAt(t)),dt),nt=tp.nt;bioLight(dt);light(tp);burnFx(t,dt,tgt);spell.update(t,dt);fx.update(t,dt,tp.night,r.getPixelRatio());if(typeof P!=='undefined'&&typeof curB!=='undefined')fx.ambient(P.x,P.y,curB,dt);if(frz>.002)G.uSat.value*=1-.75*frz;if(IN){aHemi.color.set('#ffe2b8');aHemi.groundColor.set('#9a6a3c');aHemi.intensity=1.8;aSun.color.set('#ffc27a');aSun.intensity=2.0;aBack.color.set('#ffb070')}G.uNight.value=tp.night;lights(t,tp,Math.hypot(V.cw,V.ch)/k*.78+6);rooms.update(t);
+  const IN=rooms.on,CV=IN&&rooms.cave,upd=!IN,tp=IN?(CV?(rooms.cvTp||CAVE_TP):intTp(t)):fireMix(zoneTod(todAt(t)),dt),nt=tp.nt;bioLight(dt);light(tp);burnFx(t,dt,tgt);spell.update(t,dt);fx.update(t,dt,tp.night,r.getPixelRatio());impact.update(dt);if(typeof P!=='undefined'&&typeof curB!=='undefined')fx.ambient(P.x,P.y,curB,dt);if(frz>.002)G.uSat.value*=1-.75*frz;if(IN&&!CV){const dn=tp.d||0;aHemi.color.set(tp.hemS);aHemi.groundColor.set(tp.hemG);aHemi.intensity=1.7-.7*dn;aSun.color.set(tp.sun);aSun.intensity=2.0-1.1*dn;aBack.color.set(dn>.5?'#8a9ac8':'#ffb070')}else if(CV){aHemi.color.set('#8a9ac0');aHemi.groundColor.set('#3a3028');aHemi.intensity=.95;aSun.color.set('#a0b0d0');aSun.intensity=.7;aBack.color.set('#7a8ab0')}G.uNight.value=tp.night;lights(t,tp,Math.hypot(V.cw,V.ch)/k*.78+6);rooms.update(t,IN&&!CV?(tp.d||0):0,IN&&!CV?tp.sunP:null);
   // F3f·P6 · halo del santuario: la gema (aEmit=3) se atenúa al acercarse el héroe (si no, el haz + el bloom lo sobreexponen: mancha blanca). A ≥3,6 tiles brillo completo; a ≤1,2 tiles `shrMin`. Suavizado en el tiempo.
   {let dm=99;if(typeof PO!=='undefined'&&typeof P!=='undefined')for(const e of PO)if(e.n==='santuario'){const d=Math.hypot(e.x-P.x,e.y-P.y)/ISO.TILE;if(d<dm)dm=d}
    const u=Math.min(1,Math.max(0,(dm-1.2)/2.4)),tk=shrMin+(1-shrMin)*u*u*(3-2*u);G.uShrK.value+=(tk-G.uShrK.value)*(1-Math.exp(-dt*6))}
@@ -309,8 +313,9 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
    parts.update(dt,tgt.x,hp.y,tgt.z,typeof curB!=='undefined'?curB:0,tp.night,typeof WXD!=='undefined'?WXD:0,ISO.scale()*V.dpr/1.9,S,typeof gfx==='function'?gfx('parts'):(typeof QL!=='undefined'?QL:2));
    blood.update(dt,t,hp,tp.night,typeof QL!=='undefined'?QL:2);rays.update(t,dt,tgt,Math.hypot(V.cw,V.ch)/k*.78+6,1-tp.night,typeof WXD!=='undefined'?WXD:0,(typeof gfx==='function'&&!gfx('rays'))?4:(typeof QL!=='undefined'?QL:2))}   // Lote R3D-SANGRE: gotas (física) + manchas; hp = posición del héroe en three (linterna de noche)
   if(upd){terr.lodR=typeof gfx==='function'?gfx('view'):[12,9,7,5,4][typeof QL!=='undefined'?QL:2];terr.lod(tgt.x,tgt.z);props.update();{const cr=Math.hypot(V.cw,V.ch)/k*.78+14;props.cull(tgt.x,tgt.z,cr);res.cull(tgt.x,tgt.z,cr)}sta.update(now,t,typeof HOV!=='undefined'?HOV:null,typeof A!=='undefined'&&A?A.e:null);fac.update(now,t,typeof HOV!=='undefined'?HOV:null);res.update(now,t,typeof HOV!=='undefined'?HOV:null,typeof A!=='undefined'&&A?A.e:null,dt)}
+  if(CV){const cr=Math.hypot(V.cw,V.ch)/k*.78+14,hp0=typeof P!=='undefined'?W3(P.x,P.y,0):tgt;cres.cull(tgt.x,tgt.z,cr);cres.update(now,t,typeof HOV!=='undefined'?HOV:null,typeof A!=='undefined'&&A?A.e:null,dt);blood.update(dt,t,hp0,.6,typeof QL!=='undefined'?QL:2)}   // CUEVA: menas, sangre
   // actores 3D (antes que el héroe: su copia de profundidad en aScene tiene que estar al día cuando se dibuja el héroe)
-  if(upd)actors.update(now,t,dt,tgt,Math.hypot(V.cw,V.ch)/k*.78+6,typeof HOV!=='undefined'?HOV:null,typeof P!=='undefined'?P:{x:0,y:0});actors.grp.updateMatrixWorld(true);if(upd)drops.update(now,t,dt,tgt,Math.hypot(V.cw,V.ch)/k*.78+6,typeof HOV!=='undefined'?HOV:null);if(upd)cts.update(props,res,actors,typeof P!=='undefined'?P:null,tp.night,(typeof gfx==='function'&&!gfx('contact'))?4:(typeof QL!=='undefined'?QL:2));
+  if(upd||CV)actors.update(now,t,dt,tgt,Math.hypot(V.cw,V.ch)/k*.78+6,typeof HOV!=='undefined'?HOV:null,typeof P!=='undefined'?P:{x:0,y:0});actors.grp.updateMatrixWorld(true);if(upd||CV)drops.update(now,t,dt,tgt,Math.hypot(V.cw,V.ch)/k*.78+6,typeof HOV!=='undefined'?HOV:null);if(upd)cts.update(props,res,actors,typeof P!=='undefined'?P:null,tp.night,(typeof gfx==='function'&&!gfx('contact'))?4:(typeof QL!=='undefined'?QL:2));
   if(!gate.on&&!warming&&++gFr>300)gate.on=true;if(gate.on){const vk=gVars().map(v=>v.key).join();if(vk!==gVk){if(gVk)gate.background(0,gVars());gVk=vk}}gate.tick(performance.now());   // al cambiar de calidad, los programas del nuevo destino se piden en segundo plano   // compuerta de shaders: lo añadido este fotograma (actores, objetos del suelo…) se compila antes de dibujarse
   // héroe
   const st=typeof heroState3D==='function'?heroState3D(now):null;
@@ -414,4 +419,4 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   r.setRenderTarget(rt0);r.clippingPlanes=cp;warming=false;
   if(!all){gate.on=true;gVk=cur.map(v=>v.key).join();if(typeof QA!=='undefined'&&QA&&QL===2)gate.background(0,[GV.scr])}   // solo la calidad AUTOMÁTICA en Media puede bajar sola a Baja (pantalla sin composer); el resto de destinos se piden al cambiar de calidad (gVk en frame)
   tmp.forEach(o=>{scene.remove(o);if(o.isSprite||(o.material&&o.material.isShaderMaterial))o.material.dispose()});hid.forEach(o=>{o.visible=false});console.info('[R3D shaders]',{programas:r.info.programs.length,nuevos:r.info.programs.length-n0,ms:Math.round(performance.now()-t0)})},
- gate,ghost:(a,c)=>{pendG={a,c}},get wu(){return WU},get spell(){return spell},get fx(){return fx},get res(){return res},fragment:()=>new Fragment(scene),debris:n=>new Debris(scene,n),embers:n=>new Embers(scene,n),gabriel:(x,y,z)=>new Gabriel(scene,W3,x,y,z==null?TER.standZ(x,y):z),hero,terr,stats:()=>({calls:r.info.render.calls,tris:r.info.render.triangles,chunks:terr.ch.size,heroe:{calls:HST.calls,tris:HST.tris,cpuMs:+HST.ms.toFixed(2)}})}}
+ gate,ghost:(a,c)=>{pendG={a,c}},get wu(){return WU},get spell(){return spell},get fx(){return fx},get impact(){return impact},get res(){return rooms.cave?cres:res},fragment:()=>new Fragment(scene),debris:n=>new Debris(scene,n),embers:n=>new Embers(scene,n),gabriel:(x,y,z)=>new Gabriel(scene,W3,x,y,z==null?TER.standZ(x,y):z),hero,terr,stats:()=>({calls:r.info.render.calls,tris:r.info.render.triangles,chunks:terr.ch.size,heroe:{calls:HST.calls,tris:HST.tris,cpuMs:+HST.ms.toFixed(2)}})}}

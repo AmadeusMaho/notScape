@@ -30,8 +30,11 @@ const FORGE=(()=>{
   const T_JEWEL={id:'jewel',n:'Joyería',var:{p:'t',pq:'t',q:'t',b:'c',r:'m',u:'o'},   // ESC-JOY (27 oct 2026): Joyería
     tools:{p:{n:'Martillito y soldador',s:'Avance',i:HAM},q:{n:'Pinzas y engaste',s:'Calidad',i:'<path d="M5 20l7-9M19 20l-7-9"/><path d="M12 11V4"/>'},b:{n:'Lupa',s:'Estados',i:'<circle cx="10" cy="10" r="5"/><path d="M14 14l6 6"/>'},r:{n:'Recocido',s:'Reparación',i:'<path d="M12 4c3 4 5 6 5 9a5 5 0 0 1-10 0c0-3 2-5 5-9z"/>'},u:{n:'Mesa',s:'Utilidad',i:EYE}},
     fx:{p:{spr:'hammer',c:['#fff6d8','#e8cf94','#c8a050'],k:1},q:{spr:'tongs',c:['#ffffff','#bfe0ff','#e8cf94'],k:1},b:{spr:'eye',c:['#bfe0ff'],k:1},r:{spr:'bellows',c:['#ffb347'],k:1},u:{spr:'eye',c:['#e8cf94'],k:1}},hot:1};
-  const THEMES={forge:T_FORGE,carp:T_CARP,tan:T_TAN,sew:T_SEW,stone:T_STONE,jewel:T_JEWEL};
-  const OFSKIN={sm:'forge',cr:'carp',pe:'tan',sa:'sew',es:'stone',jo:'jewel'};
+  const T_ARCANE={id:'arcane',n:'Encantamiento',var:{p:'t',pq:'t',q:'t',b:'c',r:'m',u:'o'},   // 28 oct 2026: Encantamiento (mesa rúnica)
+    tools:{p:{n:'Pluma y runas',s:'Avance',i:'<path d="M5 20L15 10"/><path d="M13 4l7 3-2 4-3-1-2 2-3-3 2-2-1-3z"/>'},q:{n:'Canalizar',s:'Calidad',i:'<circle cx="12" cy="12" r="7"/><path d="M12 5v14M5 12h14"/>'},b:{n:'Invocar',s:'Estados',i:'<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>'},r:{n:'Sellar',s:'Reparación',i:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>'},u:{n:'Mesa',s:'Utilidad',i:EYE}},
+    fx:{p:{spr:'hammer',c:['#e8d0ff','#b07aff','#7a4ad0'],k:1},q:{spr:'eye',c:['#ffffff','#d0b0ff'],k:1},b:{spr:'eye',c:['#b07aff'],k:1},r:{spr:'eye',c:['#e8cf94'],k:1},u:{spr:'eye',c:['#b07aff'],k:1}},hot:1};
+  const THEMES={forge:T_FORGE,carp:T_CARP,tan:T_TAN,sew:T_SEW,stone:T_STONE,jewel:T_JEWEL,arcane:T_ARCANE};
+  const OFSKIN={sm:'forge',cr:'carp',pe:'tan',sa:'sew',es:'stone',jo:'jewel',en:'arcane'};
   const STONEC={caliza:'#d8d0b8',granito:'#8a8a92',arenisca:'#d4a468',basalto:'#55525a',marmol:'#ece6dc',obsidiana:'#3a2a4a',astral:'#9aaaf0'},GEMC={cuarzo:'#e6e2f2',ambar:'#e8a030',jade:'#3aa86a',zafiro:'#3a6aff',opalo:'#d8eef0',rubi:'#e02a3a',amatista:'#9a5ae0',topacio:'#f0b040',coral:'#ff7a6a',diamante:'#e8f8ff'};
   let TH=T_FORGE,HS=null,hsx=null,hsT=-1e9,hand=null,el=null,cv=null,g=null,raf=0,last=0,on=false,bg=null,stn=null,ro=null,kind='bar',tcol='#8d8f9c',pname='',SC=null,SC2=null;const PC={};
   const PA=[],F=[];
@@ -102,7 +105,13 @@ const FORGE=(()=>{
     x.fillStyle='#5a1e2a';x.fillRect(40,150,150,40);x.strokeRect(40,150,150,40);['#e02a3a','#3a6aff','#3aa86a','#f0b040','#9a5ae0','#e6e2f2'].forEach((cl,i)=>{x.fillStyle=cl;x.beginPath();x.arc(58+i*22,170,5,0,7);x.fill();x.stroke()});glowDot(x,120,46,90);x.restore();
     base(x2,.8);x2.strokeStyle='#050403';x2.lineWidth=1.5;x2.fillStyle='#4a3020';[[228,140],[360,140]].forEach(([a,b])=>{x2.fillRect(a,b,12,87);x2.strokeRect(a,b,12,87)});x2.fillStyle='#6a4a2c';x2.fillRect(204,128,192,16);x2.strokeRect(204,128,192,16);x2.fillStyle='rgba(255,255,255,.2)';x2.fillRect(208,129,184,2);
     x2.fillStyle='#8a6a40';x2.beginPath();x2.moveTo(286,128);x2.lineTo(314,128);x2.lineTo(304,112);x2.lineTo(296,112);x2.closePath();x2.fill();x2.stroke();x2.fillStyle='#6a6a74';x2.fillRect(214,118,22,10);x2.strokeRect(214,118,22,10);x2.restore()}
-  const BAKE={forge:bakeForge,carp:bakeCarp,tan:bakeTan,sew:bakeSew,stone:bakeStone,jewel:bakeJewel};
+  function bakeArcane(x,x2){   // mesa de encantamiento: piedra azul oscura, estantes de pergaminos y frascos, velas y un círculo rúnico en la mesa
+    x.fillStyle='#14101e';x.fillRect(0,0,VW,VH);for(let c=0;c<20;c++){const sh=.55+hash(c*7)*.45;x.fillStyle='rgb('+Math.round(34*sh)+','+Math.round(28*sh)+','+Math.round(52*sh)+')';x.fillRect(c*32,0,31,200)}floor(x,'#1e1830','#0a0710');
+    x.save();x.strokeStyle='#050408';x.lineWidth=1.3;x.fillStyle='#3a2c24';x.fillRect(420,40,190,10);x.strokeRect(420,40,190,10);x.fillRect(420,90,190,10);x.strokeRect(420,90,190,10);
+    ['#b07aff','#6ad04a','#ff8a2a','#8fd8ff','#d4261c','#ffe85a'].forEach((cl,i)=>{x.fillStyle=cl;x.beginPath();x.arc(436+i*30,34,6,0,7);x.fill();x.stroke();x.fillStyle='#d8c8a0';x.fillRect(430+i*30,76,12,14);x.strokeRect(430+i*30,76,12,14)});glowDot(x,120,50,110);glowDot(x,520,70,70);x.restore();
+    base(x2,.8);x2.strokeStyle='#050408';x2.lineWidth=1.5;x2.fillStyle='#3a2c3e';x2.fillRect(190,140,220,16);x2.strokeRect(190,140,220,16);x2.fillStyle='#2a2030';[[210,156],[380,156]].forEach(([a,b])=>{x2.fillRect(a,b,14,70);x2.strokeRect(a,b,14,70)});
+    x2.strokeStyle='#b07aff';x2.lineWidth=2;x2.beginPath();x2.ellipse(300,148,70,10,0,0,7);x2.stroke();x2.beginPath();x2.ellipse(300,148,44,6,0,0,7);x2.stroke();for(let i=0;i<8;i++){const a=i/8*6.283;x2.beginPath();x2.moveTo(300+Math.cos(a)*44,148+Math.sin(a)*6);x2.lineTo(300+Math.cos(a)*70,148+Math.sin(a)*10);x2.stroke()}x2.restore()}
+  const BAKE={arcane:bakeArcane,forge:bakeForge,carp:bakeCarp,tan:bakeTan,sew:bakeSew,stone:bakeStone,jewel:bakeJewel};
   function texture(){if(TEXC)return TEXC;TEXC=mk(256,256);const x=TEXC.getContext('2d');x.fillStyle='#808080';x.fillRect(0,0,256,256);for(let i=0;i<900;i++){const v=hash(i*3)>.5?255:0;x.strokeStyle='rgba('+v+','+v+','+v+','+(.03+hash(i*7)*.07)+')';x.lineWidth=1+hash(i*5)*2.5;x.beginPath();const px=hash(i)*256,py=hash(i*11)*256,a=.5+hash(i*13)*.6;x.moveTo(px,py);x.lineTo(px+Math.cos(a)*(10+hash(i*17)*22),py+Math.sin(a)*(10+hash(i*17)*22));x.stroke()}return TEXC}
   let TEXC=null;
   function bake(skin){const s=2;const raw=mk(VW*s,VH*s);stn=mk(VW*s,VH*s);const x=raw.getContext('2d'),x2=stn.getContext('2d');x.scale(s,s);x2.scale(s,s);BAKE[skin](x,x2);

@@ -80,7 +80,7 @@ class B{
     this.quad([cx-hw,yy(f0),zz(f0)],[cx+hw,yy(f0),zz(f0)],[cx+hw,yy(f1),zz(f1)],[cx-hw,yy(f1),zz(f1)],mul(c,.34),em,ctr);   // fondo oscuro = juntas
     let x=cx-hw-(r%2?.1:0)*(.5+hash(rs,1,1)),i2=0;
     while(x<cx+hw-.01){const tw=.15+.11*hash(rs,i2,2),xa=Math.max(cx-hw,x),xb=Math.min(cx+hw,x+tw),wd=xb-xa;
-     if(wd>.04){const th=led*.9*(.8+.6*hash(rs,i2,3)),jx=(hash(rs,i2,4)-.5)*.03,gap=.012,xa2=xa+gap,xb2=xb-gap,cl=mul(vary(c,o.v??.18,rs,i2),.86+.22*f1+.06*(hash(rs,i2,5)-.5));
+     if(wd>.04){const th=led*.9*(.8+.6*hash(rs,i2,3)),jx=(hash(rs,i2,4)-.5)*.03,gap=.012,xa2=xa+gap,xb2=xb-gap,cl=mul(vary(c,o.v??.18,rs,i2),o.fancy?(.82+.3*f1+.06*(hash(rs,i2,5)-.5))*(r%4===3?.86:1):.86+.22*f1+.06*(hash(rs,i2,5)-.5));   /* fancy (instalaciones): degradado del alero a la cumbrera + una hilada más oscura cada 4 */
       const a=[xa2,yy(f0)+th,zz(f0)],b2=[xb2,yy(f0)+th,zz(f0)],c3=[xb2+jx,yy(f1)+th*.15,zz(f1)],d3=[xa2+jx,yy(f1)+th*.15,zz(f1)];
       this.quad(a,b2,c3,d3,cl,em,ctr);   // cara de la teja
       this.quad([xa2,yy(f0),zz(f0)],[xb2,yy(f0),zz(f0)],b2,a,mul(cl,.5),em,ctr)}   // canto (grosor): línea de sombra bajo cada teja
@@ -88,6 +88,7 @@ class B{
    }
    const e0=[cx-hw,ye,cz+sg*hd],e1=[cx+hw,ye,cz+sg*hd],ri=[cx+hw,y0+h,cz],le=[cx-hw,y0+h,cz];this.quad([e0[0],e0[1]-.05,e0[2]],[e1[0],e1[1]-.05,e1[2]],[e1[0],e1[1],e1[2]],[e0[0],e0[1],e0[2]],mul(c,.4),em,ctr);   // canto del alero
   });
+  if(o.fancy)this.exempt(()=>{this.box(cx,y0+h-.012,cz,hw*2+.05,.05,.11,mul(c,1.32),{nb:1,v:.06});[-1,1].forEach(q=>this.box(cx+q*(hw+.01),y0+h-.03,cz,.07,.09,.13,mul(c,1.15),{nb:1}))});   // cumbrera con remate (más clara que las tejas)
   const hs=hw-ov*.55;   // hastiales (triángulos de pared bajo el alero) los pone el edificio, aquí solo la cara inferior oscura
   this.tri([cx-hs,y0,cz-hd*.0-d/2],[cx-hs,y0,cz+d/2],[cx-hs,y0+h*.92,cz],mul(c,.35),em);this.tri([cx+hs,y0,cz+d/2],[cx+hs,y0,cz-d/2],[cx+hs,y0+h*.92,cz],mul(c,.35),em);
   if(o.ridge!==0)this.box(cx,y0+h-.01,cz,w+ov*2+.06,.07,.13,mul(c,.62),{v:.1});this.R.push({cx,cz,hw:w/2+ov,hd,y0,ye,h2,top:y0+h,slope:h2/hd});this.mode=_m}
@@ -124,7 +125,7 @@ const PAL={stone:col('#6a665c'),stoneD:col('#4c4942'),stoneL:col('#8a8576'),moss
  plank:col('#4a3828'),plankD:col('#352719'),glass:col('#ffb84a'),lamp:col('#ffcf6a'),rope:col('#6a5a3c'),barrel:col('#4f3a27')};
 // elige el color de pared/tejado de los DATOS (o.wall, o.roof: pastel) pero ensuciado; sin dato, el de la paleta
 const wallOf=(o,def)=>o&&o.wall?dirty(o.wall,.42,.6,.22):def;
-const roofOf=(o,def)=>o&&o.roof?dirty(o.roof,.38,.52,.18):def;
+const roofOf=(o,def)=>o&&o.roof?(o.vivid?mix(dirty(o.roof,.38,.52,.18),col(o.roof),.62):dirty(o.roof,.38,.52,.18)):def;   /* `vivid` SOLO lo llevan los tejados de las casas de INSTALACIÓN (interiors.js ROOFC y la Botica): conservan su color, con bandas y cumbrera (gable `fancy`); el resto de tejados queda como siempre */   // o.vivid = tejado que conserva su color (instalaciones: Botica verde musgo); sin él se ensucia como siempre
 
 // ─────────── elementos reutilizables ───────────
 // ventana: marco oscuro hundido + cristal ámbar (aEmit 1 con probabilidad `lit`) + cruz + postigos. `ax` = 'x' (cara hacia +x) o 'z' (cara hacia +z); (px,py,pz) = centro en la pared
@@ -172,7 +173,7 @@ const MODELS={
   timberFace(b,'z',z0+.005,W/2-.03,.2,.2+H,11);timberFace(b,'x',W/2+.005,D/2-.03,.2,.2+H,12);
   windowAt(b,'x',W/2+.005,.2+H*.68,-.28,.34,.4,3);windowAt(b,'x',W/2+.005,.2+H*.68,.38,.34,.4,5,.85);windowAt(b,'z',-W*.26,.2+H*.68,z0+.005,.34,.4,7);
   doorZ(b,W*.2,z0,.38,.62,9);lanternAt(b,W*.2+.36,.2+H*.6,z0+.12,1);   // H*.6: a H*.74 la cima del farol entraba en el faldón
-  b.gable(0,.2+H,0,W,D,.82,.2,roof,{rows:6,v:.2});
+  b.gable(0,.2+H,0,W,D,.82,.2,roof,{rows:6,v:.2,fancy:!!(o&&o.vivid)});
   const gh=.2+H;   // hastiales: la pared sube en triángulo bajo el alero (cierra el volumen)
   [-1,1].forEach(s=>{const x=s*(W/2);b.tri([x,gh,-D/2],[x,gh,D/2],[x,gh+.82,0],mix(wall,PAL.timber,.18),0)});
   b.exempt(()=>chimney(b,-W*.3,gh+.3,-D*.16,.66,5));
@@ -189,7 +190,7 @@ const MODELS={
   doorZ(b,W*.3,z0,.44,.68,15);lanternAt(b,W*.3+.4,.24+H1*.76,z0+.12,1.15);
   // letrero: ménsula de hierro, tablón oscuro con aro y farol de ánimo
   b.beam([-W*.02,y2-.1,z0+J],[-W*.02,y2-.1,z0+J+.24],.05*TK,PAL.iron);b.box(-W*.02,y2-.46,z0+J+.1,.05,.3,.3,PAL.plank,{v:.1});b.box(-W*.02,y2-.47,z0+J+.1,.02,.22,.22,PAL.thatch,{em:0,nb:1});lanternAt(b,-W*.02,y2-.12,z0+J+.24,.8);
-  const gh=y2+H2;b.gable(0,gh,0,W+J*2,D+J*2,1.0,.14,roof,{rows:7,v:.2});[-1,1].forEach(s=>{const x=s*(W/2+J-.02);b.tri([x,gh,-D/2-J],[x,gh,D/2+J],[x,gh+1.0,0],mix(wall,PAL.timber,.2),0)});
+  const gh=y2+H2;b.gable(0,gh,0,W+J*2,D+J*2,1.0,.14,roof,{rows:7,v:.2,fancy:!!(o&&o.vivid)});[-1,1].forEach(s=>{const x=s*(W/2+J-.02);b.tri([x,gh,-D/2-J],[x,gh,D/2+J],[x,gh+1.0,0],mix(wall,PAL.timber,.2),0)});
   // buhardilla en la cara +z
   b.exempt(()=>{b.box(W*.12,gh+.02,z0+J-.1,.54,.42,.4,wall,{v:.05});{const cx=W*.12,zc=z0+J-.1,ye=gh+.42,yr=gh+.44+.3,cl=roof,L=(sg)=>{const a=[cx+sg*.34,ye,zc-.22],b2=[cx+sg*.34,ye,zc+.28],c=[cx,yr,zc+.28],d=[cx,yr,zc-.22];sg>0?b.quad(b2,a,d,c,mul(cl,.95),0):b.quad(a,b2,c,d,mul(cl,.8),0)};L(1);L(-1);b.tri([cx-.27,gh+.44,zc+.2],[cx+.27,gh+.44,zc+.2],[cx,yr-.04,zc+.2],mix(wall,PAL.timber,.2),0);}   // buhardilla con cumbrera hacia +z (antes: cumbrera cruzada que tapaba la ventana y dejaba un triángulo suelto)
   windowAt(b,'z',W*.12,gh+.34,z0+J+.105,.22,.26,38,.9,0)});   // fin de la buhardilla (exenta)
