@@ -100,7 +100,10 @@ const TACK=[
  {bl:'#d8d0c0',tr:'#7a5a3a',le:'#5a3e2a',me:'#7a7e86',fur:1},{bl:'#9a2a22',tr:'#d8b050',le:'#2a1a18',me:'#d8b050',tas:'#d8b050'},{bl:'#3a3434',tr:'#ff7a2a',le:'#3a2620',me:'#4a4444',spike:1,glow:'#ff7a2a'},
  {bl:'#4a3a6a',tr:'#d8d0bc',le:'#2e2a34',me:'#d8d0bc',bone:1,glow:'#b890ff'},{bl:'#b8502a',tr:'#e8c060',le:'#7a4a2a',me:'#e8c060',tas:'#e8c060',rug:1},{bl:'#2a3a5a',tr:'#c8a870',le:'#5a3a24',me:'#c89a4a',rope:1},
  {bl:'#3a1a4a',tr:'#e8cf94',le:'#2a1a20',me:'#e8cf94',tas:'#e8cf94',glow:'#e8cf94'}];
-function saddle(S,m){{const tp=S.topAt(m.sz);if(tp>m.back){m.back=tp-.012;m.seat=m.back+.045-.38}}if(!S.sad)return;S.np=1;const T=TACK[S.cul]||TACK[0],y=m.back,z=m.sz,w=m.bw,fw=m.fw,sy=m.seat-.075,bh=m.bh||.24;S.on('body');
+// aparejo por TIER (silla `sd<i>` y brida `br<i>` equipadas): cuero y metal del tier; los adornos de cultura se conservan
+const TLE=['#9a6a34','#8a5a2a','#7a4a22','#6a4a3a','#8a8a9a','#6b4a32','#4a3a2a','#8a3a3a','#5a3a6a','#c8742a','#e8e0c8','#d8c8ff'],TME=['#c8742a','#c8842a','#8a8a98','#c8d4de','#e8e8f0','#f1e6c4','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#b8301c','#c8a0ff'];
+const tackOf=(S,k)=>{const T=TACK[S.cul]||TACK[0],t=S.tk&&S.tk[k];return t==null?T:Object.assign({},T,{le:TLE[t],me:TME[t],tr:t>=5?TME[t]:T.tr})};
+function saddle(S,m){{const tp=S.topAt(m.sz);if(tp>m.back){m.back=tp-.012;m.seat=m.back+.045-.04}}if(!S.sad)return;S.np=1;const T=tackOf(S,'sd'),y=m.back,z=m.sz,w=m.bw,fw=m.fw,sy=m.seat-.075,bh=m.bh||.24;S.on('body');
  const cy=y-bh;S.arc(0,cy,z-.02,w*1.05,bh*1.05,.4,1.05,T.bl,{lo:sh(T.bl,.7)});S.arc(0,cy,z-.02,w*1.045,bh*1.045,.43,1.1,T.tr,{n:16});S.arc(0,cy,z-.01,w*1.08,bh*1.08,.2,.85,T.le,{lo:sh(T.le,.7)});
  if(T.rug)for(const s of[-1,1])for(let i=-2;i<=2;i++){const q=[s*w*Math.sin(1.05)*1.05,y-bh+bh*1.05*Math.cos(PI-1.05)*-1,z-.02+i*.08];S.l(q,[q[0]*1.01,q[1]-.04,q[2]],.004,.004,T.tas,{n:4});S.e(q[0]*1.01,q[1]-.05,q[2],.009,.016,.009,T.tas,{d:'lo'})}
  if(T.fur){S.arc(0,y-bh,z-.02,w*1.075,bh*1.075,.46,.9,'#e0d8c8',{lo:'#b8b0a0',j:.25});S.e(0,y+.03,z-.19,w*.6,.035,.04,'#e8e0d0',{d:'md',j:.25})}
@@ -116,7 +119,7 @@ function saddle(S,m){{const tp=S.topAt(m.sz);if(tp>m.back){m.back=tp-.012;m.seat
  if(T.glow){S.gl(0,y+.06,z+.18,.018,T.glow);for(const s of[-1,1])S.gl(s*w*.95,y-.12,z-.02,.012,T.glow)}
  if(T.rope)for(const s of[-1,1])S.t(s*w*.92,y-.05,z-.17,.028,.008,T.tr,{r:[0,PI/2,0],n:10});S.np=0}
 // brida: muserola, carrilleras y riendas hasta la perilla de la silla (en el hueso de la cabeza: se mueven con ella)
-function bridle(S,m,h){if(!S.sad||!h)return;S.np=1;const T=TACK[S.cul]||TACK[0],{P,r}=h.hd,mz=h.mz,mr=h.mr;S.on('head');
+function bridle(S,m,h){if(!S.sad||!h)return;S.np=1;const T=tackOf(S,'br'),{P,r}=h.hd,mz=h.mz,mr=h.mr;S.on('head');
  S.t(...P(mz,0),mr*1.05,.009,T.le,{r:[r[0],0,0],n:12});for(const s of[-1,1]){const bt=P(mz,-mr*.3,s*mr*1.05);S.t(bt[0],bt[1],bt[2],.016,.005,T.me,{r:[0,PI/2,0],n:8});
   S.l(bt,P(h.poll||0,mr*.6,s*mr*1.1),.008,.008,T.le,{n:4});S.l(bt,[s*m.bw*.45,m.back+.08,m.sz+.11],.005,.005,T.le,{n:4})}S.np=0}
 
@@ -147,7 +150,7 @@ function ungulate(S,o){
  const h=HEADS[o.head||'equine'](S,nt,o,C,B,D,nb);
  // cola
  const tb=[0,by+bh*.72,zb-.26*(o.hip||1)];S.bone('tail','body',...tb);S.on('tail');TAILS[o.tail||'hair'](S,tb,o,C,D,by);
- const m={back:by+bh,sz:o.sz||0,bw,bh,fw:bw+.055,LH,by,hd:h&&h.hd,cyc:2.05*lg*ln,rad:.7*ln,eye:h&&h.eye};m.seat=m.back+.045-.38;if(o.x)o.x(S,{by,bh,bw,zf,zb,LH,nb,nt,h,C,B,D});saddle(S,m);bridle(S,m,h);return m}
+ const m={back:by+bh,sz:o.sz||0,bw,bh,fw:bw+.055,LH,by,hd:h&&h.hd,cyc:2.05*lg*ln,rad:.7*ln,eye:h&&h.eye};m.seat=m.back+.045-.04;if(o.x)o.x(S,{by,bh,bw,zf,zb,LH,nb,nt,h,C,B,D});saddle(S,m);bridle(S,m,h);return m}
 // cabezas de ungulado
 const HEADS={
  equine(S,nt,o,C,B,D,nb0){const a=o.ha==null?.95:o.ha,H=HD(nt,a),{P,r}=H,s=o.hs||1,M=o.muz||sh(C,.62);
@@ -207,7 +210,7 @@ function carnivore(S,o){
  S.bone('head','body',...nb);S.on('head');S.l(nb,nt,.13*w,.1*w,C,{lo:B});if(o.mane)for(let i=0;i<12;i++){const a=i/12*PI*2;S.e(Math.cos(a)*.11*w,nt[1]+Math.sin(a)*.1-.02,nt[2]-.02,.06,.085,.05,o.mane,{r:[0,0,a+PI/2],j:.3,d:'md'})}
  const h=CHEADS[o.head||'feline'](S,nt,o,C,B,D);
  const tb=[0,by+bh*.5,zb-.22*(o.hip||1)];S.bone('tail','body',...tb);S.on('tail');CTAILS[o.tail||'long'](S,tb,o,C,D);
- const m={back:by+bh,sz:o.sz||-.02,bw,bh,fw:bw+.06,LH,by,hd:h.hd,cyc:1.7*lg*ln,rad:.6*ln,eye:h.eye};m.seat=m.back+.045-.38;if(o.x)o.x(S,{by,bh,bw,zf,zb,LH,nb,nt,h,C,B,D});saddle(S,m);bridle(S,m,h);return m}
+ const m={back:by+bh,sz:o.sz||-.02,bw,bh,fw:bw+.06,LH,by,hd:h.hd,cyc:1.7*lg*ln,rad:.6*ln,eye:h.eye};m.seat=m.back+.045-.04;if(o.x)o.x(S,{by,bh,bw,zf,zb,LH,nb,nt,h,C,B,D});saddle(S,m);bridle(S,m,h);return m}
 const CHEADS={
  feline(S,nt,o,C,B,D){const H=HD(nt,o.ha==null?.12:o.ha),{P,r}=H,s=o.hs||1;S.e(...P(.06*s,.01),.1*s,.09*s,.095*s,C,{r,lo:B});S.e(...P(.04*s,-.035*s),.1*s,.06*s,.08*s,o.cheek||B,{r});
   S.e(...P(.14*s,-.025*s),.055*s,.045*s,.05*s,o.muzC||B,{r});S.e(...P(.18*s,-.0),.022*s,.016*s,.015*s,o.nose||'#c87a7a',{r,d:'lo'});S.e(...P(.15*s,-.06*s),.035*s,.02*s,.03*s,B,{r,d:'lo'});
@@ -261,7 +264,7 @@ function saurian(S,o){
  S.e(0,tb[1],tb[2]+.05,bh*.82,bh*.8,.12,C,{lo:B});TR(tb,t1,bh*.78,bh*.5,C);
  if(o.dorsal)for(let i=0;i<3;i++){const zz=tb[2]-.08-i*.1;S.k([0,tb[1]+.05-i*.02,zz],[0,tb[1]+.11-i*.03,zz-.04],.022,o.dorsal,{n:5,em:o.dorsalE||0})}
  S.bone('tail2','tail',...t1);S.on('tail2');const t2=[0,Math.max(.05,t1[1]-.12),t1[2]-.44*L];TR(t1,t2,bh*.5,.02,C);S.k([0,t2[1],t2[2]+.02],[0,t2[1]-.01,t2[2]-.08],.02,o.tipC||C);if(o.tailX)o.tailX(S,t2);
- const m={back:by+bh,sz:o.sz||-.02,bw,bh,fw:bw+.08,LH,by,hd:{P,r},cyc:1.3*lg*ln,rad:.6*ln,tilt:1,eye:[.075*s*w,...P(.08*s,.045*s).slice(1),.02]};m.seat=m.back+.045-.38;
+ const m={back:by+bh,sz:o.sz||-.02,bw,bh,fw:bw+.08,LH,by,hd:{P,r},cyc:1.3*lg*ln,rad:.6*ln,tilt:1,eye:[.075*s*w,...P(.08*s,.045*s).slice(1),.02]};m.seat=m.back+.045-.04;
  if(o.x)o.x(S,{by,bh,bw,zf,zb,LH,nb,nt,C,B,D});saddle(S,m);bridle(S,m,{hd:H,mz:.22*s,mr:.06*s,poll:0});return m}
 
 // ── AVES BÍPEDAS (raptor, grulla, ave del terror, avestruz, gaviotón): patas BL/BR, FL/FR vacías (las anima igual), alas plegadas ──
@@ -288,7 +291,7 @@ function avian(S,o){
  S.eye(.05*s,...P(.05*s,.025*s).slice(1),.014*s,o.eyeC||'#e8b030',o.eyeG!==false);
  const tb=[0,by+.03,-.32*ln];S.bone('tail','body',...tb);S.on('tail');if(o.tailR){let p=tb;for(let i=1;i<=4;i++){const t=i/4,q=[0,tb[1]+.04*t,tb[2]-.45*t*(o.tl||1)];S.l(p,q,.07*(1-t*.6),.07*(1-(t+.25)*.6),C,{jt:1,lo:B});p=q}if(o.tailFeather)S.e(0,p[1],p[2],.07,.03,.15,o.tailFeather,{d:'md',j:.3})}
  else for(let i=0;i<7;i++){const a=(i-3)*.22;S.e(Math.sin(a)*.07,tb[1]+.02+(o.tailUp||0)*.1,tb[2]-.08-Math.cos(a)*.05,.035,.02,.16*(o.tl||1),o.tailC||D,{r:[(o.tailUp||0)-.2,a,0],d:'md'})}
- const m={back:by+bh,sz:o.sz||-.02,bw,bh,fw:bw+.07,LH:HY,by,hd:{P,r},cyc:1.9*lg,rad:.5,biped:1,eye:[.05*s,...P(.05*s,.025*s).slice(1),.02]};m.seat=m.back+.045-.38;if(o.x)o.x(S,{by,bh,bw,nb,hb,P,r,s,C,B,D});saddle(S,m);bridle(S,m,{hd:H,mz:.14*s,mr:.045*s,poll:0});return m}
+ const m={back:by+bh,sz:o.sz||-.02,bw,bh,fw:bw+.07,LH:HY,by,hd:{P,r},cyc:1.9*lg,rad:.5,biped:1,eye:[.05*s,...P(.05*s,.025*s).slice(1),.02]};m.seat=m.back+.045-.04;if(o.x)o.x(S,{by,bh,bw,nb,hb,P,r,s,C,B,D});saddle(S,m);bridle(S,m,{hd:H,mz:.14*s,mr:.045*s,poll:0});return m}
 
 // alas desplegables (dragón, grifo): hueso wingL/wingR en el lomo; membrana (dragón) o plumas (grifo); plegadas hacia atrás a lo largo del cuerpo
 function wings(S,y,z,bw,o){for(const s of[-1,1]){const n=s>0?'wingL':'wingR',X=v=>s*(bw+v),b=[s*bw*.55,y,z];S.bone(n,'body',...b);S.on(n);const L=o.len||1;
@@ -335,7 +338,7 @@ const SPEC={
    else{S.l([x,.3,z],[x+s*.06,.03,z+.08],.06,.04,C,{jt:1,lo:B});for(let i=-1;i<=1;i++)S.e(x+s*.06+i*.04,.015,z+.13,.025,.015,.04,'#5a5a2a',{d:'lo'})}}
   S.bone('head','body',0,.48,.34);S.on('head');S.e(0,.52,.42,.3,.17,.2,C,{lo:B});S.e(0,.44,.46,.28,.08,.18,B);S.e(0,.5,.58,.22,.03,.04,'#4a3a2a',{d:'md'});
   for(const x of[-1,1]){S.e(x*.16,.66,.42,.07,.07,.07,C);S.e(x*.17,.68,.46,.045,.045,.045,'#d8a020',{em:0,d:'md'});S.e(x*.175,.68,.49,.03,.012,.012,'#100a06',{d:'lo',j:0});S.e(x*.24,.6,.36,.05,.035,.06,'#7a6a3a',{d:'lo'})}
-  S.bone('tail','body',0,.4,-.4);if(O.x)O.x(S);const m={back:.7,sz:-.06,bw:.32,bh:.28,fw:.38,LH:.3,by:.42,hd:{P:HD([0,.52,.42],.0).P,r:[0,0,0]},cyc:1.4,rad:.5,eye:[.17,.68,.46,.04]};m.seat=m.back+.045-.38;saddle(S,m);bridle(S,m,{hd:HD([0,.5,.42],0),mz:.12,mr:.22,poll:0});return m},
+  S.bone('tail','body',0,.4,-.4);if(O.x)O.x(S);const m={back:.7,sz:-.06,bw:.32,bh:.28,fw:.38,LH:.3,by:.42,hd:{P:HD([0,.52,.42],.0).P,r:[0,0,0]},cyc:1.4,rad:.5,eye:[.17,.68,.46,.04]};m.seat=m.back+.045-.04;saddle(S,m);bridle(S,m,{hd:HD([0,.5,.42],0),mz:.12,mr:.22,poll:0});return m},
  raptor:S=>avian(S,{lg:1.05,col:'#5a6a3a',bel:'#b8b07a',dk:'#2a3420',nc:'#5a6a3a',headC:'#5a6a3a',toothy:1,nl:.8,nr:.085,ha:.15,tailR:1,tl:1.2,wing:'arm',sickle:1,leg:'#4a5a2a',thigh:'#5a6a3a',crest:'#c84a2a',eyeC:'#e8c030',pitch:-.25,
   pnt:[PNT.tiger('#2a3420',30,.3)]}),
  bufalo:S=>ungulate(S,{lg:.85,ln:1.1,w:1.3,h:1.1,col:'#4a4a4e',bel:'#3a3a3e',dk:'#2a2a2e',head:'bovine',hs:1.08,na:.25,nl:.55,nr:1.35,ha:.3,tail:'tuft',cloven:1,lc:'#5a4a3a',sock:[1,1,1,1],sockC:'#6a5a44',muz:'#3a3a3a',
@@ -372,7 +375,7 @@ const SPEC={
   for(const[n,x,z]of[['legFL',lx,.2],['legFR',-lx,.2],['legBL',lx,-.24],['legBR',-lx,-.24]]){S.on(n);const s=Math.sign(x);S.l([x,.36,z],[x+s*.2,.42,z+.04],.035,.025,C,{jt:1});S.l([x+s*.2,.42,z+.04],[x+s*.26,.02,z+.1],.025,.012,C,{jt:1});S.k([x+s*.26,.04,z+.1],[x+s*.28,0,z+.16],.012,'#5a3a2a',{n:4})}
   S.on('body');for(const s of[-1,1]){S.l([s*.25,.36,-.02],[s*.46,.4,-.02],.03,.022,C,{jt:1});S.l([s*.46,.4,-.02],[s*.52,.02,-.0],.02,.012,C)}
   S.bone('head','body',0,.48,.44);S.on('head');S.e(0,.46,.48,.16,.12,.1,C);S.hn([[0,.5,.54],[0,.62,.66],[0,.8,.7],[0,.9,.62]],.05,'#3a2222',{tip:G});S.k([0,.42,.56],[0,.38,.68],.04,'#3a2222');for(const s of[-1,1]){S.gl(s*.1,.5,.55,.022,'#ffb020');S.hn([[s*.08,.44,.55],[s*.14,.38,.64],[s*.08,.34,.7]],.018,'#3a2222')}
-  S.bone('tail','body',0,.5,-.5);if(O.x)O.x(S);const m={back:.76,sz:-.08,bw:.34,bh:.24,fw:.42,LH:.36,by:.48,hd:{P:HD([0,.5,.5],0).P,r:[0,0,0]},cyc:1.2,rad:.55,eye:[.1,.5,.55,.03]};m.seat=m.back+.045-.38;saddle(S,m);
+  S.bone('tail','body',0,.5,-.5);if(O.x)O.x(S);const m={back:.76,sz:-.08,bw:.34,bh:.24,fw:.42,LH:.36,by:.48,hd:{P:HD([0,.5,.5],0).P,r:[0,0,0]},cyc:1.2,rad:.55,eye:[.1,.5,.55,.03]};m.seat=m.back+.045-.04;saddle(S,m);
   if(S.sad){S.on('body');const T=TACK[5];for(const s of[-1,1])S.l([s*.06,.86,.12],[s*.1,.78,.3],.01,.01,T.le,{n:4});S.l([-.12,.8,.3],[.12,.8,.3],.018,.018,T.me)}return m},
  sabueso:S=>carnivore(S,{pnt:[PNT.veins('#ff5a1a',6,.022,2)],lg:1.1,ln:1.0,w:1.05,col:'#2a1e1e',bel:'#3a2626',dk:'#1a1010',head:'canine',hs:1.15,horn:'#3a2a2a',hornT:'#ff7a2a',fang:1,eyeC:'#ff6a1a',ear:.9,tail:'long',tipC:'#ff7a2a',lt:1.05,claw:'#ff7a2a',hump:.6,
   x(S,c){S.on('body');for(let i=0;i<11;i++)S.k([0,c.by+c.bh*.85,c.zb-.08+i*.065],[0,c.by+c.bh+.1+.04*Math.sin(i),c.zb-.12+i*.065],.03,i%2?'#ff7a2a':'#ffb02a',{em:2,n:5})}}),
@@ -406,14 +409,14 @@ const SPEC={
   for(let i=0;i<14;i++){const a=i/14*PI*2;S.e(Math.sin(a)*.44,.32,Math.cos(a)*.56,.06,.03,.06,'#3a4a2e',{d:'lo'})}for(let i=0;i<9;i++)S.e((hs(i,2,4)-.5)*.5,.68+hs(i,5,4)*.06,(hs(i,7,4)-.5)*.7,.025,.03,.025,'#e8e0c8',{d:'lo'});
   for(const[n,x,z,r]of[['legFL',lx,.28,0],['legFR',-lx,.28,0],['legBL',lx,-.28,1],['legBR',-lx,-.28,1]]){S.on(n);const s=Math.sign(x);S.l([x,.28,z],[x+s*.12,.06,z+(r?-.04:.06)],.09,.08,C,{jt:1});S.e(x+s*.13,.04,z+(r?-.05:.1),.1,.04,.12,C,{lo:'#4a6a5a'});for(let i=0;i<4;i++)S.e(x+s*.12+Math.cos(i)*.05,.05,z+Math.sin(i)*.05,.02,.01,.02,'#e8e0c8',{d:'lo',j:0})}
   S.bone('head','body',0,.36,.52);S.on('head');S.l([0,.36,.5],[0,.44,.72],.11,.09,C,{lo:'#4a6a5a'});S.e(0,.48,.8,.11,.09,.13,C,{lo:'#4a6a5a'});S.e(0,.45,.92,.06,.04,.04,'#3a4a3a',{d:'md'});S.eye(.08,.51,.84,.018,'#1a1410');for(let i=0;i<6;i++)S.e((hs(i,3,1)-.5)*.16,.55,.74+hs(i,6,1)*.12,.02,.01,.02,'#2a3a2a',{d:'lo'});
-  S.bone('tail','body',0,.34,-.58);if(O.x)O.x(S);S.on('tail');S.k([0,.34,-.55],[0,.3,-.72],.05,C);const m={back:.78,sz:-.04,bw:.42,bh:.3,fw:.5,LH:.28,by:.4,hd:{P:HD([0,.48,.82],0).P,r:[0,0,0]},cyc:1.0,rad:.65,eye:[.08,.51,.84,.02]};m.seat=m.back+.045-.38;saddle(S,m);
+  S.bone('tail','body',0,.34,-.58);if(O.x)O.x(S);S.on('tail');S.k([0,.34,-.55],[0,.3,-.72],.05,C);const m={back:.78,sz:-.04,bw:.42,bh:.3,fw:.5,LH:.28,by:.4,hd:{P:HD([0,.48,.82],0).P,r:[0,0,0]},cyc:1.0,rad:.65,eye:[.08,.51,.84,.02]};m.seat=m.back+.045-.04;saddle(S,m);
   if(S.sad){S.on('head');const T=TACK[8];for(const s of[-1,1])S.l([s*.1,.47,.86],[s*.2,.84,.12],.007,.007,T.le,{n:4});S.t(0,.47,.86,.11,.012,T.tr,{r:[0,0,0],n:12})}return m},
  cangrejo:S=>{S.bone('root',null,0,0,0).bone('body','root',0,.46,0);const O=S.o||{},C=O.col||'#c84a2a',B=O.bel||'#e8b088',D=O.dk||'#7a2a1a',lx=.3;
   S.bone('legFL','body',lx,.42,.1).bone('legFR','body',-lx,.42,.1).bone('legBL','body',lx,.42,-.18).bone('legBR','body',-lx,.42,-.18);S.on('body');
   S.e(0,.5,0,.5,.18,.38,C,{lo:D});S.e(0,.58,-.02,.36,.12,.28,'#d8603a');for(let i=0;i<12;i++)S.e((hs(i,2,3)-.5)*.8,.6+hs(i,4,3)*.04,(hs(i,6,3)-.5)*.5,.025,.025,.025,'#a83a1a',{d:'lo'});S.e(0,.36,0,.38,.06,.3,B);
   for(const[n,x,z]of[['legFL',lx,.1],['legFR',-lx,.1],['legBL',lx,-.18],['legBR',-lx,-.18]]){S.on(n);const s=Math.sign(x);for(let j=0;j<2;j++){const zz=z+j*.12-.06;S.l([x,.42,zz],[x+s*.32,.66,zz+.03],.035,.028,C,{jt:1});S.l([x+s*.32,.66,zz+.03],[x+s*.6,0,zz+.08],.028,.008,j?D:C,{jt:1})}}
   S.bone('head','body',0,.5,.36);S.on('head');for(const s of[-1,1]){S.l([s*.08,.56,.34],[s*.09,.72,.38],.015,.012,C);S.e(s*.09,.75,.38,.035,.035,.035,'#1a1410',{d:'md'});S.l([s*.3,.44,.3],[s*.42,.48,.52],.06,.05,C,{jt:1});S.e(s*.44,.5,.66,.12,.09,.16,C,{lo:D});S.k([s*.42,.53,.76],[s*.38,.52,.92],.05,'#3a1a1a');S.k([s*.47,.46,.74],[s*.46,.44,.88],.04,'#3a1a1a')}
-  S.bone('tail','body',0,.46,-.38);if(O.x)O.x(S);const m={back:.68,sz:-.05,bw:.38,bh:.18,fw:.46,LH:.42,by:.46,hd:{P:HD([0,.56,.38],0).P,r:[0,0,0]},cyc:1.0,rad:.6,eye:[.09,.75,.38,.04]};m.seat=m.back+.045-.38;saddle(S,m);
+  S.bone('tail','body',0,.46,-.38);if(O.x)O.x(S);const m={back:.68,sz:-.05,bw:.38,bh:.18,fw:.46,LH:.42,by:.46,hd:{P:HD([0,.56,.38],0).P,r:[0,0,0]},cyc:1.0,rad:.6,eye:[.09,.75,.38,.04]};m.seat=m.back+.045-.04;saddle(S,m);
   if(S.sad){S.on('head');const T=TACK[8];for(const s of[-1,1])S.l([s*.09,.7,.38],[s*.15,.78,.14],.007,.007,T.le,{n:4})}return m},
  iguana:S=>saurian(S,{ln:1.1,lg:1.0,w:1.05,h:1.15,col:'#2a2a2c',bel:'#4a4a42',dk:'#1a1a1c',dorsal:'#5a5a52',dorsalH:.11,scutes:'#5a5850',eyeC:'#c84a2a',hs:1.0,tl:1.2,
   hx(S,P,s){for(let i=0;i<8;i++)S.e(...P(.03*s+i*.025*s,.06*s,(hs(i,1,1)-.5)*.08*s),.02,.02,.02,'#8a8a7a',{d:'lo'});S.e(...P(.06*s,-.07*s),.04,.05,.04,'#4a3a3a',{d:'md'})}}),
@@ -469,7 +472,7 @@ export const MSPEC=SPEC;
 export const MBIO={caballo:0,poni:0,asno:0,uro:0,ciervo:1,alce:1,osopardo:1,lince:1,varano:2,sapo:2,raptor:2,bufalo:2,yakcarga:3,ibice:3,mamut:3,osoblanco:3,tigre:4,grulla:4,panda:4,komainu:4,
  salamandra:5,rino:5,escarabajo:5,sabueso:5,huargo:6,aveterror:6,ciervorunico:6,tejon:6,camello:7,orix:7,avestruz:7,gola:7,tortuga:8,cangrejo:8,iguana:8,gavion:8,dragon:9,espectral:9,grifo:9,unicornio:9,pegaso:9,ciervolunar:9,osomusgo:9,cocodrilo:9,sapojade:9,ibicecristal:9,qilin:9,tigreblanco:9,corcelinfernal:9,cuervo:9,escarabajosol:9,esfinge:9,tortugadragon:9,cangrejorey:9};
 // Construye una especie: devuelve {bones:[{n,p,o}], geos:{nombre:BufferGeometry}, meta}. sad = con silla y bridas (montura); cul = cultura del aparejo
-export function makeSpecies(sp,sad,cul){const f=SPEC[sp];if(!f)return null;const S=new Bld(sp.length*31+sp.charCodeAt(0),!!sad,cul|0),meta=f(S);
+export function makeSpecies(sp,sad,cul,tk){const f=SPEC[sp];if(!f)return null;const S=new Bld(sp.length*31+sp.charCodeAt(0),!!sad,cul|0);if(tk){S.tk={};String(tk).split(',').forEach(q=>{const m=/^(sd|br)(\d+)$/.exec(q);if(m)S.tk[m[1]]=+m[2]})}const meta=f(S);
  meta.top=S.top;meta.len=S.zmax-S.zmin;const geos={};for(const b of S.B){S.G[b.n].paint(S.PT);geos[b.n]=S.G[b.n].geo()}return{bones:S.B,geos,meta}}
 // En grupos de three (montura e icono): cada hueso = Group en su origen relativo; cada geometría = Mesh con contorno HIJO (regla CONTORNO-HIJO)
 export function groupsOf(d,mat,hull,ink=.012,cast=true){const grp=new THREE.Group(),R={},abs={};for(const b of d.bones){const g=new THREE.Group(),pa=b.p?abs[b.p]:[0,0,0];g.position.set(b.o[0]-pa[0],b.o[1]-pa[1],b.o[2]-pa[2]);abs[b.n]=b.o;

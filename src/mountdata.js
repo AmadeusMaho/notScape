@@ -68,7 +68,7 @@ const MTD=(()=>{
  function reg(){for(const id in E){const e=E[id];I['mt_'+id]=[e.mt,e.ic,e.rare?6000:120+e.lv*18];LOOT['mt_'+id]={s:'mt',r:rar(e),k:0,st:{},mt:{sp:id}}}}
  // criaturas salvajes (game.js, tras definir LVR/MSF y antes de calcular sus niveles)
  function regMobs(){for(const id in E){const e=E[id],lo=Math.max(1,Math.round(e.lv*.6));
-  MD[id]=Object.assign(MD[id]||{},{n:e.n,lv:e.lv,hp:1,dmg:0,as:3000,c:e.c,w:24,h:e.h,an:1,tm:{lv:e.lv,xp:e.xp,rare:e.rare?1:0},co:[1,6],dr:[['carne',.6],['cuero',.5],['hueso',.3]]});
+  MD[id]=Object.assign(MD[id]||{},{n:e.n,lv:e.lv,hp:1,dmg:0,as:3000,c:e.c,w:24,h:e.h,an:1,tm:{lv:e.lv,xp:(typeof XPR==='function'?Math.round(1.1*XPR(Math.min(99,e.lv))*100):e.xp),rare:e.rare?1:0},co:[1,6],dr:[['carne',.6],['cuero',.5],['hueso',.3]]});
   MD[id].id=id;MD[id].h=Math.round(e.h/1.5);CRE.H[id]=e.h;LVR[id]=[lo,lo+3];MSF[id]=[e.rare?3:1.4,0]}}
  // colocación por bioma (game.js, junto a HERB.place): 2 pastos con 2 especies × 2 ejemplares; las raras, un claro aparte con UN ejemplar
  function place(b,k,x0,y0){if(b.zone)return 0;const sp=L.filter(r=>r[1]===k&&!r[11]).map(r=>r[0]),rr=L.filter(r=>r[1]===k&&r[11]).map(r=>r[0]),cen=b.cen||[b.w/2,b.h/2],W=300,H=200,zr=[];let tries=0;

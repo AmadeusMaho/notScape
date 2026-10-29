@@ -210,7 +210,7 @@ const WKUI=(()=>{
   function onLevel(sk,o,n){
     if(!REG[sk])return;const of=sk,nw=WK.list(of,n).filter(id=>WK.A[id].lv>o&&!WK.A[id].spec);if(!nw.length)return;
     const names=nw.map(id=>WK.A[id].n).join(', ');log('🔨 <b>Nueva acción de '+REG[of].n+':</b> '+names);
-    setTimeout(()=>{try{banner('Nueva acción',names,'#7fb4e8',3200)}catch(e){}},1800)}
+    if(typeof RECN!=='undefined')RECN.unlock({title:'🔨 ¡Nuevas acciones!',sub:REG[of].n+' · nivel '+n,items:nw.map(id=>({em:'⚡',name:WK.A[id].n})),foot:'Se añaden al libro de acciones de la hoja de trabajo.'})}
   function close(){if(el)el.style.display='none';runQ=[];if(typeof FORGE!=='undefined')FORGE.close()}
   function pose(now){
     const id=A.e&&A.e.id,v=A.wkv,k=(REG[OF]&&REG[OF].clip)||'sm';

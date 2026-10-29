@@ -205,7 +205,7 @@ const ISLA=(()=>{
  function tipHide(){if(tipEl){tipEl.remove();tipEl=null}}
  function lock(){return !!(S.isla&&S.isla.lock&&!S.isla.done)}
  function html(){const n=cur(),i=st(),p=prog();
-  return `<div class="hint" style="margin:0 0 3px;color:#d8c9a3">${CAPS[n.cap]} · Despertar ${Math.min(i.step+1,STEPS.length)}/${STEPS.length}</div><div style="color:var(--yl);font-size:25px">${n.txt}</div>`+(p?`<div class="hint" style="margin:2px 0">${p[0]}/${p[1]}</div><div class="bar"><i style="width:${p[0]/p[1]*100}%"></i></div>`:'')}
+  return `<div class="hint" style="margin:0 0 3px;color:#d8c9a3">${CAPS[n.cap]} · Despertar</div><div style="color:var(--yl);font-size:25px">${n.txt}</div>`+(p?`<div class="hint" style="margin:2px 0">${p[0]}/${p[1]}</div><div class="bar"><i style="width:${p[0]/p[1]*100}%"></i></div>`:'')}
  // objetivo de la flecha dorada (px de mundo) del paso actual: el PNJ pedido o el punto `at`; en el ritual, el brasero que falte
  function target(){if(!on())return null;const n=cur();if(n.g.t==='offer'){const k=st().off.indexOf(0);if(k>=0){const q=wp(OFR[k][1],OFR[k][2]);return q}}
   if(n.npc){const e=ST.find(s=>s.id===n.npc);if(e)return e}if(n.at)return wp(n.at[0],n.at[1]);return null}

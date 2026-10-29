@@ -48,7 +48,7 @@ const ALQ=(()=>{
   return{v,dom,type:dom?TYPE[dom]:null,str,side,sk,sv,volat,steps,stab:sv.stab+(cal*.012)}}
  // ── objetos: pz_<tipo>_<tier 1-8><calidad 1-3><lado n/f/h/s/x> ─────────────────────────────────────────────────────────────────────────────────────────────────────────
  const idOf=(type,str,g,sk)=>'pz_'+type+'_'+Math.max(1,Math.min(8,Math.round(str/3)))+(g+1)+(sk?SIDE[sk][0]:'x');
- function reg(){Object.assign(I,{frasco:['Frasco de cristal','🧪',6],al_turbio:['Brebaje turbio','🟫',1],vino:['Vino','🍷',30],alcohol:['Alcohol destilado','🧴',90]});
+ function reg(){Object.assign(I,{frasco:['Frasco de cristal','🧪',6],al_turbio:['Brebaje turbio','🟫',1],vino:['Vino','🍷',30],alcohol:['Alcohol destilado','🧴',90],tonico_cria:['Tónico de cría','🧪',110]});
   if(ACT.co&&!ACT.co.some(a=>a[2]==='vino'))ACT.co.push(['Vino de arroz',{arroz:2},'vino',8,60,2600],['Aguardiente (destilar vino)',{vino:2},'alcohol',20,140,3200]);   // COCINA destila la base de Alquimia (vino → alcohol)
   Object.keys(TN).forEach(t=>{for(let ti=1;ti<=8;ti++)for(let g=0;g<3;g++)['x','n','f','h','s'].forEach(s=>{I['pz_'+t+'_'+ti+(g+1)+s]=[TN[t][0]+' '+ROM[g]+' ('+TIERN[ti-1]+(s==='x'?'':', '+SIDE[SIDEK[s]][1]+' leve')+')',TN[t][1],Math.round((10+ti*14)*(1+g*.6)*(s==='x'?1:.8))]})});}
  const parse=id=>{const m=/^pz_([a-z]+)_([1-8])([1-3])([xnfhs])$/.exec(id);return m?{type:m[1],ti:+m[2],g:+m[3]-1,sk:SIDEK[m[4]]}:null};
@@ -85,6 +85,7 @@ const ALQ=(()=>{
   {id:'mana1',name:'Poción de maná menor',lvl:8,ing:['h_trebol','h_trebol'],adds:{h_trebol:0},ph:[{T:.4,w:.18,d:8},{T:.62,w:.16,d:8}],stir:5},
   {id:'vigor1',name:'Poción de vigor menor',lvl:12,ing:['carne_jab','carne_jab'],adds:{carne_jab:0},ph:[{T:.6,w:.18,d:9},{T:.45,w:.18,d:7}],stir:5},
   {id:'antidoto1',name:'Antídoto común',lvl:14,ing:['hueso','h_salvia'],adds:{hueso:0,h_salvia:8},ph:[{T:.55,w:.16,d:8},{T:.7,w:.14,d:10}],stir:6},
+  {id:'cria1',name:'Tónico de cría',lvl:20,ing:['h_manzanilla','h_trebol','h_loto'],adds:{h_manzanilla:0,h_trebol:0,h_loto:6},ph:[{T:.5,w:.16,d:9},{T:.62,w:.14,d:9}],stir:5,out:'tonico_cria'},   // producto FIJO (no una poción): reduce a la mitad la gestación de una cría (Establo)
   {id:'vida2',name:'Poción de vida mayor',lvl:24,ing:['h_manzanilla','h_manzanilla','h_loto'],adds:{h_manzanilla:0,h_loto:9},ph:[{T:.45,w:.16,d:9},{T:.65,w:.14,d:10},{T:.5,w:.14,d:8}],stir:7}];
  const sameSet=(a,b)=>a.length===b.length&&[...a].sort().join()===[...b].sort().join();
  function procOf(F){if(F)return{ph:F.ph,adds:F.adds,stir:F.stir,form:true};return{ph:[{T:.5,w:.24,d:9},{T:.62,w:.2,d:9}],adds:null,stir:5,form:false}}
@@ -388,7 +389,7 @@ const ALQ=(()=>{
  function hud(c){const g=G;let name='Preparación',pt=g.pot;if(pt.ready)name=g.ever?'Embotellar':'Poción lista';else if(pt.started)name=g.curPh?'Cocción · fase '+(1+g.proc.ph.indexOf(g.curPh))+'/'+g.proc.ph.length:'Remover y esperar';else name='Preparación · moler';c.fillStyle='rgba(16,13,10,.72)';c.beginPath();c.roundRect(WW/2-150-80,8,300,26,13);c.fill();c.fillStyle='#e8cf94';c.font='600 14px Cinzel,serif';c.fillText(name,WW/2-80,26)}
  // ── resultado ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
  // PANTALLA DE RESULTADO: «Has creado Poción de X» con su icono; si la fórmula es nueva pregunta si quiere ponerle un nombre (opcional)
- function showRes(){const M=G.M,sc=G.score,t=sc.total,g0=t>=.86?2:t>=.66?1:t>=.4?0:-1,exact=G.F&&sameSet(G.F.ing,potUnits()),g=exact?g0:Math.min(g0,0),none=!M.type||g<0||M.str<2,out=none?'al_turbio':idOf(M.type,M.str*(1+.12*(g-1)),g,M.sk);
+ function showRes(){const M=G.M,sc=G.score,t=sc.total,g0=t>=.86?2:t>=.66?1:t>=.4?0:-1,exact=G.F&&sameSet(G.F.ing,potUnits()),g=exact?g0:Math.min(g0,0),fo=!!(G.F&&G.F.out&&exact&&g0>=0),none=fo?false:(!M.type||g<0||M.str<2),out=fo?G.F.out:(none?'al_turbio':idOf(M.type,M.str*(1+.12*(g-1)),g,M.sk));
   G.res={g,none,out,avg:t,capped:!exact&&g0>0};G.key=keyOf(potUnits(),baseKey());NAMEIN=true;const e=document.getElementById('alq'),isNew=!(S.alr||{})[G.key]&&!none,def=(TN[M.type]?TN[M.type][0]:'Brebaje')+' de '+(potUnits()[0]&&I[potUnits()[0]]?I[potUnits()[0]][0].toLowerCase():'hierbas');
   const pc=v=>Math.round(v*100)+' %';
   const d=document.createElement('div');d.className='aq-name aq-res';d.innerHTML='<div class="aq-ri">'+ic(out)+'</div><p>'+(none?'El brebaje no ha salido bien':'Has creado <b>'+I[out][0]+'</b>')+'</p><small>'+(none?(M.type?'La destilación salió mal: no sirve de nada.':'Ninguna propiedad dominante: no hace nada.'):'Calidad '+ROM[g]+(g===2?' · ¡perfecta!':'')+(G.res.capped?' · improvisada: con la fórmula podría ser III':''))+(sc.conf?' · mezcla confusa':'')+(sc.over?' · saturada':'')+'</small>'+
@@ -402,12 +403,12 @@ const ALQ=(()=>{
   const pu_=potUnits(),used={frasco:1};pu_.forEach(id=>used[id]=(used[id]||0)+1);Object.entries(G.pot.base).forEach(([k,v])=>{const it=SOLV[k]&&SOLV[k].item;if(it&&v>.08)used[it]=(used[it]||0)+Math.max(1,Math.ceil(v/.5-1e-6))});if(!hasIn(used)){G=null;return false}take(used);
   pu_.forEach(id=>{(S.alk||(S.alk={}))[id.split('~')[0]]=1});add(out);
   const R_=S.alr||(S.alr={});if(!none){const r=R_[G.key]||(R_[G.key]={name:(G.F&&sameSet(G.F.ing,pu_)?G.F.name:G.recName)||(TN[M.type]?TN[M.type][0]:'Fórmula')+' de '+(I[pu_[0]]?I[pu_[0]][0].toLowerCase():'hierbas'),sel:pu_.slice(),solv:baseKey(),best:-1,n:0});S.alq=G.key;r.n++;r.best=Math.max(r.best,g);if(G.recName&&!r.named){r.name=G.recName;r.named=1}}
-  gain('al',20+M.str*5+pu_.length*6+(g>=0?10+g*14:0)*(none?0:1));if(typeof inc==='function')inc('make:'+out);
+  gain('al',20+(M.str||0)*5+pu_.length*6+(g>=0?10+g*14:0)*(none?0:1));if(typeof inc==='function')inc('make:'+out);
   G.msg=none?'Brebaje turbio':I[out][0];G.end=performance.now()+250;
   log('Destilas: '+I[out][0]+(G.recName?' · «'+G.recName+'»':''));if(g===2&&!none){toast('⚗️ ¡Destilación perfecta! '+I[out][0]);if(typeof snd==='function')snd('rare')}dirty=1;return true}
  // CRAFTEO INSTANTÁNEO: una fórmula ya hecha se prepara al momento con la MEJOR calidad que hayas conseguido con ella
  function quick(key){const r=(S.alr||{})[key];if(!r||!G||G.pot.started||G.mort.items.length){if(r&&G&&(G.pot.started||G.mort.items.length))toast&&toast('Termina o vacía la olla y el mortero primero');return false}const used=Object.assign({frasco:1},baseItems(r.solv));r.sel.forEach(id=>used[id]=(used[id]||0)+1);if(!hasIn(used)){toast&&toast('Te faltan ingredientes para «'+r.name+'»');return false}
-  const M=mix(r.sel,r.solv),g=Math.max(0,Math.min(2,r.best));if(!M.type||r.best<0){toast&&toast('Hazla una vez a mano primero');return false}take(used);const out=idOf(M.type,M.str*(1+.12*(g-1)),g,M.sk);add(out);r.n++;S.alq=key;gain('al',(20+M.str*5)*.4);log('Preparas «'+r.name+'»: '+I[out][0]);snd&&snd('coin');dirty=1;try{toast&&toast(ic(out)+' Has creado '+I[out][0])}catch(e){}return true}
+  const M=mix(r.sel,r.solv),g=Math.max(0,Math.min(2,r.best)),fo=FORM_DB.find(f=>f.out&&sameSet(f.ing,r.sel));if((!M.type&&!fo)||r.best<0){toast&&toast('Hazla una vez a mano primero');return false}take(used);const out=fo?fo.out:idOf(M.type,M.str*(1+.12*(g-1)),g,M.sk);add(out);r.n++;S.alq=key;gain('al',(20+(M.str||0)*5)*.4);log('Preparas «'+r.name+'»: '+I[out][0]);snd&&snd('coin');dirty=1;try{toast&&toast(ic(out)+' Has creado '+I[out][0])}catch(e){}return true}
  // ── uso de las pociones (game.js use()) ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
  function use(id,i){const f=parse(id);if(!f)return false;const now=performance.now();if(now<QCD)return true;const gm=[.75,1,1.4][f.g],str=f.ti*3,sk=f.sk;
   const done=()=>{S.inv.splice(i,1);QCD=now+600;eatDelay(now,600);P.eat=now;dirty=1};
@@ -421,4 +422,4 @@ const ALQ=(()=>{
  const LIQ={vida:'#d8382a',mana:'#4a7ae0',vigor:'#e8a030',rapidez:'#6ad0e8',antidoto:'#6ad04a'};
  /* estilo 2D compartido con Cocina (src/cooking.js): trozos con forma, color por ingrediente, tinta y acabado de pincel */
  const gfx={drawChunk,chunkKind,icol,inkS,css,lerpc,hex,paintFinish,herbD};
- return{reg,open,close,tick,use,mix,props,PR,ING,parse,gfx,liq:t=>LIQ[t]||'#8a7a5a',get G(){return G},jump(k){if(G){begin(k);pips()}},get active(){return!!G||OPEN},get brewing(){return!!G},get stn(){return STN}}})();
+ return{quick,reg,open,close,tick,use,mix,props,PR,ING,parse,gfx,liq:t=>LIQ[t]||'#8a7a5a',get G(){return G},jump(k){if(G){begin(k);pips()}},get active(){return!!G||OPEN},get brewing(){return!!G},get stn(){return STN}}})();

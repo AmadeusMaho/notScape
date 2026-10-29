@@ -1,0 +1,60 @@
+/* LIBRO DE RECETAS (game.js `bookHTML`): la ventana de interacción #sw de las estaciones de oficio pasa a ser un panel grande, centrado y adaptable (em + vw/vh, sin zoom). Cuadrícula + pestañas + buscador + detalle. */
+#sw.book{position:fixed!important;left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;width:min(1280px,96vw)!important;height:min(860px,92vh)!important;max-height:none!important;padding:.7em 1em 1em;font-size:clamp(12px,.55vw + 8px,18px);z-index:12!important}
+#sw.book::after{display:none}
+#sw.book #swh{padding-bottom:.4em;margin-bottom:.4em}
+#sw.book #swt{font-size:1.5em;letter-spacing:.04em}
+#sw.book #swi{width:2.4em;height:2.4em}
+#sw.book #swf{margin-bottom:.4em;gap:.5em;flex-wrap:wrap}
+#sw.book #swq{font-size:1.05em;padding:.3em .7em;min-width:12em}
+#sw.book #swf .bt{white-space:nowrap}
+#sw.book #swb{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:0}
+.bk{display:flex;flex-direction:column;gap:.5em;min-height:0;flex:1}
+.bk-top{display:flex;align-items:baseline;justify-content:space-between;gap:1em;font-size:.95em;color:#c8b888}
+.bk-top b{color:#e8cf94}.bk-cnt{opacity:.8;font-size:.9em}
+.bk-tabs{display:flex;flex-wrap:wrap;gap:.35em}
+.bk-tab{font:600 .95em Spectral,Georgia,serif;color:#e8dcc0;background:rgba(40,32,20,.6);border:1px solid rgba(201,181,127,.35);border-radius:.45em;padding:.3em .8em;cursor:pointer;transition:background .12s,border-color .12s,transform .1s}
+.bk-tab i{font-style:normal;opacity:.6;font-size:.85em;margin-left:.25em}
+.bk-tab:hover{border-color:#e8cf94;background:rgba(70,56,38,.8)}.bk-tab.on{background:rgba(110,86,36,.85);border-color:#e8cf94;color:#fff3d0}
+.bk-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.9fr) minmax(17em,.9fr);gap:1em}
+.bk-grid{min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(7.2em,1fr));grid-auto-rows:max-content;gap:.55em;align-content:start;padding:.2em .4em .4em .1em}
+.bk-t{position:relative;display:flex;flex-direction:column;align-items:center;gap:.15em;padding:.55em .3em .4em;background:linear-gradient(rgba(44,35,24,.85),rgba(28,22,15,.85));border:1px solid rgba(201,181,127,.28);border-radius:.6em;color:#e8dcc0;font:inherit;cursor:pointer;transition:transform .12s,border-color .12s,background .12s,box-shadow .12s}
+.bk-t .ico img.ic{width:3.2em;height:3.2em;filter:drop-shadow(0 .15em .25em rgba(0,0,0,.6))}
+.bk-t b{font-weight:500;font-size:.82em;line-height:1.12;text-align:center;max-width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.24em}
+.bk-t .lv{font-style:normal;font-size:.72em;color:#c8b888;opacity:.9}
+.bk-t u{position:absolute;top:.25em;right:.35em;text-decoration:none;font-size:.7em;color:#1c1408;background:#e8cf94;border-radius:.8em;padding:0 .45em;font-weight:700}
+.bk-t s{position:absolute;top:.35em;left:.4em;width:.55em;height:.55em;border-radius:50%;background:#7ad870;box-shadow:0 0 .5em #7ad870}
+.bk-t:hover{transform:translateY(-.15em);border-color:#e8cf94;background:linear-gradient(rgba(70,56,38,.9),rgba(40,32,22,.9))}
+.bk-t.can{border-color:rgba(122,216,112,.55)}
+.bk-t.miss{opacity:.72}.bk-t.miss .ico{filter:saturate(.7)}
+.bk-t.lock{opacity:.42;border-style:dashed}.bk-t.lock .ico{filter:grayscale(1) brightness(.8)}
+.bk-t.on,.bk-t.own{border-color:#e8cf94}
+.bk-t.sel{border-color:#e8cf94;background:linear-gradient(rgba(110,86,36,.75),rgba(60,46,22,.8));box-shadow:0 0 0 1px #e8cf94,0 0 1.2em rgba(232,207,148,.3);opacity:1}
+.bk-det{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:.55em;padding:.8em .9em;background:rgba(18,14,10,.7);border:1px solid rgba(201,181,127,.3);border-radius:.7em}
+.bk-empty{grid-column:1/-1;opacity:.7;font-style:italic;padding:1em .4em}
+.bk-dh{display:flex;gap:.8em;align-items:center}.bk-dh .big img.ic{width:4.6em;height:4.6em;filter:drop-shadow(0 .2em .35em rgba(0,0,0,.7))}
+.bk-dh h3{margin:0;font:600 1.35em Spectral,Georgia,serif;color:#fff3d0;line-height:1.1}
+.bk-sb{font-size:.85em;margin-top:.2em;color:#c8b888}.bk-sb.can{color:#9fe08a}.bk-sb.miss{color:#e8b060}.bk-sb.lock{color:#a0988a}.bk-sb.on{color:#e8cf94}
+.bk-tip{margin:0;font-size:.88em;color:#d8ccaa;line-height:1.4}
+.bk-det h4{margin:.2em 0 0;font:600 .72em Cinzel,Georgia,serif;letter-spacing:.12em;text-transform:uppercase;color:#c8b888}
+.bk-ing{display:flex;flex-direction:column;gap:.3em}
+.bk-i{display:grid;grid-template-columns:2.2em 1fr auto;align-items:center;gap:.5em;padding:.25em .5em;background:rgba(40,32,24,.7);border:1px solid rgba(201,181,127,.2);border-radius:.45em;font-size:.92em}
+.bk-i img.ic{width:1.9em;height:1.9em}.bk-i.ok b{color:#9fe08a}.bk-i.no{border-color:rgba(220,120,100,.45)}.bk-i.no b{color:#f0907a}
+.bk-miss{font-size:.82em;color:#e8b060;line-height:1.35}.bk-miss span{opacity:.75}
+.bk-meta{display:flex;flex-wrap:wrap;gap:.35em;font-size:.8em;color:#c8b888}
+.bk-meta span{background:rgba(60,48,30,.7);border-radius:.8em;padding:.1em .6em}
+.bk-act{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:.6em;flex-wrap:wrap;padding-top:.4em}
+.bk-act .go{font-size:1.15em!important;padding:.55em 1.6em!important;min-height:0!important;background:linear-gradient(#7a6228,#54421a)!important;border-color:#e8cf94!important;color:#fff3d0!important;letter-spacing:.06em}
+.bk-act .go:disabled{opacity:.45;background:rgba(40,32,20,.5)!important;border-color:rgba(201,181,127,.25)!important}
+.bk-act .go.stop{background:linear-gradient(#7a2a24,#4a1a16)!important}
+.bk-foot{font-size:.82em;opacity:.7;text-align:center}
+@media (max-width:900px),(max-aspect-ratio:1/1){
+ #sw.book{width:98vw!important;height:96vh!important;padding:.5em .6em}
+ .bk-body{grid-template-columns:1fr;grid-template-rows:minmax(0,1.2fr) minmax(0,1fr)}
+ .bk-grid{grid-template-columns:repeat(auto-fill,minmax(5.6em,1fr))}
+ .bk-t .ico img.ic{width:2.6em;height:2.6em}
+}
+@media (max-height:520px){.bk-body{grid-template-columns:minmax(0,1.4fr) minmax(13em,1fr);grid-template-rows:none}.bk-dh .big img.ic{width:3em;height:3em}}
+
+#sw.book::before{background:rgba(14,11,8,.97)!important}
+.bk-act .qb{font-size:.9em!important;padding:.25em .75em!important;min-height:0!important;min-width:2.2em}
+.bk-act>span{display:flex;gap:.3em;align-items:center}

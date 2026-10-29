@@ -30,6 +30,7 @@ const PROPS=(()=>{
  // Evita agua/acantilados (TER.heightAt≠1), caminos, la aldea, estaciones, zonas de recurso, recursos y guaridas.
  const SC=[[['arbusto',5],['roca',2],['heno',1]],[['arbusto',4],['seta',3],['tocon',3],['roca',1]],[['junco',5],['seta',2],['tocon',2],['arbusto',2]],[['roca',5],['runestone',1],['tocon',1]],[['bambu',4],['arbusto',3],['linterna',1],['roca',2],['cerezo',1]],[['obsidiana',4],['roca',4],['estela',1],['vasija',1]]];
  SC.push(SC[3],SC[5],[['roca',4],['junco',3],['arbusto',2],['tocon',1]]);   // F49a: Páramo, Desierto y Costa (esqueleto)
+ let PROPS_DECOR=null;
  function scatter(c){const NB=BIOMES.list.filter(b=>!b.zone).length,out=[];   // ISLA-1: la ZONA del Cielo (siempre la última) no tiene tabla de decoración dispersa: se queda fuera
   // Fase 44-0: rejilla espacial para «hay un recurso/adorno a menos de d px» (con el mundo ×2 hay ~8 000 recursos y la búsqueda lineal tardaba ~3,5 s en cargar). Mismas distancias y mismo resultado.
   const GS=64,gkey=(x,y)=>Math.floor(x/GS)*100003+Math.floor(y/GS),gput=(g,e,x,y)=>{const k=gkey(x,y);let a=g.get(k);if(!a)g.set(k,a=[]);a.push(e)},
@@ -47,7 +48,33 @@ const PROPS=(()=>{
     if(c.ZS.some(z=>x>z.r[0]-30&&x<z.r[1]+30&&y>z.r[2]-30&&y<z.r[3]+30))continue;
     if(gnear(NG,x,y,40,nx,ny)||c.M.some(e=>Math.hypot(e.hx-x,e.hy-y)<36)||gnear(MG,x,y,30,nx,ny))continue;
     const it={n:m,x,y,k,sc:1,_oa:1};mine.push(it);gput(MG,it,x,y);n++}
-   mine.forEach(e=>list.push(e))}}
+   mine.forEach(e=>list.push(e))}
+  // ── DECORACIÓN DE PAISAJE FUERA DE LOS RECTÁNGULOS (lote MUNDO-PAISAJE, 29 oct 2026; solo `?map=A`; `?mapdecor=0` lo apaga) ──────────────────────────────────────────────────────────────────────────────────────────────
+  // El mapa A reparte cada región por toda su caja (`MA.bbox`), pero la decoración dispersa de arriba solo cubría el rectángulo de datos de cada bioma: el resto de la región era llano y vacío. Aquí se siembran, con la tabla SCR
+  // de CADA bioma (modelos de naturaleza oscura con su paleta: arbusto, roca, piedra, tocón, tronco, seta, huesos, charco), en tierra pisable de la región fuera de cualquier rectángulo, lejos de caminos, orillas, acantilados,
+  // estaciones, zonas de recurso y de lo que ya hay. Determinista (semilla por bioma). La densidad por área es `DECA` (un 55 % de la de dentro de los rectángulos).
+  if(BIOMES.mapA&&BIOMES.mapA.bbox&&!/[?&]mapdecor=0\b/.test(location.search)){
+   const MA=BIOMES.mapA,Fd=TER.fields(),W4=TER.NX*4,DECA=45,t0=performance.now(),LG=new Map();let tot=0;list.forEach(e=>gput(LG,e,e.x,e.y));
+   const pf=(x,y)=>{const i=Math.floor(y/8)*W4+Math.floor(x/8);return Fd.PF[i]>=30||Fd.PC[i]>=30||Fd.PM[Math.floor(y/32)*TER.NX+Math.floor(x/32)]>=10};
+   const SCR=[[['arbusto',5],['roca',2],['tocon',1],['tronco',1],['piedra',.5]],[['arbusto',4],['seta',3],['tocon',3],['tronco',2],['roca',1]],[['arbusto',3],['seta',2],['tocon',2],['charco',2],['tronco',1],['huesos',.3]],
+    [['roca',5],['piedra',2],['arbusto',1],['tronco',.5]],[['arbusto',3],['roca',2],['tocon',1],['seta',1],['piedra',1]],[['roca',4],['piedra',2],['huesos',.3],['arbusto',1]],
+    [['roca',4],['piedra',2],['huesos',1],['tocon',1],['arbusto',1]],[['roca',3],['piedra',2],['huesos',1.2],['arbusto',2]],[['roca',3],['arbusto',2],['tronco',1.5],['piedra',1],['huesos',.3]]];
+   const stat={};
+   for(let k=0;k<NB;k++){const B=BIOMES.list[k],bb=MA.bbox(k);if(!bb||!SCR[k])continue;const X0=B.ox+bb.x0,Y0=B.oy+bb.y0;let sd=(k*104729+31)>>>0;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^sd>>>15,1|sd);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+    let fr=0;for(let q=0;q<500;q++){const x=X0+rnd()*bb.w,y=Y0+rnd()*bb.h;if(BIOMES.own(x,y)===k&&BIOMES.geoOwn(x,y)<0&&TER.isLand(TER.heightAt(x,y)))fr++}   // fracción de la caja que es tierra libre de ESTA región (la caja incluye mar y rectángulos)
+    const quota=Math.round(DECA*(fr/500)*bb.w*bb.h/(2300*1500)),tt=SCR[k].reduce((a,b)=>a+b[1],0),mine=[],MG2=new Map();let n=0,tries=0;
+    while(n<quota&&tries++<quota*30){const x=X0+rnd()*bb.w,y=Y0+rnd()*bb.h;
+     if(BIOMES.own(x,y)!==k||BIOMES.geoOwn(x,y)>=0)continue;   // solo la tierra de ESTA región que ningún rectángulo de datos cubre
+     if(![[0,0],[12,0],[-12,0],[0,10],[0,-10]].every(q=>TER.isLand(TER.heightAt(x+q[0],y+q[1]))))continue;
+     const tx=Math.floor(x/32),ty=Math.floor(y/32);if(TER.sandAt(tx,ty)>.2||TER.mtnAt(x,y))continue;if(TER.cliffNear(x,y,18))continue;if(pf(x,y))continue;
+     let r=rnd()*tt,m=SCR[k][0][0];for(const q of SCR[k]){if((r-=q[1])<0){m=q[0];break}}
+     if(c.ST.some(e=>Math.hypot(e.x-x,e.y-y)<90))continue;
+     if(c.ZS.some(z=>x>z.r[0]-30&&x<z.r[1]+30&&y>z.r[2]-30&&y<z.r[3]+30))continue;
+     if(gnear(NG,x,y,44,nx,ny)||gnear(LG,x,y,40,nx,ny)||gnear(MG2,x,y,34,nx,ny))continue;
+     const it={n:m,x:Math.round(x),y:Math.round(y),k,sc:1,_oa:1};mine.push(it);gput(MG2,it,x,y);n++}
+    mine.forEach(e=>list.push(e));stat[B.n||k]=n;tot+=n}
+   PROPS_DECOR={total:tot,por:stat,ms:Math.round(performance.now()-t0)};console.info('[MAPA A paisaje]',JSON.stringify(PROPS_DECOR))}
+ }
 
  // apariencia del jugador (editor de personaje, S.app) → opciones de ORG.U.heroe. Un solo punto: el juego y la vista previa del editor usan lo mismo.
  function appOpts(a){a=a||{};const o={};if(a.skin)o.skin=a.skin;if(a.hc)o.hair=a.hc;if(a.hair)o.hairStyle=a.hair;if(a.eye)o.eye=a.eye;if(a.face)o.face=a.face;if(a.pants)o.pants=a.pants;if(a.g)o.gender=a.g;if(a.col)o.col=a.col;return o}
@@ -70,6 +97,6 @@ const PROPS=(()=>{
  // altura extra (en niveles) bajo el punto (x,y): máximo de las capas que lo contienen, con rampa de margen `m` hacia fuera
  function elevAt(x,y){if(ELn!==list.length)elevBuild();if(!ELV.length)return 0;let best=0;for(const e of ELV){const dx=Math.abs(x-e.x),dy=Math.abs(y-e.y);if(dx>e.R||dy>e.R)continue;
    for(const c of e.L){let d;if(c.disc)d=Math.hypot(dx,dy)-c.hx;else d=Math.max(dx-c.hx,dy-c.hy);if(d>=e.m)continue;const f=d<=0?1:1-d/e.m,z=c.h*(f*f*(3-2*f))+EPS*f;if(z>best)best=z}}return best}
- return{sprite,build,solid,get trees(){return trees},addSolid:(x,y,hx,hy)=>{const r=[x-hx,x+hx,y-hy,y+hy];sol.push(r);extra.push(r);SG=null},resol,addEnt,delEnt,scatter,appOpts,ST,elevAt,ELEV,get list(){return list}}
+ return{get decor(){return PROPS_DECOR},sprite,build,solid,get trees(){return trees},addSolid:(x,y,hx,hy)=>{const r=[x-hx,x+hx,y-hy,y+hy];sol.push(r);extra.push(r);SG=null},resol,addEnt,delEnt,scatter,appOpts,ST,elevAt,ELEV,get list(){return list}}
 })();
 if(typeof module!=='undefined')module.exports=PROPS;

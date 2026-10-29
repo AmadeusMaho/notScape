@@ -38,6 +38,8 @@ const COC=(()=>{
   {name:'Sopa de salmón',lvl:20,m:'g',ing:['salmon','h_loto','arroz'],tg:{u:.45,d:.6,s:.4}},{name:'Guiso de oso',lvl:30,m:'g',ing:['carne_oso','h_salvia','grasa','arroz'],tg:{u:.5,a:.35,s:.5,d:.35,p:.35}},
   {name:'Festín del mar',lvl:45,m:'h',ing:['atun','salmon','h_loto','arroz','grasa'],tg:{u:.7,d:.5,s:.5}},{name:'Pollo frito con hierbas',lvl:6,m:'s',ing:['pollo','h_lavanda'],tg:{s:.5,d:.3,a:.3}},
   // recetas SIMPLES del TUTORIAL (un solo ingrediente, sin preparar): dan los platos clásicos c_camaron y f_camaron (cuentan para las misiones) y nunca se estropean mientras sean el paso actual
+  // PIENSO para monturas (DOMAR-D4b): sube mucho el afecto (src/stable.js); producto fijo, sin calidad
+  {name:'Pienso para monturas',lvl:3,m:'h',ing:['arroz','h_trebol'],tg:{d:.5},out:'pienso'},{name:'Pienso fino',lvl:18,m:'h',ing:['arroz','h_manzanilla','carne'],tg:{d:.35,u:.4,s:.3},out:'pienso_fino'},
   {name:'Camarones asados',lvl:0,m:'p',ing:['camaron'],tg:{s:.4},out:'c_camaron'},{name:'Camarones fritos',lvl:0,m:'s',ing:['camaron','grasa'],tg:{s:.5},out:'f_camaron'}];
  const HB=Object.keys(ING).filter(k=>/^h_/.test(k)),herbsHave=()=>HB.filter(k=>have(k)>0).slice(0,4);   // hierbas de Herbolaria que puedes espolvorear como sazón (máx. 4 a la vista)
  /* TUTORIAL: mientras el paso actual es cocinar un plato clásico (camarones asados/fritos), la interfaz solo ofrece el método y el ingrediente que hacen falta (nada con que confundirse) */
@@ -58,7 +60,7 @@ const COC=(()=>{
  function defOf(top,ti,q,m){return[MET[m].n+(top.length?' '+adj(top):' sencillo')+' '+ROM[q],EMO[m],Math.round((8+ti*14)*(1+q*.5)),healOf(ti,q,m)]}
  function ensure(id){if(I[id])return true;const f=parse(id);if(!f)return false;I[id]=defOf(f.top,f.ti,f.q,f.m);return true}
  /* los ids de plato son demasiados para registrarlos todos: se crean al cocinarlos y al cargar la partida (`sweep`, llamado desde game.js tras leer el guardado). Un plato que salga de otro sitio debe pasar por ensure() */
- function reg(){ensure(idOf([],1,0,'g'))}
+ function reg(){ensure(idOf([],1,0,'g'));I.pienso=['Pienso para monturas','🌾',24];I.pienso_fino=['Pienso fino para monturas','🌾',70]}
  function sweep(){S.inv.forEach(ensure);Object.keys(S.bank||{}).forEach(ensure)}
  // ── estado ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
  let G=null,SEL=[],STN=null,OPEN=false,SKIP=false,METH='g';
@@ -189,12 +191,15 @@ const COC=(()=>{
   FLK.forEach(k=>{f[k]=(M.fl[k]||0)+(cond===k?1:0);const v=cl_(f[k]/3,0,1),t=rc&&rc.tg?(rc.tg[k]||.1):(M.fl[k]?.5:.1),d=Math.abs(v-t);s+=cl_(1-Math.max(0,d-.2)/.4,0,1);st[k]=d<=.2?'ok':v<t?'low':'high'});
   const sab=s/5,score=cl_(.8*.45+.85*.2+sab*.2+.7*.12+(rc?.03:0),0,1);let q=score>=.86?2:score>=.66?1:0;if(!rc)q=0;return{M,rec:rc,score,q,sab,st}}
  const maxPortions=sel=>{if(!sel.length)return 0;const u={};sel.forEach(id=>u[id]=(u[id]||0)+1);return Math.min(20,...Object.keys(u).map(id=>Math.floor(have(id)/u[id])))};
+ /* XP por ración (equilibrado por simulación, tools/doma_sim.py): el ritmo de un oficio normal (`XPR`) durante el tiempo de conseguir sus ingredientes; nivel «de plato» por tier (1→1 … 6→86). Lineal en las raciones. */
+ const portionXP=(M,nIng,q)=>{const ti=M.ti,dl=1+(ti-1)*17;if(typeof XPR!=='function')return(8+ti*9+nIng*4)*(.6+.4*(q+1)/3)*.85;return 1.1*XPR(dl)*(nIng*15*(1+.25*(ti-1)))*1.1*(.6+.4*(q+1)/3)};
  function cookAuto(sel,m,cond,n){n=Math.max(1,Math.min(n|0||1,maxPortions(sel)));if(!sel.length||maxPortions(sel)<1||(sel.length<2&&!recOf(sel,m)))return null;
   const u={};sel.forEach(id=>u[id]=(u[id]||0)+n);take(u);sel.forEach(id=>{S.cok=S.cok||{};S.cok[id.split('~')[0]]=1});
   const r=autoScore(sel,m,cond),M=r.M,rec=r.rec,q=r.q,out=(rec&&rec.out)||idOf(M.top,M.ti,q,m);ensure(out);const key=keyOf(sel,m),R=S.cor||(S.cor={}),isNew=!R[key];
   if(isNew)R[key]={name:rec?rec.name:I[out][0].replace(/ (I|II|III)$/,''),sel:sel.slice(),m,best:q};else if(q>R[key].best)R[key].best=q;
   for(let i=0;i<n;i++){add(out);if(rec&&rec.out)inc('make:'+rec.out);inc('cook')}
-  const per=(8+M.ti*9+M.n*4)*(.6+.4*(q+1)/3)*.85,xp=Math.round(per*(isNew?1.5:1)*(1+(n-1)*.5));gain('co',xp);dirty=1;
+  if(isNew&&typeof RECN!=='undefined')RECN.learn('¡Receta descubierta!',[{id:out,name:R[key].name}],'Cocina')
+  const per=portionXP(M,sel.length,q),xp=Math.round(per*(isNew?1.5:1)*n);gain('co',xp);dirty=1;
   return{out,q,n,M,rec,score:r.score,xp,isNew,m}}
  const X={FX,FXI,FL,FLK,MET,SPFX,ROM,RECIPES,nm,props,known,prepOf,tutRec,recFor,keyOf,idOf,ensure,healOf,candidates,maxIng,autoMeth,autoScore,maxPortions,cookAuto,L:k=>L(k)};
  return{X,stationClick,ready:()=>!!G&&idle()&&ready(),recM:()=>{const r=G&&idle()?recFor(SEL):null;return r?r.m:null},tutM:()=>{const T=tutRec();return T?T.m:null},HB,herbsHave,reg,sweep,open,close,tick,use,mix,props,parse,ensure,FX,FXI,SPFX,FL,MET,healOf,RECIPES,prepOf,has,hpBonus,skipOnce,setMeth,prepDone,cookDone,plateDone,get active(){return !!G||OPEN||(AUTO()&&COOKA.active)},get cooking(){return (AUTO()&&COOKA.cooking)||(!!G&&!G.res&&G.stage!=='pick')},get stn(){return STN},get G(){return G}}})();

@@ -32,9 +32,9 @@ const PLAYA=(()=>{
  // ── props de la playa: se añaden a la aldea de la Pradera ANTES de que props.js construya la lista ──
  (function addProps(){try{const b=BIOMES.list[0];if(!b||!b.village||!b.village.props)return;const L=(k)=>({x:SP[k][0]*T,y:SP[k][1]*T});
   [['cabana','hut',{roof:'#7a5a34',rot:0},[24,20]],['hoguera','fire',null,[8,8]],['secadero','rack',null,[16,10]],['barril','barrel',null,[8,8]],['cestaPeces','net',null,[10,8]]].forEach(([n,k,o,fp])=>{const q=L(k),e={n,x:q.x,y:q.y};if(o)e.o=o;if(fp)e.fp=fp;b.village.props.push(e)})}catch(e){}})();
- const html=()=>{const i=st(),n=STEPS[Math.min(i.step,STEPS.length-1)];return `<div class="hint" style="margin:0 0 3px;color:#d8c9a3">Cien años · ${Math.min(i.step+1,STEPS.length)}/${STEPS.length}</div><div style="color:var(--yl);font-size:25px">${n.txt}</div>`};
+ const html=()=>{const i=st(),n=STEPS[Math.min(i.step,STEPS.length-1)];return `<div class="hint" style="margin:0 0 3px;color:#d8c9a3">Cien años</div><div style="color:var(--yl);font-size:25px">${n.txt}</div>`};
  const target=()=>{if(!on())return null;const n=STEPS[st().step];if(n.g==='item')return loc('chest');if(n.g==='ru'||n.g==='ru2'){const e=ruEnt();return e}if(n.g==='orsen')return orsenEnt();return null};
- function adv(){const i=st();i.step++;if(i.step>=4)try{MUSIC.scene('wakeup',false)}catch(e){}if(i.step>=STEPS.length){finish();return}try{snd('quest');toast('✔ <b>Cien años</b> · '+i.step+'/'+STEPS.length,1800)}catch(e){}try{dirty=1;save()}catch(e){}}
+ function adv(){const i=st();i.step++;if(i.step>=4)try{MUSIC.scene('wakeup',false)}catch(e){}if(i.step>=STEPS.length){finish();return}try{snd('quest');toast('✔ <b>Cien años</b>',1800)}catch(e){}try{dirty=1;save()}catch(e){}}
  function finish(){const i=st();i.done=1;try{S.goal=GOAL_HAND;S.gseen=-1;toast('Ru te espera en la plaza con el siguiente encargo.',3200);dirty=1;save()}catch(e){}}
  // ── Ru en la playa ──
  function placeRu(){const e=ruEnt();if(!e)return;if(!ruHome)ruHome={x:e.x,y:e.y};const q=loc('ru');e.x=q.x;e.y=q.y}

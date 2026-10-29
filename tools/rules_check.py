@@ -254,7 +254,7 @@ _dd = dict((k, int(v)) for k, v in re.findall(r"\['(\w+)',(\d),'", _md))
 _sp = set(re.findall(r"\n (\w+):S=>", _mm))
 _err = [k for k in _dd if k not in _sp or (_mb.get(k) != _dd[k] and _mb.get(k) != 9)]   # 9 = rara (aparejo propio; su bioma de aparición lo da mountdata) + [k for k in _sp if k not in _dd]
 (bad if _err else ok)('MONTURAS: mountdata.js ↔ mountmodels3d.js (especie, modelo y bioma)', ', '.join(_err) or f'{len(_dd)} especies')
-(ok if 'makeSpecies(sp,sad,cul)' in rd('src/r3d/mount3d.js') and 'buildMountActor' in rd('src/r3d/actors3d.js') else bad)('MONTURAS: salvaje (actors3d) y montura (mount3d) salen del MISMO modelo', '')
+(ok if 'makeSpecies(sp,sad,cul' in rd('src/r3d/mount3d.js') and 'buildMountActor' in rd('src/r3d/actors3d.js') else bad)('MONTURAS: salvaje (actors3d) y montura (mount3d) salen del MISMO modelo', '')
 _per = {}
 for k, b in _dd.items():
     if _mb.get(k) != 9: _per[b] = _per.get(b, 0) + 1

@@ -1,4 +1,5 @@
-# PLAN DE DOMAR (`dm`) — PROPUESTA del 29 oct 2026 (nada implementado; pendiente de visto bueno del dueño)
+# PLAN DE DOMAR (`dm`) — ESTADO 29 oct 2026: D1–D5 + cierres HECHOS; D5b (Corcel y ascensión) APLAZADO por el dueño a una fase posterior.
+# (título original) PLAN DE DOMAR (`dm`) — PROPUESTA del 29 oct 2026 (nada implementado; pendiente de visto bueno del dueño)
 
 > Referencias que pidió el dueño: **BDO** (captura activa de caballos salvajes, tiers, estable, cría) y **Dofus** (capturar dragopavos y CRUZARLOS para sacar variantes con efectos). Decisiones previas que mandan: Domar entra con el Bosque; **una montura + una mascota a la vez** (2 ranuras dedicadas); una criatura domable por bioma (★9 de `docs/MATRIZ_OFICIOS_MUNDO.md`); el viaje rápido «se diseña mejor» más adelante (las monturas son parte de la respuesta); **sin progreso offline**; **cada modelo es único** (no se reutilizan assets); el crafteo usa la hoja de trabajo FF14, **pero Domar NO la usa (decisión del dueño, 29 oct: no encaja con una criatura viva)**.
 
@@ -92,7 +93,7 @@ Cada animal salvaje es una criatura NUEVA con su modelo (regla de no reutilizar)
 2. ✅ **HECHO el 29 oct 2026 (lote DOMAR-D2 en AGENTS.md) · D2 · Captura (BDO):** skill `dm`, lazo (Ingeniería), alerta de la criatura, fase de doma con el aviso de golpe; Domar XP.
 3. ✅ **HECHO el 29 oct 2026 (lote DOMAR-D3 en AGENTS.md; por especie, hasta D4) · D3 · Progreso por uso:** nivel de la montura, **habilidades aleatorias** (pool, rareza, rangos, olvido), XP por distancia/galope.
 4. ✅ **HECHO el 29 oct 2026 (lote DOMAR-D4 en AGENTS.md; faltan silla/brida, herraduras y pienso como cruces de oficio) · D4 · Establo:** guardar/sacar, genes y rasgos, silla y brida (Peletería), cebo/pienso (Cocina).
-5. **D5 · Cría:** panel de cruce, gestación, herencia (genes, rasgos, habilidades), mutación, pity, retiro.
+5. ✅ **HECHO el 29 oct 2026 (lote DOMAR-D5 en AGENTS.md; sin pelaje ni Tónico de cría) · D5 · Cría:** panel de cruce, gestación, herencia (genes, rasgos, habilidades), mutación, pity, retiro.
 5b. **D5b · Corcel y ascensión:** lista de perfección, título, altar, `ASC` por familia y las primeras especies únicas (equinos).
 6. **D6 · Más especies** (Bosque: ciervo y lobo-mascota; Cumbres: yak…) y rasgos de terreno, conforme se hagan los biomas.
 

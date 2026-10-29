@@ -71,11 +71,11 @@
    if(Math.abs(lx-sf[0])<sf[2]+600&&Math.abs(ly-sf[1])<sf[3]+600){n.aldea++;continue}                           // junto a la aldea
    if(pois.some(p=>Math.hypot(lx-p.x,ly-p.y)<p.r+380)){n.poi++;continue}                                       // junto a un POI
    const r=H(gi,gj,k*7+1);
-   if(r<.28&&wcT.length){const hw=300+H(gi,gj,9)*160;if(!ok(cx,cy,hw*.6,k)){n.mar++;continue}const t=wcT[Math.floor(H(gi,gj,5)*wcT.length)],rc=[lx-hw,lx+hw,ly-hw*.8,ly+hw*.8];
+   if(r<.34&&wcT.length){const hw=300+H(gi,gj,9)*160;if(!ok(cx,cy,hw*.6,k)){n.mar++;continue}const t=wcT[Math.floor(H(gi,gj,5)*wcT.length)],rc=[lx-hw,lx+hw,ly-hw*.8,ly+hw*.8];
     res.wc.push(t[0].map(([i,m])=>[i,Math.max(4,Math.min(12,Math.round(m*.6)))]));L.wc.push({r:[rc],z:rc});n.wc++}
-   else if(r<.40&&miT.length){const hw=170+H(gi,gj,9)*90;if(!ok(cx,cy,hw*.7,k)){n.mar++;continue}const t=miT[Math.floor(H(gi,gj,6)*miT.length)],rc=[lx-hw,lx+hw,ly-hw,ly+hw];
+   else if(r<.49&&miT.length){const hw=170+H(gi,gj,9)*90;if(!ok(cx,cy,hw*.7,k)){n.mar++;continue}const t=miT[Math.floor(H(gi,gj,6)*miT.length)],rc=[lx-hw,lx+hw,ly-hw,ly+hw];
     res.mi.push(t[0].map(([i,m])=>[i,Math.max(2,Math.min(7,Math.round(m*.6)))]));L.mi.push({r:[rc],z:rc});n.mi++}
-   else if(r<.62&&ids.length){if(!ok(cx,cy,150,k)){n.mar++;continue}const id=ids[Math.floor(H(gi,gj,7)*ids.length)],c=2+Math.floor(H(gi,gj,8)*2),mobs=[];
+   else if(r<.75&&ids.length){if(!ok(cx,cy,150,k)){n.mar++;continue}const id=ids[Math.floor(H(gi,gj,7)*ids.length)],c=2+Math.floor(H(gi,gj,8)*2),mobs=[];
     for(let q=0;q<c;q++){const a=H(gi,gj,20+q)*6.283,d=40+H(gi,gj,30+q)*60;mobs.push([id,Math.round(lx+Math.cos(a)*d),Math.round(ly+Math.sin(a)*d)])}
     fa.push({z:[lx-190,lx+190,ly-190,ly+190],mobs,t:'🐾 Tierras salvajes'});n.fa++}else n.nada++}
   st.por[B.n||k]=n});

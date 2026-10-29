@@ -316,3 +316,11 @@ Datos y lógica en `src/engineering.js` (global `ING`; todo son tablas: `EL` ele
 
 ## Cocina automática (29 oct 2026)
 La Cocina por defecto es AUTOMÁTICA (`src/cookauto.js`, datos en `COC.X` de cooking.js): el jugador solo elige ingredientes/receta, método y condimento. Ingrediente nuevo = fila en `ING`; receta nueva = fila en `RECIPES`; ambos entran solos en la interfaz. Los minijuegos manuales siguen con `?cookmg`; las pruebas `tools/cook_*.py` son del flujo manual.
+
+
+## Libro de recetas (29 oct 2026)
+Todo oficio con estación usa el LIBRO DE RECETAS (`bookHTML`, `css/craftbook.css`): una receta nueva en `ACT[sk]` aparece sola como loseta; su categoría sale de `catOf` (game.js). Prefijos de objeto nuevos de equipo de montura: `sd_` silla, `br_` brida, `hz_` herraduras (§13.1). Cualquier ventana nueva grande debe dimensionarse con em/vw/vh como `#sw.book` (o `zoom:var(--ui)` como `#alq`), nunca con px fijos.
+
+
+## Avisos de desbloqueo (29 oct 2026)
+**Todo desbloqueo nuevo se anuncia con `RECN.unlock({title,sub,items:[{id|em,name}],foot})`** (src/recipenote.js): el letrero deslizante de la izquierda. Ya lo usan recetas, recursos, animales domables, acciones de oficio, habilidades de montura y recetas descubiertas; las futuras habilidades, subclases, zonas o logros deben usarlo en vez de un `banner`/`toast` suelto. `id` = objeto con icono; sin él usa `em` (emoji).

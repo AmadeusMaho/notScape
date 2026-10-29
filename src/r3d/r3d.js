@@ -321,7 +321,7 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   // héroe
   const st=typeof heroState3D==='function'?heroState3D(now):null;
   if(st){hero.setLook(resolveLook(st.look));const p=W3(st.x,st.y,st.z);
-   hero.update({x:p.x,y:p.y,z:p.z,mv:st.mv,run:st.run,w:st.w,act:st.act,hurt:st.hurt,cb:st.cb,recv:st.recv||0,dash:st.dash||0,sleep:st.sleep||0,blk:st.blk||0,bhit:st.bhit||0,jmp:st.jmp||0,back:st.back||0,ride:st.ride||0,gait:st.gait||0,msp:st.msp||'caballo',t,face:st.fx!=null?[st.fx,st.fy]:null,night:nt,wind:[.9,.4]},dt);
+   hero.update({x:p.x,y:p.y,z:p.z,mv:st.mv,run:st.run,w:st.w,act:st.act,hurt:st.hurt,cb:st.cb,recv:st.recv||0,dash:st.dash||0,sleep:st.sleep||0,blk:st.blk||0,bhit:st.bhit||0,jmp:st.jmp||0,back:st.back||0,ride:st.ride||0,gait:st.gait||0,msp:st.msp||'caballo',mtk:st.mtk||'',mti:st.mti||null,t,face:st.fx!=null?[st.fx,st.fy]:null,night:nt,wind:[.9,.4]},dt);
    blob.scale.setScalar(1+.9*(st.ride||0)*(hero.mount?hero.mount.sz:1));blob.position.set(p.x,p.y+.012,p.z);lantern.position.set(p.x+.15,p.y+.75,p.z+.1);lantern.intensity=1.8*nt*(1+Math.sin(t*9)*.05);heroL={x:p.x+.15,y:p.y+.75,z:p.z+.2,i:nt};aLantern.position.set(p.x+.15,p.y+.7,p.z+.25);aLantern.intensity=1.4*nt;   // linterna del héroe: se enciende sola de noche (guía §1.3)
    // rastro en el pasto (4 puntos, se recupera en ~1,6 s)
    if(!trail.length||Math.hypot(p.x-trail[0].x,p.z-trail[0].z)>.14)trail.unshift({x:p.x,z:p.z,t});if(trail.length>4)trail.length=4;

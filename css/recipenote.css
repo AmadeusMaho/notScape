@@ -1,0 +1,22 @@
+/* AVISO DE RECETAS NUEVAS (src/recipenote.js): tarjeta a la izquierda que entra deslizando con rebote, brillo, destellos y iconos que saltan uno a uno. */
+#rcn{position:fixed;left:0;top:30%;z-index:11;width:min(22em,78vw);font-size:clamp(12px,.5vw + 8px,17px);pointer-events:none;display:flex;flex-direction:column;gap:.6em}
+.rc-card{position:relative;pointer-events:auto;cursor:pointer;overflow:hidden;padding:.8em 1em .7em 1.1em;color:#e8dcc0;font-family:var(--f,Spectral,serif);background:linear-gradient(100deg,rgba(40,30,12,.96),rgba(16,13,9,.94) 70%);border:1px solid #e8cf94;border-left:0;border-radius:0 .9em .9em 0;box-shadow:0 .4em 1.6em rgba(0,0,0,.6),0 0 1.8em rgba(232,207,148,.35);transform:translateX(-112%);opacity:0;transition:transform .7s cubic-bezier(.2,1.35,.35,1),opacity .3s}
+.rc-card.in{transform:none;opacity:1;animation:rcpulse 2.2s .7s 2}
+.rc-card.out{transform:translateX(-112%);opacity:0;transition:transform .6s cubic-bezier(.6,0,.9,.3),opacity .5s}
+@keyframes rcpulse{0%,100%{box-shadow:0 .4em 1.6em rgba(0,0,0,.6),0 0 1.4em rgba(232,207,148,.3)}50%{box-shadow:0 .4em 1.6em rgba(0,0,0,.6),0 0 2.6em rgba(255,226,140,.7)}}
+.rc-glow{position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 35%,rgba(255,240,190,.42) 50%,transparent 65%);transform:translateX(-120%);animation:rcsweep 1.5s .55s ease-out}
+@keyframes rcsweep{to{transform:translateX(120%)}}
+.rc-hd{display:flex;flex-direction:column;gap:.1em;margin-bottom:.5em}
+.rc-hd b{font:700 1.2em Cinzel,Georgia,serif;letter-spacing:.05em;color:#ffe9a8;text-shadow:0 0 .6em rgba(255,210,100,.6)}
+.rc-hd span{font-size:.85em;color:#c8b888}
+.rc-row{display:flex;flex-wrap:wrap;gap:.4em;margin-bottom:.5em}
+.rc-i{width:2.9em;height:2.9em;display:flex;align-items:center;justify-content:center;background:rgba(60,46,22,.85);border:1px solid rgba(232,207,148,.55);border-radius:.55em;transform:scale(0);animation:rcpop .5s cubic-bezier(.2,1.7,.4,1) forwards;box-shadow:0 0 .8em rgba(232,207,148,.25)}
+.rc-i img.ic{width:2.3em;height:2.3em;filter:drop-shadow(0 .1em .2em rgba(0,0,0,.6))}.rc-i em{font-style:normal;font-size:1.4em}.rc-i.more{font-weight:700;color:#e8cf94;animation-delay:.9s}
+@keyframes rcpop{0%{transform:scale(0) rotate(-20deg)}70%{transform:scale(1.18) rotate(4deg)}100%{transform:scale(1) rotate(0)}}
+.rc-ls{margin:0 0 .4em;padding:0;list-style:none;font-size:.92em;line-height:1.4}
+.rc-ls li{opacity:0;transform:translateX(-.8em);animation:rcli .4s forwards}.rc-ls li::before{content:'◆ ';color:#e8cf94;font-size:.7em;vertical-align:.1em}.rc-ls li.mo{opacity:.7;font-style:italic}
+@keyframes rcli{to{opacity:1;transform:none}}
+.rc-ft{font-size:.78em;color:#a89a78;font-style:italic}
+.rc-sp{position:absolute;left:var(--x);top:var(--y);width:var(--s);height:var(--s);background:#ffe48a;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);box-shadow:0 0 .5em #ffd84a;pointer-events:none;opacity:0;animation:rcsp var(--d) var(--w) ease-out infinite}
+@keyframes rcsp{0%{transform:translateY(0) scale(0) rotate(0);opacity:0}25%{opacity:1;transform:translateY(-.8em) scale(1.1) rotate(80deg)}100%{transform:translateY(-3em) scale(.2) rotate(240deg);opacity:0}}
+@media (max-width:700px){#rcn{top:22%}}

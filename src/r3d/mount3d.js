@@ -11,7 +11,7 @@ const ss=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t
 const VC={chr:1,vc:1,emit:1};let MAT=null;
 const SEAT=.64;   // asiento del caballo de referencia (lo exporta para compatibilidad)
 export class Mount3D{
- constructor(sp='caballo',cul,sad=true){if(!MSPEC[sp])sp='caballo';this.sp=sp;if(cul==null)cul=MBIO[sp]|0;if(!MAT)MAT=toon('#ffffff',VC);const d=makeSpecies(sp,sad,cul),g=groupsOf(d,MAT,hull,.012,false);
+ constructor(sp='caballo',cul,sad=true,tk=''){if(!MSPEC[sp])sp='caballo';this.sp=sp;this.tk=tk||'';if(cul==null)cul=MBIO[sp]|0;if(!MAT)MAT=toon('#ffffff',VC);const d=makeSpecies(sp,sad,cul,tk),g=groupsOf(d,MAT,hull,.012,false);
   this.obj=g.grp;this.R=g.R;this.meta=d.meta;this.seat=d.meta.seat;this.fw=d.meta.fw;this.sz=Math.max(.7,d.meta.len/1.6);this.obj.name='mount_'+sp;this.obj.visible=false;this.ph=0;this.gait=0;this.k=0;this.wf=0}
  // k: rampa de montar (0..1) · gait: 0 quieto, 1 trote, 2 galope (suavizado) · dist: distancia recorrida este fotograma (unidades three) · t: reloj
  update(k,gaitT,dist,dt,t,pos,face){const o=this.obj;this.k=k;if(k<=.001){o.visible=false;return}o.visible=true;o.position.copy(pos);o.rotation.y=face;
@@ -28,4 +28,6 @@ export class Mount3D{
   if(R.wingL){this.wf+=((gal>.3?1:0)-this.wf)*(1-Math.exp(-dt*3));const f=this.wf,fl=Math.sin(t*7)*.55*f;R.wingL.rotation.z=.15*f+fl;R.wingR.rotation.z=-.15*f-fl;R.wingL.rotation.y=-.5*f;R.wingR.rotation.y=.5*f}}
  dispose(){this.obj.traverse(m=>{if(m.geometry)m.geometry.dispose()})}
 }
+// PELAJE del animal montado (DOMAR-D5): tinte multiplicativo sobre el color por vértice; solo hay una montura visible a la vez, así que el material compartido vale. null = sin tinte
+export function setMountTint(c){if(!MAT)MAT=toon('#ffffff',VC);if(c&&Array.isArray(c))MAT.color.setRGB(c[0],c[1],c[2]);else MAT.color.setRGB(1,1,1)}
 export {SEAT};
