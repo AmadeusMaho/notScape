@@ -103,7 +103,7 @@ function summon(m,id,now){log('📣 ¡<b>'+m.d.n+'</b> llama refuerzos!');snd('t
 // esbirros: se retiran al morir, o cuando su jefe muere o deja de perseguirte
 function bossClean(now){for(let i=M.length-1;i>=0;i--){const e=M[i];if(!e.sm)continue;if(e.rt||!e.sm.hunt||e.sm.rt||P.hp<=0){if(A&&A.e===e)stopA();if(P.pjM===e)P.pjM=null;M.splice(i,1)}}}
 // efectos de un golpe del jefe que ha dañado (d>0): robavida y herida por segundo
-function bossHit(m,d,now){if(!d||m.sm)return;STS.onHit(m,now);if(bmech(m,'lif')){const h=Math.max(1,Math.round(d/2));m.hp=Math.min(m.mh,m.hp+h);splat(m.x,m.y,h,'#6ad04a',m.d.h+6)}
+function bossHit(m,d,now){if(!d||m.sm)return;STS.onHit(m,now);if(bmech(m,'lif')){const h=Math.max(1,Math.round(d/2));m.hp=Math.min(m.mh,m.hp+h);splat(m.x,m.y,h,'#6ad04a',m.d.h+6,0,1,m)}
  const dt=bmech(m,'dot');if(dt&&Math.random()<.4){const k=dt.split(':')[1];STS.add(P,{sangrado:'bleed',veneno:'poison',quemadura:'burn'}[k]||'bleed',{dur:5000,v:Math.max(1,Math.round((m.dm||1)*.12))})}}   // 22 oct 2026: la herida de los jefes ya es un estado del motor STS (status.js)
 function dotTick(now){return;const D=P.dot;if(!D)return;if(P.hp<=0||INT){P.dot=null;return}if(now<D.t)return;D.t=now+1000;P.hp-=D.v;splat(P.x,P.y,D.v,DOTN[D.k][2],26);HURT=now;if(--D.n<=0)P.dot=null;if(P.hp<=0){P.dot=null;die()}}
 

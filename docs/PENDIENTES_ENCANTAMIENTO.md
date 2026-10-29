@@ -15,7 +15,7 @@
 
 ---
 
-## TAREA 1 · ESTADOS VISIBLES EN EL ENEMIGO (prioridad 1)
+## TAREA 1 · ESTADOS VISIBLES EN EL ENEMIGO ✅ HECHA el 28 oct 2026 (lote ENCANT-ESTADOS-VISIBLES en AGENTS.md; `Aura` en `impact3d.js`). Queda solo: aura/funda en el jugador (el estallido al romperse la congelación se hizo en ENCANT-VFX-CUERPO). El texto de abajo es el encargo original.
 **Problema:** un enemigo quemado, congelado o envenenado solo muestra el icono sobre su nombre (`npDeb` en game.js) y el texto al aplicarse. No se «ve» el estado mientras dura.
 **Qué hacer:** un aspecto persistente por estado mientras esté activo, pensado para leerse a zoom normal sin tapar al enemigo:
 | estado | aspecto propuesto |
@@ -48,7 +48,7 @@
 1. **Lluvia y agua empapan:** con lluvia/tormenta (`WX`/clima en `ambient.js` o donde se guarde) y al pisar agua poco profunda o salir de ella, `STS.add(P,'wet')` y a los enemigos al aire libre; con lluvia los estados de fuego duran menos (Empapado apaga el fuego ya en `react`).
 2. **Enemigos con estados elementales:** añadir a `STS.ONHIT` (golpes de criaturas) o a las habilidades por datos `MD[id].sk` estados nuevos: p. ej. ranas/cosas del Pantano → `wet`; demonios → `burn`; yetis/criaturas de Cumbres → `chill`; brujas/chamanes → `curse` o `silence` contra el jugador; algún élite → `fear`. Recuerda que el jugador también sufre reacciones (el fuego + el hielo = Vapor y ceguera).
 3. **Segunda fuente para el jugador:** la magia (bola de fuego ya aplica `burn`) puede añadir el segundo elemento: un hechizo de agua/hielo básico encajaría (va con la Fase 14 «Magia/escuelas», o adelanta uno si el dueño quiere).
-4. Que la reacción se VEA: hoy solo sale texto + `sp()`; añade una receta en `impact3d.js` por reacción (Electrocutado, Vapor, Nube tóxica, Purga, Congelado) llamándola desde `react` (`window.R3D&&R3D.impact`).
+4. ✅ HECHO el 28 oct 2026 (lote ENCANT-VFX-CUERPO: `REACT` en impact3d.js + funda `bodyfx3d.js`; también el estallido al romperse la congelación). Texto original: Que la reacción se VEA: hoy solo sale texto + `sp()`; añade una receta en `impact3d.js` por reacción (Electrocutado, Vapor, Nube tóxica, Purga, Congelado) llamándola desde `react` (`window.R3D&&R3D.impact`).
 **Criterios:** en una partida normal con lluvia y un arma Tormentosa se ve un Electrocutado; prueba automática en `ns.py` de cada reacción (ver la batería del lote ESTADOS-FINALES en AGENTS.md).
 
 ## TAREA 3 · EQUILIBRIO (después de que juegue el dueño)

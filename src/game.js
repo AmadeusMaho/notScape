@@ -549,6 +549,7 @@ const SND={wc:()=>{noise(.1,.14,700,'lowpass');tone(110,.1,'triangle',.1,-50)},m
 sm:()=>{tone(880,.18,'square',.04,-150);tone(1320,.25,'triangle',.03)},cr:()=>{tone(300,.06,'square',.05,-80);tone(450,.05,'square',.03,0,.06)},hit:()=>{noise(.1,.12,900,'lowpass');tone(200,.1,'sawtooth',.06,-120)},miss:()=>noise(.12,.04,2500,'bandpass'),hurt:()=>tone(160,.25,'sawtooth',.08,-80),
 kill:()=>{tone(300,.2,'square',.06,200);tone(500,.25,'square',.06,0,.12)},die:()=>tone(300,.6,'sawtooth',.08,-250),lvl:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.25,'square',.06,0,i*.1)),
 coin:()=>{tone(988,.08,'square',.05);tone(1319,.15,'square',.05,0,.07)},xp:()=>{tone(1175,.05,'sine',.04);tone(1568,.09,'sine',.035,0,.05)},quest:()=>[392,523,659].forEach((f,i)=>tone(f,.3,'triangle',.08,0,i*.12)),epic:()=>[523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,.4,'square',.06,0,i*.12)),rare:()=>[659,784,988,1319,1568].forEach((f,i)=>tone(f,.3,'square',.06,0,i*.09))};
+SND.react=()=>{tone(392,.07,'triangle',.05,300);setTimeout(()=>tone(784,.16,'sine',.045,260),55);noise(.14,.045,2600,'highpass')};SND.sts=()=>{tone(620,.06,'triangle',.03,160)};   // letreros de REACCIÓN y de ESTADO aplicado (lote DAÑO-LEGIBLE)
 const snd=k=>{try{SND[k]&&SND[k]()}catch(e){}},mut=()=>{S.mute=!S.mute;save();panel()};
 const PEN=BI.map(b=>b.music.pen);
 function music(now){if(!AC||S.mute||now<nm)return;nm=now+R(1400,3000);const f=PEN[curB][R(0,4)]*(Math.random()<.3?2:1);tone(f,1.8,BI[curB].music.wave,BI[curB].music.gain)}
@@ -841,21 +842,21 @@ function hsBake(col,txt){const key=col+'|'+txt;let b=HSC.get(key);if(b)return b;
  g.shadowColor='rgba(0,0,0,.9)';g.shadowBlur=F*.9;g.shadowOffsetY=F*.3;g.fillStyle=gold?'#fff1c8':'#f6eddb';g.fillText(txt,cx*F,(cy+.5)*F);
  b={c,W,H};if(HSC.size>120)HSC.delete(HSC.keys().next().value);HSC.set(key,b);return b}
 function hsDraw(p){const cr=!!p.cr,b=cr?hsBakeCrit(p.tx):hsBake(p.hs,p.tx),q=ISO.toCanvas(p.x,p.y,TER.standZ(p.x,p.y)),s=ISO.scale(),px=Math.max(2,Math.round(s*1.1)),age=(p.L0||1.2)-p.l;
- /* NÚMEROS DE DAÑO MÁS SATISFACTORIOS (22 oct 2026, retoque ligero): el normal NACE con un pop (×.55 → ×1,18 con rebote → ×1), sube en ARCO hacia un lado, es algo mayor cuanto más pega (`p.sk`) y se encoge un pelo al desvanecerse. */
- const ezo=t=>1-Math.pow(1-Math.max(0,Math.min(1,t)),3);let sc=1,rise=(Math.sqrt(Math.min(age,.7)/.7)*9)*px*.5,al=Math.min(1,p.l/.3),dxs=(p.jx>=0?1:-1)*Math.min(age,.7)*5*px*.5;
- if(!p.cr){sc=(age<.13?.55+.63*ezo(age/.13):1.18-.18*ezo((age-.13)/.12))*(p.sk||1)*(.9+.1*al)}
- if(cr){ // «dopamina» WoW: nace pequeño, revienta a ×2,5 con rebote, se asienta en ×1,6, sube más alto y se queda más tiempo; destello radial al nacer
-  const u=age/.5,ez=t=>1-Math.pow(1-t,3);sc=u<.12?.35+(2.5-.35)*ez(u/.12):u<.38?2.5-.9*ez((u-.12)/.26):1.6+.06*Math.sin(age*5);rise=Math.min(age*70,15)*px*.55;al=Math.min(1,p.l/.4);dxs=0}
- const dw=b.W*px*sc,dh=b.H*px*sc,shk=(p.cr&&age<.14)?(Math.sin(age*160)*px*1.4*(1-age/.14)):0,cx=q.x+p.jx*px+dxs+shk,cy=q.y-p.h*SPR*s-rise,x=Math.round(cx-dw/2),y=Math.round(cy-dh/2);
+ /* CÓMO «POPEAN» (lote DAÑO-PAUSA, 28 oct 2026; sustituye al movimiento de DAÑO-WOW): el número nace sobre la placa con el POP de siempre (×.55 → ×1,18 → ×1),
+    SE QUEDA QUIETO en su sitio ~0,55 s (la «dopamina») y luego sube despacio y se desvanece. CRÍTICO: nace grande (×2,6), se asienta en ×1,75 y se queda quieto 0,8 s.
+    DAÑO POR TIEMPO ×0,72 (`sk`). Los números de un mismo enemigo no se pisan: cada uno va a un CARRIL (`p.ln`: centro, derecha, izquierda…) elegido al nacer en `splat`. */
+ const ezo=t=>1-Math.pow(1-Math.max(0,Math.min(1,t)),3),L0=p.L0||1.2,u=Math.min(1,age/L0),bs=p.sk||1,hold=cr?.8:.55;let sc,rise,al;
+ if(!cr)sc=(age<.13?.55+.63*ezo(age/.13):1.18-.18*ezo((age-.13)/.12))*bs;
+ else sc=age<.15?2.6-.85*ezo(age/.15):1.75;
+ rise=ezo((age-hold)/(L0-hold))*b.H*px*(cr?.7:.9);al=u<.7?1:1-(u-.7)/.3;al=Math.max(0,Math.min(1,al));
+ const row=Math.ceil((p.ln||0)/2),side=p.ln?((p.ln%2)?1:-1):0,lw=19*px*.62,lh=15*px*.95;   // CARRIL: 0 centro · impares a la derecha · pares a la izquierda, cada pareja una fila más arriba (racimo compacto junto al enemigo)
+ const dw=b.W*px*sc,dh=b.H*px*sc,cx=q.x+p.jx*px+side*lw;let cy=q.y-p.h*SPR*s-rise;
+ if(p.m){const top=(window.R3D&&R3D.actors&&R3D.actors.topPx(p.m))||(p.m.d&&p.m.d.h)||p.h,r=cvRect(),kk=r.width/cv.width||1,nb=q.y-(top+4)*SPR*s,base=nb-(p.m._nph||26)/kk+b.H*px*.45;   /* un poco más abajo (dueño, 28 oct): el borde inferior del número roza el borde superior de la placa */
+  cy=base-b.H*px*bs*.5-rise-row*lh-(cr?dh*.3:0)}   /* sobre la placa y los iconos de estado (son DOM y van encima del lienzo: debajo los taparían) */
+ const x=Math.round(cx-dw/2),y=Math.round(cy-dh/2);
  ctx.setTransform(1,0,0,1,0,0);ctx.save();
- if(cr&&age<.42){const f=1-age/.42,gr=ctx.createRadialGradient(cx,cy,0,cx,cy,dw*.95);gr.addColorStop(0,'rgba(255,236,170,'+(.7*f)+')');gr.addColorStop(1,'rgba(255,200,90,0)');ctx.globalCompositeOperation='lighter';ctx.fillStyle=gr;ctx.beginPath();ctx.arc(cx,cy,dw*.95,0,7);ctx.fill();
-  ctx.strokeStyle='rgba(255,241,200,'+(.8*f)+')';ctx.lineWidth=Math.max(1,px*.5*f);ctx.beginPath();ctx.arc(cx,cy,dw*(.25+age*1.6),0,7);ctx.stroke();ctx.globalCompositeOperation='source-over'}
  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.globalAlpha=al;
- if(cr){   // CRÍTICO: bamboleo que se amortigua + destellos en cruz que salen disparados (22 oct 2026)
-  const f=Math.max(0,1-age/.5),rot=Math.sin(age*26)*.1*Math.max(0,1-age/.45);
-  if(age<.5){ctx.save();ctx.globalCompositeOperation='lighter';for(let i=0;i<6;i++){const a=i*1.047+.4+p.jx*.3,r=dw*(.32+age*1.25),sx=cx+Math.cos(a)*r,sy=cy+Math.sin(a)*r*.8,z=px*(2.6*f+.6);ctx.fillStyle='rgba(255,236,170,'+(.85*f)+')';ctx.beginPath();ctx.moveTo(sx,sy-z*1.8);ctx.lineTo(sx+z*.45,sy);ctx.lineTo(sx,sy+z*1.8);ctx.lineTo(sx-z*.45,sy);ctx.closePath();ctx.moveTo(sx-z*1.8,sy);ctx.lineTo(sx,sy+z*.45);ctx.lineTo(sx+z*1.8,sy);ctx.lineTo(sx,sy-z*.45);ctx.closePath();ctx.fill()}ctx.restore()}
-  ctx.translate(cx,cy);ctx.rotate(rot);ctx.drawImage(b.c,-dw/2,-dh/2,dw,dh)}
- else ctx.drawImage(b.c,x,y,dw,dh);
+ ctx.drawImage(b.c,x,y,dw,dh);
  ctx.restore()}
 // ---- F5-C · efectos del golpe máximo (daño amarillo), en coordenadas de pantalla y pixelados como los hitsplats: 'star' (estallido de 8 rayos en el objetivo), 'thrust' (estocada: estela dorada de la mano al objetivo),
 // 'punch' (puñetazo: estela + onda circular). Los proyectiles (flecha/orbe) se dibujan en drawPJ con la variante hv. Todo vive ≤0,4 s; no se guarda.
@@ -882,7 +883,7 @@ function drawPJ(p,now){if(p.fb)return;   // la bola de fuego se dibuja en 3D (R3
   for(let i=0;i<8;i++){const a2=i*Math.PI/4+u*9;sq(x+Math.cos(a2)*8*s,y+Math.sin(a2)*8*s,'#e8cf94',.9)}}
  else{ctx.globalAlpha=.8;ctx.fillStyle=p.col||ORB[tierOf(S.eq.w||'st_pino')]||'#9cf';ctx.beginPath();ctx.arc(x,y,6*s,0,7);ctx.fill()}
  ctx.restore()}
-function splat(x,y,d,c,hgt,crit,sk){const L0=crit?1.75:1.2;parts.push({x,y,vx:0,vy:0,g:0,l:L0,L0,cr:crit?1:0,sk:sk||1,tx:String(d),hs:(d>0||c)?(c||'#d4261c'):'#2f6fdc',h:hgt||0,jx:Math.round((Math.random()-.5)*(crit?4:3))})}   // crit=1: golpe crítico (máximo) → estallido grande, estilo WoW (ver hsBake/hsDraw)
+function splat(x,y,d,c,hgt,crit,sk,m){const L0=m?(crit?1.95:1.4):crit?1.75:1.2;let ln=0;if(m){const used=new Set();for(const q of parts)if(q.m===m&&q.tx&&(q.L0-q.l)<.9)used.add(q.ln);while(used.has(ln))ln++}parts.push({ln,x,y,vx:0,vy:0,g:0,l:L0,L0,cr:crit?1:0,sk:sk||1,tx:String(d),hs:(d>0||c)?(c||'#d4261c'):'#2f6fdc',h:hgt||0,m:m||null,jx:Math.round((Math.random()-.5)*(crit?2:5))})}   // m = enemigo: el número nace en su cuerpo y nunca lo tapa su placa de vida ni los iconos de estado (lote DAÑO-LEGIBLE, 28 oct 2026)   // crit=1: golpe crítico (máximo) → estallido grande, estilo WoW (ver hsBake/hsDraw)
 // Comer es manual: LMB en la comida del inventario. La cura es PROGRESIVA: cada bocado añade a la cola HOT y cada ~0,6 s se aplica un paso con un «+N» verde.
 let HOT=[],EATCD=0,QCD=0;const QUICKH=8; // lote B2: comer retrasa el SIGUIENTE ataque (comida normal 1,8 s · bocado rápido de ≤8 PV y pociones 0,6 s). Un bocado rápido se puede comer a la vez que una comida normal (COMBO) y sus retrasos no se suman.
 function eatDelay(now,ms){ATKT=Math.max(ATKT,now+ms);if(A&&A.ty==='f')A.ph=Math.max(A.ph,now+ms)}
@@ -926,8 +927,8 @@ function fin(now){const{ty,sk,i,e}=A,a=ACT[sk][i],cb=sk==='co'?count(a[2]):0;if(
  dirty=1;save()}
 /* EFECTOS DE ESTADO (21 oct 2026; decisión del dueño): cada efecto tiene SU COLOR (`STC`) en los números de daño y el daño por estado NO da XP (ni de Magia ni de nada: subían la magia demasiado rápido). `dotHit()` es el golpe de un efecto
    sobre un enemigo (quemadura, sangrado…); los efectos que sufre el jugador usan los mismos colores (`DOTN` en combat.js). Se reorganizará con el motor de estados alterados (Fase 23). */
-const STC={burn:'#ff8a2a',bleed:'#d4261c',poison:'#6ad04a',frost:'#7ad0ff',shock:'#c9a0ff',stun:'#e8d36a'};
-function dotHit(m,d,now,kind){if(!alive(m,now)||!(d>0))return;m.hp-=d;m.fl=now+80;splat(m.x,m.y,d,STC[kind]||'#ffffff',m.d.h+6);if(m.hp<=0){kill(m,now);if(A&&A.e===m)reseek(m,now)}}
+const STC={burn:'#ff8a2a',incinerate:'#e8202e',bleed:'#d4261c',hemorrhage:'#e8306e',poison:'#6ad04a',toxin:'#1ee0a0',curse:'#9a48ff',doom:'#e050ff',void:'#b060ff',manaburn:'#4a8cff',arcane:'#4a8cff',shock:'#4ab4ff',overload:'#8ae8ff',frost:'#cfeeff',holy:'#ffe9a0',thorns:'#c8a070',stun:'#e8d36a'};   // lote DAÑO-LEGIBLE (28 oct 2026): un color por elemento y otro para su versión fuerte (Quemadura naranja · Incinerar carmesí · Toxina turquesa…). '#c9a24a' queda reservado al golpe máximo
+function dotHit(m,d,now,kind){if(!alive(m,now)||!(d>0))return;m.hp-=d;m.fl=now+80;splat(m.x,m.y,d,STC[kind]||'#ffffff',m.d.h+6,0,.72,m);if(m.hp<=0){kill(m,now);if(A&&A.e===m)reseek(m,now)}}
 /* ═══ STAGGER (22 oct 2026; pedido del dueño) ═══ Cada enemigo con daño (y todo jefe/élite) tiene una barra de STAGGER (`m.sg` de `m.sgM`): cada golpe que recibes la baja (el pesado/cargado más), tarda `SG.wait` ms en regenerarse. A 0 queda ATURDIDO `SG.stunMs` ms
    (jefes `SG.bossMs`): no actúa, recibe ×1,5 de daño y el PRIMER golpe que le des siempre acierta; luego tiene `SG.imm` ms de inmunidad al stagger. La barra se ve en la barra de jefe (`.bb-s`) y en el nameplate (`.nps`). PARADA PERFECTA = contraataque (`m.rip`): quita el 60 % del stagger y abre una ventana de 1,6 s con ×2 de daño y golpe seguro.
    Neutrales sin daño (gallinas, corderos) no tienen stagger. DoT/quemadura (mxv 99) no lo tocan. Constantes en `SG`. */
@@ -944,7 +945,7 @@ const sureHit=m=>{const n=performance.now();if(m.stun>n&&!m.stSure){m.stSure=1;r
 // TEXTO FLOTANTE de feedback (parada, esquiva, mitigado, aturdido…): DOM sobre un punto del mundo, sube y se desvanece (≈ 1 s)
 function fText(tx,c,wx,wy,hpx,cls){if(!npRoot){npRoot=document.createElement('div');npRoot.id='nps';document.body.appendChild(npRoot)}
  const el=document.createElement('div');el.className='ftx'+(cls?' '+cls:'');el.textContent=tx;el.style.color=c;const cc=ISO.toCanvas(wx,wy,TER.standZ(wx,wy)),r=cvRect(),k=r.width/cv.width;FTI=(FTI+1)%3;
- el.style.left=(r.left+cc.x*k)+'px';el.style.top=(r.top+(cc.y-(hpx||40)*SPR*ISO.scale())*k-FTI*15)+'px';npRoot.appendChild(el);setTimeout(()=>el.remove(),cls==='ench'?1500:1150)}
+ el.style.left=(r.left+cc.x*k)+'px';el.style.top=(r.top+(cc.y-(hpx||40)*SPR*ISO.scale())*k-FTI*15)+'px';npRoot.appendChild(el);if(cls==='react'||cls==='sts')el.style.setProperty('--gc',c);setTimeout(()=>el.remove(),cls==='react'?1750:cls==='ench'?1500:cls==='sts'?1350:1150)}
 // IMÁN de dirección del golpe cuerpo a cuerpo (22 oct 2026): el swing se corrige hasta ≈ 17° hacia el enemigo más cercano a donde apuntas (el fijado con Tab pesa el doble); con un CONTRAATAQUE activo apunta solo al enemigo parado. Solo cuerpo a cuerpo.
 function magnetAng(a,now){if(wtype()!=='m'||(wKind()==='staff'&&skl().sel))return a;const reach=(wKind()==='dagger'?66:wKind()==='great'?92:80)+10;
  if(RIP&&RIP.rip>now&&alive(RIP,now)&&Math.hypot(RIP.x-P.x,RIP.y-P.y)<160)return Math.atan2(RIP.y-P.y,RIP.x-P.x);
@@ -982,7 +983,7 @@ function hitM(m,d,now,sk,mxv,wt){if(!alive(m,now))return;fightAt=now;
  if(d>0&&sk!=='mg'&&window.R3D&&R3D.spell){try{R3D.spell.hit(m.x,m.y,Math.atan2(m.y-P.y,m.x-P.x),mx?1:heavy?.6:0)}catch(e){}}   // impacto 3D: destello + chispas en la dirección del golpe
  if(d>0&&sk!=='mg'&&mxv!==99&&window.R3D&&R3D.blood){try{R3D.blood.hit(m,d,now,{wt:wt==='r'?'r':'m',mx})}catch(e){}}   // Lote R3D-SANGRE (solo ?r3d=1): golpes físicos directos sangran; hechizos (sk='mg'), espinas y sangrado por turnos (mxv=99) no. wt='r' = flecha/virote
  if(mxv!==99)hitFeel(m,d,now,mx,heavy,sk,wt);
- if(d>0)splat(m.x,m.y,d,mx?'#c9a24a':null,m.d.h+6,mx,Math.min(1.4,1+Math.min(.3,d/Math.max(4,m.mh)*1.5)+(heavy?.1:0)));else fText('Fallo','#d8dde8',m.x,m.y,m.d.h+10);   /* estilo WoW (22 oct 2026): sin «0»: palabras Fallo / Esquiva / Parada / Absorbido con nuestra UI (fText) */
+ if(d>0)splat(m.x,m.y,d,mx?'#c9a24a':null,m.d.h+6,mx,Math.min(1.4,1+Math.min(.3,d/Math.max(4,m.mh)*1.5)+(heavy?.1:0)),m);else fText('Fallo','#d8dde8',m.x,m.y,m.d.h+10);   /* estilo WoW (22 oct 2026): sin «0»: palabras Fallo / Esquiva / Parada / Absorbido con nuestra UI (fText) */
  if(mx){sp(m.x,m.y-m.d.h/2,'#e8cf94',16,120,80,170);sp(m.x,m.y-m.d.h/2,'#fff1c8',8,70,60,190);SHK=now+160;HFX.push({k:'star',tx:m.x,ty:m.y,th:m.d.h/2,t0:now,d:380})}if(d)gain(sk||WSK(),d*xpMul(m));if(m.hp<=0){kill(m,now);if(A&&A.e===m)reseek(m,now)}}
 const inVilla=(x,y)=>{if(INT&&INT.cave)return CAVE.blk(x,y);   /* CUEVA: «zona segura» = roca; las criaturas no atraviesan las paredes */
  const k=ownAt(x,y);if(k<0)return false;if(typeof ISLA!=='undefined'&&ISLA.fightOn())return false;   // la Arena del Vigía queda dentro de la zona segura del Agora: durante el combate de Gabriel NO hay zona segura
@@ -1420,7 +1421,7 @@ const ISLA_B=()=>typeof ISLA!=='undefined'?ISLA.boss:null;
 function npSweep(){for(const [m,e] of NPS)if(!e.seen){e.el.remove();NPS.delete(m)}else e.seen=0}
 /* ESTADOS SOBRE EL NAMEPLATE (estilo WoW): un iconito por estado alterado del enemigo (STS.list) con anillo de tiempo restante y los segundos; ×n si se apila. Solo toca el DOM si cambia el conjunto o el segundo. */
 function npDeb(e,m){const L=(typeof STS!=='undefined'&&m.sts)?STS.list(m).filter(s=>s.d&&s.d.ic):[],key=L.map(s=>s.k+(s.n||1)).join(',');
- if(key!==e.dk){e.dk=key;e.d.innerHTML=L.map(s=>'<span class="npd1" data-k="'+s.k+'" style="--c:'+s.d.col+'"><i>'+s.d.ic+'</i>'+(s.n>1?'<sup>'+s.n+'</sup>':'')+'<b></b></span>').join('')}
+ if(key!==e.dk){e.dk=key;e.nphD=1;e.d.innerHTML=L.map(s=>'<span class="npd1" data-k="'+s.k+'" style="--c:'+s.d.col+'"><i>'+s.d.ic+'</i>'+(s.n>1?'<sup>'+s.n+'</sup>':'')+'<b></b></span>').join('')}
  const ch=e.d.children;for(let i=0;i<L.length&&i<ch.length;i++){const s=L[i],p=Math.max(0,Math.min(1,s.rem/s.tot)),pp=Math.round(p*40)/40,sec=Math.ceil(s.rem/1000),q=ch[i];if(q._p!==pp){q._p=pp;q.style.setProperty('--p',pp)}if(q._s!==sec){q._s=sec;q.lastChild.textContent=sec}}}
 function dMo(m,t,now){if(!alive(m,now)||m===BBM)return;const d=m.d,h=(window.R3D&&R3D.actors.topPx(m))||d.h;
  const dmg=m.hp<m.mh;if(!d.boss&&!d.ag&&!dmg&&Math.hypot(m.x-P.x,m.y-P.y)>300)return;   // «Lv» solo cerca (<300 px), en combate o si el enemigo es jefe/agresivo
@@ -1432,6 +1433,7 @@ function dMo(m,t,now){if(!alive(m,now)||m===BBM)return;const d=m.d,h=(window.R3D
  if(pct!==e.hp){if(pct<e.hp)e.g.style.width=(e.hp*100)+'%';e.hp=pct;e.f.style.width=(pct*100)+'%';e.p.textContent=Math.ceil(pct*100)+'%';clearTimeout(e.gt);e.gt=setTimeout(()=>{e.g.style.width=(pct*100)+'%'},320)}
  {const q=m.sgM?Math.max(0,m.sg/m.sgM):1,st=m.stun>now;e.sg.classList.toggle('full',q>=.999&&!st);e.sg.classList.toggle('stn',st);e.sgi.style.width=(st?100:q*100)+'%'}   // barrita de stagger bajo la vida (solo si has empezado a bajarla)
  npDeb(e,m);
+ if(e.nphD||e.key!==e.nphK){e.nphD=0;e.nphK=e.key;const fz=parseFloat(getComputedStyle(e.el).fontSize)||12;m._nph=e.el.offsetHeight+(e.d.children.length?e.d.offsetHeight+fz*.25:0)}   // alto de placa + iconos (para los números de daño), solo al cambiar
  {const tf='translate('+(r.left+c.x*k).toFixed(1)+'px,'+(r.top+sy*k).toFixed(1)+'px) translate(-50%,-100%)';if(tf!==e.tf){e.tf=tf;e.el.style.transform=tf}}}
 
 
