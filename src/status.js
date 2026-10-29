@@ -48,8 +48,19 @@ const STS=(()=>{
  };
  const STRONG={};for(const k in D)if(D[k].rep)STRONG[D[k].rep]=k;   // débil → fuerte
  const UNDEAD=new Set(['esqueleto','espantapajaros','demonio','k5','b5','bruja']);
- const ONHIT={lobo:['bleed',.25,6000],jabali:['bleed',.2,6000],oso:['bleed',.25,6000],rana:['poison',.3,7000],bruja:['poison',.3,8000],lagarto:['poison',.25,7000],demonio:['burn',.3,4000],k5:['burn',.35,4000],
-  yak:['slow',.3,4000],gigante:['slow',.3,4000],golem:['root',.2,2500],k3:['freeze',.25,3500],k2:['poison',.35,8000],oni:['weak',.3,6000],shinobi:['blind',.25,4000],k4:['blind',.25,4000],bandido:['bleed',.2,6000],orco:['vuln',.25,6000]};
+ const ONHIT={lobo:['bleed',.25,6000],jabali:['bleed',.2,6000],oso:['bleed',.25,6000],rana:[['poison',.3,7000],['wet',.35,7000]],bruja:[['poison',.3,8000],['silence',.18,3500],['curse',.15,6000]],lagarto:['poison',.25,7000],demonio:['burn',.3,4000],k5:['burn',.35,4000],
+  yak:[['slow',.3,4000],['chill',.3,6000]],gigante:[['slow',.3,4000],['chill',.25,6000]],golem:['root',.2,2500],k3:['freeze',.25,3500],k2:['poison',.35,8000],oni:['weak',.3,6000],shinobi:['blind',.25,4000],k4:['blind',.25,4000],bandido:['bleed',.2,6000],orco:['vuln',.25,6000]};
+
+ // ICONOS SVG de línea (sin emojis: regla del HUD). `svg(k)` devuelve el <svg> del estado `k` (usa currentColor); estado nuevo = una clave en IC hacia un glifo de GL
+ const GL={flame:'<path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-6 1-9z"/>',drop:'<path d="M12 3C9 8 6 11 6 15a6 6 0 0 0 12 0c0-4-3-7-6-12z"/>',snow:'<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/>',bolt:'<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>',
+  skull:'<path d="M5 11a7 7 0 0 1 14 0c0 2-1 3-2 4v3H7v-3c-1-1-2-2-2-4zM9.5 11h.01M14.5 11h.01M10 18v2M14 18v2"/>',bubbles:'<circle cx="8" cy="15" r="3"/><circle cx="15" cy="10" r="4"/><circle cx="16.5" cy="18" r="2"/>',beaker:'<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/>',
+  eyeoff:'<path d="M3 12s4-7 9-7 9 7 9 7-4 7-9 7-9-7-9-7zM4 4l16 16"/>',shield:'<path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/>',down:'<path d="M12 4v13M6 12l6 7 6-7"/>',up:'<path d="M12 20V7M6 12l6-7 6 7"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  root:'<path d="M5 20c3-6 3-10 7-16M12 20c0-5 1-8 5-11M9 14l-4-2M15 13l4-3"/>',target:'<circle cx="12" cy="12" r="6"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/>',fear:'<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5h.01"/>',mute:'<path d="M4 5h16v11H9l-5 4zM3 3l18 18"/>',
+  moon:'<path d="M20 14A8 8 0 1 1 10 4a6 6 0 0 0 10 10z"/>',claw:'<path d="M5 5l10 14M10 4l10 14M3 10l8 10"/>',gem:'<path d="M12 3l7 9-7 9-7-9z"/>',scales:'<path d="M12 4v16M7 20h10M4 8h16M4 8l-2 6a3 3 0 0 0 4 0zM20 8l-2 6a3 3 0 0 0 4 0z"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',haste:'<path d="M6 6l6 6-6 6M12 6l6 6-6 6"/>',thorn:'<path d="M12 3l2 7 7 2-7 2-2 7-2-7-7-2 7-2z"/>',rock:'<path d="M3 20l6-10 4 6 3-4 5 8z"/>'};
+ const IC={burn:'flame',incinerate:'flame',bleed:'drop',hemorrhage:'drop',wet:'drop',slow:'clock',exhaust:'clock',chill:'snow',freeze:'snow',shock:'bolt',overload:'bolt',poison:'bubbles',toxin:'bubbles',corrode:'beaker',dissolve:'beaker',curse:'moon',doom:'skull',vuln:'down',exposed:'down',weak:'down',rend:'claw',
+  root:'root',blind:'eyeoff',fear:'fear',silence:'mute',mark:'target',manaburn:'gem',judgement:'scales',shield:'shield',fury:'up',regen:'plus',haste:'haste',thorns:'thorn',unbreak:'rock'};
+ const svg=k=>'<svg class="stsv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+(GL[IC[k]]||GL.bolt)+'</svg>';
  const now0=()=>performance.now(),isP=e=>e===P,H=e=>isP(e)?60:(e.d&&e.d.h)||40;
  const get=(e,k)=>{const s=e&&e.sts&&e.sts[k];return s&&s.t1>now0()?s:null};
  const has=(e,k)=>!!get(e,k),any=(e,...ks)=>ks.some(k=>has(e,k)),del=(e,...ks)=>{if(e&&e.sts)ks.forEach(k=>delete e.sts[k])};
@@ -112,14 +123,17 @@ const STS=(()=>{
   return{d,crit}}
  function shieldAbs(e,d){const s=get(e,'shield');if(!s)return d;const ab=Math.min(s.v,d);s.v-=ab;d-=ab;say(e,ab?'Absorbido '+ab:'Escudo','#6ab0ff',30);if(s.v<=0)delete e.sts.shield;return d}
  function thaw(e,now){if(e.sts&&e.sts.freeze)delete e.sts.freeze;e.stsImm=e.stsImm||{};e.stsImm.freeze=now+C.immMs;if(R3())V('deshielo',e);else try{sp(e.x,e.y-H(e)/2,'#cfeaff',14,120,80,140)}catch(x){}}
- function onHit(m,now){const o=m&&m.d&&ONHIT[m.d.id];if(o&&Math.random()<o[1])add(P,o[0],{dur:o[2],v:Math.max(1,Math.round((m.dm||1)*.12))})}
+ function onHit(m,now){const o=m&&m.d&&ONHIT[m.d.id];if(!o)return;for(const q of (Array.isArray(o[0])?o:[o]))if(Math.random()<q[1])add(P,q[0],{dur:q[2],v:Math.max(1,Math.round((m.dm||1)*.12))})}   /* una fila de ONHIT puede ser [estado,prob,ms] o una lista de ellas (lote ENCANT-CIERRE: el Pantano moja, Cumbres enfría, la bruja silencia: sin segundo elemento no hay reacciones) */
  // al MORIR un enemigo: Incinerar salta a los cercanos (lo llama kill() de game.js)
  function onKill(m,now){if(!m||!m.sts)return;if(has(m,'incinerate')){const t=near(m,C.nearR,3);spread(()=>t.forEach(o=>add(o,'incinerate')));if(t.length){say(m,'¡Incinerar!','#ffd04a',18,'react');fx(m,'#ffd04a',20);V('incinerar',m,t)}}}
  function vision(dt){const t=has(P,'blind')?1:0;blindK+=(t-blindK)*Math.min(1,dt*(t?4:2.2));
   if(blindK<.01){if(blindEl&&blindEl.style.display!=='none')blindEl.style.display='none';return}
   if(!blindEl){blindEl=document.createElement('div');blindEl.id='blind';document.body.appendChild(blindEl)}
   blindEl.style.display='block';blindEl.style.setProperty('--r',(72-60*blindK).toFixed(1)+'vmin');blindEl.style.opacity=Math.min(1,blindK*1.4)}
- function tick(now,dt){vision(dt||.016);const all=[P];if(typeof M!=='undefined')for(const m of M)if(m.sts)all.push(m);
+ let rainT=0;
+ function rain(now){if(now<rainT)return;rainT=now+2500;if(typeof INT!=='undefined'&&INT)return;if(typeof WX==='undefined'||(WX.t!=='rain'&&WX.t!=='storm'))return;   /* LLUVIA: moja al jugador y a los enemigos cercanos al aire libre (Empapado + rayo = Electrocutado, + frío = Congelado, apaga el fuego) */
+  add(P,'wet',{dur:8000});for(const o of near(P,900,10))add(o,'wet',{dur:8000})}
+ function tick(now,dt){vision(dt||.016);rain(now);const all=[P];if(typeof M!=='undefined')for(const m of M)if(m.sts)all.push(m);
   for(const e of all){if(!e.sts)continue;const me=!isP(e);if(me&&typeof alive==='function'&&!alive(e,now)){e.sts=null;continue}if(!me&&P.hp<=0){e.sts=null;continue}
    for(const k in e.sts){const s=e.sts[k],d=D[k];
     if(now>=s.t1){delete e.sts[k];if(d.doom&&me&&alive(e,now)){const b=Math.round((s.acc||0)*d.doom)+2;say(e,'¡Condena!','#d070ff',18,'react');fx(e,'#d070ff',22);V('condena',e);dotHit(e,b,now,'doom');if(!alive(e,now)){e.sts=null;break}}continue}
@@ -130,5 +144,5 @@ const STS=(()=>{
      else if(!INT){if(typeof ENCH!=='undefined')dmg=Math.max(1,Math.round(dmg*(1-Math.min(.6,.12*ENCH.arm('resguardo')))));P.hp-=dmg;splat(P.x,P.y,dmg,d.col,26);HURT=now;if(P.hp<=0){die();break}}}}
    if(e.sts&&now>(e.stsFx||0)&&!(me&&R3())){   /* con 3D los estados los pinta R3D.aura/R3D.body; esto es el respaldo 2D */e.stsFx=now+420;for(const k in e.sts){const d=D[k];if(d.dot||d.froze||d.stack>1||k==='fury'||k==='root'||k==='wet'||k==='shock'||k==='overload'){try{sp(e.x,e.y-H(e)*.5,d.col,k==='burn'||k==='incinerate'?2:1,24,30,k==='burn'||k==='incinerate'||k==='fury'||k==='curse'?-30:20)}catch(x){}}}}}
  }
- return{D,C,ONHIT,UNDEAD,STRONG,add,has,clear,list,spd,out,acc,healM,noMana,inP,inM,frozen,onHit,onKill,tick,thaw}
+ return{D,C,ONHIT,UNDEAD,STRONG,add,has,clear,list,spd,out,acc,healM,noMana,inP,inM,frozen,onHit,onKill,tick,thaw,svg}
 })();

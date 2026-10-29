@@ -118,7 +118,7 @@ const ENCH=(()=>{
  // PASIVOS DE ARMADURA: suma de LVB[nivel] de las piezas puestas con ese encantamiento
  const arm=e=>{let t=0;try{for(const k of ARMS){const id=S.eq[k];if(id&&of(id)===e)t+=LVB[lvOf(id)]}}catch(x){}return t};
  // HERRAMIENTA de la habilidad `sk` → {e,b} (b = LVB del nivel) o null
- const tool=sk=>{try{const id=S.eq[sk],e=of(id);return e?{e,b:LVB[lvOf(id)]}:null}catch(x){return null}};
+ const tool=sk=>{try{const id=S.eq[sk],e=of(id);return e?{e,b:LVB[lvOf(id)]}:(typeof ING!=='undefined'?ING.rigOf(sk):null)}catch(x){return null}};   /* un APAREJO de Ingeniería activo da el efecto aunque la herramienta no esté encantada (lote INGENIERIA-1) */
  // barra que sale de una mena (receta de Herrería que la funde sola) y plato asado de un pescado (Cocina, un ingrediente)
  const smeltOf=o=>{try{const a=(ACT.sm||[]).find(r=>r.length===6&&typeof r[2]==='string'&&r[2].startsWith('b_')&&r[1][o]&&Object.keys(r[1]).every(k=>k===o||k==='carbon'));return a&&a[2]}catch(x){return null}};
  const cookOf=f=>{try{const a=(ACT.co||[]).find(r=>r.length===6&&typeof r[2]==='string'&&r[1][f]&&Object.keys(r[1]).length===1);return a&&a[2]}catch(x){return null}};
@@ -132,6 +132,7 @@ const ENCH=(()=>{
   if(!d.p)return;if((m.ecd||0)>now)return;if(Math.random()*100>=chance(S.eq.w))return;m.ecd=now+d.cd;
   if(d.sts&&typeof STS!=='undefined')STS.add(m,d.sts,{dur:d.dur*LVD[l],n:(d.n2||1)});if(d.mana&&typeof MN!=='undefined')MN=Math.min(mnMax(),MN+d.mana*LVB[l]);if(d.push&&typeof P!=='undefined'){const dx=m.x-P.x,dy=m.y-P.y,dl=Math.hypot(dx,dy)||1,nx=m.x+dx/dl*d.push,ny=m.y+dy/dl*d.push;if(typeof inVilla!=='function'||!inVilla(nx,ny)){m.x=nx;m.y=ny}}if(d.sts2&&typeof STS!=='undefined')STS.add(m,d.sts2,{dur:d.dur*LVD[l]});if(d.stun)m.nt=Math.max(m.nt||0,now)+d.stun*LVD[l];
   if(d.heal&&typeof P!=='undefined'){P.hp=Math.min(maxHp(),P.hp+d.heal*LVB[l]);try{splat(P.x,P.y,d.heal*LVB[l],'#2f9a3a',26)}catch(x){}}
+  try{if(typeof SND!=='undefined'&&SND.en)SND.en(e)}catch(x){}
   try{if(window.R3D&&R3D.impact)R3D.impact.burst(m,e,vk(S.eq.w));else{sp(m.x,m.y-10,d.col,16,90,70,0);sp(m.x,m.y-10,d.col2,8,50,50,0)}fText(d.ic+' '+d.pop,d.col,m.x,m.y,(m.d&&m.d.h||30)+30,'ench')}catch(x){}}   /* IMPACTO 3D (src/r3d/impact3d.js) */
  // drop de esencia al morir la criatura (lo llama kill())
  function drop(m){const d=m&&m.d,key=d&&d.id,e=key&&DROP[key];if(!e)return;const lv=(d.lv||1),p=(.04+.0015*lv)*(m.elite||/^[bk]\d/.test(String(key))?3:1);

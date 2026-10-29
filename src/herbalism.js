@@ -59,7 +59,7 @@ const HERB=(()=>{
   gain('he',a[3]*(.45+sum*.2+(perf?.35:0)));if(perf){toast('🌿 ¡Cosecha perfecta! +1 '+a[0].toLowerCase());if(typeof snd==='function')snd('rare')}
   if(typeof inc==='function')inc('herb');log('Cortas: '+a[0]+' ×'+n);
   const el=document.getElementById('hg');if(el)el.querySelector('.hg-h').textContent=perf?'¡Cosecha perfecta! ×'+n:a[0]+' ×'+n;
-  e.rt=now+30000;if(typeof reseek==='function')reseek(e,now);relocate(e);dirty=1;G.end=now+900}
+  e.rt=now+30000;if(typeof reseek==='function')reseek(e,now);(typeof relocDefer==='function'?relocDefer:relocate)(e);dirty=1;G.end=now+900}
  // la entrada: en captura sobre la ventana para que el LMB no mueva al héroe ni ataque mientras el minijuego está activo
  addEventListener('pointerdown',ev=>{if(!G||ev.button!==0)return;ev.stopImmediatePropagation();ev.preventDefault();cut(performance.now())},true);
  addEventListener('keydown',ev=>{if(G&&ev.key==='Escape'){G=null;hide()}},true);

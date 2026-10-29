@@ -21,6 +21,7 @@ const fsph=(r,sx,sy,sz)=>{const g=new THREE.SphereGeometry(r,8,5).scale(sx,sy,sz
 const shade=(c,k)=>'#'+new THREE.Color(c).multiplyScalar(k).getHexString(),mixc=(a,b,t)=>'#'+new THREE.Color(a).lerp(new THREE.Color(b),t).getHexString();
 import {HK} from './scale3d.js';
 import {torsoWear,maskWear,penitentCross,strapsWear,mixc as mix2} from './outfitwear3d.js';
+import {Mount3D,SEAT as MOUNT_SEAT} from './mount3d.js';   // Lote DOMAR-D1: la montura cuelga del héroe
 export const HERO_SCALE=.8*HK;      // el mundo se ve ×1,25 más grande (zoom en game.js) con el héroe del mismo tamaño en pantalla: casas y terreno ganan proporción sin tocar la lógica
 const HEIGHT=1.25*HERO_SCALE;
 
@@ -78,7 +79,8 @@ export function lookToSpec(look){look=look||{};const a=Object.assign({g:'m',hair
  return sp}
 
 export class MiniHero{
- constructor(){this.obj=new THREE.Group();this.obj.name='heroMini';this.cloth=[];this.rodTip=null;this.lookKey='';this.look=null;this.m=null;this.anim=null;this.last=null;this.face=0;this.faceT=0;this.t=0;this.HS=1}
+ constructor(){this.obj=new THREE.Group();this.obj.name='heroMini';this.cloth=[];this.rodTip=null;this.lookKey='';this.look=null;this.m=null;this.anim=null;this.last=null;this.face=0;this.faceT=0;this.t=0;this.HS=1;this.mounts={};this.mount=this.mountOf('caballo')}
+ mountOf(sp){let m=this.mounts[sp];if(!m){m=new Mount3D(sp);this.mounts[sp]=m;this.obj.add(m.obj)}return m}   /* DOMAR-D3: una Mount3D por especie usada, cacheada (las demás invisibles) */
  setLook(look){const key=JSON.stringify(look||{});if(key===this.lookKey)return;this.lookKey=key;this.look=look||{};
   if(this.anim&&this.anim.ench){this.anim.ench.dispose();this.anim.ench=null}   // el aspecto del encantamiento cuelga de `obj` (que se conserva): sin esto se quedaban los del arma anterior
   if(this.m){this.obj.remove(this.m.obj);this.m.obj.traverse(o=>o.geometry&&o.geometry.dispose())}
@@ -87,8 +89,9 @@ export class MiniHero{
   if(this.last){const dx=pos.x-this.last.x,dz=pos.z-this.last.z,d=Math.hypot(dx,dz);if(d<2.5)dist=d;if(d>1e-4&&st.mv&&!st.face)this.faceT=Math.atan2(dx,dz)}
   if(st.face)this.faceT=Math.atan2(st.face[0],st.face[1]);this.last=pos.clone();
   const df=((this.faceT-this.face+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;this.face+=df*(1-Math.exp(-dt*(st.mv?11:8)));
-  m.obj.position.copy(pos);m.obj.rotation.y=this.face;G.uChrB.value.set(pos.y,HEIGHT);
+  if(st.msp&&st.msp!==this.mount.sp){this.mount.update(0,0,0,dt,this.t,pos,this.face);this.mount=this.mountOf(st.msp)}st.mfw=this.mount.fw;const rd=st.ride||0,rse=rd*rd*(3-2*rd);m.obj.position.copy(pos);m.obj.rotation.y=this.face;if(rd>0)m.obj.position.y+=this.mount.seat*rse+Math.sin(rd*Math.PI)*.08;   /* DOMAR-D1: el jinete sube a la silla (con un saltito al montar/desmontar) */G.uChrB.value.set(pos.y,HEIGHT);
   {const sl=st.sleep||0;m.obj.rotation.order='YXZ';if(sl>0){const r=1-sl,sm=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)},a2=sm(.4,.8,r),a3=sm(.8,1,r);   // DORMIDO / LEVANTÁNDOSE (22 oct 2026): `st.sleep` 1 = tumbado boca arriba; al bajar a 0: (r<.4) solo se incorpora el torso (heroanim3d.js), (.4–.8) el cuerpo se alza en cuclillas, (.8–1) se pone de pie
    m.obj.rotation.x=-Math.PI/2*(1-a2)+.14*a2*(1-a3);m.obj.position.y+=.17*(1-a2)}else m.obj.rotation.x=0}
-  st.dist=dist;this.anim.update(st,dt,this.t);m.tickSkirt(dt);this.rodTip=this.anim.rodTip;this.handR=this.anim.handR}
+  st.dist=dist;this.mount.update(rd,st.gait||0,dist,dt,this.t,pos,this.face);if(rd>.001){st.mv=false;st.run=false;st.w=0}   /* montado: el héroe no camina (lo hace el caballo) */
+  this.anim.update(st,dt,this.t);m.tickSkirt(dt);this.rodTip=this.anim.rodTip;this.handR=this.anim.handR}
 }

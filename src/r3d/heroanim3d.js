@@ -531,6 +531,10 @@ export class HeroAnim{
    v[C.cx]+=bend;v[C.hx]-=bend*.65;v[C.py]-=.24*a2*(1-a3);
    for(let i=0;i<3;i++){const R=[-.2,.26,-.2][i],Lh=[.2,.26,-.2][i];v[C.rp+i]+=(R-v[C.rp+i])*hp;v[C.lp+i]+=(Lh-v[C.lp+i])*hp}   // manos apoyadas detrás
    const k=a2*(1-a3);v[C.fl+1]+=.1*k;v[C.fr+1]+=.08*k;v[C.fl+2]+=.0;v[C.pz]+=.05*k}}
+  /* A CABALLO (lote DOMAR-D1): piernas abiertas a los lados del caballo (pies en los estribos), tronco algo inclinado al galope y ambas manos al frente sujetando las riendas. `st.ride` 0..1 mezcla desde la pose normal; la altura la pone herom3d.js */
+  {const rd=st.ride||0;if(rd>.001){const lf=(c,x,z,y)=>{v[c]+=(x-v[c])*rd;v[c+1]+=(z-v[c+1])*rd;v[c+2]+=(y-v[c+2])*rd;v[c+3]*=1-rd;v[c+4]*=1-rd},gl=ss(1.1,1.9,st.gait||0);
+   const mfw=st.mfw||.27;lf(C.fl,mfw,.05,0);lf(C.fr,-mfw,.05,0);v[C.cy]*=1-rd;v[C.hy]*=1-rd;v[C.yaw]*=1-rd;   /* el jinete mira al frente, no al enemigo */v[C.cx]+=.06*rd+.14*gl*rd;v[C.hx]-=.5*(.06*rd+.14*gl*rd);
+   const hp=(c,x,y,z)=>{v[c]+=(x-v[c])*rd;v[c+1]+=(y-v[c+1])*rd;v[c+2]+=(z-v[c+2])*rd};hp(C.rp,-.11,.04,.22);hp(C.lp,.11,.04,.22)}}
   this.resolve(v);if(this.xd)this.holsterOver(v,this.xd>0?this.xp:1-this.xp);v[C.spin]=Math.atan2(Math.sin(v[C.spin]),Math.cos(v[C.spin]));
   const ds=st.dash||0;if(ds>.001&&ds<.999){
    // QUICKSTEP estilo BLOODBORNE (21 oct 2026; el dueño descartó la voltereta): paso rápido y bajo, SIN giros. El cuerpo se agacha y se inclina hacia donde va (`env`: sube rápido, se mantiene y se suelta suave),

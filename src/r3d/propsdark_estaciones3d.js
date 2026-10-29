@@ -239,6 +239,27 @@ const MODELS={
   for(let i=0;i<9;i++){const h=hash(i,791,5);b.box(-.5+h*1.0,0,.32+hash(i,791,6)*.12,.06+h*.06,.012,.05,dust,{nb:1})}   // polvo
   return b},
 
+ // ESTABLO (≈2,4 × 1,5 × 1,5; frente +z; DOMAR-D4 29 oct 2026): cobertizo abierto de postes y tablas con tejado a dos aguas, pesebre con agua, fardos de heno, barra para atar, soporte con una silla de montar,
+ // herradura clavada en un poste y un farol. Sin animal dibujado (los animales no se reutilizan como props). Techo por B.gable; todo lo colgado queda bajo el alero.
+ establo(o){const b=new B(821),a=A({bk:K(o)}),k=K(o),roof=(k===2||k===7)?mix(PAL.thatch,PAL.thatchD,.25):mul(a.wood2,.7),HAY=()=>dirty('#c8a850',.5,.62,.2);
+  b.box(0,0,0,2.2,.06,1.1,mul(a.wood,.6),{v:.12,jit:.012});   // suelo de tablas
+  [[-1.05,-.5],[1.05,-.5],[-1.05,.5],[1.05,.5]].forEach(([x,z],i)=>{b.box(x,.06,z,.1,1.0,.1,vary(a.wood,.12,821,i),{v:.1,jit:.01})});   // postes
+  b.box(0,.06,-.52,2.1,.62,.05,vary(a.wood2,.1,821,6),{v:.1});b.box(0,.66,-.52,2.1,.06,.07,a.wood,{v:.1});[-.7,0,.7].forEach((x,i)=>b.box(x,.06,-.5,.03,.6,.02,mul(a.wood2,.7),{nb:1}));   // pared del fondo con listones
+  b.box(-1.0,.06,0,.05,.5,.9,vary(a.wood2,.1,821,7),{v:.1});b.box(-1.0,.56,0,.07,.05,.95,a.wood,{v:.1});   // cerca del lateral izquierdo
+  b.box(0,.38,.52,2.1,.06,.06,a.wood,{v:.1});b.box(0,.62,.52,2.1,.06,.06,a.wood,{v:.1});   // barra para atar delante
+  [-.5,.5].forEach((x,i)=>tube(b,[x,.38,.52],[x,.7,.52],.02,.02,4,PAL.iron,{nb:1}));   // argollas
+  b.box(.45,.06,-.2,.9,.26,.3,vary(a.wood,.1,821,8),{v:.1});b.box(.45,.3,-.2,.82,.03,.22,WATER(),{nb:1,t:.9});b.box(.45,.28,-.2,.9,.04,.34,mul(a.wood,.8),{nb:1});   // pesebre con agua
+  [[-.5,.06,-.25,.34,.2,.3],[-.34,.26,-.28,.3,.18,.26],[-.62,.06,.1,.3,.2,.28]].forEach(([x,y,z,w,h,d],i)=>{b.box(x,y,z,w,h,d,vary(HAY(),.1,821,10+i),{v:.12,jit:.02});for(let j=0;j<3;j++)b.box(x-w*.3+j*w*.3,y+h*.5,z+d/2+.003,.012,h*.9,.006,mul(HAY(),.7),{nb:1})});   // fardos
+  lump(b,-.3,.44,-.1,.06,.03,.07,HAY(),20);lump(b,-.2,.06,.28,.07,.03,.06,HAY(),21);   // paja suelta
+  b.box(.95,.06,.18,.06,.78,.06,PAL.iron,{nb:1});b.box(.9,.84,.18,.18,.04,.05,PAL.iron,{nb:1});   // soporte de la silla
+  b.box(.9,.74,.16,.22,.05,.12,HIDE(),{nb:1});b.box(.9,.66,.16,.06,.12,.1,HIDE(),{nb:1});b.box(.84,.7,.16,.04,.1,.04,a.acc,{nb:1});   // silla de montar
+  tube(b,[.82,.66,.14],[.82,.42,.14],.008,.008,3,HIDE(),{nb:1});b.box(.82,.38,.14,.04,.06,.02,PAL.iron,{nb:1});   // estribo
+  tube(b,[-1.05,.78,.55],[-1.05,.78,.56],.04,.04,6,PAL.iron,{nb:1});b.box(-1.08,.7,.56,.02,.1,.02,PAL.iron,{nb:1});b.box(-1.02,.7,.56,.02,.1,.02,PAL.iron,{nb:1});b.box(-1.05,.69,.56,.08,.02,.02,PAL.iron,{nb:1});   // herradura
+  b.cyl(.35,.06,.44,.1,.09,.18,8,a.wood,{seg:2,bulge:.02,v:.1});b.cyl(.35,.23,.44,.08,.08,.01,8,WATER(),{nb:1});   // cubo
+  b.gable(0,1.06,0,2.2,1.1,.5,.14,roof,{rows:5,v:.2});
+  tube(b,[0,1.06,.2],[0,.92,.2],.008,.008,3,PAL.iron,{nb:1});b.cyl(0,.76,.2,.055,.04,.12,8,PAL.iron,{nb:1});b.box(-.03,.78,.17,.06,.08,.06,PAL.lamp,{em:1,nb:1});   // farol bajo la viga
+  return b},
+
  // BANCO DE JOYERO (≈1,10 × 1,10 × 0,62; frente +z; ESC-JOY 27 oct 2026): mesa de madera oscura con estante de cajoncitos, tas de joyero (yunquecito),
  // lupa en un brazo, bandeja de terciopelo con gemas (brillan de noche), crisol con brasas y una lámpara cálida.
  joyero(o){const b=new B(801),a=A({bk:K(o)}),vel=dirty('#6a1e2a',.6,.55,.1);
@@ -250,6 +271,21 @@ const MODELS={
   b.box(.05,.74,.12,.26,.025,.14,vel,{nb:1});['#e02a3a','#3a6aff','#3aa86a','#f0b040','#9a5ae0'].forEach((c,i)=>b.box(-.04+i*.05,.765,.14+(i%2)*.04,.025,.025,.025,col(c),{em:1,nb:1}));   // bandeja con gemas
   b.cyl(-.08,.74,-.06,.045,.035,.06,8,CLAY(),{nb:1});b.cyl(-.08,.795,-.06,.03,.03,.008,8,col('#ff8a30'),{em:2,nb:1});   // crisol con brasas
   tube(b,[-.48,.74,-.14],[-.48,1.08,-.14],.012,.012,4,PAL.iron,{nb:1});b.cyl(-.48,1.04,-.08,.07,.03,.08,8,PAL.iron,{nb:1});b.box(-.51,1.0,-.11,.06,.04,.06,PAL.lamp,{em:1,nb:1});   // lámpara
+  return b},
+
+ // BANCO DE INGENIERO (≈1,20 × 1,10 × 0,66; frente +z; INGENIERIA-1 29 oct 2026): banco de madera recia con panel de herramientas, tornillo de banco, tren de engranajes de latón,
+ // resorte, bomba con mecha, anteojo de latón con lente y una lámpara. Los engranajes llevan dientes (cajas en corona); la lente y la mecha brillan de noche.
+ ingeniero(o){const b=new B(811),a=A({bk:K(o)}),BR=dirty('#b8873a',.5,.6,.1),BRD=mul(BR,.75);
+  [[-.52,-.2],[.52,-.2],[-.52,.2],[.52,.2]].forEach(([x,z],i)=>b.box(x,0,z,.08,.66,.08,vary(a.wood,.12,811,i),{v:.1}));b.box(0,.66,0,1.18,.07,.54,a.wood2,{v:.1,jit:.01});b.box(0,.2,0,1.02,.04,.44,mul(a.wood,.85),{v:.1});
+  b.box(0,.74,-.24,1.14,.44,.06,a.wood,{v:.1});[-.42,-.14,.14,.42].forEach((x,i)=>{b.box(x,.9,-.205,.05,.2,.03,PAL.iron,{nb:1});b.box(x,1.08,-.205,.09,.04,.03,PAL.iron,{nb:1})});   // panel con llaves colgadas
+  b.box(-.5,.73,.1,.12,.12,.14,PAL.iron,{nb:1});b.box(-.5,.85,.1,.16,.03,.16,PL(),{nb:1});tube(b,[-.5,.76,.2],[-.5,.76,.32],.012,.012,4,PAL.iron,{nb:1});   // tornillo de banco
+  const gear=(x,z,r,n,c,sd)=>{b.cyl(x,.73,z,r,r,.04,12,c,{nb:1});for(let i=0;i<n;i++){const t=i/n*TAU;b.box(x+Math.cos(t)*(r+.015),.73,z+Math.sin(t)*(r+.015),.035,.04,.035,mul(c,.9),{nb:1})}b.cyl(x,.77,z,r*.25,r*.25,.02,8,mul(c,.6),{nb:1})};
+  gear(-.26,.06,.15,10,BR,1);gear(-.03,.14,.09,7,PL(),2);gear(-.22,-.12,.08,6,BRD,3);
+  for(let i=0;i<6;i++)b.cyl(.18,.73+i*.026,.12,.04,.04,.018,8,i%2?PL():BR,{nb:1});   // resorte
+  lump(b,.4,.73,.12,.15,.15,.15,col('#2a2a30'),811);tube(b,[.4,.88,.12],[.43,.96,.12],.01,.01,4,col('#8a7a5a'),{nb:1});b.box(.43,.97,.12,.03,.03,.03,col('#ffb040'),{em:2,nb:1});   // bomba con mecha
+  tube(b,[-.1,.74,-.1],[.18,.9,-.1],.035,.03,8,BR,{nb:1});b.cyl(.2,.915,-.1,.045,.045,.03,8,PL(),{nb:1});b.cyl(.215,.92,-.1,.032,.032,.01,8,mix(col('#cfe8f0'),col('#ffffff'),.3),{em:1,nb:1});   // anteojo con lente
+  [[-.05,.74,-.2],[.03,.74,-.05]].forEach(([x,y,z],i)=>tube(b,[x,y,z],[x+(i?.04:-.04),.78,z+.02],.012,.012,4,PAL.iron,{nb:1}));
+  tube(b,[.52,.74,-.14],[.52,1.12,-.14],.012,.012,4,PAL.iron,{nb:1});b.cyl(.52,1.08,-.08,.07,.03,.08,8,PAL.iron,{nb:1});b.box(.49,1.04,-.11,.06,.04,.06,PAL.lamp,{em:1,nb:1});   // lámpara
   return b},
 
  // TALLER (≈1,46 × 0,83 × 0,68): banco de carpintero con tornillo de banco, tablones, sierra, garlopa, mazo, formones y virutas.
@@ -332,7 +368,7 @@ const MODELS={
 };
 
 // huella y altura de la malla ORG ACTUAL (ancho x, alto y, fondo z; medida con `node tools/r3d/org_capture.js` el 20 oct 2026; ejes ORG x,z↑,y → three x,y↑,z)
-export const OF_FOOT={cantero:[1.30,.95,.80],joyero:[1.10,1.10,.62],banco:[1.92,1.36,1.42],tienda:[2.32,1.48,1.27],subastas:[1.90,1.66,1.16],tablon:[.34,1.41,1.64],fogata:[1.34,.20,1.31],horno:[1.03,1.17,.91],yunque:[1.12,.65,.42],armero:[.80,1.24,.78],curtidor:[.63,.91,1.02],cocina:[2.05,1.82,1.19],alambique:[1.1,.85,.6],
+export const OF_FOOT={establo:[2.54,1.62,1.38],cantero:[1.30,.95,.80],joyero:[1.10,1.10,.62],ingeniero:[1.20,1.10,.66],banco:[1.92,1.36,1.42],tienda:[2.32,1.48,1.27],subastas:[1.90,1.66,1.16],tablon:[.34,1.41,1.64],fogata:[1.34,.20,1.31],horno:[1.03,1.17,.91],yunque:[1.12,.65,.42],armero:[.80,1.24,.78],curtidor:[.63,.91,1.02],cocina:[2.05,1.82,1.19],alambique:[1.1,.85,.6],
  taller:[1.46,.83,.68],escritorio:[1.20,1.07,.68],altarRezo:[1.18,1.32,.82],lanzas:[.50,1.49,.31],totem:[.57,1.93,.31],arcoRuina:[1.49,1.14,.50],brasero:[.51,.84,.52],tinaja:[1.10,.37,.48],monumento:[1.64,2.34,1.64]};
 const GEO=new Map();
 export function ofGeo(n,o,th){if(!MODELS[n])return null;const key='dk:of:'+n+'|'+JSON.stringify(o||{});if(GEO.has(key))return GEO.get(key);

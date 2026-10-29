@@ -22,6 +22,7 @@ JS = """(()=>{
  const hits={};for(const sk of ['wc','mi']){hits[sk]=ACT[sk].map(a=>{const row=[];for(let t=0;t<=5;t++){const hp=3*Math.pow(NODER,TLV(rq(a)));row.push(Math.max(3,Math.min(12,Math.round(2*hp/(Math.pow(NODER,t)*(1+Math.max(1,rq(a))*.01))))))}return row})}
  out.hits=hits;
  const drops={};if(typeof MD!=='undefined')for(const id in MD){for(const d of (MD[id].dr||[]))(drops[d[0]]=drops[d[0]]||[]).push(id)}out.drops=drops;
+ if(typeof ENCH!=='undefined')for(const m in ENCH.DROP){const e=ENCH.DROP[m],id=ENCH.essOf?ENCH.essOf(e):'es_'+e;(drops[id]=drops[id]||[]).push(m);(drops['esp_'+e]=drops['esp_'+e]||[]).push(m)}   // esencias de Encantamiento: caen de criaturas (ENCH.drop)
  out.tsrc=typeof TSRC!=='undefined'?TSRC:{};
  out.shop=[];try{for(const v in TRADE.VEND){const s=TRADE.VEND[v].stock?TRADE.VEND[v].stock(5):[];s.forEach(r=>out.shop.push(r[0]))}}catch(e){}
  out.rare=typeof RARE!=='undefined'?RARE:{};

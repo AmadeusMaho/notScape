@@ -94,7 +94,7 @@
   const DOC=sh(2077,768);old.props.filter(e=>(e.n==='portonOrco'||e.n==='empalizada')&&e.x===1900).forEach(e=>props.push(DOC.prop(e)));
   // ── guaridas: las ya decoradas, movidas a su anillo ──
   const sp={ing:sh(778,1440).spot(S0.ing),camp:sh(1503,345).spot(S0.camp),orc:sh(2077,768).spot(S0.orc),
-   pack:{id:'prado',t:'🐑 Prado de ovejas y cabras',z:[2960,3340,1360,1740],mobs:[['oveja',3040,1450],['oveja',3170,1410],['oveja',3270,1520],['oveja',3120,1610],['oveja',3020,1620],['cabra',3210,1560],['cabra',3090,1560],['cabra',3250,1650],['conejo',3000,1530],['conejo',3030,1580],['conejo',3150,1480],['zorrorojo',3060,1700],['toro',3310,1705],['espantapajaros',2995,1395],['espantapajaros',3325,1395]],
+   pack:{id:'prado',t:'🐑 Prado de ovejas y cabras',z:[2960,3340,1360,1740],mobs:[['oveja',3040,1450],['oveja',3170,1410],['oveja',3270,1520],['oveja',3120,1610],['oveja',3020,1620],['cabra',3210,1560],['cabra',3090,1560],['cabra',3250,1650],['caballo',3090,1690],['caballo',3235,1470],['conejo',3000,1530],['conejo',3030,1580],['conejo',3150,1480],['zorrorojo',3060,1700],['toro',3310,1705],['espantapajaros',2995,1395],['espantapajaros',3325,1395]],
     decor:[P('arbusto',3000,1400),P('arbusto',3300,1640),P('arbusto',3230,1380),P('heno',3090,1520),P('heno',3104,1530),P('roble',3330,1450,null,{fp:[6,6]})]}};   // 14 oct 2026: las ovejas, aparte del rancho
   const st=[],plaza=[[CX,CY,175],[CX+60,CY-395,105],[CX+345,CY+255,95],[CX-285,CY-230,85],[CX+285,CY-230,85]],routes=[],dirt=[];
   ['ing','camp','orc','pack'].forEach(k=>{sp[k].decor.forEach(e=>props.push(e));(sp[k].dirt||[]).forEach(d=>plaza.push(d));(sp[k].routes||[]).forEach(r=>routes.push(r));st.push(...(sp[k].stone||[]))});

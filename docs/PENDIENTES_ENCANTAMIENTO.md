@@ -42,7 +42,7 @@
 3. Lee los estados con `STS.list(m)` (devuelve `{k,d,n,rem,tot}`); el color de cada uno está en `STS.D[k].col`.
 **Criterios de aceptación:** se distingue cada estado a zoom normal (captura a zoom mínimo y máximo); 10 enemigos con 2 estados cada uno no suben más de 2 llamadas de dibujo; `R3D.budget()` ok en Media y Alta; sin compilaciones de shader en juego (`[R3D] shaders compilados EN JUEGO` no debe aparecer).
 
-## TAREA 2 · QUE LAS REACCIONES OCURRAN (prioridad 1)
+## TAREA 2 · QUE LAS REACCIONES OCURRAN ✅ HECHA el 29 oct 2026 salvo 2.3 (2.ª fuente por magia, Fase 14) — ver lote ENCANT-CIERRE
 **Problema:** las reacciones de `status.js` (`react`) necesitan dos elementos en el mismo enemigo, pero cada arma lleva un solo encantamiento y **Empapado no tiene ninguna fuente** (Marea quedó fuera del recorte). Hoy Electrocutado y la congelación instantánea no pueden pasar en partida.
 **Qué hacer (propuesta; confirma con el dueño las que cambien el diseño):**
 1. **Lluvia y agua empapan:** con lluvia/tormenta (`WX`/clima en `ambient.js` o donde se guarde) y al pisar agua poco profunda o salir de ella, `STS.add(P,'wet')` y a los enemigos al aire libre; con lluvia los estados de fuego duran menos (Empapado apaga el fuego ya en `react`).
@@ -62,7 +62,7 @@ Todas las cifras son propuesta del agente, sin jugar. Dónde están:
 - Requisito de las armas (`wReq` en game.js).
 **Cómo:** pide al dueño 2–3 sesiones de juego y sus notas; ajusta en lotes pequeños. Útil: añadir al panel F4 o a un `NSTEST` un contador de procs/min por efecto.
 
-## TAREA 4 · INTERFAZ
+## TAREA 4 · INTERFAZ (29 oct: HECHOS 4.1 Mesa por pestañas y 4.3 iconos SVG de estados + esencias en polvo; quedan 4.2 y 4.4)
 1. **Mesa de encantamiento:** `ACT.en` se regenera en `ENCH.rebuild()` (al abrir la mesa, `openIW` con `e.id==='altar'`) con TODAS las combinaciones (objeto × efecto) + Potenciar + Ascender + Refinar + Desarmar: con mochila llena son cientos de filas. Hace falta: agrupar por objeto (elige primero el objeto, luego el efecto), pestañas Encantar / Mejorar / Esencias / Desarmar, y mostrar el efecto (`ENCH.desc`) y el VFX (icono con `ITEMICON.ench`) antes de confirmar. Es la hoja de trabajo FF14 (`WKUI`, skin `arcane` en forge.js): mira cómo otros oficios eligen receta.
 2. **La Mesa debería estar en un Templo arcano** (diseño de oficios), hoy es el `altar` del Taller (`interiors.js`). Cuando exista el edificio, moverla (y su `IWI`/`ROOMOF`).
 3. **Iconos de estados y esencias:** hoy son emojis (`STS.D[k].ic`, `I['es_*']`, `I['esp_*']`). El HUD usa iconos de línea en SVG (ver `SKI` en game.js) y las reglas del HUD piden sin emojis: dibuja un SVG por estado (en `npDeb` y en la barra de buffs del jugador) y un icono 3D/2D de esencia (frasco con el color del efecto; pura = cristal) en `itemgen3d.js`/`item-icons.js`.
@@ -77,6 +77,6 @@ Todas las cifras son propuesta del agente, sin jugar. Dónde están:
 6. **Reserva del plan** (`docs/PLAN_ENCANTAMIENTOS.md`): Corrosiva, del Viento, del Terror, Marea, Ejecutora, de Ecos, Fortuna (armas); Represalia, Destreza, Inquebrantable, Lucidez y los 5 Resguardos elementales (armadura); Ligereza, Concentración, Conservación, Prospección (herramientas). Solo si el dueño los pide.
 
 ## TAREA 6 · COMPROBACIONES PENDIENTES
-1. **Requisito de nivel de las armas** (`wReq`/`wOk` en game.js): jugar el tutorial de la isla de punta a punta (`python tools/isla_playthrough.py`) y comprobar que nada se rompe (las armas de inicio son de cobre/pino = nivel 1; las prestadas por Miguel también); revisar `autoEq` (no debe equipar un arma que no puedes usar) y el botín que el jugador aún no puede usar (que el tooltip lo marque en rojo: ya lo hace).
+1. ✅ HECHO 29 oct (isla_playthrough OK). **Requisito de nivel de las armas** (`wReq`/`wOk` en game.js): jugar el tutorial de la isla de punta a punta (`python tools/isla_playthrough.py`) y comprobar que nada se rompe (las armas de inicio son de cobre/pino = nivel 1; las prestadas por Miguel también); revisar `autoEq` (no debe equipar un arma que no puedes usar) y el botín que el jugador aún no puede usar (que el tooltip lo marque en rojo: ya lo hace).
 2. **Móvil y gráfica integrada:** medir con el panel F4 y `R3D.stats()` en el PC/móvil del dueño con un arma encantada superior + armadura encantada + 5 enemigos con estados e impactos seguidos. Límite: el presupuesto de §P.
 3. **Héroe con armadura de placas = ~560 llamadas de dibujo** (medido el 28 oct, NO es de los encantamientos; sin armadura ~280): investigar por qué la armadura metálica dobla las llamadas del héroe (muchas piezas con contorno). Afecta a todas las calidades.

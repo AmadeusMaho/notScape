@@ -8,7 +8,7 @@ srv=subprocess.Popen([sys.executable,'-m','http.server','8803','--bind','127.0.0
 JS=r"""()=>{const out={};const save=JSON.stringify(S);
  // D7: tiempos y pasos del modelo vivo (work.js: stepsEst/pieceSec/QUICK_XP); síntesis rápida = 0,9 s y XP×QUICK_XP
  const marks=[30,50,60,70,80,90,99];out.skills={};
- const sks=['wc','mi','fi','he','al','ds','co','sm','pe','sa','cr','es','jo','en','ins'];
+ const sks=['wc','mi','fi','he','al','ds','co','sm','pe','sa','cr','es','jo','ing','dm','en','ins'];
  for(const sk of sks){let t=0;const res={};let l=1;
   const SH=typeof WKUI!=='undefined'&&WKUI.REG[sk];   // D7 (26 oct 2026): los oficios con hoja de trabajo se miden con el modelo NUEVO (pasos del planificador + síntesis rápida + XP extra), no con dur()
   while(l<99){S.xp[sk]=XT[l];S.tool[sk]=TOOLS[sk]?TLV(l):0;S.tq[sk]=0;let best=0;for(const a of ACT[sk]){if(l<rq(a))continue;let d,x=xv(a);

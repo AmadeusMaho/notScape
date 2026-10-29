@@ -37,6 +37,7 @@
    if(o&&o.o)p.o=Object.assign({},p.o||{},o.o);if(o&&o.room)p.room=o.room}   // o.o = opciones del modelo (color de tejado…) · o.room = casa de una instalación (interiors.js)
   // 5 · quitar props (spec.del: [[nombre,[x,y]]]) y añadir los nuevos (spec.add: [[nombre,[x,y],opciones|null,[fpx,fpy]|null]]; 28 oct 2026, Botica)
   for(const [n,a] of (spec.del||[])){const p=find(n,a[0],a[1],44);if(!p){warn.push(n+' @'+a+' no encontrado (del)');continue}V.props.splice(V.props.indexOf(p),1)}
+  for(const [id,n,a] of (spec.sadd||[]))V.stations.push([id,n,C[0]+a[0],C[1]+a[1]]);   /* estaciones nuevas: [id,nombre,[x,y]] (Establo, DOMAR-D4) */
   for(const [n,a,o,fp] of (spec.add||[])){const q={n,x:Math.round(C[0]+a[0]),y:Math.round(C[1]+a[1])};if(o)q.o=o;if(fp)q.fp=fp;V.props.push(q)}
   V.props.forEach(p=>{delete p._vb});
   VB.done.push(k);VB.warn.push(...warn.map(w=>'['+k+'] '+w));return warn}
@@ -56,6 +57,7 @@
   // BOTICA (28 oct 2026): la casa de Alquimia (la del este de la calle de los oficios, tejado verde musgo). Fuera: caldero grande de alquimista, hierbas colgadas y mesa de frascos; el PNJ Nerys (npcs.js) se coloca junto a la puerta.
   del:[['atril',[186,-282]],['estanteria',[234,-282]]],
   add:[['calderoAlq',[408,-388],null,[12,10]],['hierbasColgadas',[242,-396],null,[19,5]],['mesaAlq',[452,-424],null,[14,6]],['letreroAlq',[386,-362],null,[6,4]]],
+  sadd:[['establo','Establo',[290,308]]],
   st:{bank:[-232,-150],shop:[262,-150],furnace:[110,-470],anvil:[70,-450],bench:[-420,-450],altar:[330,-450]},
   mv:[
    // FILA NORTE DE LA CALLE MAYOR (puertas al sur, a la plaza y a la calle mayor): banco y tienda a los lados de la plaza, vecinos hacia fuera

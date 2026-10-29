@@ -272,7 +272,7 @@ export class Rooms3D{
   for(const p of this.puffs){p.age+=dt;if(p.age>p.life)p.age-=p.life;const u=p.age/p.life,e=p.e;p.sp.position.set(e.x+p.ox+Math.sin(t*.6+p.ph)*e.drift*u*3,e.y+u*e.h,e.z+p.oz+Math.cos(t*.5+p.ph)*e.drift*u*2);p.sp.scale.setScalar(e.sz*(.45+1.5*u));p.sp.material.opacity=e.op*Math.pow(Math.sin(Math.PI*u),1.3)}
   if(this.act.length&&typeof P!=='undefined'){const hx=(P.x-IRC.x)/32,hz=(P.y-IRC.y)/32;for(const a of this.act){const look=Math.max(-.9,Math.min(.9,Math.atan2(hx-a.x,hz-a.z)));ANIM.human(a.A,{t,dt,mv:0,at:-1,wave:0,look:a.nolook?0:(a.yaw==null?look:Math.max(-.9,Math.min(.9,look-a.yaw))),job:a.job,seat:a.seat})}}}
 }
-export const INT_TP={sky:'#0f0804',hemS:'#ffe2b8',hemG:'#9a6a3c',hemI:1.9,sun:'#ffc27a',sunI:2.3,sunP:[-6,8,5],sat:1.08,night:.55,live:.95,inkK:.8,ink:'#2a1608',rim:'#ffc890',wDeep:'#0a6670',wShal:'#48c8b4',bloom:.42,lift:'#080402',vig:.75,fire:1,win:1,nt:0};
+export const INT_TP={sky:'#0f0804',hemS:'#ffe2b8',hemG:'#9a6a3c',hemI:.95,sun:'#ffc27a',sunI:.95,sunP:[-6,8,5],sat:1.08,night:.55,live:.95,inkK:.8,ink:'#2a1608',rim:'#ffc890',wDeep:'#0a6670',wShal:'#48c8b4',bloom:.42,lift:'#080402',vig:.75,fire:1,win:1,nt:0};
 
 // CUEVAS: oscuridad fría; la luz viene del héroe y de las fuentes cercanas (PointLights de Rooms3D). `nt` alto = la linterna del héroe encendida.
 export const CAVE_TP={sky:'#03050a',hemS:'#6a7a98',hemG:'#2a2420',hemI:.62,sun:'#8a9ac0',sunI:.4,sunP:[-6,8,5],sat:1.06,night:.6,live:.95,inkK:.8,ink:'#120c08',rim:'#9ab0d8',wDeep:'#0a6670',wShal:'#48c8b4',bloom:.5,lift:'#020306',vig:.92,fire:1,win:0,nt:.9};

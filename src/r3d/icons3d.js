@@ -18,7 +18,8 @@ import {BUILD} from './heroanim3d.js';
 import {cultWeapon} from './weapons3d.js';
 import {armorHooks} from './armor3d.js';
 import {Mini} from './mini3d.js';
-import {GEN2,POSE2,DPOSE2} from './itemgen3d.js';   // Lote R3D-DROPS-3D: comida, botín, runas, pergaminos… (antes solo 2D)
+import {GEN2,POSE2,DPOSE2} from './itemgen3d.js';
+import {Mount3D} from './mount3d.js';   // DOMAR-D3: icono de montura = el modelo real con su silla   // Lote R3D-DROPS-3D: comida, botín, runas, pergaminos… (antes solo 2D)
 
 const IDLE=6000,PI=Math.PI;let SIZE=128;
 const shade=(c,k)=>'#'+new THREE.Color(c).multiplyScalar(k).getHexString(),mixc=(a,b,t)=>'#'+new THREE.Color(a).lerp(new THREE.Color(b),t).getHexString();
@@ -72,7 +73,7 @@ Object.assign(GEN,GEN2);   // los kinds nuevos usan la misma firma que GEN
 // qué kind del 2D → modelo de arma/herramienta de BUILD
 const WK={sword:'sword',dagger:'dagger',greatsword:'great',xbow:'xbow',scepter:'scepter',staff:'staff',bow:'bow',mace:'mace',axe:'axe',pick:'pick',rod:'rod',shears:'shears'};
 const ARM_K=new Set(['chest','legs','gloves','boots','helm','cape','shield']);
-export const supports=k=>!!(WK[k]||ARM_K.has(k)||GEN[k]||k==='arrows'||k==='bolts'||k==='quiver');
+export const supports=k=>!!(k==='mount'||WK[k]||ARM_K.has(k)||GEN[k]||k==='arrows'||k==='bolts'||k==='quiver');
 
 // orientación de cada modelo en el icono: [rx, ry, rz] del grupo (las armas se inclinan 45°, el resto se ve en 3/4)
 const POSE={sword:[0,-.5,-.8],dagger:[0,-.5,-.8],greatsword:[0,-.5,-.8],staff:[0,-.4,-.6],scepter:[0,-.5,-.8],mace:[0,-.5,-.8],axe:[0,-.5,-.7],pick:[0,-.5,-.7],rod:[0,-.3,-.55],shears:[0,-.5,-.7],bow:[0,-.85,0],xbow:[-.95,-.35,-.7],
@@ -101,6 +102,7 @@ export function build(kind,info){const root=new THREE.Group(),keep=[],part=mkPar
   mini.obj.traverse(ob=>{if(ob.isMesh){ob.visible=kept.has(ob);if(kept.has(ob)&&!ob.userData.hull)keep.push(ob)}});
   root.rotation.set(0,a.slot==='c'?PI-.45:a.slot==='f'?PI/2-.3:-.45,a.slot==='g'?PI:0,'ZYX')}
  else if(kind==='bolts'||kind==='arrows'){GEN.arrows(part,root,c,{bolt:kind==='bolts'});root.rotation.set(0,info.ground?0:-.3,info.ground?PI/2:-.7,'ZYX')}
+ else if(kind==='mount'){const M=new Mount3D(o.sp);M.obj.visible=true;M.obj.rotation.y=info.ground?.4:-.85;if(info.ground)M.obj.scale.setScalar(.45);root.add(M.obj);M.obj.traverse(m=>{if(m.isMesh&&!m.userData.hull)keep.push(m)})}
  else if(GEN[kind]){const g=new THREE.Group();root.add(g);GEN[kind](part,g,GEN2[kind]?info.c:c,o);const q=poseOf(kind,info);g.rotation.set(q[0],q[1],q[2],'ZYX')}
  else return null;
  return{root,keep,mini}}

@@ -72,6 +72,7 @@ const WKUI=(()=>{
     });
   }
   const msg=t=>{if(el)$('#wk-m').textContent=t||''};
+  Object.assign(DESC,{clb:'Calidad 140 %. +1 Calidad interior (Calibre).',lbr:'Innovación y +1 Calidad interior.',ens:'Avance 210 %. Requiere Calidad interior.',tmp:'Restaura 20 de Durabilidad y da Sin desperdicio (3).',prt:'Calidad 200 % (necesita 2 de Calidad interior).'});
   const tip=id=>{const a=WK.A[id];return '<b>'+a.n+'</b><br>'+(a.po?a.po+' PO · ':'')+'nv '+a.lv+(a.of?' · exclusiva':'')+'<br>'+(DESC[id]||'')};
   const slotKey=i=>i<10?String((i+1)%10):'⇧'+((i-9)%10);
   function slotHTML(i,s){
@@ -220,7 +221,7 @@ const WKUI=(()=>{
   // ¿este oficio usa la hoja de trabajo en esta estación? (lo llama el arranque de la acción en game.js)
   const on=(sk,stn)=>{const r=REG[sk];return !!r&&!!stn&&r.stn.includes(stn.id)};
   const reg=(sk,o)=>{REG[sk]=Object.assign({n:SK[sk]&&SK[sk][0]||sk,stn:[],clip:'sm'},o)};
-  reg('cr',{stn:['bench'],skin:'carp'});reg('pe',{stn:['curtidor'],skin:'tan'});reg('sa',{stn:['bench'],skin:'sew'});reg('es',{stn:['cantero'],skin:'stone'});reg('jo',{stn:['joyero'],skin:'jewel'});reg('en',{stn:['altar'],skin:'arcane'});   // ESC-JOY (27 oct 2026)   // D6: Artesanía (Taller) y Peletería (Banco de curtidor); animación genérica 'sm' hasta que tengan clip propio
+  reg('cr',{stn:['bench'],skin:'carp'});reg('pe',{stn:['curtidor'],skin:'tan'});reg('sa',{stn:['bench'],skin:'sew'});reg('es',{stn:['cantero'],skin:'stone'});reg('jo',{stn:['joyero'],skin:'jewel'});reg('en',{stn:['altar'],skin:'arcane'});reg('ing',{stn:['ingeniero'],skin:'tinker'});   /* INGENIERIA-1 */   // ESC-JOY (27 oct 2026)   // D6: Artesanía (Taller) y Peletería (Banco de curtidor); animación genérica 'sm' hasta que tengan clip propio
   // teclas 1..0 y Mayús+1..0 → casillas (en captura para que el '1' no seleccione habilidad de combate)
   addEventListener('keydown',ev=>{
     if(!A||!A.wk||ev.repeat||ev.ctrlKey||ev.metaKey||ev.altKey)return;

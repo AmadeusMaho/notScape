@@ -247,6 +247,25 @@ _glow_need = [n for n in ('hogar', 'farolPapel', 'candelabro', 'sconce') if not 
 #  e) armas en la mano: `Mini.hold` invierte el signo (rx negativo = hacia delante); si alguien lo vuelve a quitar, las armas salen por la espalda
 (ok if 'h.rotation.x=-rx' in rd('src/r3d/mini3d.js') else bad)('ARMAS: Mini.hold apunta el arma hacia delante (rx negativo)', 'mini3d.js hold')
 
+# 15. MONTURAS (lote DOMAR-D3-MODELOS): cada especie de src/mountdata.js tiene modelo en mountmodels3d.js (SPEC) con el MISMO bioma (MBIO), y al revés; regla «montura = salvaje + silla» (un solo modelo)
+_mm = rd('src/r3d/mountmodels3d.js'); _md = rd('src/mountdata.js')
+_mb = dict((k, int(v)) for k, v in re.findall(r"(\w+):(\d)", re.search(r"export const MBIO=\{([^}]*)\}", _mm).group(1)))
+_dd = dict((k, int(v)) for k, v in re.findall(r"\['(\w+)',(\d),'", _md))
+_sp = set(re.findall(r"\n (\w+):S=>", _mm))
+_err = [k for k in _dd if k not in _sp or (_mb.get(k) != _dd[k] and _mb.get(k) != 9)]   # 9 = rara (aparejo propio; su bioma de aparición lo da mountdata) + [k for k in _sp if k not in _dd]
+(bad if _err else ok)('MONTURAS: mountdata.js ↔ mountmodels3d.js (especie, modelo y bioma)', ', '.join(_err) or f'{len(_dd)} especies')
+(ok if 'makeSpecies(sp,sad,cul)' in rd('src/r3d/mount3d.js') and 'buildMountActor' in rd('src/r3d/actors3d.js') else bad)('MONTURAS: salvaje (actors3d) y montura (mount3d) salen del MISMO modelo', '')
+_per = {}
+for k, b in _dd.items():
+    if _mb.get(k) != 9: _per[b] = _per.get(b, 0) + 1
+_low = [str(b) for b in range(9) if _per.get(b, 0) < 4]
+(bad if _low else ok)('MONTURAS: al menos 4 domables por bioma (0–8)', ', '.join(_low))
+_rr = {}
+for k, b in _dd.items():
+    if _mb.get(k) == 9: _rr[b] = _rr.get(b, 0) + 1
+_rl = [str(b) for b in range(9) if not 1 <= _rr.get(b, 0) <= 2]
+(bad if _rl else ok)('MONTURAS: 1–2 únicas raras por bioma (decisión del dueño, 29 oct)', ', '.join(_rl))
+
 for lv, r, d in res: print(f'{lv:7} {r}' + (f'  → {d}' if d else ''))
 nf = sum(1 for x in res if x[0] == 'FALLO'); nw = sum(1 for x in res if x[0] in ('AVISO', 'REVISAR'))
 print(f'\nRESULTADO: {"OK" if not nf else "FALLO"} ({nf} fallos, {nw} avisos)'); sys.exit(1 if nf else 0)

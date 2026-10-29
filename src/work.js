@@ -90,7 +90,13 @@ const WK=(()=>{
     egs:{of:'jo',n:'Engastar',lv:24,po:26,t:'q',e:150,ok:s=>s.iq>=1},
     rcc:{of:'jo',n:'Recocer',lv:32,po:36,t:'r',fn:s=>{s.dur=Math.min(s.durMax,s.dur+20);s.b.wn=3;s.b.wn2=0}},
     lup:{of:'jo',n:'Lupa',lv:42,po:30,t:'b',fn:s=>{s.b.inn=4;s.iq=Math.min(MAXIQ,s.iq+1)}},
-    esp:{of:'jo',n:'Pulido espejo',lv:54,po:44,t:'q',e:190,ok:s=>s.iq>=2}
+    esp:{of:'jo',n:'Pulido espejo',lv:54,po:44,t:'q',e:190,ok:s=>s.iq>=2},
+    // ---- exclusivas de INGENIERÍA (of:'ing', engranajes, resortes y artilugios; INGENIERIA-1 29 oct) ----
+    clb:{of:'ing',n:'Calibrar',lv:10,po:24,t:'q',e:140,fn:s=>{s.iq=Math.min(MAXIQ,s.iq+1)}},
+    lbr:{of:'ing',n:'Lubricar',lv:22,po:30,t:'b',fn:s=>{s.b.inn=4;s.iq=Math.min(MAXIQ,s.iq+1)}},
+    ens:{of:'ing',n:'Engranar',lv:34,po:32,t:'p',e:210,ok:s=>s.iq>=1},
+    tmp:{of:'ing',n:'Templar el resorte',lv:46,po:38,t:'r',fn:s=>{s.dur=Math.min(s.durMax,s.dur+20);s.b.wn=3;s.b.wn2=0}},
+    prt:{of:'ing',n:'Prototipo',lv:60,po:46,t:'q',e:200,ok:s=>s.iq>=2}
   };
   const IDS=Object.keys(A);
   // PRNG mulberry32 (sin Math.random).

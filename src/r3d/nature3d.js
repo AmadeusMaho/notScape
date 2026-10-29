@@ -122,7 +122,7 @@ const NOUMW=function(){};
 export class Resources{
  constructor(scene,occScene,W3){this.scene=scene;this.occ=occScene;this.W3=W3;this.grp=new THREE.Group();this.grp.name='recursos3d';scene.add(this.grp);this.ogrp=new THREE.Group();occScene.add(this.ogrp);
   this.sig='';this.idx=new Map();this.cells=null;this.pend=new Set();this.geo={};this.wmat={};this.dmat=new THREE.MeshBasicMaterial({colorWrite:false});this.on=false;
-  this.hlMat=new THREE.MeshBasicMaterial({color:'#fff0c8',transparent:true,opacity:.28,blending:THREE.AdditiveBlending,depthWrite:false});this.hlFol={};this.hl=new THREE.Group();scene.add(this.hl);this.hlE=null;this.falls=[];this.gs=new Map();this.ck=null}
+  this.hlMat=new THREE.MeshBasicMaterial({color:'#e8cf94',transparent:true,opacity:.2,blending:THREE.AdditiveBlending,depthWrite:false});this.hlRim=new THREE.MeshBasicMaterial({color:'#e8cf94',side:THREE.BackSide,transparent:true,opacity:.9,depthWrite:false});   /* RESALTE «Susurro»: borde DORADO (#e8cf94, el dorado único del HUD) que respira + velo dorado muy tenue; sustituye al lavado crema aditivo heredado del 2D */this.hlFol={};this.hl=new THREE.Group();scene.add(this.hl);this.hlE=null;this.falls=[];this.gs=new Map();this.ck=null}
  kindOf(e,dead){if(e.t==='wc'){let sp=TREES[e.i]||'roble';if(inZone(e.x))sp='mundo';let bk=0;try{bk=inZone(e.x)?9:Math.max(0,BIOMES.at(e.x,e.y))}catch(x){}return dead?'tocon':sp+'@'+bk+'#'+(Math.floor(hash(Math.round(e.x),Math.round(e.y),5)*NVAR))}
   if(e.t==='mi')return 'mena'+e.i+(inZone(e.x)?'z':'')+(dead?'d':'');if(e.t==='he')return 'hierba'+e.i+(dead?'d':'');return null}
  parts(kind){if(this.geo[kind])return this.geo[kind];let P=[];
@@ -154,7 +154,7 @@ export class Resources{
     const d=new THREE.InstancedMesh(pt.g,pt.fol?folDepth(pt.fol):this.dmat,list.length);d.layers.set(3);ms.push(d);this.sec(this.ogrp,cx,cy).add(d)});
    list.forEach((e,i)=>{const dead=kind==='tocon'||kind.endsWith('d');let r=this.idx.get(e);if(!r)this.idx.set(e,r={});r[dead?'d':'a']={ms,i};
     o3.position.copy(this.W3(e.x,e.y,TER.standZ(e.x,e.y)));o3.rotation.set(0,hash(e.x,e.y,9)*6.283,0);const sc=e.t==='wc'?.92+hash(e.x,e.y,3)*.16:1;o3.scale.setScalar(sc);o3.updateMatrix();
-    r.base=r.base||{p:o3.position.clone(),q:o3.quaternion.clone(),s:sc};ms.forEach(m=>m.setMatrixAt(i,o3.matrix));r.state=null});
+    r.base=r.base||{p:o3.position.clone(),q:o3.quaternion.clone(),s:sc};r.bx=e.x;r.by=e.y;ms.forEach(m=>m.setMatrixAt(i,o3.matrix));r.state=null});
    ms.forEach(m=>{m.instanceMatrix.needsUpdate=true;m.computeBoundingSphere();m.matrixAutoUpdate=false;m.matrixWorldAutoUpdate=false})});
   S.g.forEach(({list})=>list.forEach(e=>{const r=this.idx.get(e);if(r&&!r.ci){r.ci=1;const k=Math.floor(e.x/CS)*100003+Math.floor(e.y/CS);let a=this.cells.get(k);if(!a)this.cells.set(k,a=[]);a.push(e,r)}}));
   this.built.add(S.sk);if(this.onSec)this.onSec()}
@@ -205,7 +205,8 @@ export class Resources{
    if(e.t!=='wc'||typeof swPh!=='function')return 0;const f=swPh(now);return f<.22?Math.pow(1-f/.22,2):0}catch(x){return 0}};
   const prog=e=>{try{return act===e&&typeof A!=='undefined'&&A&&A.wh?Math.min(1,A.pr||0):0}catch(x){return 0}};   // progreso de la rueda: el recurso se va deshaciendo / inclinando
   // Fase 49a (rendimiento): con 9 biomas hay ~13 700 recursos; recorrerlos todos cada fotograma costaba ~+6 ms. Solo cambian de estado los que están cerca del héroe (talar/minar) o los ya agotados (`pend`, hasta que reviven).
-  const proc=(r,e)=>{const dead=typeof alive==='function'?!alive(e,now):false,hk=dead?0:hitK(e),shake=hk>0,pg=dead?0:prog(e),st=(dead?'d':'a')+(shake?'s':'')+Math.round(pg*12);if(dead)this.pend.add(e);else this.pend.delete(e);if(st===r.state&&!shake)return;r.state=st;
+  const proc=(r,e)=>{const dead=typeof alive==='function'?!alive(e,now):false;if(!dead&&r.base&&(r.bx!==e.x||r.by!==e.y)){r.bx=e.x;r.by=e.y;r.base.p.copy(this.W3(e.x,e.y,TER.standZ(e.x,e.y)));r.state=null}   /* al REAPARECER en otro punto (relocDefer de game.js) la malla se coloca donde está la hitbox */
+  const hk=dead?0:hitK(e),shake=hk>0,pg=dead?0:prog(e),st=(dead?'d':'a')+(shake?'s':'')+Math.round(pg*12);if(dead)this.pend.add(e);else this.pend.delete(e);if(st===r.state&&!shake)return;r.state=st;
    const show=dead?r.d:r.a,hide=dead?r.a:r.d;if(hide)hide.ms.forEach(m=>{m.setMatrixAt(hide.i,Z);m.instanceMatrix.needsUpdate=true});
    if(show){o3.position.copy(r.base.p);o3.quaternion.copy(r.base.q);o3.scale.setScalar(r.base.s*(e.t==='mi'?1-.3*pg+.05*hk:1));if(pg>0)o3.rotation.x+=.05*pg;if(shake){const am=e.t==='mi'?.07:.05;o3.rotation.z+=Math.sin(t*42)*am*hk;o3.rotation.x+=Math.cos(t*35)*.03*hk}o3.updateMatrix();show.ms.forEach(m=>{m.setMatrixAt(show.i,o3.matrix);m.instanceMatrix.needsUpdate=true})}};
   if(typeof P!=='undefined'&&this.cells){const ci=Math.floor(P.x/CS),cj=Math.floor(P.y/CS);for(let a=ci-3;a<=ci+3;a++)for(let b=cj-3;b<=cj+3;b++){const q=this.cells.get(a*100003+b);if(q)for(let n=0;n<q.length;n+=2){if(q[n].g)this.gold(q[n],q[n+1],t);proc(q[n+1],q[n])}}
@@ -213,9 +214,10 @@ export class Resources{
   else this.idx.forEach((r,e)=>proc(r,e));
   {const ae=(act&&act.t==='mi'&&this.idx.has(act)&&typeof A!=='undefined'&&A&&A.wh)?act:null;this.updCracks(ae,ae?Math.min(1,A.pr||0):0)}   // grietas de la mena activa
   // resalte: copia del modelo con luz aditiva (más clara) solo en la entidad bajo el puntero
+  this.hlRim.opacity=.78+.22*Math.sin(t*3.2);
   const he=hov&&this.idx.has(hov)?hov:null;if(he!==this.hlE){this.hlE=he;this.hl.clear();if(he){const dead=typeof alive==='function'&&!alive(he,now),P=this.parts(this.kindOf(he,dead)),r=this.idx.get(he);
     P.forEach(pt=>{const m=new THREE.Mesh(pt.g,pt.fol?(this.hlFol[pt.fol]||(this.hlFol[pt.fol]=Object.assign(this.hlMat.clone(),{map:leafTex(pt.fol),alphaTest:.5,side:THREE.DoubleSide}))):this.hlMat);m.renderOrder=3;this.hl.add(m);
-     if(pt.ink){const h=new THREE.Mesh(pt.ink,new THREE.MeshBasicMaterial({color:'#ffe9b0',side:THREE.BackSide}));h.scale.setScalar(1.02);this.hl.add(h)}});
+     if(!pt.fol){const h=new THREE.Mesh(pt.g,this.hlRim);h.scale.setScalar(1.11);h.renderOrder=2;this.hl.add(h)}});
     this.hl.position.copy(r.base.p);this.hl.quaternion.copy(r.base.q);this.hl.scale.setScalar(r.base.s)}}}
 }
 const FD={};function folDepth(kind){return FD[kind]||(FD[kind]=new THREE.MeshBasicMaterial({colorWrite:false,map:leafTex(kind),alphaTest:.5,side:THREE.DoubleSide}))}

@@ -439,4 +439,4 @@ const KIT=(()=>{
     c.fillStyle=sel?'#fff2c0':'#fff2d0';c.font='bold 54px Cinzel,serif';c.textAlign='center';c.lineWidth=12;c.lineJoin='round';c.strokeStyle=OL;c.strokeText(NM[id],cx*WW+400,cy*HH+250);c.fillText(NM[id],cx*WW+400,cy*HH+250);
     if(m){c.font='28px Cinzel,serif';c.fillStyle=sel?'#ffd070':'#c8b888';c.lineWidth=8;const t2=lk?'ahora no':rd?(sel?'receta: cocinar aquí':'cocinar aquí'):'primero los ingredientes';c.strokeText(t2,cx*WW+400,cy*HH+300);c.fillText(t2,cx*WW+400,cy*HH+300)}});c.globalAlpha=1}
   c.restore();gx().paintFinish(c)}
- return{spiceOn:k=>L('co')>=SPL[k],CELL,NM,STOF,go,camInit,cookInit,plateInit,mesaStart,mgNew,tick,input,render,sabor,tgOf,flav,get ptr(){return ptr},pop,perfect}})();
+ return{drawCh,spiceOn:k=>L("co")>=SPL[k],CELL,NM,STOF,go,camInit,cookInit,plateInit,mesaStart,mgNew,tick,input,render,sabor,tgOf,flav,get ptr(){return ptr},pop,perfect}})();

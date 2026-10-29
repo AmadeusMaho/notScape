@@ -19,6 +19,7 @@ import {Mini,MINI,sword,shieldMesh} from './mini3d.js';
 import {hairFn} from './herom3d.js';
 import {angelWings} from './wings3d.js';   // alas de ángel reutilizables (Lote CINE-2b)
 import {SkirtPhys,flapRig} from './skirt3d.js';
+import {MSPEC,makeSpecies} from './mountmodels3d.js';   // DOMAR-D3: animales domables = el mismo modelo que la montura, sin silla
 
 const M4=THREE.Matrix4,V3=THREE.Vector3,QT=THREE.Quaternion;
 import {HK} from './scale3d.js';
@@ -49,7 +50,8 @@ function bake(obj,boneObjs,skinHex){
  obj.traverse(o=>{if(!o.isMesh||!o.geometry)return;const mw=new M4().multiplyMatrices(inv0,o.matrixWorld),bi=near(o),g=o.geometry,pa=g.attributes.position;
   if(o.userData.hull){const ix=g.index;const put=i=>{v.fromBufferAttribute(pa,i).applyMatrix4(mw);HP.push(v.x,v.y,v.z);HB.push(bi)};if(ix)for(let i=0;i<ix.count;i++)put(ix.getX(i));else for(let i=0;i<pa.count;i++)put(i);return}
   const mat=o.material;if(Array.isArray(mat))return;const c=C[mat.side===THREE.DoubleSide?2:(skinHex!=null&&!mat.isMeshBasicMaterial&&mat.color.getHex()===skinHex)?1:0],na=g.attributes.normal,base=c.P.length/3,col=mat.color,em=mat.isMeshBasicMaterial?2:0;
-  nm.getNormalMatrix(mw);for(let i=0;i<pa.count;i++){v.fromBufferAttribute(pa,i).applyMatrix4(mw);c.P.push(v.x,v.y,v.z);if(na){n.fromBufferAttribute(na,i).applyMatrix3(nm).normalize();c.N.push(n.x,n.y,n.z)}else c.N.push(0,1,0);c.K.push(col.r,col.g,col.b);c.E.push(em);c.B.push(bi)}
+  const gc=g.attributes.color,ge=g.attributes.aEmit;   /* geometrías con color/emisión por vértice (mountmodels3d.js) */
+  nm.getNormalMatrix(mw);for(let i=0;i<pa.count;i++){v.fromBufferAttribute(pa,i).applyMatrix4(mw);c.P.push(v.x,v.y,v.z);if(na){n.fromBufferAttribute(na,i).applyMatrix3(nm).normalize();c.N.push(n.x,n.y,n.z)}else c.N.push(0,1,0);if(gc)c.K.push(gc.getX(i)*col.r,gc.getY(i)*col.g,gc.getZ(i)*col.b);else c.K.push(col.r,col.g,col.b);c.E.push(ge?ge.getX(i):em);c.B.push(bi)}
   if(g.index)for(let i=0;i<g.index.count;i++)c.I.push(base+g.index.getX(i));else for(let i=0;i<pa.count;i++)c.I.push(base+i)});
  const geo=new THREE.BufferGeometry(),P=[],N=[],K=[],E=[],B=[],I=[];let off=0;
  C.forEach((c,gi)=>{const base=P.length/3,st=I.length;for(const x of c.P)P.push(x);for(const x of c.N)N.push(x);for(const x of c.K)K.push(x);for(const x of c.E)E.push(x);for(const x of c.B)B.push(x);for(const x of c.I)I.push(base+x);geo.addGroup(st,I.length-st,gi)});
@@ -83,6 +85,11 @@ class Proto{
  eyes(p,x,y,z,r,col,glowing){[-1,1].forEach(q=>{if(glowing)this.glow(sph(r,1,1.1,.7,10),col,x*q,y,z,{p});else{this.part(sph(r,1,1.1,.7,10),col||'#1c1410',x*q,y,z,{p,ink:0});this.part(sph(r*.32,1,1,1,6),'#fff6e0',x*q+r*.3*q*.0+r*.25,y+r*.35,z+r*.45,{p,ink:0})}})}
 }
 function bakeProto(P,skin){return bake(P.obj,P.list,skin?new THREE.Color(skin).getHex():null)}
+// MONTURA SALVAJE (lote DOMAR-D3-MODELOS): huesos y geometrías de mountmodels3d.js (sin silla) → Proto → horneado. tpl.kind 'quad' (animQuad: patas en diagonal; bípedos con FL/FR vacías)
+const MWHITE=new THREE.MeshLambertMaterial({color:'#ffffff'});   /* solo para el horneado: blanco (el color y la emisión van por vértice) */
+function buildMountActor(key){const d=makeSpecies(key,false,0),P=new Proto(),abs={},G={};
+ for(const b of d.bones){const pa=b.p?abs[b.p]:[0,0,0],g=P.bone(b.n,b.p?G[b.p]:null,b.o[0]-pa[0],b.o[1]-pa[1],b.o[2]-pa[2]);G[b.n]=g;abs[b.n]=b.o;const geo=d.geos[b.n];if(geo){const m=new THREE.Mesh(geo,MWHITE);m.add(hull(geo,.014));g.add(m)}}
+ const t=bakeProto(P,null),M=d.meta;t.kind='quad';t.k=1;t.h=M.top;t.rad=Math.max(.3,M.len*.36);t.tilt=M.tilt?1:0;t.cycle=M.cyc;t.eye=M.eye;t.eyeCol='#ffd36a';t.mount=1;return t}
 
 // ═══════════════════════════════ CUADRÚPEDOS (parámetros = los de creatures.js quad(), en px de modelo) ═══════════════════════════════
 // col/belly/leg/hoof/bx/by/len/lwid/hx/hy/hr/sn como en CRE (hx,hy relativos al centro del cuerpo, y hacia abajo). Extras: ear (point|round|none), eye (color brillante), s.
@@ -221,6 +228,7 @@ const PRA={
   eyeQ(P,neck,4.4*k,-1.4*k,10.8*k,.95*k,'#ff5a3a',true);
   const tail=P.bone('tail',body,0,by*.5,-20.6*k);P.part(cyl(.8*k,.6*k,9*k,6).translate(0,-4.5*k,-.6*k),D,0,0,0,{p:tail,ink:.008});P.part(sph(1,1.8*k,3.4*k,1.8*k,8),'#1e1410',0,-10.2*k,-.6*k,{p:tail,ink:.008});
   return finQ(P,{h:40,rad:28,cyc:76,eye:'#ff6a3a'})},
+ // CABALLO SALVAJE: ahora sale de mountmodels3d.js como las otras 38 monturas (lote DOMAR-D3-MODELOS; ver buildMountActor)
  // OVEJA (rehecha): vellón de grumos esponjosos, cara y patas oscuras, copete sobre la frente y rabo de lana
  oveja(){const k=U,P=new Proto(),L=7*k,by=6.6*k,root=P.bone('root',null),body=P.bone('body',root,0,L+by*.8,0),W='#f1ede2',F='#4a3e38';
   P.part(sph(1,6.4*k,by*.95,10*k,16),W,0,0,0,{p:body,ink:.016});
@@ -486,9 +494,9 @@ PRA.slime=function(){const k=U,P=new Proto(),root=P.bone('root',null),body=P.bon
 const TPL=new Map();
 function tplFor(key){if(TPL.has(key))return TPL.get(key);let t=null;try{
   if(key==='ru')t=buildHuman(RU);else if(key.startsWith('v:')&&typeof NPCLK!=='undefined'&&NPCLK[key]){t=buildHuman(vdef(key));t.nowave=!NPCLK[key].wave}else if(NPC_DEF[key]){t=buildHuman(NPC_DEF[key]);t.nowave=NPC_DEF[key].wave===false}else if(HUM[key]){const d=HUM[key];const sp=Object.assign({},d.spec);t=buildHuman({id:key,H:d.H,spec:Object.assign(sp,{top:d.spec.top,acc:d.spec.acc})})}
-  else if(PRA[key])t=PRA[key]();else if(QUADS[key])t=buildQuad(key);else if(key==='gallina')t=buildBird();else if(key==='rana')t=buildFrog()}catch(e){console.warn('[R3D actors]',key,e);t=null}
+  else if(MSPEC[key])t=buildMountActor(key);else if(PRA[key])t=PRA[key]();else if(QUADS[key])t=buildQuad(key);else if(key==='gallina')t=buildBird();else if(key==='rana')t=buildFrog()}catch(e){console.warn('[R3D actors]',key,e);t=null}
  if(t)console.info('[R3D actors]',key,t.kind,t.tris+' tris');TPL.set(key,t);return t}
-export const ACTOR_IDS=[...Object.keys(HUM),...Object.keys(QUADS),...Object.keys(PRA),'gallina','rana'];
+export const ACTOR_IDS=[...new Set([...Object.keys(HUM),...Object.keys(QUADS),...Object.keys(PRA),...Object.keys(MSPEC),'gallina','rana'])];
 
 // ═══════════════════════════════ ACTOR (instancia) ═══════════════════════════════
 const AX=new THREE.Vector3(1,0,0);
@@ -568,6 +576,7 @@ function animQuad(A,s){const {t,mv,at}=s,ph=A.ph,sn=Math.sin(ph),a=mv,br=Math.si
  let hp=Math.sin(ph*2)*.05*a+br*.03*(1-a)+Math.sin(t*.5+A.seed)*.04,hy=Math.sin(t*.7+A.seed)*.18*(1-a),lunge=0;
  if(at>=0){const w=ss(0,.18,at),k=ss(.18,.3,at),r=ss(.3,.85,at);hp=lerp(-.55*w*(1-k)+.95*k,hp,r);lunge=k*(1-r)*.22;A.rot('body',(-.15*w*(1-k)+.1*k)*(1-r),0,0);A.b.root.position.z=A.restP.root.z+lunge*A.tpl.rad*.5}
  else A.b.root.position.z=A.restP.root.z;
+ if(A.b.wingL){const fl=(at>=0?Math.sin(at*Math.PI*4)*.5:0)+Math.sin(t*1.3+A.seed)*.03;A.rot('wingL',0,0,fl);A.rot('wingR',0,0,-fl)}   /* monturas aladas: alas plegadas que respiran; aleteo al atacar */
  A.rot('head',hp,hy,0);A.rot('tail',-.2+Math.sin(t*(mv>.2?9:2.4)+A.seed)*.3*(0.4+a),Math.sin(t*(mv>.2?7:2)+A.seed)*.35,0);if(A.b.tail2)A.rot('tail2',Math.sin(t*3+1)*.3,Math.sin(t*2.5+2)*.35,0)}
 
 function animBird(A,s){const {t,mv,at}=s,ph=A.ph,sn=Math.sin(ph);A.rot('legL',sn*.8*mv,0,0);A.rot('legR',-sn*.8*mv,0,0);A.b.body.position.y=A.restP.body.y+Math.abs(Math.cos(ph))*.012*mv;
@@ -618,6 +627,7 @@ export class Actors{
  step(A,e,isNpc,alive_,now,t,dt,hov,P_){
   // vida / muerte
   if(!alive_&&A.state==='live'){A.state='dying';A.td=now}
+  if(!alive_&&e.gone&&A.state==='dying')A.state='gone';   /* DOMAR-D2: un animal domado desaparece sin cadáver */
   if(alive_&&A.state!=='live'){A.state='live';A.vis=true;A.last=null;A.grp.visible=true;A.grp.scale.setScalar(A.sc);A.b.root.rotation.set(0,0,0);A.b.root.position.copy(A.restP.root)}
   if(A.state==='gone'){A.vis=false;A.grp.visible=false;if(A.proxy)A.proxy.visible=false;return}
   const z=TER.standZ(e.x,e.y),p=this.W3(e.x,e.y,z);let dist=0;

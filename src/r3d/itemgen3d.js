@@ -87,6 +87,12 @@ export const GEN2={
   p(new THREE.TorusGeometry(.17,.012,5,16),'#8ad0e0',0,-.12,0,{p:g,ink:0}).rotation.x=PI/2},
  feather(p,g,c){c=cc(c,'#cfe8ff');p(cyl(.012,.012,.5,5).translate(0,.05,0),shade(c,.7),0,0,0,{p:g,ink:.006});
   const v=sph(.06,1,5.2,.18,10);p(v,c,.04,.1,0,{p:g,ink:.01});p(v.clone().translate(-.08,0,0),mixc(c,'#ffffff',.4),.04,.1,0,{p:g,ink:0})},
+ dust(p,g,c,o){c=cc(c,'#c8a860');const pure=o&&o.g>=2;   /* ESENCIA: montoncito de polvo sobre un platillo de piedra (no es un frasco: no repite las pociones). La PURA suma cristales que brillan */
+  p(cyl(.25,.22,.04,14),'#6a625a',0,-.02,0,{p:g,ink:.012});p(cyl(.19,.19,.012,14),shade('#6a625a',.7),0,.003,0,{p:g,ink:0});
+  const hl={};new THREE.Color(c).getHSL(hl);const m=mixc(c,'#cfc6b4',hl.l<.25?.14:.42);p(cyl(.025,.2,.17,9),m,0,.09,0,{p:g,ink:.012});p(cyl(.02,.12,.09,8),shade(m,1.12),.07,.09,.03,{p:g,ink:0});p(sph(.085,1,.5,1,8),shade(m,.92),-.1,.045,-.06,{p:g,ink:0});p(sph(.06,1,.5,1,8),shade(m,1.05),.1,.04,-.08,{p:g,ink:0});
+  for(let i=0;i<7;i++){const a=i*2.4+.5,r=.2+((i*37)%5)*.012;p(sph(.016,1,.7,1,5),mixc(c,'#cfc6b4',.2+(i%3)*.15),Math.cos(a)*r,.015,Math.sin(a)*r,{p:g,ink:0})}
+  p(sph(.026),'#ffffff',.03,.15,.04,{p:g,ink:0,mat:glow(c,1.3)});
+  if(pure)for(let i=0;i<3;i++){const a=i*2.1+.4;p(new THREE.OctahedronGeometry(.055,0).scale(.8,1.5,.8),mixc(c,'#ffffff',.55),Math.cos(a)*.1,.14+i*.02,Math.sin(a)*.09,{p:g,ink:.008,mat:glow(mixc(c,'#ffffff',.5),1.3)})}},
  butter(p,g,c){c=cc(c,'#f2e08a');p(box(.36,.18,.26),c,0,0,0,{p:g,ink:.014});p(box(.37,.03,.27),shade(c,1.1),0,.09,0,{p:g,ink:0});p(box(.1,.02,.2),shade(c,.85),.09,.1,0,{p:g,ink:0})},
  // ── comida y pescado ──
  steak(p,g,c){c=cc(c,'#d8605a');p(blobG(.23,1.2,.38,.95,.04),c,0,0,0,{p:g,ink:.014});p(blobG(.17,.9,.14,.65,.03),shade(c,1.18),0,.06,0,{p:g,ink:0});
@@ -137,9 +143,9 @@ export const GEN2={
 };
 
 // pose «en el icono» (rx, ry, rz) de cada modelo nuevo; el resto usa [0,-.4,0]
-export const POSE2={flask:[0,-.4,0],elixir:[0,-.4,0],herbplant:[.1,.3,0],hide:[.5,-.4,0],wool:[0,0,0],cloth:[.25,-.5,0],bone:[0,-.4,.5],tooth:[0,-.3,-.3],skull:[0,-.4,0],club:[0,-.4,-.7],horn:[0,-.4,.3],nest:[.45,0,0],pearl:[0,0,0],feather:[0,-.3,-.7],butter:[.2,-.5,0],
+export const POSE2={dust:[.45,-.25,0],flask:[0,-.4,0],elixir:[0,-.4,0],herbplant:[.1,.3,0],hide:[.5,-.4,0],wool:[0,0,0],cloth:[.25,-.5,0],bone:[0,-.4,.5],tooth:[0,-.3,-.3],skull:[0,-.4,0],club:[0,-.4,-.7],horn:[0,-.4,.3],nest:[.45,0,0],pearl:[0,0,0],feather:[0,-.3,-.7],butter:[.2,-.5,0],
  steak:[.55,-.4,0],drum:[0,-.3,.5],egg:[0,-.3,0],mush:[0,-.4,0],rice:[.3,0,0],salt:[0,-.4,0],bread:[.3,-.4,0],burger:[.3,-.3,0],fish:[0,-.4,.35],shrimp:[0,-.3,0],squid:[0,-.4,.2],plate:[.7,-.3,0],bowl:[.55,-.3,0],
  crown:[.35,-.3,0],mask:[0,-.35,0],hat:[.2,-.4,0],shuriken:[.9,-.2,0],core:[0,.5,0],rune:[0,-.35,0],scroll:[0,-.4,.6],swirl:[0,.3,0],bag:[0,-.4,0]};
 // pose en el SUELO (drops3d): lo largo se tumba; lo plano queda plano
-export const DPOSE2={flask:[0,0,PI/2],elixir:[0,0,PI/2],herbplant:[0,0,0],hide:[0,0,0],cloth:[0,0,0],bone:[0,0,0],tooth:[0,0,PI/2],club:[0,0,PI/2],horn:[0,0,PI/2],feather:[0,0,PI/2],scroll:[0,0,0],plate:[0,0,0],bowl:[0,0,0],steak:[0,0,0],fish:[0,0,0],shrimp:[0,0,0],squid:[0,0,PI/2],mask:[-PI/2+.4,0,0],shuriken:[0,0,0],drum:[0,0,.5],rune:[-.5,0,0],nest:[0,0,0],burger:[0,0,0],bread:[0,0,0],butter:[0,0,0],wool:[0,0,0],bag:[0,0,0]};
+export const DPOSE2={dust:[0,0,0],flask:[0,0,PI/2],elixir:[0,0,PI/2],herbplant:[0,0,0],hide:[0,0,0],cloth:[0,0,0],bone:[0,0,0],tooth:[0,0,PI/2],club:[0,0,PI/2],horn:[0,0,PI/2],feather:[0,0,PI/2],scroll:[0,0,0],plate:[0,0,0],bowl:[0,0,0],steak:[0,0,0],fish:[0,0,0],shrimp:[0,0,0],squid:[0,0,PI/2],mask:[-PI/2+.4,0,0],shuriken:[0,0,0],drum:[0,0,.5],rune:[-.5,0,0],nest:[0,0,0],burger:[0,0,0],bread:[0,0,0],butter:[0,0,0],wool:[0,0,0],bag:[0,0,0]};
 Object.assign(GEN2,GEN3);Object.assign(POSE2,POSE3);Object.assign(DPOSE2,DPOSE3);   // los kinds de oficio usan la misma firma y las mismas tablas

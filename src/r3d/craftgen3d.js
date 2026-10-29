@@ -59,6 +59,18 @@ export const GEN3={
   [[-.14,-.14],[-.14,.09],[.12,.09]].forEach(([x,y])=>p(cyl(.022,.022,.02,8).rotateX(PI/2),shade(c,.6),x,y,.03,{p:g,ink:0}))},
  handle(p,g,c){c=cc(c,'#8a5a30');const pr=[[0,0],[.045,0],[.05,.05],[.032,.14],[.032,.3],[.045,.36],[.05,.44],[0,.46]].map(a=>new THREE.Vector2(a[0],a[1]));
   p(new THREE.LatheGeometry(pr,10).translate(0,-.23,0),c,0,0,0,{p:g,ink:.012});p(cyl(.052,.052,.025,10),shade(c,.5),0,-.15,0,{p:g,ink:0})},
+
+ // ── INGENIERÍA (29 oct 2026) ──
+ spring(p,g,c){c=cc(c,IRON);for(let i=0;i<6;i++){p(new THREE.TorusGeometry(.115,.026,6,14).rotateX(PI/2),i%2?shade(c,.8):c,0,-.2+i*.075,0,{p:g,ink:.01,t:{rim:2}})}p(cyl(.1,.1,.03,12),shade(c,.7),0,-.235,0,{p:g,ink:.008});p(cyl(.1,.1,.03,12),shade(c,.7),0,.26,0,{p:g,ink:.008})},
+ bomb(p,g,c,o){c=cc(c,'#ffcf6a');const k=1+.1*((o&&o.g)||0);p(sph(.2*k,1,1,1,14),'#2a2a30',0,-.02,0,{p:g,ink:.014,t:{rim:2}});p(new THREE.TorusGeometry(.2*k,.025,6,16).rotateX(PI/2),c,0,-.02,0,{p:g,ink:.008});
+  p(cyl(.05,.065,.07,8),'#8a7a5a',0,.2*k,0,{p:g,ink:.01});p(cyl(.012,.012,.14,5).rotateZ(.5).translate(.04,.3*k,0),'#d8c8a0',0,0,0,{p:g,ink:.006});p(sph(.035),'#ffd890',.1,.37*k,0,{p:g,ink:0,mat:glow('#ffb040',1.8)});p(sph(.05,1,.6,.6),'#ffffff',-.08,.06,.15,{p:g,ink:0})},
+ trap(p,g,c,o){c=cc(c,IRON);const k=1+.1*((o&&o.g)||0);p(cyl(.24*k,.26*k,.05,16),shade(c,.6),0,-.1,0,{p:g,ink:.012});p(new THREE.TorusGeometry(.2*k,.03,6,16).rotateX(PI/2),c,0,-.06,0,{p:g,ink:.01,t:{rim:2}});
+  for(let i=0;i<8;i++){const a=i/8*PI*2;p(flat(new THREE.ConeGeometry(.03,.14,4).translate(Math.cos(a)*.2*k,.03,Math.sin(a)*.2*k)),'#dcd6c8',0,0,0,{p:g,ink:.006})}p(cyl(.05,.05,.04,8),'#2a2420',0,-.04,0,{p:g,ink:.006})},
+ rig(p,g,c){c=cc(c,IRON);p(box(.34,.24,.24),c,0,-.04,0,{p:g,ink:.014,t:{rim:2}});for(let i=0;i<3;i++)p(cyl(.055,.055,.03,10).rotateX(PI/2),shade(c,.55),-.1+i*.1,-.03,.13,{p:g,ink:.007});p(cyl(.015,.015,.22,5).rotateZ(-.9).translate(.26,.12,0),'#4a4038',0,0,0,{p:g,ink:.007});p(sph(.04),c,.34,.2,0,{p:g,ink:.008})},
+ lens(p,g,c,o){c=cc(c,'#b8873a');const gl=cc(o&&o.c,'#bfe8ff');p(new THREE.TorusGeometry(.26,.018,5,14,PI).rotateZ(PI).translate(0,.04,0),'#5a4030',0,0,0,{p:g,ink:.008});
+  for(const sx of[-1,1]){p(cyl(.11,.11,.06,14).rotateX(PI/2),c,sx*.13,-.04,.04,{p:g,ink:.012,t:{rim:2}});p(cyl(.082,.082,.05,14).rotateX(PI/2),gl,sx*.13,-.04,.075,{p:g,ink:0,mat:glow(gl,.8)});p(cyl(.126,.126,.03,12).rotateX(PI/2),shade(c,.7),sx*.13,-.04,.02,{p:g,ink:0})}p(box(.07,.04,.04),c,0,-.03,.04,{p:g,ink:.007})},
+ scope(p,g,c){c=cc(c,IRON);p(cyl(.045,.045,.46,10).rotateZ(PI/2),c,0,0,0,{p:g,ink:.012,t:{rim:2}});p(cyl(.06,.06,.08,10).rotateZ(PI/2),shade(c,.65),-.24,0,0,{p:g,ink:.01});p(cyl(.07,.07,.1,10).rotateZ(PI/2),shade(c,.65),.24,0,0,{p:g,ink:.01});
+  p(sph(.04,.4,1,1),'#bfe8ff',-.285,0,0,{p:g,ink:0,mat:glow('#bfe8ff',.9)});p(sph(.05,.4,1,1),'#bfe8ff',.295,0,0,{p:g,ink:0,mat:glow('#bfe8ff',.9)});p(box(.14,.1,.05),shade(c,.5),0,-.08,0,{p:g,ink:.008})},
  gear(p,g,c){c=cc(c,IRON);p(cyl(.17,.17,.06,16).rotateX(PI/2),c,0,0,0,{p:g,ink:.013,t:{rim:2}});for(let i=0;i<10;i++){const a=i/10*PI*2;p(box(.07,.07,.06).rotateZ(a).translate(Math.cos(a)*.2,Math.sin(a)*.2,0),shade(c,.9),0,0,0,{p:g,ink:.008})}
   p(cyl(.05,.05,.07,10).rotateX(PI/2),shade(c,.4),0,0,0,{p:g,ink:0})},
  herb(p,g,c){c=cc(c,'#5aa048');for(let i=0;i<5;i++){const a=(i-2)*.28;p(new THREE.CylinderGeometry(.008,.012,.4,4).rotateZ(a).translate(Math.sin(a)*-.2,0,0),shade(c,.6),0,0,0,{p:g,ink:.006});
@@ -66,8 +78,8 @@ export const GEN3={
 };
 
 export const POSE3={hammer:[0,-.5,-.7],tongs:[0,-.5,-.6],knife:[0,-.5,-.7],chisel:[0,-.5,-.7],saw:[0,-.4,-.35],needle:[0,-.3,-.7],cap:[.2,-.4,0],apron:[0,-.35,0],oglove:[0,-.4,0],
- plank:[.5,-.5,0],leather:[.5,-.4,0],thread:[.45,-.3,0],fiber:[0,-.4,.5],stoneblk:[.2,-.5,0],brick:[.25,-.5,0],column:[.1,-.4,0],statue:[.1,-.4,0],blade:[0,-.5,-.7],fitting:[0,-.4,0],handle:[0,-.4,-.7],gear:[.15,-.5,0],herb:[0,-.4,.25]};
+ plank:[.5,-.5,0],leather:[.5,-.4,0],thread:[.45,-.3,0],fiber:[0,-.4,.5],stoneblk:[.2,-.5,0],brick:[.25,-.5,0],column:[.1,-.4,0],statue:[.1,-.4,0],blade:[0,-.5,-.7],fitting:[0,-.4,0],handle:[0,-.4,-.7],gear:[.15,-.5,0],herb:[0,-.4,.25],spring:[.1,-.4,0],bomb:[.1,-.5,0],trap:[.5,-.5,0],rig:[.1,-.4,0],lens:[.5,-.4,0],scope:[0,-.4,0]};
 export const DPOSE3={hammer:[0,0,PI/2],tongs:[0,0,PI/2],knife:[0,0,PI/2],chisel:[0,0,PI/2],saw:[PI/2,0,0],needle:[0,0,PI/2],cap:[0,0,0],apron:[PI/2,0,0],oglove:[PI/2,0,0],
- plank:[0,0,0],leather:[0,0,0],thread:[0,0,0],fiber:[0,0,PI/2],stoneblk:[0,0,0],brick:[0,0,0],column:[PI/2,0,0],statue:[PI/2,0,0],blade:[PI/2,0,0],fitting:[PI/2,0,0],handle:[0,0,PI/2],gear:[PI/2,0,0],herb:[0,0,PI/2]};
+ plank:[0,0,0],leather:[0,0,0],thread:[0,0,0],fiber:[0,0,PI/2],stoneblk:[0,0,0],brick:[0,0,0],column:[PI/2,0,0],statue:[PI/2,0,0],blade:[PI/2,0,0],fitting:[PI/2,0,0],handle:[0,0,PI/2],gear:[PI/2,0,0],herb:[0,0,PI/2],spring:[0,0,PI/2],bomb:[0,0,0],trap:[0,0,0],rig:[0,0,0],lens:[PI/2,0,0],scope:[0,0,0]};
 // tamaño real en el suelo (drops3d.js, SIZE)
-export const SIZE3={hammer:.4,tongs:.4,knife:.3,chisel:.3,saw:.45,needle:.25,cap:.28,apron:.34,oglove:.2,plank:.4,leather:.34,thread:.22,fiber:.3,stoneblk:.3,brick:.26,column:.34,statue:.3,blade:.36,fitting:.22,handle:.32,gear:.22,herb:.26};
+export const SIZE3={hammer:.4,tongs:.4,knife:.3,chisel:.3,saw:.45,needle:.25,cap:.28,apron:.34,oglove:.2,plank:.4,leather:.34,thread:.22,fiber:.3,stoneblk:.3,brick:.26,column:.34,statue:.3,blade:.36,fitting:.22,handle:.32,gear:.22,herb:.26,spring:.22,bomb:.24,trap:.3,rig:.3,lens:.3,scope:.34};
