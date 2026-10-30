@@ -89,9 +89,8 @@ const POIGEN=(()=>{
      if(bad(lx,ly,tp.r)||!ok(B.ox+lx,B.oy+ly,Math.min(tp.r,110),k))continue;
      const p={id:'L'+li,k:tp.pk||'hito',n:tp.n(),x:Math.round(lx),y:Math.round(ly),r:tp.r,tier:2,em:tp.em,rv:tp.rv},pool=tp.mobIds||(POOL.camp.length?POOL.camp:all);
      if(tp.mobs&&pool.length)p.mobs=tp.mobs().map(([dx,dy],m)=>[pool[Math.floor(H(k*131+li,m,77)*pool.length)],dx,dy]);
-     pois.push(p);tp.dec.forEach(([nm,dx,dy,o,fp])=>props.push(P(nm,p.x+dx,p.y+dy,o||null,fp?{fp}:undefined)));put=true;stats.hitos=(stats.hitos||0)+1;
-     {const L=Math.hypot(lx-c0[0],ly-c0[1]),n=Math.floor((L-tp.r*.6-380)/150),pts=[],ta=Math.atan2(c0[1]-ly,c0[0]-lx);   // camino de tierra desde la aldea hasta el hito (serpentea y se corta donde deja de ser tierra firme)
-      if(n>2){for(let i=0;i<=n;i++){const f=(380+i*150)/L,w=Math.sin(i*1.3+li*2)*24*Math.min(1,i/2),x=Math.round(c0[0]+(lx-c0[0])*f-Math.sin(ta)*w),y=Math.round(c0[1]+(ly-c0[1])*f+Math.cos(ta)*w);if(!ok(B.ox+x,B.oy+y,12,k))break;pts.push([x,y])}if(pts.length>2){B.routes.push(pts);stats.caminos=(stats.caminos||0)+1}}}}
+     pois.push(p);tp.dec.forEach(([nm,dx,dy,o,fp])=>props.push(P(nm,p.x+dx,p.y+dy,o||null,fp?{fp}:undefined)));put=true;stats.hitos=(stats.hitos||0)+1;   // (sin camino de tierra al hito: quitado el 30 oct 2026)
+     }
     if(!put)console.warn('[POIGEN] sin sitio para el hito',kind,B.n)});
    stats.por[B.n||k]=n;stats.tot+=n});
   console.info('[POIGEN]',stats)}

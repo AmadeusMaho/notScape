@@ -22,12 +22,7 @@ const PLAYA=(()=>{
   if(!H){console.warn('[PLAYA] sin playa válida: se conserva la antigua');return}
   const dx=(H[0]-B.ox)/T-SP.hero[0],dy=(H[1]-B.oy)/T-SP.hero[1];for(const k in SP){SP[k][0]+=dx;SP[k][1]+=dy}
   BEACH={x:H[0],y:H[1],dist:Math.round(Math.hypot(H[0]-cx,H[1]-cy))};
-  // camino de tierra playa → aldea (avance voraz de 150 px hacia la plaza esquivando agua y acantilados)
-  {const pts=[],ok=(x,y)=>BIOMES.own(x,y)===0&&!wat(x,y)&&!TER.cliffNear(x,y,12)&&TER.sandAt(Math.floor(x/T),Math.floor(y/T))<.9;let px=H[0],py=H[1]-6*T;pts.push([Math.round(px-B.ox),Math.round(py-B.oy)]);
-   for(let i=0;i<260;i++){const ddx=cx-px,ddy=cy-py;if(Math.hypot(ddx,ddy)<420)break;const base=Math.atan2(ddy,ddx);let mv=false;
-    for(const off of[0,.3,-.3,.6,-.6,.95,-.95,1.3,-1.3,1.7,-1.7]){const a=base+off,nx=px+Math.cos(a)*150,ny=py+Math.sin(a)*150;if(ok(nx,ny)&&ok((px+nx)/2,(py+ny)/2)){px=nx;py=ny;mv=true;break}}
-    if(!mv)break;pts.push([Math.round(px-B.ox),Math.round(py-B.oy)])}
-   if(pts.length>2){B.routes.push(pts);BEACH.camino=pts.length}}
+  // (sin camino de tierra playa → aldea: quitado el 30 oct 2026)
   console.info('[PLAYA] playa en',BEACH)}catch(e){console.warn('[PLAYA] retarget falló',e)}}
  let inited=0;const init=()=>{if(inited)return;inited=1;retarget();addProps()};   // game.js lo llama justo ANTES de `PROPS.build()` (el mapa A y TER ya existen; al cargar este script aún no)
  const TXT={

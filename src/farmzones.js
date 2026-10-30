@@ -71,7 +71,7 @@ const FARM=(()=>{
     if(A.chest){const px=Math.round(C.x+Math.cos(toV+2.4)*R*.16),py=Math.round(C.y+Math.sin(toV+2.4)*R*.16);(B.pois||(B.pois=[])).push({id:'F'+A.id,k:'cofre',n:A.chest,x:px,y:py,r:70,tier:2,em:'🧰'});stats.cofres=(stats.cofres||0)+1}
     // ── suelo y camino ──
     if(A.dirt){V.plaza.push([C.x,C.y,Math.round(R*A.dirt)]);for(let i=0;i<6;i++){const a=H(k*31+ai,i,7)*TAU,r=R*A.dirt*(.55+.5*H(k*31+ai,i,8));V.plaza.push([Math.round(C.x+Math.cos(a)*r),Math.round(C.y+Math.sin(a)*r),Math.round(R*A.dirt*(.42+.3*H(k*31+ai,i,9)))])}}   // mancha irregular de tierra pisada (varios círculos solapados, no un disco)
-    {const pts=[],L=Math.hypot(C.x-c0[0],C.y-c0[1]),n=Math.floor((L-R*.55-380)/150);if(n>2){for(let i=0;i<=n;i++){const f=(380+i*150)/L,w=Math.sin(i*1.3+ai)*26*Math.min(1,i/2),x=Math.round(c0[0]+(C.x-c0[0])*f-Math.sin(toV)*w),y=Math.round(c0[1]+(C.y-c0[1])*f+Math.cos(toV)*w);if(!land(B,k,x,y,12))break;pts.push([x,y])}if(pts.length>2){B.routes.push(pts);stats.rutas++}}}
+    // (sin camino de tierra hacia el área: se quitaron los caminos extra por área, 30 oct 2026; el dueño los consideró excesivos)
     // ── registrar: enemigos + zona (game.js lee B.fauna), rectángulo reservado, ficha para mapa/diario ──
     const z=[C.x-R,C.x+R,C.y-R,C.y+R];fa.push({z,mobs:Z.mobs,t:A.em+' '+A.n,farm:1});B.spots['f'+ni++]={id:A.id,t:A.em+' '+A.n,z,mobs:[],decor:[]};(B.farm=B.farm||[]).push({id:A.id,n:A.n,em:A.em,x:C.x,y:C.y,R,mobs:A.mobs.map(m=>m[0])});
     stats.zonas++;stats.mobs+=Z.mobs.length;stats.props+=np});

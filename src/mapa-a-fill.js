@@ -103,8 +103,7 @@
     B.village.props.push(P('puenteAntiguo',Math.round(lx),Math.round(ly),{rot:dir},{keep:1}),P('arbusto',Math.round(lx+ax[0]*(e+40)+pp[0]*70),Math.round(ly+ax[1]*(e+40)+pp[1]*70),null,{keep:1}),P('piedra',Math.round(lx-ax[0]*(e+36)-pp[0]*66),Math.round(ly-ax[1]*(e+36)-pp[1]*66),null,{keep:1}));
     (B.pois||(B.pois=[])).push({id:'LB',k:'hito',n:'Puente de piedra antiguo',em:'🌉',x:Math.round(lx),y:Math.round(ly),r:230,rv:14,tier:1});{const NAT=/^(pino|abedul|roble|fresno|sauce|arce|tejo|ebano|caoba|baobab|ceniza|mundo|arbusto|roca|piedra|arbolSeco|tocon|tronco|seta|cerezo|junco)$/;let cl=0;   // despejar el paso: sin árboles ni rocas sobre el tablero ni en las rampas de acceso
      B.village.props.forEach(q=>{if(q.keep||q._del||!NAT.test(q.n))return;const dx=q.x-lx,dy=q.y-ly,t=dx*ax[0]+dy*ax[1],pr=dx*pp[0]+dy*pp[1];if(Math.abs(t)<run/2+190&&Math.abs(pr)<96){q._del=1;cl++}});st.puenteDespejados=cl}
-    {const s1=[cx+ax[0]*e,cy+ax[1]*e],s2=[cx-ax[0]*e,cy-ax[1]*e],V=[B.ox+c0[0],B.oy+c0[1]],E=Math.hypot(s1[0]-V[0],s1[1]-V[1])<Math.hypot(s2[0]-V[0],s2[1]-V[1])?s1:s2,L=Math.hypot(E[0]-V[0],E[1]-V[1]),n=Math.floor((L-380)/150),pts=[];   // camino de tierra desde la aldea hasta la rampa del puente
-     if(n>2){for(let i=0;i<=n;i++){const f=(380+i*150)/L,w=Math.sin(i*1.1)*22*Math.min(1,i/2),x=V[0]+(E[0]-V[0])*f+w,y=V[1]+(E[1]-V[1])*f;if(!lnd(x,y))break;pts.push([Math.round(x-B.ox),Math.round(y-B.oy)])}if(pts.length>2){B.routes.push(pts);st.puenteCamino=pts.length}}}
+    // (sin camino de tierra hasta el puente: quitado el 30 oct 2026)
     TER.reset&&TER.reset();st.puente=[Math.round(cx),Math.round(cy),dir,run]}
    else st.puente='sin sitio'}}
  MA.fill=st;st.ms=Math.round(performance.now()-t0);
