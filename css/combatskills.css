@@ -1,0 +1,58 @@
+/* Habilidades de combate (src/combatskills.js): pestaña «Habilidades» (Z) con el árbol por arma, y animaciones de la barra #hs-sk. Sin backdrop-filter (regla de rendimiento §P). */
+#pn .kw{display:flex;flex-direction:column;gap:.5em;font-size:13px}
+#pn .kw button{font:inherit;color:inherit;cursor:pointer}
+#pn .kw-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:.3em}
+#pn .kw-tabs button{display:flex;flex-direction:column;align-items:center;gap:.05em;padding:.35em .2em;background:rgba(255,255,255,.04);border:1px solid rgba(232,207,148,.2);border-radius:4px;position:relative}
+#pn .kw-tabs button span{font-size:1.35em;line-height:1}#pn .kw-tabs button b{font-weight:600;font-size:.82em}
+#pn .kw-tabs button:hover{border-color:rgba(232,207,148,.6)}
+#pn .kw-tabs button.on{border-color:#e8cf94;background:rgba(232,207,148,.16)}
+#pn .kw-tabs button.eq::after{content:"";position:absolute;right:.35em;top:.35em;width:.5em;height:.5em;border-radius:50%;background:#9ad08a;box-shadow:0 0 5px #9ad08a}
+#pn .kw-note{font-size:.88em;opacity:.8;padding:.3em .5em;border-left:2px solid rgba(232,207,148,.35)}#pn .kw-note.ok{border-color:#9ad08a;opacity:.9}
+#pn .kw-t{margin-top:.3em;font:600 .82em Cinzel,Georgia,serif;letter-spacing:.09em;text-transform:uppercase;color:#e8cf94}
+#pn .kw-t small{font:400 1.05em Spectral,Georgia,serif;text-transform:none;letter-spacing:0;opacity:.7;margin-left:.5em}
+#pn .kw-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:.3em}
+#pn .kw-bar button{position:relative;height:4.6em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.1em;padding:.2em .1em;background:rgba(0,0,0,.25);border:1px solid rgba(232,207,148,.3);border-radius:4px;color:var(--c,#e8cf94)}
+#pn .kw-bar button.e{opacity:.5;color:#999}#pn .kw-bar button.sel{border-color:#e8cf94;box-shadow:0 0 8px rgba(232,207,148,.45)}
+#pn .kw-bar button:hover{border-color:#e8cf94}
+#pn .kw-bar b{position:absolute;left:.3em;top:.1em;font:600 .75em Cinzel,Georgia,serif;color:#d8cdb4;opacity:.85}
+#pn .kw-bar span svg{width:1.5em;height:1.5em;display:block}#pn .kw-bar small{font-size:.68em;line-height:1.05;text-align:center;color:#d8cdb4}
+#pn .kw-trunk,#pn .kw-bn{display:flex;align-items:center}
+#pn .kl{flex:1 1 4px;min-width:4px;height:2px;background:rgba(232,207,148,.3);margin-bottom:1.4em}
+#pn .kn{position:relative;flex:0 0 auto;width:4.9em;display:flex;flex-direction:column;align-items:center;gap:.1em;padding:.3em .15em;background:rgba(255,255,255,.04);border:1px solid rgba(232,207,148,.25);border-radius:6px;color:var(--c,#e8cf94)}
+#pn .kn .ki{width:2.1em;height:2.1em;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);border:1px solid currentColor}
+#pn .kn .ki svg{width:1.25em;height:1.25em}
+#pn .kn b{font-size:.7em;line-height:1.08;text-align:center;color:#e0d6bc;font-weight:600;min-height:2.2em;display:flex;align-items:center}
+#pn .kn small{font-size:.66em;opacity:.75;color:#d8cdb4}
+#pn .kn.un{box-shadow:inset 0 0 10px rgba(232,207,148,.1)}#pn .kn.un small{color:#9ad08a;opacity:1}
+#pn .kn.lk{opacity:.5;filter:grayscale(.7)}#pn .kn.dm{opacity:.38}
+#pn .kn:hover{border-color:#e8cf94;opacity:1}#pn .kn.sel{border-color:#e8cf94;background:rgba(232,207,148,.16);opacity:1;filter:none}
+#pn .kn u{position:absolute;right:-.2em;top:-.3em;min-width:1.5em;height:1.5em;border-radius:50%;background:#e8cf94;color:#1a140c;text-decoration:none;font:700 .72em Cinzel,Georgia,serif;display:flex;align-items:center;justify-content:center}
+#pn .kn.ks{border-style:dashed}
+#pn .kw-br{border:1px solid rgba(232,207,148,.2);border-radius:6px;padding:.45em .5em;background:rgba(255,255,255,.025);display:flex;flex-direction:column;gap:.3em}
+#pn .kw-br.on{border-color:#e8cf94;background:rgba(232,207,148,.08)}
+#pn .kw-bh{display:flex;align-items:center;gap:.5em;justify-content:space-between}
+#pn .kw-bh div{display:flex;flex-direction:column}#pn .kw-bh b{color:#e8cf94}#pn .kw-bh small{font-size:.78em;opacity:.75;line-height:1.15}
+#pn .kw-go{flex:none;background:rgba(232,207,148,.14);border:1px solid #e8cf94;border-radius:4px;padding:.3em .6em;font-weight:600}
+#pn .kw-go:hover{background:rgba(232,207,148,.3)}
+#pn .kw-on{flex:none;text-decoration:none;color:#9ad08a;font-weight:600;font-size:.85em}#pn .kw-lk{flex:none;text-decoration:none;opacity:.55;font-size:.82em}
+#pn .kd{margin-top:.2em;border:1px solid rgba(232,207,148,.3);border-radius:6px;padding:.55em .65em;background:#14100b;display:flex;flex-direction:column;gap:.3em;position:sticky;bottom:-1px;box-shadow:0 -8px 10px #100d0a}
+#pn .kd.hint{opacity:.7;font-size:.9em;border-style:dashed}
+#pn .kd-h{display:flex;align-items:center;gap:.5em}#pn .kd-h svg{width:1.8em;height:1.8em;display:block}#pn .kd-h b{color:#e8cf94;font-size:1.05em}#pn .kd-h em{font-style:normal;color:#e8cf94}
+#pn .kd p{margin:0;font-size:.92em}#pn .kd small{font-size:.8em;opacity:.75}
+#pn .kd-w{color:#e8a070}
+#pn .kd-s{display:flex;align-items:center;gap:.3em;font-size:.88em}
+#pn .kd-s button{width:2em;height:2em;border-radius:4px;background:rgba(232,207,148,.1);border:1px solid rgba(232,207,148,.4);font-weight:700}
+#pn .kd-s button:hover{background:rgba(232,207,148,.3)}#pn .kd-s button.on{background:#e8cf94;color:#1a140c}
+#pn .kd-k{display:grid;grid-template-columns:1fr 1fr;gap:.4em}
+#pn .kd-k button{text-align:left;display:flex;flex-direction:column;gap:.15em;padding:.4em .5em;background:rgba(232,207,148,.08);border:1px solid rgba(232,207,148,.35);border-radius:4px}
+#pn .kd-k button.on{border-color:#e8cf94;background:rgba(232,207,148,.25)}#pn .kd-k button:hover{border-color:#e8cf94}
+#pn .kd-k small{opacity:.8}
+
+/* barra de habilidades: destello al lanzar y al volver a estar lista */
+#hs-sk .s.pop{animation:cskpop .26s ease-out}
+#hs-sk .s.rdy{animation:cskrdy .45s ease-out}
+@keyframes cskpop{0%{transform:scale(1.28);filter:brightness(2)}100%{transform:scale(1);filter:none}}
+@keyframes cskrdy{0%{box-shadow:0 0 0 0 var(--c,#e8cf94);filter:brightness(1.7)}60%{box-shadow:0 0 10px 3px var(--c,#e8cf94)}100%{box-shadow:0 0 0 0 transparent;filter:none}}
+
+/* Buffs/debuffs del jugador (#hs-fx) BAJO la barra de habilidades (#hs-sk, absoluta bajo el marco): sin esto se solapaban. */
+#hs .hs-pl:has(.sk[style*="flex"]) .hs-fx{margin-top:2.55em}

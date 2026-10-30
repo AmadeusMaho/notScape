@@ -21,7 +21,7 @@ JS=r"""()=>{const out={};const save=JSON.stringify(S);
  const gear=l=>{let wi=-1;IL.forEach((v,i)=>{if(l>=v)wi=i});let ai=-1;AL.forEach((v,i)=>{if(l>=v)ai=i});return['sw_'+(wi>=0?TI[wi][0]:'cobre'),ai>=0?'ar_'+TI[ai][0]:'ar_cuero']};
  const fight=(l,id,mlv)=>{S.xp.cb=XT[l];const g=gear(l);S.eq.w=g[0];S.eq.a=g[1];S.eq.h=S.eq.f=S.eq.r=S.eq.r2=S.eq.n=null;S.vig=0;S.fzr=0;S.dfs=0;S.buf={};
   const d=MD[id],f=MSF[id],hp=Math.max(3,Math.round(HPF(mlv)*f[0])),dm=f[1]?Math.max(1,Math.round(DMF(mlv)*f[1])):0,m={d,lv:mlv,hp,mh:hp,dm};
-  const mhit=maxHit(),hc=hitChance(m),ms=atkMs(),avg=(1+mhit)/2,dps=Math.max(.001,hc*avg*(1000/ms));
+  const mhit=maxHit(),hc=hitChance(m),ms=atkMs(),avg=(1+mhit)/2,dps=Math.max(.001,hc*avg*(1000/ms))*(1+(typeof CSK!=='undefined'?CSK.UPLIFT:0));   // habilidades de combate: +UPLIFT de DPS con uso medio (combatskills.js)
   const kt=hp/dps,ma=monAcc(m),mdps=ma*(dm/2)*(1000/(d.as||2400)),loss=kt*mdps/maxHp();
   return{dps,kt,loss,hc,mhit,xps:dps*xpMul(m),mdps,hp,dm,maxhp:maxHp()}};
  const ids=Object.keys(LVR);

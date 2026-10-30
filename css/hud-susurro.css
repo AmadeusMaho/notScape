@@ -641,15 +641,15 @@ body.hs-on #fp .tap{filter:drop-shadow(0 0 2px rgba(232,207,148,.6))}
 
 /* ═══ Nameplates de enemigos (21 oct 2026): barra plana ancha con filo dorado, nombre a la izquierda, % a la derecha y el nivel en su propia caja (referencia: Forever Simple Skin) ═══ */
 #nps{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden;font-size:var(--hu,16px);font-family:"Cinzel",Georgia,serif}
-.np{position:absolute;left:0;top:0;display:flex;align-items:stretch;gap:.28em;will-change:transform;white-space:nowrap;--ac:#e8cf94;--lc:#f1e7d2}
-.npb{position:relative;width:6.2em;height:1.08em;display:flex;align-items:center;justify-content:space-between;gap:.5em;padding:0 .55em;border-radius:.3em;background:rgba(14,12,10,.84);border:1px solid var(--ac);box-shadow:0 .1em .55em rgba(0,0,0,.55),inset 0 0 .5em rgba(0,0,0,.5);overflow:hidden}
+.np{position:absolute;left:0;top:0;display:flex;align-items:stretch;gap:.28em;white-space:nowrap;--ac:#e8cf94;--lc:#f1e7d2}   /* sin will-change: con ~15 placas visibles cada una era una capa propia del compositor y costaba ~40 % del fotograma (29 oct 2026) */
+.npb{position:relative;width:6.2em;height:1.08em;display:flex;align-items:center;justify-content:space-between;gap:.5em;padding:0 .55em;border-radius:.3em;background:rgba(14,12,10,.84);border:1px solid var(--ac);box-shadow:0 .08em .25em rgba(0,0,0,.6),inset 0 0 .3em rgba(0,0,0,.45);overflow:hidden}
 .npb i,.npb u{position:absolute;left:0;top:0;bottom:0;width:100%;text-decoration:none}
 .npb u{background:rgba(240,225,190,.5);transition:width .5s ease-out}
 .npb i{background:linear-gradient(180deg,#d8493e,#8e1f1a);box-shadow:inset 0 .12em .2em rgba(255,255,255,.18);transition:width .18s ease-out;z-index:1}
 .npt,.npp{position:relative;z-index:2;font:700 .58em "Cinzel",Georgia,serif;letter-spacing:.06em;color:#f6ecd2;text-shadow:0 0 .3em #000,0 .06em .08em #000,0 0 .1em #000}
 .npt{overflow:hidden;text-overflow:ellipsis;max-width:4.2em}
 .npp{font-size:.52em;margin:0}.npp{font-style:normal}
-.npl{display:grid;place-items:center;min-width:1.3em;padding:0 .28em;border-radius:.3em;font:700 .58em "Cinzel",Georgia,serif;color:var(--lc);background:rgba(14,12,10,.84);border:1px solid var(--ac);box-shadow:0 .1em .55em rgba(0,0,0,.55),inset 0 0 .5em rgba(0,0,0,.5);text-shadow:0 0 .3em #000}
+.npl{display:grid;place-items:center;min-width:1.3em;padding:0 .28em;border-radius:.3em;font:700 .58em "Cinzel",Georgia,serif;color:var(--lc);background:rgba(14,12,10,.84);border:1px solid var(--ac);box-shadow:0 .08em .25em rgba(0,0,0,.6),inset 0 0 .3em rgba(0,0,0,.45);text-shadow:0 0 .3em #000}
 .np.easy{--lc:#8fd48a}.np.mid{--lc:#f0b45a}.np.hard{--lc:#ff7a66}
 .np.boss{--ac:#d9a441}.np.boss .npb{width:8.4em;height:1.3em}.np.boss .npt{font-size:.64em;max-width:5.8em;color:#ffe7a8}
 .np.boss .npb i{background:linear-gradient(180deg,#f0b84a,#a8691a)}
