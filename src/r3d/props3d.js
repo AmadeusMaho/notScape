@@ -31,7 +31,10 @@ initBosque({cardGeo});
 const BO_ON=DARK_ON&&!/[?&]bo=old\b/.test(location.search),BOS=new Set(BO_NAMES);
 // ISLA-3 (21 oct 2026): arquitectura GRIEGA de MÁRMOL del Cielo (propsdark_cielo3d.js). Material de las rocas (sombreado continuo, sin textura procedural); `?ci=old` los desactiva (caen al ORG genérico).
 import {cieloGeo,CI_NAMES,CI_ROCK} from './propsdark_cielo3d.js';
+// MUNDO-HITOS (30 oct 2026): hitos grandes del continente (Torre del Vigía, Roble del Pacto, torre en ruinas) → propsdark_hitos3d.js. `?hi=old` los desactiva.
+import {hitosGeo,HI_NAMES,HI_BK,HI_ROCK} from './propsdark_hitos3d.js';
 const CI_ON=DARK_ON&&!/[?&]ci=old/.test(location.search),CIS=new Set(CI_NAMES);
+const HI_ON=DARK_ON&&!/[?&]hi=old/.test(location.search),HIS=new Set(HI_NAMES);
 const nhash=(a,b,c)=>{const h=Math.sin(a*127.1+b*311.7+c*74.7)*43758.5453;return h-Math.floor(h)};
 
 const FAKE=new Proxy({},{get:(t,k)=>k in t?t[k]:(/^create(Linear|Radial)Gradient$/.test(k)?()=>({addColorStop(){}}):k==='measureText'?()=>({width:10}):k==='getImageData'?()=>({data:new Uint8ClampedArray(4)}):k==='canvas'?{width:1,height:1}:()=>{}),set:(t,k,v)=>{t[k]=v;return true}});
@@ -43,6 +46,7 @@ export function propGeo(n,o,th){const key=n+'|'+JSON.stringify(o||{})+'|'+(th?JS
  if(n==='arbolSeco'){g=deadTreeGeo(o&&o.rot?2:1);const c=new THREE.Color('#3a2f2a'),C=new Float32Array(g.attributes.position.count*3);for(let i=0;i<C.length;i+=3){C[i]=c.r;C[i+1]=c.g;C[i+2]=c.b}g.setAttribute('color',new THREE.BufferAttribute(C,3));g.setAttribute('aEmit',new THREE.BufferAttribute(new Float32Array(C.length/3),1));GEO.set(key,{g,key});return GEO.get(key)}   // árbol seco rehecho (guía §4.5)
  if(BO_ON&&BOS.has(n)){const D=bosqueGeo(n,o,th);if(D){GEO.set(key,D);return D}}
  if(CI_ON&&CIS.has(n)){const D=cieloGeo(n,o,th);if(D){GEO.set(key,D);return D}}
+ if(HI_ON&&HIS.has(n)){const D=hitosGeo(n,o,th);if(D){GEO.set(key,D);return D}}
  if(DARK_ON){const D=darkGeo(n,o,th);if(D){GEO.set(key,D);return D}}
  if(NAT_ON&&NATS.has(n)){const D=natGeo(n,o,th);if(D){GEO.set(key,D);return D}}
  if(PR_ON&&PRS.has(n)){const D=praderaGeo(n,o,th);if(D){GEO.set(key,D);return D}}
@@ -85,9 +89,9 @@ export class Props{
  *buildGen(){const T0=performance.now();this.prog=0;this.fp=[];this.fpVer=(this.fpVer||0)+1;[this.grp,this.ogrp].forEach(g=>{while(g.children.length){const c=g.children.pop();c.dispose&&c.dispose()}g.userData.sec=null});
   const groups=new Map(),o3=new THREE.Object3D();let ok=0,fail=0,TG=0,TH=0;
   let nn=0;const NL=Math.max(1,PROPS.list.length);
-  for(const e of PROPS.list){if((++nn&63)===0){this.prog=nn/NL*.5;yield}const T1=performance.now(),k=e.k!=null?e.k:Math.max(0,BIOMES.at(e.x,e.y)),th=BIOMES.list[k]&&BIOMES.list[k].village.theme||null,G=propGeo(e.n,NAT_ON&&NATS.has(e.n)?Object.assign({bk:k,v:NAT_VAR[e.n]?Math.floor(nhash(e.x,e.y,5)*NAT_VAR[e.n]):0},e.o):PR_ON&&PR_BK.has(e.n)||OF_ON&&OF_BK.has(e.n)||BO_ON&&BO_BK.has(e.n)?Object.assign({bk:k},e.o):e.o,th);TG+=performance.now()-T1;if(!G){fail++;continue}
+  for(const e of PROPS.list){if((++nn&63)===0){this.prog=nn/NL*.5;yield}const T1=performance.now(),k=e.k!=null?e.k:Math.max(0,BIOMES.at(e.x,e.y)),th=BIOMES.list[k]&&BIOMES.list[k].village.theme||null,G=propGeo(e.n,NAT_ON&&NATS.has(e.n)?Object.assign({bk:k,v:NAT_VAR[e.n]?Math.floor(nhash(e.x,e.y,5)*NAT_VAR[e.n]):0},e.o):PR_ON&&PR_BK.has(e.n)||OF_ON&&OF_BK.has(e.n)||BO_ON&&BO_BK.has(e.n)||HI_ON&&HI_BK.has(e.n)?Object.assign({bk:k},e.o):e.o,th);TG+=performance.now()-T1;if(!G){fail++;continue}
    const ck=G.key+'@'+Math.floor(e.x/(32*CELL))+','+Math.floor(e.y/(32*CELL));let a=groups.get(ck);if(!a)groups.set(ck,a={G,list:[],s:scaleOf(e.n,G),cx:Math.floor(e.x/(32*CELL)),cy:Math.floor(e.y/(32*CELL))});a.list.push(e);ok++}   // por modelo Y por zona de CELL×CELL tiles: así se descartan las zonas fuera de cámara
-  this.sd=new Map();this.built=new Set();let gg=0;const NG=Math.max(1,groups.size);for(const gr of groups.values()){if((++gg&31)===0){this.prog=.5+gg/NG*.5;yield}const {G,list,s:PS,cx,cy}=gr,isRock=NAT_ON&&(list[0].n==='roca'||list[0].n==='piedra'||list[0].n==='bocaCueva')||CI_ON&&CI_ROCK.has(list[0].n);gr.isRock=isRock;
+  this.sd=new Map();this.built=new Set();let gg=0;const NG=Math.max(1,groups.size);for(const gr of groups.values()){if((++gg&31)===0){this.prog=.5+gg/NG*.5;yield}const {G,list,s:PS,cx,cy}=gr,isRock=NAT_ON&&(list[0].n==='roca'||list[0].n==='piedra'||list[0].n==='bocaCueva')||CI_ON&&CI_ROCK.has(list[0].n)||HI_ON&&HI_ROCK.has(list[0].n);gr.isRock=isRock;
    const T2=performance.now();if(!G.hull)G.hull=hull(G.g,isRock?.012:.016).geometry;TH+=performance.now()-T2;
    {const bb=G.g.boundingBox;if(bb&&bb.max.y>.25){const sx=Math.max(.3,(bb.max.x-bb.min.x)*.5*1.35*PS),sz=Math.max(.3,(bb.max.z-bb.min.z)*.5*1.35*PS),cx=(bb.max.x+bb.min.x)*.5*PS,cz=(bb.max.z+bb.min.z)*.5*PS;list.forEach(e=>this.fp.push({x:e.x,y:e.y,cx,cz,sx:Math.min(sx,4),sz:Math.min(sz,4),h:bb.max.y*PS,n:e.n}))}}   // F3f·P3A: huella de la malla para la sombra de contacto (contact3d.js)
    const sx=Math.floor(cx/4),sy=Math.floor(cy/4),sk=sx*1000+sy;let S=this.sd.get(sk);if(!S)this.sd.set(sk,S={sk,gr:[],c:this.W3((sx+.5)*4*CELL*32,(sy+.5)*4*CELL*32,0)});S.gr.push(gr)}

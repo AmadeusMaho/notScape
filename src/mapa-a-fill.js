@@ -32,7 +32,7 @@
    st.vadosReales++;
    for(let c=0;c<w*h;c++)if(ford[c]&&HG[c]===.75)HG[c]=1;   // el vado ya es suelo para la inundación siguiente
    comp=flood(base)}
-  MA.ford=(x,y)=>x>=0&&y>=0&&ford[((y/T/S)|0)*w+((x/T/S)|0)]===1;
+  MA.ford=(x,y)=>x>=0&&y>=0&&ford[((y/T/S)|0)*w+((x/T/S)|0)]===1;MA.fordAdd=(x,y)=>{if(x>=0&&y>=0&&x/T/S<w&&y/T/S<h)ford[((y/T/S)|0)*w+((x/T/S)|0)]=1};   // pasos extra (puente de piedra antiguo de la Pradera)
   // ── CAMINOS A* ENTRE ALDEAS con PUENTES (27 oct 2026) ── red = cadena de progresión (Pradera→Bosque→Pantano→Cumbres→Páramo→Desierto→Oriental→Costa→Volcán) + Pradera–Costa (puerto) y Desierto–Volcán.
   // A* de 4 vecinos sobre la rejilla de 4 tiles (la ruta es 4-conexa: los puentes quedan de una celda de ancho y no se cortan en diagonal). Coste: suelo 1 (+ruido de hash ≤ .35 para que serpentee), agua 14 (puente),
   // camino ya trazado 0,4 (los troncales se funden); acantilado/montaña/mar impasables. Cada celda de AGUA de la ruta pasa a ser vado (`ford`) y pasarela (`MA.bridgeList` → DK 2 = E–O, 3 = N–S, que terrain3d ya dibuja
@@ -87,6 +87,26 @@
    let shore=false;for(const r of[40,64,90]){for(let a=0;a<12&&!shore;a++){if(TER.isLand(TER.heightAt(x+Math.cos(a*.5236)*r,y+Math.sin(a*.5236)*r)))shore=true}if(shore)break}if(!shore)continue;
    const lp=last[k]||(last[k]=[]);if(lp.some(p=>Math.hypot(p[0]-x,p[1]-y)<380))continue;lp.push([x,y]);
    const L=B.lay||(B.lay={}),fi=L.fi||(L.fi=[]),lx=x-B.ox,ly=y-B.oy;B.res.fi.push(B.res.fi[0].map(([i])=>[i,2]));fi.push({z:[lx-170,lx+170,ly-150,ly+150],t:'Río'});cnt[k]=(cnt[k]||0)+1}}
+ // ── PUENTE DE PIEDRA ANTIGUO (hito menor de la Pradera; `?bridge=0` lo apaga): se busca en la región de la Pradera un RÍO estrecho (56–190 px de ancho, que sigue a ambos lados) con orilla firme a los dos extremos, lo más cerca posible de la aldea; ──
+ // se talla el vado bajo el tablero (`MA.fordAdd`), se pone el modelo `puenteAntiguo` (propsdark_hitos3d.js, gira con `rot` si cruza de N a S) y un hito 🌉 que revela el mapa. Sin colisión propia: el tablero es el vado.
+ {const B=list[0],P=BIOMES.tk&&BIOMES.tk.P;if(B&&P&&MA.fordAdd&&B.cen&&!/[?&]bridge=0/.test(location.search)){const c0=B.cen,T2=32,wat=(x,y)=>!TER.isLand(TER.heightAt(x,y)),lnd=(x,y)=>TER.isLand(TER.heightAt(x,y))&&!TER.cliffNear(x,y,14)&&TER.sandAt(Math.floor(x/T2),Math.floor(y/T2))<.5&&!TER.mtnAt(x,y);
+   const rect=Object.values(B.spots||{}).map(s=>s.z).filter(Boolean),pois=B.pois||[];let best=null;
+   for(let ring=1500;ring<=8000&&!best;ring+=160)for(let a=0;a<72&&!best;a++){const ang=(a*5+(ring/160%5))*Math.PI/180,wx=Math.round(B.ox+c0[0]+Math.cos(ang)*ring),wy=Math.round(B.oy+c0[1]+Math.sin(ang)*ring);
+    if(BIOMES.own(wx,wy)!==0||!wat(wx,wy))continue;
+    for(const dir of[0,1]){const ax=dir?[0,1]:[1,0],pp=dir?[1,0]:[0,1];let lo=0,hi=0;while(lo>-320&&wat(wx+ax[0]*(lo-8),wy+ax[1]*(lo-8)))lo-=8;while(hi<320&&wat(wx+ax[0]*(hi+8),wy+ax[1]*(hi+8)))hi+=8;
+     const run=hi-lo;if(run<56||run>190)continue;const mid=(hi+lo)/2,cx=wx+ax[0]*mid,cy=wy+ax[1]*mid,lx=cx-B.ox,ly=cy-B.oy,e=run/2+70;
+     if(!lnd(cx+ax[0]*e,cy+ax[1]*e)||!lnd(cx-ax[0]*e,cy-ax[1]*e))continue;                                   // orilla firme a los dos extremos
+     if(!wat(cx+pp[0]*90,cy+pp[1]*90)||!wat(cx-pp[0]*90,cy-pp[1]*90))continue;                                // el río sigue a ambos lados (no es la esquina de un lago)
+     if(rect.some(z=>lx>z[0]-170&&lx<z[1]+170&&ly>z[2]-170&&ly<z[3]+170)||pois.some(q=>Math.hypot(q.x-lx,q.y-ly)<420))continue;
+     best={cx,cy,lx,ly,dir,run,ax,pp}}}
+   if(best){const{cx,cy,lx,ly,dir,run,ax,pp}=best,e=run/2+72;for(let t=-e;t<=e;t+=24)for(let q=-60;q<=60;q+=30)MA.fordAdd(cx+ax[0]*t+pp[0]*q,cy+ax[1]*t+pp[1]*q);
+    B.village.props.push(P('puenteAntiguo',Math.round(lx),Math.round(ly),{rot:dir},{keep:1}),P('arbusto',Math.round(lx+ax[0]*(e+40)+pp[0]*70),Math.round(ly+ax[1]*(e+40)+pp[1]*70),null,{keep:1}),P('piedra',Math.round(lx-ax[0]*(e+36)-pp[0]*66),Math.round(ly-ax[1]*(e+36)-pp[1]*66),null,{keep:1}));
+    (B.pois||(B.pois=[])).push({id:'LB',k:'hito',n:'Puente de piedra antiguo',em:'🌉',x:Math.round(lx),y:Math.round(ly),r:230,rv:14,tier:1});{const NAT=/^(pino|abedul|roble|fresno|sauce|arce|tejo|ebano|caoba|baobab|ceniza|mundo|arbusto|roca|piedra|arbolSeco|tocon|tronco|seta|cerezo|junco)$/;let cl=0;   // despejar el paso: sin árboles ni rocas sobre el tablero ni en las rampas de acceso
+     B.village.props.forEach(q=>{if(q.keep||q._del||!NAT.test(q.n))return;const dx=q.x-lx,dy=q.y-ly,t=dx*ax[0]+dy*ax[1],pr=dx*pp[0]+dy*pp[1];if(Math.abs(t)<run/2+190&&Math.abs(pr)<96){q._del=1;cl++}});st.puenteDespejados=cl}
+    {const s1=[cx+ax[0]*e,cy+ax[1]*e],s2=[cx-ax[0]*e,cy-ax[1]*e],V=[B.ox+c0[0],B.oy+c0[1]],E=Math.hypot(s1[0]-V[0],s1[1]-V[1])<Math.hypot(s2[0]-V[0],s2[1]-V[1])?s1:s2,L=Math.hypot(E[0]-V[0],E[1]-V[1]),n=Math.floor((L-380)/150),pts=[];   // camino de tierra desde la aldea hasta la rampa del puente
+     if(n>2){for(let i=0;i<=n;i++){const f=(380+i*150)/L,w=Math.sin(i*1.1)*22*Math.min(1,i/2),x=V[0]+(E[0]-V[0])*f+w,y=V[1]+(E[1]-V[1])*f;if(!lnd(x,y))break;pts.push([Math.round(x-B.ox),Math.round(y-B.oy)])}if(pts.length>2){B.routes.push(pts);st.puenteCamino=pts.length}}}
+    TER.reset&&TER.reset();st.puente=[Math.round(cx),Math.round(cy),dir,run]}
+   else st.puente='sin sitio'}}
  MA.fill=st;st.ms=Math.round(performance.now()-t0);
  console.info('[MAPA A relleno]',JSON.stringify(st.por),st.ms+' ms');
 })();

@@ -27,7 +27,7 @@ function sash(w,prof,off=.016){const N=40,P=[],I=[],V=THREE.Vector3,R=y=>{for(le
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setIndex(I);g.computeVertexNormals();return g}
 
 export class Mini{
- static DRESS_OK=['ru','anciano','aldeana','hechicera','bruja','b2','k2','heroe-mago'];   // 'heroe-mago' = héroe con peto de TELA (túnica, armor3d.js)   // PNJ femeninos (Ru, Aldeana) y MAGOS (túnica larga): decisión del dueño, 18 oct 2026
+ static DRESS_OK=['ru','anciano','aldeana','hechicera','bruja','b2','k2','goblinsha','heroe-mago'];   // 'heroe-mago' = héroe con peto de TELA (túnica, armor3d.js)   // PNJ femeninos (Ru, Aldeana) y MAGOS (túnica larga): decisión del dueño, 18 oct 2026
  constructor(s){this.spec=s;this.hulls=[];this.obj=new THREE.Group();const g=this.root=new THREE.Group();this.obj.add(g);this.ph=s.ph||0;
   const FC=!!s.facet,k=s.k||1,robe=s.robe,skin=shade(s.skin||'#e2b890',.76),W=s.w||1;this.k=k;this.W=W;
   const pelvis=this.pelvis=new THREE.Group();pelvis.position.set(0,.42,0);g.add(pelvis);

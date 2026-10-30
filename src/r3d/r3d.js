@@ -266,7 +266,9 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
  // copia `sRT` al mapa real (copia nativa de color y profundidad, `blitFramebuffer`) y encima se dibuja solo lo que se MUEVE (actores, objetos…). Mismo mapa, mismas matrices,
  // mismo filtro PCF: la luz de día y de noche (faroles, linterna, luces dinámicas: no usan este mapa) se ve igual. Opción «Sombra en caché» (Ajustes avanzados); en interiores, apagada.
  let sRT=null,sKey='',sT=-1e9,sDirty=true,sChunks=-1;const sHid=[],sBasis={x:new THREE.Vector3(),y:new THREE.Vector3(),z:new THREE.Vector3()},sC=new THREE.Vector3();
- const sStatic=()=>[terr.grp,props.grp,sta.grp,res.grp];
+ /* BOSQUES DENSOS (30 oct 2026): en calidad Media o menor los ÁRBOLES/recursos no proyectan sombra del sol (tris y llamadas del pase de sombra a la mitad en un bosque); el suelo, los props y los actores sí. Alta/Máxima: solo las copas (los troncos no, ver nature3d.js). */
+ const shTrees=()=>true;let sTr=true;   // decisión del dueño (30 oct): los árboles proyectan sombra en TODAS las calidades; si el bosque no cabe en el presupuesto se aclara (props.js `thinForest`), no se quitan sombras
+ const sStatic=()=>shTrees()?[terr.grp,props.grp,sta.grp,res.grp]:[terr.grp,props.grp,sta.grp];
  const shadowF9On=()=>!sBad&&!(typeof gfx==='function'&&!gfx('shcache'))&&!rooms.on&&!dry&&!!sun.shadow.map;
  // three solo deja dibujar sombras DENTRO de un render() (fuera, su estado de render es nulo): el trabajo se lanza desde el onBeforeRender de un triángulo vacío e invisible QUE VIVE EN LA
  // PROPIA ESCENA (renderOrder mínimo = se procesa el primero): mismo estado de luces → mismos programas de profundidad que la sombra normal (con una escena aparte salían 5 programas nuevos).
@@ -281,12 +283,12 @@ const aBack=new THREE.DirectionalLight('#7fa3ad',1);aScene.add(aBack,aBack.targe
   const u=tgt.dot(sBasis.x),v=tgt.dot(sBasis.y),w=tgt.dot(sBasis.z),iu=Math.round(u/st),iv=Math.round(v/st),iw=Math.round(w/4);sC.copy(tgt).addScaledVector(sBasis.x,iu*st-u).addScaledVector(sBasis.y,iv*st-v).addScaledVector(sBasis.z,iw*4-w);   // también en PROFUNDIDAD (eje del sol, pasos de 4 u.): si no, la profundidad de toda la caché quedaba desfasada al moverse y las sombras temblaban
   sun.position.copy(sC).addScaledVector(sBasis.z,30);sun.target.position.copy(sC);sun.updateMatrixWorld();sun.target.updateMatrixWorld();
   if(!sRT||sRT.width!==sz){if(sRT)sRT.dispose();sRT=new THREE.WebGLRenderTarget(sz,sz,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});sDirty=true}
-  const key=iu+','+iv+','+iw+'|'+sz;if(terr.ch.size!==sChunks){sChunks=terr.ch.size;sDirty=true}
+  const key=iu+','+iv+','+iw+'|'+sz;if(terr.ch.size!==sChunks){sChunks=terr.ch.size;sDirty=true}if(shTrees()!==sTr){sTr=shTrees();sDirty=true}
   const SS=sStatic(),sm=r.shadowMap;
   if(key!==sKey||sDirty||now-sT>1200){sKey=key;sDirty=false;sT=now;sSt.refrescos++;sSt.clave=key;   // 1) lo FIJO a sRT
    sHid.length=0;for(const o of scene.children)if(o.visible&&!SS.includes(o)){o.visible=false;sHid.push(o)}
    const real=sh.map;sh.map=sRT;sm.needsUpdate=true;sm.render([sun],scene,cam);sh.map=real;for(const o of sHid)o.visible=true}
-  sHid.length=0;for(const o of SS)if(o&&o.visible){o.visible=false;sHid.push(o)}   // 2) cada fotograma: copia de lo fijo + lo que se MUEVE
+  sHid.length=0;for(const o of SS)if(o&&o.visible){o.visible=false;sHid.push(o)}if(!shTrees()&&res.grp&&res.grp.visible){res.grp.visible=false;sHid.push(res.grp)}   // 2) cada fotograma: copia de lo fijo + lo que se MUEVE
   const oc=r.clear;r.clear=function(){oc.apply(r,arguments);r.clear=oc;const gl=r.getContext(),P=r.properties,fs=P.get(sRT).__webglFramebuffer,fd=P.get(sh.map).__webglFramebuffer;if(!fs||!fd)return;   // copia NATIVA (WebGL2 blitFramebuffer) de color + profundidad de la caché al mapa real
    r.state.bindFramebuffer(gl.READ_FRAMEBUFFER,fs);r.state.bindFramebuffer(gl.DRAW_FRAMEBUFFER,fd);gl.blitFramebuffer(0,0,sz,sz,0,0,sz,sz,gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT,gl.NEAREST);r.state.bindFramebuffer(gl.READ_FRAMEBUFFER,null)};
   try{sm.needsUpdate=true;sm.render([sun],scene,cam)}finally{r.clear=oc;for(const o of sHid)o.visible=true}}

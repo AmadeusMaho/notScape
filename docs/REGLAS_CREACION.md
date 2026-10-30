@@ -324,3 +324,9 @@ Todo oficio con estación usa el LIBRO DE RECETAS (`bookHTML`, `css/craftbook.cs
 
 ## Avisos de desbloqueo (29 oct 2026)
 **Todo desbloqueo nuevo se anuncia con `RECN.unlock({title,sub,items:[{id|em,name}],foot})`** (src/recipenote.js): el letrero deslizante de la izquierda. Ya lo usan recetas, recursos, animales domables, acciones de oficio, habilidades de montura y recetas descubiertas; las futuras habilidades, subclases, zonas o logros deben usarlo en vez de un `banner`/`toast` suelto. `id` = objeto con icono; sin él usa `em` (emoji).
+
+## 0b. UN BIOMA SE CIERRA ANTES DEL SIGUIENTE (dueño, 30 oct 2026; permanente)
+- No se empieza un bioma nuevo hasta que el anterior esté **terminado y pulido al máximo** y el dueño lo apruebe. Hoy: la Pradera. Antes de darlo por cerrado, cada bioma debe tener: aldea y PNJ propios, **áreas de farmeo** (`src/farmzones.js`: una por grupo de enemigos, con decoración, tierra pisada y camino), **hitos grandes y menores** (`propsdark_hitos3d.js` + `LANDM`), **descubrimientos** (`discoveries.js`), **cofres** con su tabla (`chestloot.js`, sin XP), fauna y 9 enemigos propios, y verificación con GPU (capturas, `R3D.budget()` en TODAS las calidades en los puntos más densos, `rules_check`, consola limpia).
+- **Nada se coloca en ríos, orillas ni caminos:** todo prop/recurso/criatura nuevo pasa por `landRing()` (game.js) o `PROPS.pathI()`/`TER.isLand`; `props.js` descarta lo que cae en agua o camino al construir, y `WORLDFIX` (arranque) sanea el resto. Las áreas de farmeo marcan sus props con `keep:1` (llevan su propia tierra pisada).
+- **Los cofres no dan XP:** botín = objetos de la tabla del bioma (`CLOOT.T[k]`) con probabilidades tipo WoW (ver `chestloot.js`).
+- **Bosque denso = presupuesto:** los árboles son lo más caro del mundo; medir `R3D.budget()` en el punto más denso del bioma (Máx, Alta y Media) antes de entregarlo.

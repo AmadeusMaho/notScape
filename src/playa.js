@@ -10,6 +10,26 @@ const PLAYA=(()=>{
  const T=32,GOAL_HAND=4;   // GOALS[4] = «Funde una barra de cobre» (provisional)
  // sitios (tiles LOCALES de la Pradera, x → este, y → sur); la arena queda al sur-oeste, la hierba al norte
  const SP={hero:[152.4,169.1],ru:[154.5,169.5],hut:[153.8,163.6],chest:[156.4,165.7],fire:[150.8,166.4],rack:[157.4,168.6],barrel:[155.6,162.2],net:[149.6,164.6]};
+ // ── LA PLAYA MÁS CERCANA A LA ALDEA (30 oct 2026; el dueño: «te tienes que spawnear en la playa más cercana a la aldea»): con el mapa A la playa fija de la rejilla antigua (tiles locales 150–170) quedaba a ~300 tiles de la aldea.
+ // Se busca, en anillos crecientes desde la plaza, el primer punto de ARENA con MAR al sur (el layout de la cabaña mira a un mar al sur), un rectángulo llano y seco al norte para la cabaña, el baúl, la hoguera y el secadero,
+ // y se desplazan TODOS los sitios (`SP`) ahí. Además se traza un camino de tierra desde la playa hasta la aldea («sigue el camino hacia el norte»). `?beach=0` conserva la playa antigua. `PLAYA.beach` = {x,y,dist} del punto elegido.
+ let BEACH=null;
+ function retarget(){try{const B=BIOMES.list[0];if(!BIOMES.mapA||!B||!B.cen||/[?&]beach=0/.test(location.search))return;
+  const cx=B.ox+B.cen[0],cy=B.oy+B.cen[1],wat=(x,y)=>!TER.isLand(TER.heightAt(x,y)),sea=(x,y)=>wat(x,y)&&TER.seaAt(Math.floor(x/T),Math.floor(y/T));
+  const okSite=(x,y)=>{if(BIOMES.own(x,y)!==0||wat(x,y)||TER.sandAt(Math.floor(x/T),Math.floor(y/T))<.3)return false;let s=false;for(let d=70;d<=300;d+=35)if(sea(x,y+d)){s=true;break}if(!s)return false;
+   for(let u=-3;u<=5;u+=2)for(let v=-11;v<=0;v+=2){const px=x+u*T,py=y+v*T;if(wat(px,py)||TER.cliffNear(px,py,12))return false}return true};   // sitio llano y seco para la cabaña
+  let H=null;for(let r=600;r<=14000&&!H;r+=96)for(let a=0;a<120&&!H;a++){const q=a*3*Math.PI/180,x=Math.round(cx+Math.cos(q)*r),y=Math.round(cy+Math.sin(q)*r);if(okSite(x,y))H=[x,y]}
+  if(!H){console.warn('[PLAYA] sin playa válida: se conserva la antigua');return}
+  const dx=(H[0]-B.ox)/T-SP.hero[0],dy=(H[1]-B.oy)/T-SP.hero[1];for(const k in SP){SP[k][0]+=dx;SP[k][1]+=dy}
+  BEACH={x:H[0],y:H[1],dist:Math.round(Math.hypot(H[0]-cx,H[1]-cy))};
+  // camino de tierra playa → aldea (avance voraz de 150 px hacia la plaza esquivando agua y acantilados)
+  {const pts=[],ok=(x,y)=>BIOMES.own(x,y)===0&&!wat(x,y)&&!TER.cliffNear(x,y,12)&&TER.sandAt(Math.floor(x/T),Math.floor(y/T))<.9;let px=H[0],py=H[1]-6*T;pts.push([Math.round(px-B.ox),Math.round(py-B.oy)]);
+   for(let i=0;i<260;i++){const ddx=cx-px,ddy=cy-py;if(Math.hypot(ddx,ddy)<420)break;const base=Math.atan2(ddy,ddx);let mv=false;
+    for(const off of[0,.3,-.3,.6,-.6,.95,-.95,1.3,-1.3,1.7,-1.7]){const a=base+off,nx=px+Math.cos(a)*150,ny=py+Math.sin(a)*150;if(ok(nx,ny)&&ok((px+nx)/2,(py+ny)/2)){px=nx;py=ny;mv=true;break}}
+    if(!mv)break;pts.push([Math.round(px-B.ox),Math.round(py-B.oy)])}
+   if(pts.length>2){B.routes.push(pts);BEACH.camino=pts.length}}
+  console.info('[PLAYA] playa en',BEACH)}catch(e){console.warn('[PLAYA] retarget falló',e)}}
+ let inited=0;const init=()=>{if(inited)return;inited=1;retarget();addProps()};   // game.js lo llama justo ANTES de `PROPS.build()` (el mapa A y TER ya existen; al cargar este script aún no)
  const TXT={
   wake:['Cien años.','Respira… sigue respirando.','El mar te dejó aquí entero. No sé cómo.','Despacio. No te levantes de golpe.'],
   chest:'Un baúl viejo, hinchado de sal. Dentro hay ropa doblada.',
@@ -30,8 +50,8 @@ const PLAYA=(()=>{
  const ruEnt=()=>{try{return ST.find(e=>e.id==='ru')||null}catch(e){return null}};
  const orsenEnt=()=>{try{return ST.find(e=>e.id==='anciano'&&ownAt(e.x,e.y)===0)||ST.find(e=>e.id==='anciano')||null}catch(e){return null}};
  // ── props de la playa: se añaden a la aldea de la Pradera ANTES de que props.js construya la lista ──
- (function addProps(){try{const b=BIOMES.list[0];if(!b||!b.village||!b.village.props)return;const L=(k)=>({x:SP[k][0]*T,y:SP[k][1]*T});
-  [['cabana','hut',{roof:'#7a5a34',rot:0},[24,20]],['hoguera','fire',null,[8,8]],['secadero','rack',null,[16,10]],['barril','barrel',null,[8,8]],['cestaPeces','net',null,[10,8]]].forEach(([n,k,o,fp])=>{const q=L(k),e={n,x:q.x,y:q.y};if(o)e.o=o;if(fp)e.fp=fp;b.village.props.push(e)})}catch(e){}})();
+ function addProps(){try{const b=BIOMES.list[0];if(!b||!b.village||!b.village.props)return;const L=(k)=>({x:SP[k][0]*T,y:SP[k][1]*T});
+  [['cabana','hut',{roof:'#7a5a34',rot:0},[24,20]],['hoguera','fire',null,[8,8]],['secadero','rack',null,[16,10]],['barril','barrel',null,[8,8]],['cestaPeces','net',null,[10,8]]].forEach(([n,k,o,fp])=>{const q=L(k),e={n,x:q.x,y:q.y};if(o)e.o=o;if(fp)e.fp=fp;b.village.props.push(e)})}catch(e){}}
  const html=()=>{const i=st(),n=STEPS[Math.min(i.step,STEPS.length-1)];return `<div class="hint" style="margin:0 0 3px;color:#d8c9a3">Cien años</div><div style="color:var(--yl);font-size:25px">${n.txt}</div>`};
  const target=()=>{if(!on())return null;const n=STEPS[st().step];if(n.g==='item')return loc('chest');if(n.g==='ru'||n.g==='ru2'){const e=ruEnt();return e}if(n.g==='orsen')return orsenEnt();return null};
  function adv(){const i=st();i.step++;if(i.step>=4)try{MUSIC.scene('wakeup',false)}catch(e){}if(i.step>=STEPS.length){finish();return}try{snd('quest');toast('✔ <b>Cien años</b>',1800)}catch(e){}try{dirty=1;save()}catch(e){}}
@@ -70,4 +90,4 @@ const PLAYA=(()=>{
    try{zoneCheck(performance.now());for(let i=0;i<10&&R3D.preload()>0;i++);}catch(e){}   // FIX: tras el salto de 75 tiles se fuerza la carga de los chunks del terreno alrededor (la pantalla sigue negra), si no la playa salía a trozos
    start0();setTimeout(()=>ov.remove(),500)},3000)}
  function reset(){try{MUSIC.scene('wakeup',false)}catch(e){}musOn=0;S.playa=null;if(S.app)S.app.under=0;sl=0;cineTried=0;ruGoHome()}   // para `ISLA.reset()` y pruebas
- return{STEPS,SP,TXT,on,html,target,tick,start,reset,chest,ruTalk,dlg,adv,loc,placeRu,ruGoHome,get sl(){return sl},set sl(v){sl=Math.max(0,Math.min(1,+v||0))},get step(){return on()?st().step:-1}}})();
+ return{init,get beach(){return BEACH},STEPS,SP,TXT,on,html,target,tick,start,reset,chest,ruTalk,dlg,adv,loc,placeRu,ruGoHome,get sl(){return sl},set sl(v){sl=Math.max(0,Math.min(1,+v||0))},get step(){return on()?st().step:-1}}})();

@@ -13,7 +13,22 @@ const PROPS=(()=>{
  const PROP_K=window.R3D_ON?(()=>{const m=/[?&]pk=([\d.]+)/.exec(location.search);return m?Math.max(.5,Math.min(3,+m[1]||1.5)):1.5})():1;window.PROP_K=PROP_K;
  const HOUSEK=/^(casa|troncos|cabana|palafito|casaJp|casaMaya|casaLarga|salon|stabbur|taberna|casaArbol)$/;   // edificios escalados por ORG.HK (V5)
  function mk(p,k){const B=BIOMES.list[k],e=Object.assign({},p,{x:B.ox+p.x,y:B.oy+p.y,k,_oa:1,_src:p,sc:p.sc||1});if(p.fp){const f=p.o&&p.o.rot?[p.fp[1],p.fp[0]]:p.fp,hk=window.R3D_ON?PROP_K:(HOUSEK.test(p.n)?ORG.HK:1);e.fp=[f[0]*e.sc*hk,f[1]*e.sc*hk]}return e}
- function build(){list=[];sol=[];SG=null;trees=[];extra=[];for(let k=0;k<BIOMES.N;k++){const B=BIOMES.list[k];for(const p of B.village.props){if(p._del)continue;
+ // ── NADA EN RÍOS NI EN CAMINOS (30 oct 2026, regla del dueño; auditoría: 8 427 árboles en el agua y 389 en caminos con el mapa A): el bosque de relleno y la decoración de los layouts se colocan ANTES que los
+ // ríos/lagos/caminos del mapa A, así que aquí, al construir, se descartan (`_del`) los props que caen en agua (o con la orilla a < 16 px si son árboles/naturaleza) y los de naturaleza que pisan un camino
+ // (`PF/PC` ≥ 128) fuera de la aldea. Exentos: `keep` (áreas de farmeo, que llevan su propia tierra pisada) y los props que viven en el agua o la orilla por diseño (`WOK`). `PROPS.rej` = cuántos se descartaron.
+ const WOK=new Set(['charco','obsidiana','bambu','junco','nenufar','puente','muelle','bote','farola','abrevadero','pozo','pasarela','cañaveral']);
+ const NATP=new Set(['pino','abedul','roble','fresno','sauce','arce','tejo','ebano','caoba','baobab','ceniza','mundo','roca','piedra','arbusto','arbolSeco','tocon','tronco','seta','huesos','cerezo','junco','bambu','heno','obsidiana']);
+ let rej={agua:0,camino:0};
+ function pathI(x,y){const F=TER.fields(),NX=TER.NX,T=32,tx=Math.floor(x/T),ty=Math.floor(y/T);if(tx<0||ty<0)return 0;const sx=Math.min(3,Math.floor((x/T-tx)*4)),sy=Math.min(3,Math.floor((y/T-ty)*4)),i=(ty*4+sy)*(NX*4)+tx*4+sx;return Math.max(F.PF[i]||0,F.PC[i]||0)}
+ function badSpot(p,B){if(p.keep||typeof TER==='undefined'||!TER.isLand)return false;const x=B.ox+p.x,y=B.oy+p.y,nat=NATP.has(p.n);
+  if(!WOK.has(p.n)){if(!TER.isLand(TER.heightAt(x,y))){rej.agua++;return true}
+   if(nat){for(let a=0;a<6;a++){const q=a*1.047;if(!TER.isLand(TER.heightAt(x+Math.cos(q)*16,y+Math.sin(q)*16))){rej.agua++;return true}}}}
+  if(nat&&B!==BIOMES.zone){const sf=B.village.safe;if(!(sf&&Math.abs(p.x-sf[0])<sf[2]&&Math.abs(p.y-sf[1])<sf[3])&&pathI(x,y)>=128){rej.camino++;return true}}
+  return false}
+ // TOPE DE DENSIDAD DE ÁRBOLES por bioma (30 oct 2026; decisión del dueño: las sombras se quedan en todas las calidades y, si el bosque no cabe en el presupuesto, se aclara): máximo de árboles por celda de 200×200 px. Pradera 4 (≈ −20 % en el bosque más denso).
+ const TREECAP={0:4};let thin=0;
+ function build(){list=[];sol=[];SG=null;trees=[];extra=[];rej={agua:0,camino:0};thin=0;for(let k=0;k<BIOMES.N;k++){const B=BIOMES.list[k],cap=TREECAP[k],cc=cap?new Map():null;for(const p of B.village.props){if(p._del)continue;if(badSpot(p,B)){p._del=1;continue}
+  if(cc&&!p.keep&&TREES.indexOf(p.n)>=0){const key=Math.floor((B.ox+p.x)/200)*100003+Math.floor((B.oy+p.y)/200),c=cc.get(key)|0;if(c>=cap){p._del=1;thin++;continue}cc.set(key,c+1)}
   const ti=TREES.indexOf(p.n);if(ti>=0){trees.push({i:ti,x:B.ox+p.x,y:B.oy+p.y});solOf(p,B,1);continue}   // árbol → recurso talable (lo crea game.js desde PROPS.trees)
   list.push(mk(p,k));solOf(p,B,0)}}}
  function resol(){sol=[];SG=null;for(let k=0;k<BIOMES.N;k++){const B=BIOMES.list[k];for(const p of B.village.props)if(!p._del)solOf(p,B,TREES.indexOf(p.n)>=0)}extra.forEach(r=>sol.push(r))}
@@ -97,6 +112,6 @@ const PROPS=(()=>{
  // altura extra (en niveles) bajo el punto (x,y): máximo de las capas que lo contienen, con rampa de margen `m` hacia fuera
  function elevAt(x,y){if(ELn!==list.length)elevBuild();if(!ELV.length)return 0;let best=0;for(const e of ELV){const dx=Math.abs(x-e.x),dy=Math.abs(y-e.y);if(dx>e.R||dy>e.R)continue;
    for(const c of e.L){let d;if(c.disc)d=Math.hypot(dx,dy)-c.hx;else d=Math.max(dx-c.hx,dy-c.hy);if(d>=e.m)continue;const f=d<=0?1:1-d/e.m,z=c.h*(f*f*(3-2*f))+EPS*f;if(z>best)best=z}}return best}
- return{get decor(){return PROPS_DECOR},sprite,build,solid,get trees(){return trees},addSolid:(x,y,hx,hy)=>{const r=[x-hx,x+hx,y-hy,y+hy];sol.push(r);extra.push(r);SG=null},resol,addEnt,delEnt,scatter,appOpts,ST,elevAt,ELEV,get list(){return list}}
+ return{get rej(){return rej},get thin(){return thin},pathI,get decor(){return PROPS_DECOR},sprite,build,solid,get trees(){return trees},addSolid:(x,y,hx,hy)=>{const r=[x-hx,x+hx,y-hy,y+hy];sol.push(r);extra.push(r);SG=null},resol,addEnt,delEnt,scatter,appOpts,ST,elevAt,ELEV,get list(){return list}}
 })();
 if(typeof module!=='undefined')module.exports=PROPS;

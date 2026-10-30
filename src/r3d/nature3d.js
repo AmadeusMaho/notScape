@@ -58,7 +58,7 @@ function leafTex(kind){if(LEAFTEX[kind])return LEAFTEX[kind];const W=kind==='ram
 const FMAT={};
 export function folMat(kind){if(FMAT[kind])return FMAT[kind];const base=toon('#ffffff',{vc:1,fol:1,side:THREE.DoubleSide}),m=base.clone();m.map=leafTex(kind);m.alphaTest=.5;m.onBeforeCompile=base.onBeforeCompile;m.customProgramCacheKey=()=>base.customProgramCacheKey()+kind;return FMAT[kind]=m}
 // láminas → una geometría (de la referencia: cardMesh). cards = [{p0,d,s,L,H,droop}] · center(y) = eje para la normal «esferizada» (luz de nube) · R(y) = radio
-export function cardGeo(cards,pal,center,R,opt){const P=[],N=[],C=[],UV=[],I=[],U0=opt&&opt.uv?opt.uv[0]:0,U1=opt&&opt.uv?opt.uv[1]:1,ca=new THREE.Color(pal[0]),cb=new THREE.Color(pal[1]),cc=new THREE.Color(pal[2]),tmp=new THREE.Color();let v0=0;const SEG=opt&&opt.seg||4;
+export function cardGeo(cards,pal,center,R,opt){const P=[],N=[],C=[],UV=[],I=[],U0=opt&&opt.uv?opt.uv[0]:0,U1=opt&&opt.uv?opt.uv[1]:1,ca=new THREE.Color(pal[0]),cb=new THREE.Color(pal[1]),cc=new THREE.Color(pal[2]),tmp=new THREE.Color();let v0=0;const SEG=opt&&opt.seg||1;
  cards.forEach((cd,ci)=>{for(let i=0;i<=SEG;i++){const t=i/SEG,arc=cd.d.clone().multiplyScalar(cd.L*t).add(new THREE.Vector3(0,-cd.droop*t*t,0)).add(cd.p0);
    [-1,1].forEach(sd=>{const v=arc.clone().addScaledVector(cd.s,sd*cd.H*.5);P.push(v.x,v.y,v.z);const cn=center(v.y),n=v.clone().sub(cn).normalize();n.y=n.y*.8+.35;n.normalize();N.push(n.x,n.y,n.z);
     const out=Math.min(1,v.clone().sub(cn).setY(0).length()/R(v.y)),k=Math.min(1,out*.75+t*.25)*(.85+hash(ci,1,9)*.3);tmp.copy(ca).lerp(cb,Math.min(1,k*1.5));if(k>.62)tmp.lerp(cc,Math.min(1,(k-.62)/.38));C.push(tmp.r,tmp.g,tmp.b);UV.push(U0+(U1-U0)*t,sd<0?0:1)})}
@@ -112,7 +112,7 @@ export function herbGeo(i,dead){const D=(typeof HERB!=='undefined'&&HERB.D[i])||
 export function stumpGeo(){const g=jit(new THREE.CylinderGeometry(.13,.18,.2,8).translate(0,.1,0),.02);return g}
 
 // ───────── capa de recursos 3D (árboles talables y menas) ─────────
-const CELL=24,NVAR=3,CS=256;
+const CELL=24,NVAR=2,CS=256;   // 2 variantes de forma por especie (antes 3): un bosque denso gastaba ~350 llamadas de dibujo solo en recursos; la rotación y la escala por instancia mantienen la variedad
 export const ORECOL=['#c8742a','#e8e8f8','#c0603a','#9a9aa2','#f0f0f8','#4a7aff','#3adf6a','#3ad0d8','#e89a3a','#c8a0ff','#e8c24a','#ff4a2a','#d8d0b8','#9a9aa2','#d4a468','#55525a','#f2ece2','#4a3a5a','#9aaaf0'];   // 12–18: piedras de Escultor (ESC-JOY)
 const GOLDTEX=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,246,200,1)');r.addColorStop(.25,'rgba(255,214,90,.7)');r.addColorStop(.6,'rgba(255,170,40,.22)');r.addColorStop(1,'rgba(255,150,20,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();   // CS: celda (px de mundo) del índice de recursos para update()
 // El Cielo (ISLA-4): todo lo que está en la columna de la zona (x ≥ BIOMES.zone.x0) usa ÁRBOLES DEL MUNDO (hojas azules) y menas en mármol claro
@@ -149,7 +149,8 @@ export class Resources{
  // construye las mallas de UN sector
  mk(S){const o3=new THREE.Object3D();
   S.g.forEach(({kind,list,cx,cy})=>{const P=this.parts(kind);if(!P.length)return;const ms=[];
-   P.forEach(pt=>{const m=depthI(new THREE.InstancedMesh(pt.g,pt.mat,list.length));m.castShadow=m.receiveShadow=true;ms.push(m);this.sec(this.grp,cx,cy).add(m);
+   P.forEach(pt=>{const m=depthI(new THREE.InstancedMesh(pt.g,pt.mat,list.length));m.castShadow=!!pt.fol||P.length===1;m.receiveShadow=true;   // en árboles solo la COPA proyecta sombra del sol (el tronco, no): un tercio de llamadas menos en el pase de sombra de un bosque
+   ms.push(m);this.sec(this.grp,cx,cy).add(m);
     if(pt.ink){const h=new THREE.InstancedMesh(pt.ink,pt.inkM,list.length);ms.push(h);this.sec(this.grp,cx,cy).add(h)}
     const d=new THREE.InstancedMesh(pt.g,pt.fol?folDepth(pt.fol):this.dmat,list.length);d.layers.set(3);ms.push(d);this.sec(this.ogrp,cx,cy).add(d)});
    list.forEach((e,i)=>{const dead=kind==='tocon'||kind.endsWith('d');let r=this.idx.get(e);if(!r)this.idx.set(e,r={});r[dead?'d':'a']={ms,i};
