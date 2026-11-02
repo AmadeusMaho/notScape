@@ -110,3 +110,42 @@ function dotTick(now){return;const D=P.dot;if(!D)return;if(P.hp<=0||INT){P.dot=n
 // ═══ LOTE B2 · AUTO-RETALIATE (defenderse solo) ═══ Como en OSRS: con «Auto» activado (por defecto), cuando un enemigo te golpea y no estás luchando, empiezas a pelear contra él. Botón en los ajustes (#arb) o tecla T. Se guarda en S.ar (0 = apagado).
 function arTog(){S.ar=S.ar===0?1:0;arPaint();snd(S.ar===0?'miss':'xp');toast(S.ar===0?'⚔️ Defensa automática: <b>desactivada</b>. Los enemigos te golpearán sin que respondas.':'⚔️ Defensa automática: <b>activada</b>. Responderás a quien te ataque.',2400);dirty=1}
 function arPaint(){const el=document.getElementById('arb');if(!el)return;const on=S.ar!==0;el.textContent='Defensa automática: '+(on?'SÍ':'NO')+' (T)';el.title='Defensa automática (tecla T): '+(on?'respondes':'NO respondes')+' a los enemigos que te atacan.'}
+
+// ═══ N0.4 (2 nov 2026) · INTERRUMPIR AVISOS + ÉLITES/CAMPEONES CON AFIJOS (todo por DATOS) ═══
+// INTERRUPCIÓN: aturdir (habilidades con `stun`, golpe aturdidor, embestida de escudo, stagger…) a un enemigo que está PREPARANDO un golpe (m.wind) o un golpe pesado telegrafado (m.tel)
+//   cancela el golpe (ya lo hacía stunStart) y ahora además PREMIA: letrero «¡Interrumpido!», Vulnerable 4 s sobre él y +15 de Energía. Contador `inc('interrumpir')` (para logros/colección, N3).
+// AFIJOS: los élites por datos (`MD[id].el`) y los CAMPEONES (cualquier enemigo hostil común con prob. CHAMP_P al aparecer o reaparecer: nivel +2, vida ×2,4, daño ×1,25) llevan 1 afijo (2 si el élite es de nivel ≥ 30).
+//   Un afijo nuevo = una fila en AFX con sus ganchos: spawn(m) al aparecer · tick(m,now) mientras te persigue · hitP(m,d) cuando te hace daño · die(m,now) al morir. Los élites ya tienen el golpe pesado telegrafado (telOn).
+//   Se ve en la placa: «★ Nombre · Afijo». No afecta a jefes, capitanes, esbirros, animales domables, presas ni pacíficos.
+const CHAMP_P=.05,EXPL=[];
+const AFX={
+ veloz:{n:'Veloz',spawn:m=>{m.spx=1.35;m.asx=(m.asx||1)*.72}},
+ escudado:{n:'Escudado',tick:(m,now)=>{if(STS.has(m,'shield'))return;if(!m.shT){m.shT=m.shI?now+12000:now;m.shI=1}if(now>=m.shT){m.shT=0;STS.add(m,'shield',{dur:600000});fText('Escudo','#7ab8ff',m.x,m.y,(m.d.h||40)+12)}}},   /* el primer escudo se pone al empezar a perseguirte; luego se regenera 12 s después de romperse */
+ volatil:{n:'Volátil',die:(m,now)=>{EXPL.push({x:m.x,y:m.y,t0:now,t1:now+1500,r:74,dm:Math.max(2,Math.round((m.dm||2)*1.5))});fText('¡Va a estallar!','#ff9a3a',m.x,m.y,(m.d.h||40)+12)}},
+ vampirico:{n:'Vampírico',hitP:(m,d)=>{const h=Math.max(1,Math.round(d*.5));m.hp=Math.min(m.mh,m.hp+h);splat(m.x,m.y,h,'#6ad04a',m.d.h+6,0,1,m)}},
+ invocador:{n:'Invocador',tick:(m,now)=>{if(!m.sumD&&m.hp<m.mh*.5){m.sumD=1;summon(m,m.d.id,now)}}},
+ enfurecido:{n:'Enfurecido',tick:(m,now)=>{if(!m.furD&&m.hp<m.mh*.4){m.furD=1;STS.add(m,'fury',{dur:20000});fText('¡Furia!','#ff6a5a',m.x,m.y,(m.d.h||40)+12)}}}
+};
+const afxNames=m=>m.afx.map(k=>AFX[k].n).join(' · ');
+function afxRoll(m){m.afx=null;m.spx=1;m.sumD=0;m.furD=0;m.shT=0;m.shI=0;   /* ¡OJO! se llama al crear el mundo: no uses STS ni P aquí (P aún no existe) */
+ if(m.champ){m.champ=0;m.elite=0}
+ const d=m.d;if(!d||d.boss||m.sm||d.tm||d.an||d.fl||(!d.ag&&(d.dmg||0)<3)||typeof STS==='undefined')return;
+ const el=!!d.el;if(!el&&Math.random()>=CHAMP_P)return;
+ if(!el){m.champ=1;m.elite=1;m.lv+=2;m.mh=Math.round(m.mh*2.4);m.hp=m.mh;if(m.dm)m.dm=Math.max(1,Math.round(m.dm*1.25))}
+ const ks=Object.keys(AFX),n=el&&m.lv>=30?2:1,a=[];while(a.length<n){const k=ks[Math.floor(Math.random()*ks.length)];if(!a.includes(k))a.push(k)}
+ m.afx=a;a.forEach(k=>{const f=AFX[k].spawn;if(f)f(m)})}
+function afxTick(m,now){for(const k of m.afx){const f=AFX[k].tick;if(f)f(m,now)}}
+function afxHitP(m,d){for(const k of m.afx){const f=AFX[k].hitP;if(f)f(m,d)}}
+function afxDie(m,now){for(const k of m.afx){const f=AFX[k].die;if(f)f(m,now)}}
+// explosiones de los «Volátil»: círculo en el suelo 1,5 s (decal 3D como el golpe pesado) y daño si sigues dentro; la esquiva (ESPACIO) lo evita
+function afxDraw(now){for(let i=EXPL.length-1;i>=0;i--){const e=EXPL[i];if(P.hp<=0||inRoom()){EXPL.splice(i,1);continue}
+  if(now<e.t1){try{R3D.spell.tele(e,e.x,e.y,0,e.r,7,Math.min(1,(now-e.t0)/(e.t1-e.t0)),'#ff7a1a')}catch(x){}continue}
+  EXPL.splice(i,1);snd('thunder');SHK=now+160;sp(e.x,e.y-8,'#ffb050',22,130,90,160);sp(e.x,e.y-8,'#ff5a1a',12,90,70,120);
+  if(Math.hypot(P.x-e.x,P.y-e.y)<e.r){if(dashInv()){fText('Esquiva','#9fe0ff',P.x,P.y,46);continue}const d=STS.inP(e.dm,now,null);if(d>0){P.hp-=d;splat(P.x,P.y,d,'#ff9a3a',26);HURT=now;if(P.hp<=0)die()}}}}
+function onInterrupt(m,now){fText('¡Interrumpido!','#ffd27a',m.x,m.y,(m.d.h||40)+30,'ench');try{STS.add(m,'vuln',{dur:4000})}catch(x){}EN=Math.min(enMax(),EN+15);try{tone(880,.12,'triangle',.06,1320);tone(1320,.16,'sine',.05,1760)}catch(x){}try{inc('interrumpir')}catch(x){}log('⚡ ¡Interrumpes a <b>'+m.d.n+'</b>! Queda vulnerable y recuperas energía.')}
+// INDICADOR DE INTERRUPCIÓN (2 nov 2026): `castOf(m,now)` = lo que el enemigo está preparando y se puede cortar aturdiéndolo → {p:0..1, n:nombre} o null.
+//   Golpe pesado telegrafado (m.tel), golpe fuerte de un enemigo grande (m.wind.big) y habilidades de enemigo (m.wind.kind==='sk': embestida, cuchillo). Los golpes normales no salen (son muy cortos y frecuentes).
+//   Lo usan la barra de preparación de la placa (game.js dMo, `.npc`) y el brillo de las casillas que aturden (hud.js `.s.kick`, vía `kickNow()`).
+const SKN={lunge:'Embestida',knife:'Lanzar cuchillo'};
+function castOf(m,now){if(m.tel)return{p:Math.max(0,Math.min(1,(now-m.tel.t0)/Math.max(1,m.tel.t1-m.tel.t0))),n:'Golpe pesado'};const w=m.wind;if(!w||now>=w.t1||now<w.t0||!(w.big||w.kind==='sk'))return null;return{p:Math.max(0,Math.min(1,(now-w.t0)/Math.max(1,w.t1-w.t0))),n:w.kind==='sk'?(SKN[w.sk]||'Habilidad'):'Golpe fuerte'}}
+let KICKC={t:0,v:false};function kickNow(){const now=performance.now();if(now-KICKC.t<80)return KICKC.v;KICKC.t=now;let v=false;for(const m of M){if(m.hp>0&&Math.hypot(m.x-P.x,m.y-P.y)<300&&castOf(m,now)){v=true;break}}KICKC.v=v;return v}

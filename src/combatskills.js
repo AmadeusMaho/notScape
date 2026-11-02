@@ -149,6 +149,39 @@ function unlockCheck(){const f=fam();if(!f||locked())return;const s=st(),n=avail
  n.forEach(a=>s.seen[a.id]=1);if(n.every(a=>a.lv<=1))return;   // las del nivel 1 no se anuncian
  const it=n.filter(a=>a.lv>1).map(a=>({em:f.em,name:a.n}));if(!it.length)return;
  try{if(typeof RECN!=='undefined'&&RECN.unlock)RECN.unlock({title:'Nueva habilidad',sub:f.n,items:it,foot:'Pestaña Habilidades (Z)'})}catch(e){}}
+/* ═══ FX DE HABILIDADES (2 nov 2026, fase N0.4 · lotes N0-FX y N0-FX-SHADERS) — TODO POR ARQUETIPO Y ELEMENTO; una habilidad nueva hereda su FX de sus datos.
+   · SHADERS PROPIOS (`R3D.skill`, src/r3d/skillfx3d.js, 1 programa y 1 llamada): cuerpo a cuerpo = TAJO (media luna que barre, una por golpe, alternando lado; grande en golpes fuertes);
+     área centrada en ti = REMOLINO (cuerpo a cuerpo) u ORBE (magia); a distancia = ESTELA hasta el objetivo (una por flecha/virote/orbe); mejora propia = COLUMNA de energía;
+     ejecutar = HENDIDURA vertical sobre el objetivo; al impactar, aturdir/aplastante = GRIETAS en el suelo y magia fuerte = ORBE. Magia de fuego potente: además, bola de fuego.
+   · IMPACTO: estallido del ELEMENTO sobre el objetivo (`R3D.impact.burst`, recetas de encantamiento). Elemento (`elemOf`) = el del estado que aplica (ELEM); si no:
+     robo de vida → vampírica, aturdir → aplastante, ejecutar → implacable, magia → arcana, resto → físico.
+   · SONIDO: diseño procedural por capas (`SFXS`, src/sfxsynth.js: reverberación, ruido filtrado, cuerda física, campanas FM…); `SKS` = sonido por elemento, `BUFS` por mejora;
+     si `SFXS` no suena (silencio, demasiadas voces) cae al `SND.en` antiguo. Para un FX propio de una habilidad, su id en `FXID` (sobrescribe el elemento). */
+const ELEM={bleed:'sangre',hemorrhage:'hemorragica',poison:'veneno',toxin:'toxica',chill:'escarcha',slow:'escarcha',freeze:'glacial',shock:'rayo',overload:'tempestad',burn:'fuego',incinerate:'infernal',curse:'vacio',weak:'vacio',fear:'vacio',doom:'abisal',vuln:'aplastante',root:'aplastante',exposed:'fisico',rend:'implacable',mark:'cazadora'},
+ BUFE={fury:'fuego',shield:'arcana',haste:'rayo',regen:'sagrada',unbreak:'aplastante'},
+ SNDE={sangre:'sangre',hemorragica:'sangre',vampirica:'sangre',veneno:'veneno',toxica:'veneno',escarcha:'escarcha',glacial:'escarcha',rayo:'rayo',tempestad:'rayo',fuego:'fuego',infernal:'fuego',vacio:'vacio',abisal:'vacio',sagrada:'sagrada',arcana:'arcana'},
+ FXID={};
+const elemOf=(a,f)=>FXID[a.id]||(a.drain?'vampirica':a.sts&&ELEM[a.sts[0]]?ELEM[a.sts[0]]:a.stun?'aplastante':a.exec?'implacable':f.sk==='mg'?'arcana':'fisico');
+const SKS={sangre:'blood',hemorragica:'blood',vampirica:'blood',veneno:'poison',toxica:'poison',escarcha:'ice',glacial:'ice',rayo:'shock',tempestad:'shock',fuego:'fire',infernal:'fire',vacio:'void',abisal:'void',sagrada:'holy',arcana:'arcane',aplastante:'hitStone',implacable:'hitMetal',cazadora:'hitFlesh',fisico:'hitFlesh'},
+ BUFS={fury:'fire',shield:'arcane',haste:'shock',regen:'holy',unbreak:'hitStone'};
+const dk=(h,f)=>{const n=parseInt(String(h).slice(1),16);if(isNaN(n))return h;const c=x=>Math.max(0,Math.min(255,Math.round(x*f))).toString(16).padStart(2,'0');return '#'+c(n>>16&255)+c(n>>8&255)+c(n&255)};
+const SX=(n,k,pan)=>{try{if(typeof SFXS!=='undefined'&&SFXS.play(n,{k,pan}))return true}catch(e){}return false};
+const SK3=()=>typeof R3D!=='undefined'&&R3D.skill;
+function fxCast(a,f,m,melee){const col=a.col||f.col||'#e8cf94',c2=dk(col,.45),hv=(a.coef||0)>=1.3,n2=a.n2||1,K=SK3(),el=elemOf(a,f);
+ try{
+  if(a.buf&&!a.coef){if(K)K.play('columna',{x:P.x,y:P.y,r:34,h:78,col,col2:c2,life:1.1});if(R3D.impact)R3D.impact.burst(P,BUFE[a.buf[0]]||'arcana',.9);SX('powerup',1);SX(BUFS[a.buf[0]]||'arcane',.7);return}
+  if(a.aoe&&a.self){if(melee){if(K)K.play('remolino',{x:P.x,y:P.y,r:a.aoe,col,col2:c2,life:.6,dir:1});SX('whirl',1.1)}else{if(K)K.play('orbe',{x:P.x,y:P.y,r:a.aoe*.7,col,col2:c2,life:.75});SX(SKS[el]||'arcane',1.2)}return}
+  if(!m)return;const ang=Math.atan2(m.y-P.y,m.x-P.x),rch=(f.rng||90)*.7;
+  if(melee){for(let h=0;h<Math.min(n2,5);h++){if(K)K.play('tajo',{x:P.x,y:P.y,ang:ang+(h&1?.25:-.25)*(h?1:0),r:rch,dir:h&1?-1:1,col,col2:c2,k:hv&&!h?1.6:1,delay:h*.11,life:hv&&!h?.38:.28});setTimeout(()=>SX(hv&&!h?'swooshHeavy':'swoosh',hv&&!h?1.2:.9,0),h*110)}
+   if(a.exec&&K)K.play('hendidura',{x:m.x,y:m.y,h:Math.max(60,(m.d.h||40)*1.6),col:'#ffffff',col2:col,k:1.6,delay:.12,life:.45});return}
+  const ranged=f.sk!=='mg';if(K)for(let h=0;h<Math.min(n2,4);h++)K.play('estela',{x:P.x,y:P.y,tx:m.x,ty:m.y,r:hv?18:12,col,col2:c2,delay:h*.11,life:.3});
+  if(f.sk==='mg'&&hv&&(el==='fuego'||el==='infernal')&&R3D.spell&&R3D.spell.fireball)R3D.spell.fireball(P.x,P.y,m.x,m.y,260,.7);
+  if(ranged)SX(/ballesta|virote|anclaje|salva|francotirador|recarga/i.test(a.n+' '+f.n)?'crossbow':'bow',hv?1.2:1);else SX(SKS[el]||'arcane',hv?1.1:.8)
+ }catch(e){}}
+function fxHit(a,f,o,k){if(!o||!(o.hp>0))return;const el=elemOf(a,f),K=SK3(),col=a.col||f.col||'#e8cf94';
+ try{if(R3D.impact)R3D.impact.burst(o,el,k)}catch(e){}
+ try{if(K){if(a.stun||el==='aplastante')K.play('grietas',{x:o.x,y:o.y,r:46*k,ang:Math.random()*6.28,col:'#ffc070',col2:'#7a3010',life:1});else if(f.sk==='mg'&&(a.coef||0)>=1.3)K.play('orbe',{x:o.x,y:o.y,r:34*k,col,col2:dk(col,.45),life:.55})}}catch(e){}
+ if(!SX(a.stun?'stun':a.exec?'execute':SKS[el]||'hitFlesh',k)){try{if(SND&&SND.en)SND.en(SNDE[el]||'fisico')}catch(e){}}}
 function use(slot){
  if(!active()||P.hp<=0||CK||(typeof inRoom==='function'&&inRoom()))return false;
  const f=fam(),a=bar()[slot];if(!a)return false;const now=performance.now();
@@ -164,6 +197,7 @@ function use(slot){
  const mul=1+.08*rk;
  if(typeof tone==='function')try{tone(300+slot*55,.07,'triangle',.05)}catch(e){}
  U[a.id]=now;
+ fxCast(a,f,m,f.sk==='cb');
  if(a.buf){STS.add(P,a.buf[0],{dur:a.buf[1]});try{snd('magic')}catch(e){}sp(P.x,P.y-14,f.col,12,70,60,120)}
  if(tg0){const rk0=rank(a.id);tg0.forEach(o=>STS.add(o,a.sts[0],{dur:a.sts[1]*(1+.08*rk0),v:a.sts[2]}));HFX.push({k:'star',tx:P.x,ty:P.y,th:4,t0:now,d:380});sp(P.x,P.y-6,a.col||f.col,16,a.aoe*1.6,50,120);try{snd('magic')}catch(e){}}
  if(a.coef&&m){
@@ -176,7 +210,8 @@ function use(slot){
    const t1=now+(melee?60+h*110:(a.aoe&&!a.self?260:150)+h*110);
    if(melee){if(!h&&o===m)HFX.push({k:wColor()?'thrust':'punch',x:P.x,y:P.y,tx:o.x,ty:o.y,th:o.d.h/2,t0:now,d:300});
     PJ.push({x:P.x,y:P.y,sh:14,tx:o.x,ty:o.y,th:o.d.h/2,t0:t1+9999,t1,m:o,d,wt:'m',sk:'cb',mxv:mx*a.coef,hv:0,nodraw:1})}
-   else PJ.push({x:P.x,y:P.y,sh:14,tx:o.x,ty:o.y,th:o.d.h/2,t0:t1-170,t1,m:o,d,wt:f.sk==='mg'?'g':'r',sk:f.sk,mxv:mx*a.coef,col:a.col,hv:hv&&!h?1:0})}
+   else PJ.push({x:P.x,y:P.y,sh:14,tx:o.x,ty:o.y,th:o.d.h/2,t0:t1-170,t1,m:o,d,wt:f.sk==='mg'?'g':'r',sk:f.sk,mxv:mx*a.coef,col:a.col,hv:hv&&!h?1:0});
+   if(h<3)Q.push({t:t1+15,fn:()=>fxHit(a,f,o,(o===m?1:.65)*(h?.7:1)*(hv?1.3:1))})}
    if(a.sts||a.stun||a.drain)Q.push({t:now+280,fn:()=>{if(!alive(o,performance.now()))return;
     if(a.sts)STS.add(o,a.sts[0],{dur:a.sts[1]*(1+.08*rk),v:a.sts[2]});
     if(a.stun&&typeof stunStart==='function'&&o===m)stunStart(o,performance.now(),a.stun*(1+.08*rk));
@@ -190,7 +225,7 @@ function tick(now,dt){{const f=fam();if(f&&f.res==='MN'&&active()&&dt>0&&!(typeo
 function view(){const f=fam();if(!f)return[];const now=performance.now(),mg=f.res==='MN',have=mg?MN:EN;
  return bar().map((a,i)=>a?{a,i}:null).filter(Boolean).map(({a,i})=>{const c=costOf(a),r=Math.max((cd[a.id]||0)-now,gcd-now,0),tot=Math.max(1,(cd[a.id]||0)>now?cdOf(a)*1000:GCD),rk=rank(a.id);
   const rd=(cd[a.id]||0),pop=now-(U[a.id]||-1e9)<260,rdy=rd>0&&now>=rd&&now-rd<450;
-  return{id:a.id,slot:i,pop,rdy,key:String(i+1),n:a.n,e:a.e,col:a.col||f.col,cdp:r>0?Math.min(1,r/tot):0,off:have<c,
+  return{id:a.id,slot:i,pop,rdy,kick:!!a.stun,key:String(i+1),n:a.n,e:a.e,col:a.col||f.col,cdp:r>0?Math.min(1,r/tot):0,off:have<c,
    tip:'<b>'+a.n+'</b> <small>(tecla '+(i+1)+(rk?' · dominio '+rk:'')+')</small><br>'+a.d+'<br><small>Coste: '+c+(mg?' de maná':' de energía')+' · enfriamiento '+cdOf(a).toFixed(1)+' s'+(a.coef?' · daño ×'+(a.coef*(1+.08*rk)).toFixed(1):'')+'</small>'}})}
 /* iconos SVG (24×24, color = currentColor) */
 const IC={slash:'<path d="M5 19L17 5l2 2L7 21z"/><path d="M15 4l5 5-2 2-5-5z" opacity=".6"/>',arrow:'<path d="M3 12h15M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
@@ -276,4 +311,4 @@ function ui(a,i){const fid=uiFam(),f=FAM[fid];
  panel()}
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('.kw [data-a]');if(!b)return;ev.preventDefault();ui(b.dataset.a,b.dataset.i)});
 addEventListener('contextmenu',ev=>{if(ev.target.closest&&ev.target.closest('#hs-sk')&&!locked()){ev.preventDefault();if(typeof tabClick==='function')tabClick('mg')}},true);
-return{FAM,SP,ALIAS,ENR,UPLIFT,active,use,tick,view,icon,list,fam:()=>wf(),rank,cd:()=>cd,out,inMul,onHit,tab,ui,choose,chooseKey,assign,dbg:{st,T,UI}}})();
+return{FAM,SP,ALIAS,ENR,UPLIFT,fx:{cast:fxCast,hit:fxHit,elemOf},active,use,tick,view,icon,list,fam:()=>wf(),rank,cd:()=>cd,out,inMul,onHit,tab,ui,choose,chooseKey,assign,dbg:{st,T,UI}}})();
