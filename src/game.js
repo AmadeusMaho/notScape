@@ -1192,10 +1192,10 @@ function guardHit(m,d0,now,heavy){if(!BLK.on)return{d:d0,kind:null};const sh=has
   if(window.R3D){R3D.tscale=.05;clearTimeout(window.__hs);window.__hs=setTimeout(()=>{if(!(typeof CINE!=='undefined'&&CINE.on))R3D.tscale=1},85)}
   log('✦ <b>¡Parada perfecta!</b> '+m.d.n+' queda aturdido.');inc('pblock');return{d:0,kind:'perfect'}}
  if(d0<=0)return{d:0,kind:null};
- const mit=sh?BLK.mit:S.eq.w?BLK.mitW:BLK.mitF,cost=Math.ceil((sh?2.2:4.5)*d0*(heavy?1.4:1)+(sh?2:5));
+ const gd=typeof CSK!=='undefined'&&CSK.guardian(),mit=Math.min(.92,(sh?BLK.mit:S.eq.w?BLK.mitW:BLK.mitF)+(gd?.1:0)),cost=Math.ceil((sh?2.2:4.5)*d0*(heavy?1.4:1)+(sh?2:5));
  if(S.sta<cost){S.sta=0;STP=3;BLK.on=0;sp(P.x,P.y-8,'#ff6a5a',9,90,60,110);try{tone(150,.2,'sawtooth',.07,70)}catch(e){}log('¡Guardia rota! Sin resistencia para aguantar el golpe.');return{d:d0,kind:'broke'}}
  S.sta-=cost;STP=2;BLK.hit=now;sp(P.x,P.y-10,'#cfe3ff',sh?10:6,90,50,110);sp(P.x,P.y-8,'#ffffff',4,60,40,90);SHK=Math.max(SHK,now+(sh?90:60));snd('hit');try{tone(sh?820:620,.08,'square',.05,sh?520:380)}catch(e){}
- {const dd=Math.max(0,Math.round(d0*(1-mit)));fText(dd<d0?'MITIGADO −'+(d0-dd):'BLOQUEADO',sh?'#9fd0ff':'#cfe3ff',P.x,P.y,46);return{d:dd,kind:'block'}}}
+ {const dd=Math.max(0,Math.round(d0*(1-mit)));if(gd)try{CSK.riposte(m,d0,now)}catch(e){}fText(dd<d0?'MITIGADO −'+(d0-dd):'BLOQUEADO',sh?'#9fd0ff':'#cfe3ff',P.x,P.y,46);return{d:dd,kind:'block'}}}
 // PERFECT DODGE: el golpe de `m` cae en los primeros 170 ms de la esquiva → reembolso de resistencia, fantasma y un instante de cámara lenta (una vez por esquiva)
 function pdCheck(m,now){if(DSH.pd===DSH.t0)return;const t=now-DSH.t0;if(t<0||t>170)return;DSH.pd=DSH.t0;
  S.sta=Math.min(100,(S.sta||0)+Math.round(DSH.cost*.8));DSH.cd=now+120;STP=.4;inc('pdodge');
@@ -1477,6 +1477,7 @@ function dMo(m,t,now){if(!alive(m,now)||m===BBM)return;const d=m.d,h=(window.R3D
 const wColor=()=>S.eq.w?TCOL[tierOf(S.eq.w)]||(LOOT[S.eq.w]?['#c8742a','#9a9aa8','#cfd8e0','#4a7aff','#d83a3a','#3adf6a'][LOOT[S.eq.w].k]:'#ddd'):null;
 function actState(now){if(CAST&&!inRoom())return{k:'se',ph:0};
  if(CK&&S.stn)return{k:'co',ph:0,id:S.stn.id};
+ if(P.ck&&now-P.ck.t0<P.ck.d&&!CK)return{k:'ck',ph:(now-P.ck.t0)/P.ck.d,id:P.ck.id,wk:wKind(),wcol:wColor(),orb:ORB[tierOf(S.eq.w||'')]};   /* N0-HABILIDADES-ANIM: animación de la habilidad en curso (skillanim3d.js) */
  if(aimOn()&&CHG.on&&now-CHG.t0>220&&!CK)return{k:'f',wt:wtype(),wk:wKind(),wcol:wColor(),orb:ORB[tierOf(S.eq.w||'')],hv:1,ph:Math.min(.9,.3+chgK(now)*.6)};   // cargando: pose de preparación sostenida
  if(aimOn()&&now<SWG.t0+Math.min(SWG.ms,SWG.wind+900)&&!CK){const imp=SWG.t0+SWG.wind,b={k:'f',wt:SWG.wt,wk:wKind(),wcol:wColor(),orb:ORB[tierOf(S.eq.w||'')],hv:SWG.hv};return now<imp?Object.assign(b,{ph:.5+.5*Math.max(0,Math.min(1,(now-SWG.t0)/Math.max(1,SWG.wind)))}):Object.assign(b,{ph:0,rc:q4((now-imp)/260)})}   // combate dirigido: preparación → impacto → recuperación
  if(P.sp&&now-P.sp.t0<P.sp.d&&!CK)return{k:'sp',ph:(now-P.sp.t0)/P.sp.d,wt:P.sp.wt,wk:wKind(),wcol:wColor(),orb:ORB[tierOf(S.eq.w||'')]};

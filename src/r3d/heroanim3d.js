@@ -482,7 +482,7 @@ export class HeroAnim{
    this.it[name]=Object.assign({g,kind,hand:name==='tongs'||name==='book'||(name==='food'&&this.eatL())?1:0},info);g.visible=false;this.m.body.add(g)}return this.it[name]}
  // ── estado → pose viva ──
  update(st,dt,t){dt=Math.min(.1,Math.max(1e-4,dt||1/60));this.t=t;const sw=st.mv&&st.act&&st.act.k==='f'&&st.act.mv?1:0,a=(st.mv&&!sw)?null:st.act,v=this.live;   // sw = GOLPE MIENTRAS TE MUEVES (combate dirigido): el tren superior hace el golpe y las piernas siguen caminando
-  const fight=!!(a&&(a.k==='f'||a.k==='sp')),combat=!!(st.cb||fight);
+  const fight=!!(a&&(a.k==='f'||a.k==='sp'||a.k==='ck')),combat=!!(st.cb||fight);
   // armas guardadas fuera de combate: al entrar se DESENFUNDAN (mano → empuñadura → guardia), al salir se ENFUNDAN; con herramienta en la mano el arma queda en su sitio
   this.holster(combat,fight,a,a?(a.k==='sm'&&a.id==='furnace'?'fu':a.k):null,dt);
   const armed=this.xd>0||(this.drawn&&!this.xd),cls=armed?this.cls:'fist',sh=armed&&this.shUse;this.pcSh=sh;
@@ -508,6 +508,7 @@ export class HeroAnim{
     if(this.inStrike)u=ph;else if(this.impT>=0){const fdur=FOLLOW[wkey]*(this.hvNow?1.2:1);u=1+cl((t-this.impT)/fdur,0,1)}else u=2;
     if(u>=2&&!this.inStrike)this.stancePose(wkey,sh,t,v);else{sampleClip(clip,u,v);this.breath(v,t,.4)}
     key='act:'+ak+':'+(this.hvNow?'h':'')+this.vr;feetStep=0}
+   else if(ak==='ck'){const u=cl(a.ph||0,0,1);if(this.key==='ck'&&u<this.lastU-.3)this.forceFade=.12;this.lastU=u;const c=this.clip('ck',cls,sh,0,a.id);if(c){sampleClip(c,u,v);{const n=Math.round(v[C.yaw]/TAU);if(n){v[C.yaw]-=n*TAU;v[C.hy]-=.8*n*TAU}}if(u<.04)this.forceFade=Math.max(this.forceFade||0,.06)}   /* los giros completos (Torbellino) acaban en yaw+2π: se normaliza para no «desenrollar» al volver a la guardia */else this.stancePose(cls,sh,t,v);this.breath(v,t,.3);key='ck';feetStep=0;this.inStrike=0}   /* HABILIDAD del jugador (skillanim3d.js): clip por id */
    else if(ak==='sp'){const u=a.ph||0;if(this.key==='sp'&&u<this.lastU-.3)this.forceFade=.15;this.lastU=u;sampleClip(this.clip('sp',cls,sh,0,a.wt),u,v);key='sp';feetStep=0;this.inStrike=0}
    else if(ak==='fi'){sampleClip(this.clip('fi'),a.ph||0,v);this.tug+=((a.tug||0)-this.tug)*(1-Math.exp(-dt*25));
     if(this.tug>.01){const s=this.tug;v[C.rd+1]+=.45*s;v[C.rd+2]-=.25*s;v[C.rp+1]+=.04*s;v[C.cx]-=.05*s}
@@ -563,6 +564,7 @@ export class HeroAnim{
   if(k==='f'&&cls==='dual'){const d=this.dualK;c=hv?dualH(S,d):vr?dualB(S,d):dualA(S,d)}
   else if(k==='f'){if(cls==='great')c=hv?greatH(S):greatA(S);else if(cls==='sword')c=hv?thrust(S,sh,1):vr?swordB(S,sh):swordA(S,sh);else if(cls==='dagger')c=hv?thrust(S,sh,1.05):vr?daggerB(S,sh):daggerA(S,sh);
    else if(cls==='fist')c=hv?hook(S,sh):vr&&!sh?fistB(S,sh):fistA(S,sh);else if(cls==='bow')c=bowA(S,hv);else if(cls==='xbow')c=xbowA(S);else if(cls==='staff')c=staffA(S,sh,hv);else c=scepterA(S,sh,hv)}
+  else if(k==='ck'){c=HeroAnim.skillClip?HeroAnim.skillClip(vr,S,cls,sh,this.dualK):null}   /* vr = id de la habilidad */
   else if(k==='sp'&&cls==='dual')c=dualSp(S,this.dualK);
   else if(k==='sp'){if(vr==='r'||cls==='bow'||cls==='xbow')c=cls==='xbow'?spXbow(S):spBow(S);else if(vr==='g'||cls==='staff'||cls==='scepter')c=spStaff(S,sh&&cls!=='staff'?sh:false,cls==='scepter');else c=spMelee(S,cls,sh)}
   else if(WORK[k])c=WORK[k]();else if(k==='fi')c=fishC();else if(k==='eat')c=eatC(vr);else if(k==='pk')c=pickC(vr);
@@ -752,3 +754,6 @@ export class HeroAnim{
   const dt=e.t-o.t;if(dt<.02)return{k:this.sK,p:new V3(e.x,e.y,e.z),v:new V3(),sp:0};
   const v=new V3((e.x-o.x)/dt,(e.y-o.y)/dt,(e.z-o.z)/dt);return{k:this.sK,p:new V3(e.x,e.y,e.z),v,sp:v.length()}}
 }
+
+// para skillanim3d.js (clips de las habilidades del jugador): las piezas de construcción de clips y los golpes base
+export const HX={K,T,full,P,N,nrm,crs,edge,axisOf,ft,b2o,withSh,swordA,swordB,thrust,daggerA,daggerB,fistA,fistB,hook,greatA,greatH,bowA,xbowA,staffA,scepterA,STANCE,DEF};

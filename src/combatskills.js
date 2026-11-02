@@ -72,8 +72,8 @@ const FAM={
 /* ESPECIALIZACIONES («Caminos»): una por skill a nivel 30. Añaden 3 habilidades (30/50/75), una regla de identidad (hooks out/inMul/onHit) y una piedra clave a nivel 60 (elegir 1 de 2).
    Solo valen con las armas de `fam`. Datos; la lógica de cada `id` está en `out`, `inMul` y `onHit`. */
 const SP={
- guardian:{sk:'cb',fam:['sword'],n:'Guardián',em:'🛡️',idn:'Recibes un 12 % menos de daño (20 % con escudo).',
-  key:[{n:'Fortaleza',d:'Recibes un 8 % menos de daño adicional.'},{n:'Represalia',d:'+20 % de daño durante 4 s tras recibir un golpe.'}],
+ guardian:{sk:'cb',fam:['sword'],n:'Guardián',em:'🛡️',idn:'Recibes un 12 % menos de daño (20 % con escudo). Al bloquear mitigas un 10 % más y reflejas parte del golpe al atacante.',
+  key:[{n:'Fortaleza',d:'Recibes un 8 % menos de daño adicional. El daño reflejado al bloquear se duplica.'},{n:'Represalia',d:'+20 % de daño durante 4 s tras recibir un golpe.'}],
   kit:[{id:'gd_provocar',n:'Provocar',e:'up',lv:30,cd:30,c:16,aoe:160,self:1,sts:['weak',8000,1],d:'Los enemigos cercanos quedan Debilitados: hacen menos daño.'},
    {id:'gd_escudo',n:'Embestida de escudo',e:'shield',lv:50,cd:18,c:24,coef:.95,stun:2000,d:'Embistes con el escudo y aturdes al enemigo.'},
    {id:'gd_muro',n:'Muro inamovible',e:'shield',lv:75,cd:60,c:25,buf:['unbreak',8000],d:'Inquebrantable: inmune a aturdimientos y raíces durante 8 s.'}]},
@@ -197,7 +197,10 @@ function use(slot){
  const mul=1+.08*rk;
  if(typeof tone==='function')try{tone(300+slot*55,.07,'triangle',.05)}catch(e){}
  U[a.id]=now;
- fxCast(a,f,m,f.sk==='cb');
+ /* ANIMACIÓN (skillanim3d.js, `window.SKA[id]` = {d ms, ip fracción del impacto, hits}): el héroe hace lo que describe la habilidad y los efectos y el daño caen en el impacto del clip */
+ const KA=(typeof window!=='undefined'&&window.SKA&&window.SKA[a.id])||null,imp=KA?KA.d*KA.hits[0]:0;
+ if(KA&&typeof P==='object')P.ck={id:a.id,t0:now,d:KA.d};
+ if(KA&&imp>90){const f0=f,m0=m,sk0=f.sk==='cb';Q.push({t:now+imp-(sk0?70:0),fn:()=>{if(P.hp>0)fxCast(a,f0,m0,sk0)}})}else fxCast(a,f,m,f.sk==='cb');
  if(a.buf){STS.add(P,a.buf[0],{dur:a.buf[1]});try{snd('magic')}catch(e){}sp(P.x,P.y-14,f.col,12,70,60,120)}
  if(tg0){const rk0=rank(a.id);tg0.forEach(o=>STS.add(o,a.sts[0],{dur:a.sts[1]*(1+.08*rk0),v:a.sts[2]}));HFX.push({k:'star',tx:P.x,ty:P.y,th:4,t0:now,d:380});sp(P.x,P.y-6,a.col||f.col,16,a.aoe*1.6,50,120);try{snd('magic')}catch(e){}}
  if(a.coef&&m){
@@ -207,12 +210,12 @@ function use(slot){
   tg.forEach(o=>{for(let h=0;h<n2;h++){
    let d=Math.max(1,Math.round(mx*a.coef*mul*(.85+Math.random()*.3)));
    if(a.exec&&o.hp<=o.mh*a.exec[0])d=Math.max(1,Math.round(mx*a.exec[1]*mul*(.85+Math.random()*.3)));
-   const t1=now+(melee?60+h*110:(a.aoe&&!a.self?260:150)+h*110);
+   const hf=KA?KA.d*(KA.hits[Math.min(h,KA.hits.length-1)]+(h>=KA.hits.length?(h-KA.hits.length+1)*.06:0)):0,t1=KA?now+hf+(melee?0:(a.aoe&&!a.self?260:170)):now+(melee?60+h*110:(a.aoe&&!a.self?260:150)+h*110);
    if(melee){if(!h&&o===m)HFX.push({k:wColor()?'thrust':'punch',x:P.x,y:P.y,tx:o.x,ty:o.y,th:o.d.h/2,t0:now,d:300});
     PJ.push({x:P.x,y:P.y,sh:14,tx:o.x,ty:o.y,th:o.d.h/2,t0:t1+9999,t1,m:o,d,wt:'m',sk:'cb',mxv:mx*a.coef,hv:0,nodraw:1})}
    else PJ.push({x:P.x,y:P.y,sh:14,tx:o.x,ty:o.y,th:o.d.h/2,t0:t1-170,t1,m:o,d,wt:f.sk==='mg'?'g':'r',sk:f.sk,mxv:mx*a.coef,col:a.col,hv:hv&&!h?1:0});
    if(h<3)Q.push({t:t1+15,fn:()=>fxHit(a,f,o,(o===m?1:.65)*(h?.7:1)*(hv?1.3:1))})}
-   if(a.sts||a.stun||a.drain)Q.push({t:now+280,fn:()=>{if(!alive(o,performance.now()))return;
+   if(a.sts||a.stun||a.drain)Q.push({t:now+(KA?KA.d*KA.hits[0]+(melee?10:200):280),fn:()=>{if(!alive(o,performance.now()))return;
     if(a.sts)STS.add(o,a.sts[0],{dur:a.sts[1]*(1+.08*rk),v:a.sts[2]});
     if(a.stun&&typeof stunStart==='function'&&o===m)stunStart(o,performance.now(),a.stun*(1+.08*rk));
     if(a.drain&&o===m){const hl=Math.max(1,Math.round(mx*a.coef*mul*a.drain));P.hp=Math.min(maxHp(),P.hp+hl);splat(P.x,P.y,'+'+hl,'#2f9a3a',30)}}})});
@@ -249,6 +252,10 @@ function out(m,sk,wt,now){const sp=spec(sk);if(!sp||!m)return 1;const k=keyOn(),
   case 'crio':if(STS.has(m,'chill')||STS.has(m,'freeze'))r*=k===2?1.45:1.3;break;
   case 'oscura':if(STS.has(m,'curse'))r*=1.25;break}
  return r}
+/* REFLEJO DEL GUARDIÁN (N0): al BLOQUEAR (no en la parada perfecta, que es la de todos) devuelve el 35 % del golpe al atacante (70 % con Fortaleza) con un contragolpe visual (estela + estallido físico) */
+const guardian=()=>{const sp=spec('cb');return !!sp&&sp.id==='guardian'};
+function riposte(m,d0,now){if(!guardian()||!m||!(d0>0))return;const d=Math.max(1,Math.round(d0*(keyOn()===1?.7:.35)));try{hitM(m,d,now,'cb',99)}catch(e){}
+ try{const K=R3D.skill;if(K)K.play('estela',{x:P.x,y:P.y,tx:m.x,ty:m.y,col:'#cfe3ff',col2:'#ffffff',life:.35});if(R3D.impact)R3D.impact.burst(m,'fisico',1.1);if(R3D.spell)R3D.spell.parry((P.x+m.x)/2,(P.y+m.y)/2,Math.atan2(m.y-P.y,m.x-P.x))}catch(e){}}
 function inMul(){const sp=spec('cb');if(!sp)return 1;const k=keyOn();let r=1;
  if(sp.id==='guardian'){r=S.eq.s?.8:.88;if(k===1)r*=.92}else if(sp.id==='monje'&&k===2)r=.9;return r}
 function onHit(m,d,sk,wt,now){const sp=spec(sk);if(!sp||!m)return;const k=keyOn(),rn=Math.random();
@@ -311,4 +318,4 @@ function ui(a,i){const fid=uiFam(),f=FAM[fid];
  panel()}
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('.kw [data-a]');if(!b)return;ev.preventDefault();ui(b.dataset.a,b.dataset.i)});
 addEventListener('contextmenu',ev=>{if(ev.target.closest&&ev.target.closest('#hs-sk')&&!locked()){ev.preventDefault();if(typeof tabClick==='function')tabClick('mg')}},true);
-return{FAM,SP,ALIAS,ENR,UPLIFT,fx:{cast:fxCast,hit:fxHit,elemOf},active,use,tick,view,icon,list,fam:()=>wf(),rank,cd:()=>cd,out,inMul,onHit,tab,ui,choose,chooseKey,assign,dbg:{st,T,UI}}})();
+return{FAM,SP,ALIAS,ENR,UPLIFT,fx:{cast:fxCast,hit:fxHit,elemOf},active,use,tick,view,icon,list,fam:()=>wf(),rank,cd:()=>cd,out,inMul,guardian,riposte,onHit,tab,ui,choose,chooseKey,assign,dbg:{st,T,UI}}})();

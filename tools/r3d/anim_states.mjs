@@ -48,6 +48,11 @@ SC.push({id:'dano',n:'daño (espada, guardia)',g:gear('sword'),st:tm=>({cb:1,hur
 SC.push({id:'parar',n:'parar tras correr (espada)',g:gear('sword'),st:tm=>tm<1.5?{mv:1,run:1,speed:3.4}:{},win:[1.3,2]});
 SC.push({id:'cb2idle',n:'combate→reposo (mandoble)',g:gear('great'),st:tm=>tm<1.5?{cb:1}:{},win:[1.3,2.1]});
 SC.push({id:'idle2cb',n:'reposo→combate (espada+escudo)',g:Object.assign(gear('sword'),{sh:'#7a5a3a'}),st:tm=>tm>1.5?{cb:1}:{},win:[1.4,2.1]});
+// HABILIDADES DEL JUGADOR (N0-HABILIDADES-ANIM, skillanim3d.js): un escenario por habilidad con el arma de su familia; el clip dura lo que dice SKILLS y luego vuelve a la guardia
+import {SKILLS} from '../../src/r3d/skillanim3d.js';
+const FAMOF={sw:'sword',bw:'bow',st:'staff',dg:'dagger',gr:'great',fs:'fist',xb:'xbow',sc:'scepter',gd:'sword',as:'dagger',vd:'great',mj:'fist',cz:'bow',fr:'xbow',pi:'staff',cr:'staff',tm:'staff',os:'scepter'};
+for(const id in SKILLS){const k=FAMOF[id.split('_')[0]],d=SKILLS[id].d/1000,sh=id==='gd_escudo'||id==='gd_muro'||id==='gd_provocar'||id==='sw_aturde';
+ SC.push({id:'ck.'+id,n:'habilidad · '+id+' ('+k+(sh?'+escudo':'')+')',g:Object.assign(gear(k),sh?{sh:'#7a5a3a'}:{}),st:tm=>({act:{k:'ck',id,ph:Math.max(0,Math.min(.999,(tm-1)/d)),wt:WT[k],wk:k},cb:1}),T:1+d+1,win:[1,1+d]})}
 export const byId=id=>SC.find(s=>s.id===id);
 // estado completo en el instante tm (como lo pasa r3d.js a MiniHero.update)
 export function stateAt(sc,tm){const s=Object.assign({x:0,y:0,z:0,t:tm,mv:0,run:0,act:null,hurt:0,face:[0,1]},sc.st(tm));if(s.mv&&s.speed)s.z=s.speed*tm;return s}

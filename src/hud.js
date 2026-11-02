@@ -22,9 +22,9 @@ const HUDSU=(()=>{
   `<div class="bars"><div class="nm" id="hs-tn"></div>${bar('hp th')}</div></div></div>`+
   `<div class="hs-xp" id="hs-xp" aria-live="polite"></div>`+
   `<div class="hs-bn" id="hs-bn"><h3></h3><p></p></div>`+
-  `<div class="hs-wh" id="hs-wh" title="Resistencia"><svg viewBox="0 0 36 36"><circle class="bg" cx="18" cy="18" r="14"/><circle class="fg" cx="18" cy="18" r="14" pathLength="100" stroke-dasharray="100 100"/></svg></div>`;
+  `<div class="hs-wh" id="hs-wh" title="Resistencia"><svg viewBox="0 0 36 36"><circle class="bg" cx="18" cy="18" r="14"/><circle class="fg" cx="18" cy="18" r="14" pathLength="100" stroke-dasharray="100 100"/><circle class="dc" cx="18" cy="18" r="9.6" pathLength="100" stroke-dasharray="0 100"/></svg></div>`;
  host.appendChild(root);
- const $=s=>root.querySelector(s),pl=$('#hs-pl'),tg=$('#hs-tg'),act=$('#hs-act'),fxr=$('#hs-fx'),wh=$('#hs-wh'),whf=wh.querySelector('.fg');
+ const $=s=>root.querySelector(s),pl=$('#hs-pl'),tg=$('#hs-tg'),act=$('#hs-act'),fxr=$('#hs-fx'),wh=$('#hs-wh'),whf=wh.querySelector('.fg'),whd=wh.querySelector('.dc');let dcOn=0;
  // Lote ANTI-TIRONES (25 oct 2026): el tamaño de cada lienzo de barra se guarda con un ResizeObserver; antes fx() leía offsetParent/clientWidth en CADA fotograma, y tras las escrituras
  // de estilo del mismo fotograma (nameplates, barras) eso forzaba un reflow por barra.
  const RO=typeof ResizeObserver!=='undefined'?new ResizeObserver(es=>{for(const e of es){const b=e.target._b;if(b){b.W=e.contentRect.width;b.H=e.contentRect.height}}}):null;
@@ -182,7 +182,9 @@ const HUDSU=(()=>{
   // acción (talar, minar…): barra de progreso sobre el marco
   const ac=A&&A.ty!=='f'&&!A.wh&&!A.wk&&!A.fg;   /* con la rueda de recolección no hay barra de acción (la rueda lleva el progreso) */act.classList.toggle('on',!!ac);if(ac){$('#hs-al').textContent=actLabel();setBar(B.ac,Math.min(1,A.pr||0),null)}
   // resistencia (E7/H7): el juego guarda S.sta (0–100) y S.exh; la rueda se ve solo si no está llena o se está corriendo
-  if(typeof S.sta==='number'){const st=S.sta/100;wh.classList.toggle('show',S.sta<99.5||!!RUN);wh.classList.toggle('exh',!!S.exh);wh.classList.toggle('low',!S.exh&&st<.15);wh.classList.toggle('warn',!S.exh&&st>=.15&&st<.35);whf.setAttribute('stroke-dasharray',(st*100).toFixed(1)+' 100')}
+  /* enfriamiento del DASH: anillo interior que se llena hasta poder esquivar de nuevo (cd y cdt de DSH en game.js) */
+  const dl=DSH.cd-now,dp=dl>0?1-dl/DSH.cdt:1,dOn=dl>0;if(dOn||dcOn){whd.setAttribute('stroke-dasharray',(Math.min(1,Math.max(0,dp))*100).toFixed(1)+' 100');if(dcOn&&!dOn){wh.classList.add('dcr');setTimeout(()=>wh.classList.remove('dcr'),260)}dcOn=dOn?1:0;wh.classList.toggle('dcd',dOn)}
+  if(typeof S.sta==='number'){const st=S.sta/100;wh.classList.toggle('show',S.sta<99.5||!!RUN||dOn);wh.classList.toggle('exh',!!S.exh);wh.classList.toggle('low',!S.exh&&st<.15);wh.classList.toggle('warn',!S.exh&&st>=.15&&st<.35);whf.setAttribute('stroke-dasharray',(st*100).toFixed(1)+' 100')}
   dlgFrame(now);dollFrame(now);if(!(tg.classList.contains('on')&&tpFrame(now)))heroPortrait(now);
   if(now>=fxN){const fd=Math.min(.1,fxL?(now-fxL)/1000:.033);fxL=now;fxN=now+33;fx(B.hp,tt,fd,low);fx(B.mp,tt,fd,0);if(tg.classList.contains('on'))fx(B.th,tt,fd,0);if(ac)fx(B.ac,tt,fd,0)}}   // barras animadas a ~30 fps (antes cada fotograma: 3–4 lienzos subidos al compositor por fotograma)
  function warm(){if(thFail||!window.R3D||!R3D.talkHead)return;try{if(!th)th=R3D.talkHead(dCv);th.warm('guardia');th.key=''}catch(e){thFail=1}

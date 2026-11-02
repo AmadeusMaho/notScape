@@ -46,7 +46,7 @@ function telStart(m,now){const sw=MSW[m.d.id];if(sw){const j=((sw.indexOf(mst(m)
  if(kd!=='slam'&&(!m.stl2||now-m.stl2>2500)){m.stl2=now;log(kd==='met'?'☄️ <b>'+m.d.n+'</b> marca el suelo bajo tus pies: ¡muévete!':'💥 <b>'+m.d.n+'</b> carga una onda expansiva: ¡aléjate!')}
  m.tn=now+(m.d.boss===1?7000:m.d.boss===2?8500:9500)*(m.asx||1);m.nt=now+1600}
 function telUpd(m,now){if(!m.tel)return false;m.f=P.x-m.x-(P.y-m.y)>=0?1:-1;if(now<m.tel.t1)return true;
- const T=m.tel,cx=T.cx==null?m.x:T.cx,cy=T.cy==null?m.y:T.cy,dp=Math.hypot(P.x-cx,P.y-cy),r=T.r;m.tel=null;m.nt=now+1200*(m.asx||1);snd('thunder');SHK=now+180;sp(cx,cy-4,'#ff6a3a',14,r*1.4,40,100);
+ const T=m.tel,cx=T.cx==null?m.x:T.cx,cy=T.cy==null?m.y:T.cy,dp=Math.hypot(P.x-cx,P.y-cy),r=T.r;m.at0=now-.18*(m.d.boss?760:640);m.tel=null;m.nt=now+1200*(m.asx||1);snd('thunder');SHK=now+180;sp(cx,cy-4,'#ff6a3a',14,r*1.4,40,100);
  if(dp<=r&&P.hp>0&&!dashInv()){const g0=guardHit(m,Math.max(1,Math.round((m.dm||1)*(T.f||2.2)*STS.out(m))),now,1);if(g0.kind&&g0.d<=0)return true;const q=prMod(m,g0.d,1),d=STS.inP(q.d,now,m);if(q.blocked&&!d){fText('Absorbido','#6ab0ff',P.x,P.y,46);log('🙏 Tu oración absorbió el golpe pesado de '+m.d.n+'.');return true}P.hp-=d;splat(P.x,P.y,d,q.blocked?'#6ab0ff':'#d4261c',26);snd('hurt');HURT=now;P.pjM=m;P.pj=now+4800;bossHit(m,d,now);if(P.hp<=0)die()}
  else if(P.hp>0){if(dashInv()&&dp<=r*1.15)pdCheck(m,now);log('Esquivaste el golpe pesado de '+m.d.n+'.');if(dp<=r)fText('Esquiva','#9fe0ff',P.x,P.y,46)}return true}
 function drawTel(now){const s=ISO.scale();for(const m of M){if(!m.tel)continue;const u=Math.min(1,(now-m.tel.t0)/1200),r=m.tel.r,cx=m.tel.cx==null?m.x:m.tel.cx,cy=m.tel.cy==null?m.y:m.tel.cy;
@@ -68,11 +68,11 @@ function skPick(m,now,dx,dy,dp){const s=m.d.sk;if(!s||STS.has(m,'silence')||m.da
  return false}
 function skFire(m,w,now,dx,dy,dp){const o=m.d.sk[w.sk],a=Math.atan2(dy,dx);m.flare=now;
  if(w.sk==='lunge'){m.dash={t0:now,t1:now+o.dur,a,sp:o.sp,f:o.f,hit:0};snd('miss')}
- else{KNV.push({x:m.x,y:m.y,a,sp:o.sp,t0:now,life:o.life,m,f:o.f,k:o.k||'knife'});m.at0=now;snd(o.k==='orb'?'magic':'bow')}}
+ else{KNV.push({x:m.x,y:m.y,a,sp:o.sp,t0:now,life:o.life,m,f:o.f,k:o.k||'knife'});m.at0=now-.18*(m.d.boss?760:640);snd(o.k==='orb'?'magic':'bow')}}   /* el disparo cae en el instante del golpe de la animación (u=.18) */
 function skDash(m,now,dt,dx,dy,dp){const d=m.dash;if(now>=d.t1||P.hp<=0){m.dash=null;m.nt=Math.max(m.nt||0,now+450);return}
  const nx=m.x+Math.cos(d.a)*d.sp*dt,ny=m.y+Math.sin(d.a)*d.sp*dt;if(inVilla(nx,ny)){m.dash=null;m.nt=Math.max(m.nt||0,now+450);return}
  m.x=nx;m.y=ny;m.mv=now;m.f=Math.cos(d.a)-Math.sin(d.a)>=0?1:-1;if(Math.random()<.5)sp(m.x,m.y-2,'#b8a888',1,16,18,24);
- if(!d.hit&&dp<=46+(m.d.w||16)*.3+10){d.hit=1;if(dashInv()){pdCheck(m,now);fText('Esquiva','#9fe0ff',P.x,P.y,46);inc('dodge')}else{const o=m.dm;m.dm=Math.max(1,Math.round(o*d.f));monHit(m,now);m.dm=o}m.dash=null;m.nt=Math.max(m.nt||0,now+700)}}
+ if(!d.hit&&dp<=46+(m.d.w||16)*.3+10){d.hit=1;if(dashInv()){pdCheck(m,now);fText('Esquiva','#9fe0ff',P.x,P.y,46);inc('dodge')}else{const o=m.dm;m.dm=Math.max(1,Math.round(o*d.f));monHit(m,now);m.dm=o}m.at0=now-.18*(m.d.boss?760:640);m.dash=null;m.nt=Math.max(m.nt||0,now+700)}}
 function knTick(dt,now){for(let i=KNV.length-1;i>=0;i--){const n=KNV[i],m=n.m;n.x+=Math.cos(n.a)*n.sp*dt;n.y+=Math.sin(n.a)*n.sp*dt;
  let dead=now>=n.t0+n.life||inVilla(n.x,n.y);
  if(!dead&&P.hp>0&&Math.hypot(P.x-n.x,P.y-n.y)<16){dead=true;if(dashInv()){fText('Esquiva','#9fe0ff',P.x,P.y,46);inc('dodge')}else{const o=m.dm;m.dm=Math.max(1,Math.round(o*n.f));monHit(m,now);m.dm=o}}
@@ -99,7 +99,7 @@ function bossTick(m,now){const L0=BM[m.d.id];if(!L0||m.sm)return;
  if(!m.bi){m.bi=1;log('⚠️ <b>'+m.d.n+'</b> — '+L0.map(x=>BMN[x.split(':')[0]]).join(' · ')+'.')}
  if(bmech(m,'enr')&&!m.en&&m.hp<m.mh*.3){m.en=1;m.dm=Math.max(m.dm+1,Math.round(m.dm*1.25));m.asx=.75;log('🔥 ¡<b>'+m.d.n+'</b> entra en furia!');sp(m.x,m.y-m.d.h/2,'#ff3a1a',16,120,90,180);SHK=now+250;snd('thunder')}
  const s=bmech(m,'sum');if(s&&(m.bph||0)<2&&m.hp<m.mh*((m.bph||0)<1?.66:.33)){m.bph=(m.bph||0)+1;summon(m,s.split(':')[1],now)}}
-function summon(m,id,now){log('📣 ¡<b>'+m.d.n+'</b> llama refuerzos!');snd('thunder');for(let i=0;i<2;i++){const a=Math.random()*6.283,x=m.x+Math.cos(a)*40,y=m.y+Math.sin(a)*40,e={d:Object.assign({},MD[id],{dr:[],co:[0,0],ag:1}),hx:m.x,hy:m.y,x,y,rt:0,tx:x,ty:y,wt:0,fl:0,sm:m};rollLv(e);e.mh=Math.max(3,Math.round(e.mh*.6));e.hp=e.mh;e.hunt=1;e.lx=m.x;e.ly=m.y;e.nt=now+1200;M.push(e);sp(x,y-6,'#c8a0ff',10,60,50,110)}}
+function summon(m,id,now){m.sig={k:'call',t0:now};log('📣 ¡<b>'+m.d.n+'</b> llama refuerzos!');snd('thunder');for(let i=0;i<2;i++){const a=Math.random()*6.283,x=m.x+Math.cos(a)*40,y=m.y+Math.sin(a)*40,e={d:Object.assign({},MD[id],{dr:[],co:[0,0],ag:1}),hx:m.x,hy:m.y,x,y,rt:0,tx:x,ty:y,wt:0,fl:0,sm:m};rollLv(e);e.mh=Math.max(3,Math.round(e.mh*.6));e.hp=e.mh;e.hunt=1;e.lx=m.x;e.ly=m.y;e.nt=now+1200;M.push(e);sp(x,y-6,'#c8a0ff',10,60,50,110)}}
 // esbirros: se retiran al morir, o cuando su jefe muere o deja de perseguirte
 function bossClean(now){for(let i=M.length-1;i>=0;i--){const e=M[i];if(!e.sm)continue;if(e.rt||!e.sm.hunt||e.sm.rt||P.hp<=0){if(A&&A.e===e)stopA();if(P.pjM===e)P.pjM=null;M.splice(i,1)}}}
 // efectos de un golpe del jefe que ha dañado (d>0): robavida y herida por segundo
@@ -124,7 +124,7 @@ const AFX={
  volatil:{n:'Volátil',die:(m,now)=>{EXPL.push({x:m.x,y:m.y,t0:now,t1:now+1500,r:74,dm:Math.max(2,Math.round((m.dm||2)*1.5))});fText('¡Va a estallar!','#ff9a3a',m.x,m.y,(m.d.h||40)+12)}},
  vampirico:{n:'Vampírico',hitP:(m,d)=>{const h=Math.max(1,Math.round(d*.5));m.hp=Math.min(m.mh,m.hp+h);splat(m.x,m.y,h,'#6ad04a',m.d.h+6,0,1,m)}},
  invocador:{n:'Invocador',tick:(m,now)=>{if(!m.sumD&&m.hp<m.mh*.5){m.sumD=1;summon(m,m.d.id,now)}}},
- enfurecido:{n:'Enfurecido',tick:(m,now)=>{if(!m.furD&&m.hp<m.mh*.4){m.furD=1;STS.add(m,'fury',{dur:20000});fText('¡Furia!','#ff6a5a',m.x,m.y,(m.d.h||40)+12)}}}
+ enfurecido:{n:'Enfurecido',tick:(m,now)=>{if(!m.furD&&m.hp<m.mh*.4){m.furD=1;m.sig={k:'roar',t0:now};STS.add(m,'fury',{dur:20000});fText('¡Furia!','#ff6a5a',m.x,m.y,(m.d.h||40)+12)}}}
 };
 const afxNames=m=>m.afx.map(k=>AFX[k].n).join(' · ');
 function afxRoll(m){m.afx=null;m.spx=1;m.sumD=0;m.furD=0;m.shT=0;m.shI=0;   /* ¡OJO! se llama al crear el mundo: no uses STS ni P aquí (P aún no existe) */

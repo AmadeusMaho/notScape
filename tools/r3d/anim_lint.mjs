@@ -9,9 +9,9 @@
 //   · giro    : salto angular máximo de un hueso entre fotogramas (rad) → detecta «chasquidos» (poses que saltan)
 // Umbrales (FALLO): manoI > .02 en agarres a dos manos, pies > .02, patina > .6, cuerpo > 17 %, giro > 1 (un golpe rápido llega a ~.95 en el impacto).
 import {register} from 'node:module';
-import {pathToFileURL} from 'node:url';
+import {pathToFileURL,fileURLToPath} from 'node:url';
 import path from 'node:path';
-const ROOT=path.resolve(path.dirname(new URL(import.meta.url).pathname),'../..');
+const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 register('data:text/javascript,'+encodeURIComponent(`export async function resolve(s,c,n){if(s==='three')return{url:${JSON.stringify(pathToFileURL(ROOT+'/vendor/three/build/three.module.js').href)},shortCircuit:true};return n(s,c)}`));
 const THREE=await import('three');
 const {MiniHero}=await import(pathToFileURL(ROOT+'/src/r3d/herom3d.js').href);

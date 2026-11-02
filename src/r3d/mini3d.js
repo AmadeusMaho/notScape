@@ -27,12 +27,18 @@ function sash(w,prof,off=.016){const N=40,P=[],I=[],V=THREE.Vector3,R=y=>{for(le
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setIndex(I);g.computeVertexNormals();return g}
 
 export class Mini{
+ /* RIG2 (N0-ESQUELETOS, 2 nov 2026): los ENEMIGOS (buildHuman en actors3d.js) activan `Mini.rig2` y ganan 8 articulaciones más: `ribs` (torso alto: pivote en y=.66; `chest` pasa a ser la cintura), `neck`, clavículas `clav` y muñecas `wr` (la mano y el arma cuelgan de ahí) y los dedos del pie `toe`. Héroe y PNJ siguen con el rig clásico. */
+ static rig2=false;
  static DRESS_OK=['ru','anciano','aldeana','hechicera','bruja','b2','k2','goblinsha','heroe-mago'];   // 'heroe-mago' = héroe con peto de TELA (túnica, armor3d.js)   // PNJ femeninos (Ru, Aldeana) y MAGOS (túnica larga): decisión del dueño, 18 oct 2026
  constructor(s){this.spec=s;this.hulls=[];this.obj=new THREE.Group();const g=this.root=new THREE.Group();this.obj.add(g);this.ph=s.ph||0;
   const FC=!!s.facet,k=s.k||1,robe=s.robe,skin=shade(s.skin||'#e2b890',.76),W=s.w||1;this.k=k;this.W=W;
   const pelvis=this.pelvis=new THREE.Group();pelvis.position.set(0,.42,0);g.add(pelvis);
+  const R2=!!Mini.rig2;this.rig2=R2;
   const chest=this.chest=new THREE.Group();pelvis.add(chest);
-  const body=this.body=new THREE.Group();body.position.set(0,-.42,0);chest.add(body);
+  let body,low;
+  if(R2){low=this.low=new THREE.Group();low.position.set(0,-.42,0);chest.add(low);   /* torso bajo (abdomen): gira con la cintura */
+   const ribs=this.ribs=new THREE.Group();ribs.position.set(0,.24,0);chest.add(ribs);body=this.body=new THREE.Group();body.position.set(0,-.66,0);ribs.add(body)}   /* torso alto: todo lo demás (cabeza, brazos, accesorios) cuelga de aquí */
+  else{body=this.body=new THREE.Group();body.position.set(0,-.42,0);chest.add(body);low=body}
   const part=(geo,col,x,y,z,o={})=>{const m=new THREE.Mesh(geo,o.mat||T(col,col===skin?Object.assign({rim:.3},o.t):o.t));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=col!==skin;(o.p||body).add(m);
    if(o.ink!==0){const h=hull(geo,(o.ink||.022)*(s.inkK||1));h.visible=!!this.inkOn;m.add(h);   /* el contorno es HIJO de la malla: gira/escala/mueve con ella aunque se cambie después (antes copiaba la pose al crearse y quedaba una cuña negra) */this.hulls.push(h);m.userData.h=h}return m};
   this.part=part;this.skinC=skin;
@@ -55,8 +61,11 @@ export class Mini{
      part(LT(lo.map(p=>[p[0],p[1]-y0]),5,ps,pl),robe,0,0,0,{p:grp});if(tr)part(LT(tr.map(p=>[p[0],p[1]-y0]),5,ps,pl),s.trim,0,0,0,{p:grp,ink:0})}}
   }else{
    const rc=.19*W*cw;
-   part(lathe([[0,.36],[.13*W,.365],[.155*W*ww+bel,.42],[rw,.5],[rw,.52]]),pc,0,0,0);                                                       // abdomen + cadera (pantalón)
-   part(lathe([[rw*1.012,.5],[rw*1.012,.52],[rw*1.1+bel*.4,.6],[rc,.7],[rc*.99,.79],[rc*.62,.845],[.05,.865],[0,.87]]),robe,0,0,0);          // camisa/chaleco: cintura → pecho → hombros
+   part(lathe([[0,.36],[.13*W,.365],[.155*W*ww+bel,.42],[rw,.5],[rw,.52]]),pc,0,0,0,{p:low});                                                       // abdomen + cadera (pantalón)
+   if(R2){const x1=rw*1.1+bel*.4,xm=x1+(rc-x1)*.5;   /* camisa partida en la cintura alta (y .65): la mitad baja con `chest`, la alta con `ribs`; se solapan 1 cm */
+    part(lathe([[rw*1.012,.5],[rw*1.012,.52],[x1,.6],[xm,.655]]),robe,0,0,0,{p:low});
+    part(lathe([[xm*.995,.645],[xm,.655],[rc,.7],[rc*.99,.79],[rc*.62,.845],[.05,.865],[0,.87]]),robe,0,0,0)}
+   else part(lathe([[rw*1.012,.5],[rw*1.012,.52],[rw*1.1+bel*.4,.6],[rc,.7],[rc*.99,.79],[rc*.62,.845],[.05,.865],[0,.87]]),robe,0,0,0);          // camisa/chaleco: cintura → pecho → hombros
    if(s.trim)part(new THREE.TorusGeometry(.105*Math.max(.8,W*cw*.9),.018,6,18).rotateX(Math.PI/2),s.trim,0,.835,0,{ink:0});                       // cuello/ribete
    part(sph(.12*W,1.2,.82,.95),pc,0,0,0,{p:pelvis,ink:.016});                                                                                  // cadera: une el torso con las piernas (no gira con el pecho)
    if(s.strap)part(sash(.06,[[.5,rw*1.012],[.6,rw*1.1+bel*.4],[.7,rc],[.79,rc*.99]]),s.strap,0,0,0,{ink:.01,t:{side:THREE.DoubleSide}});   // bandolera: cinta CURVA que abraza el torso (REGLA: nunca una caja recta que cuelgue del pecho; ver AGENTS.md «Accesorios del cuerpo»)
@@ -70,12 +79,16 @@ export class Mini{
    part(new THREE.CylinderGeometry(.062*lw,.058*lw,.08,12).translate(0,-.04,0),pc,0,0,0,{p:kn,ink:.015});
    part(FC?fct(new THREE.CylinderGeometry(.062*lw,.075*lw,.1,7).translate(0,-.1,0)):new THREE.CylinderGeometry(.062*lw,.07*lw,.1,12).translate(0,-.1,0),bc,0,0,0,{p:kn,ink:.014});
    const an=new THREE.Group();an.position.set(0,-.19,0);kn.add(an);this.ankles.push(an);
-   l.userData.foot=part(FC?fsph(.074*lw,1,.62,1.5,7,4):sph(.07*lw,1,.65,1.5),bc,0,0,.04,{p:an,ink:.014});return l});
+   if(R2){const tz=new THREE.Group();tz.position.set(0,-.005,.07*lw);an.add(tz);(this.toes||(this.toes=[])).push(tz);   /* pie en dos piezas: talón (tobillo) + punta (dedos) */
+    l.userData.foot=part(FC?fsph(.068*lw,1,.62,1.2,7,4):sph(.064*lw,1,.62,1.15),bc,0,0,.015,{p:an,ink:.014});part(fsph(.05*lw,1,.55,1.25,6,4),bc,0,0,.025,{p:tz,ink:.013})}
+   else l.userData.foot=part(FC?fsph(.074*lw,1,.62,1.5,7,4):sph(.07*lw,1,.65,1.5),bc,0,0,.04,{p:an,ink:.014});return l});
   this.feet=this.ankles;
   if(this.skG)this.skp=new SkirtPhys({pelvis:this.pelvis,chest:this.chest,body:this.body,legs:this.legs,knees:this.knees,ankles:this.ankles,groups:this.skG,phi:this.skPhi,y0:this.skY0,rad:this.skRad,hem:this.skHem,seed:this.ph});
-  if(s.belt)part(FC?fct(new THREE.TorusGeometry(dress?.19*W:rw*1.04,.03,4,14).rotateX(Math.PI/2)):new THREE.TorusGeometry(dress?.19*W:rw*1.04,.025,8,24).rotateX(Math.PI/2),s.belt,0,dress?.52:.515,0,{ink:.012});
+  if(s.belt)part(FC?fct(new THREE.TorusGeometry(dress?.19*W:rw*1.04,.03,4,14).rotateX(Math.PI/2)):new THREE.TorusGeometry(dress?.19*W:rw*1.04,.025,8,24).rotateX(Math.PI/2),s.belt,0,dress?.52:.515,0,{ink:.012,p:dress?undefined:low});
   // cabeza
-  const hy=1.06,head=this.head=new THREE.Group();head.position.set(0,hy,0);if(s.headK)head.scale.setScalar(s.headK);body.add(head);
+  const hy=1.06,head=this.head=new THREE.Group();head.position.set(0,hy,0);if(s.headK)head.scale.setScalar(s.headK);
+  if(R2){const nk=this.neck=new THREE.Group();nk.position.set(0,.88,0);body.add(nk);head.position.set(0,hy-.88,0);nk.add(head);part(new THREE.CylinderGeometry(.055*Math.min(W,1.3),.07*Math.min(W,1.3),.12,6).translate(0,.05,0),skin,0,0,0,{p:nk,ink:.012})}   /* cuello: la cabeza gira sobre él */
+  else body.add(head);
   if(!s.skull){part(sph(.19,1,1.02,1),skin,0,0,.04,{p:head,ink:.016});
    [-1,1].forEach(q=>{part(sph(.034,1,s.enemy?.85:1.2,.7),s.enemy&&s.eye?s.eye:(s.irisC||'#1c1410'),.07*q,.012,.212,{p:head,ink:0,t:{flat:0},mat:s.enemy&&s.eye?glow(s.eye,1.6):undefined});part(sph(.011),'#fff6e0',.07*q+.01,.026,.232,{p:head,ink:0});
     part(new THREE.BoxGeometry(.09,s.enemy?.026:.02,.02),s.brow||'#3a2a20',.07*q,s.enemy?.066:.075,.2,{p:head,ink:0}).rotation.z=(s.enemy?.42:(s.browT==null?.12:s.browT))*q;if(s.blush)part(sph(.02,1.2,.7,.5),'#e29a86',.115*q,-.04,.19,{p:head,ink:0})});
@@ -87,12 +100,15 @@ export class Mini{
   s.top&&s.top(this,head,part);
   // brazos: hombro → codo → mano (grip). Cápsulas con la semiesfera centrada en la articulación
   this.elbows=[];this.grips=[];this.hands=[];
-  this.arms=[-1,1].map(q=>{const a=new THREE.Group();a.position.set(.19*q*W*(dress||!s.chestW?1:Math.max(1,cw*1.04)),.78,0);body.add(a);const sc=s.sleeve||robe;
+  this.arms=[-1,1].map(q=>{const a=new THREE.Group();let cv=null;
+   if(R2){cv=new THREE.Group();cv.position.set(.19*q*W*(dress||!s.chestW?1:Math.max(1,cw*1.04)),.78,0);body.add(cv);(this.clavs||(this.clavs=[])).push(cv);cv.add(a)}   /* clavícula: encoge/adelanta el hombro entero */
+   else{a.position.set(.19*q*W*(dress||!s.chestW?1:Math.max(1,cw*1.04)),.78,0);body.add(a)}const sc=s.sleeve||robe;
    part(new THREE.CapsuleGeometry(.055*aw,.18,6,10).translate(0,-.09,0),sc,0,0,0,{p:a,ink:.016});
    const el=new THREE.Group();el.position.set(0,-.18,0);a.add(el);this.elbows.push(el);
    part(new THREE.CapsuleGeometry(.05*aw,.15,6,10).translate(0,-.075,0),sc,0,0,0,{p:el,ink:.015});
-   this.hands.push(part(FC?fsph(.056*Math.pow(aw,.8),1,1,1,7,5):sph(.052*Math.pow(aw,.8)),skin,0,-.18,0,{p:el,ink:.012}));
-   const gr=new THREE.Group();gr.position.set(0,-.18,0);gr.rotation.order='YXZ';el.add(gr);this.grips.push(gr);
+   let wp=el,wy=-.18;if(R2){wp=new THREE.Group();wp.position.set(0,-.18,0);el.add(wp);(this.wrists||(this.wrists=[])).push(wp);wy=0}   /* muñeca: la mano y lo que empuña giran en ella */
+   this.hands.push(part(FC?fsph(.056*Math.pow(aw,.8),1,1,1,7,5):sph(.052*Math.pow(aw,.8)),skin,0,wy,0,{p:wp,ink:.012}));
+   const gr=new THREE.Group();gr.position.set(0,wy,0);gr.rotation.order='YXZ';wp.add(gr);this.grips.push(gr);
    if(s.pauld){const pr=.1*aw;part(FC?fsph(pr,1.2,.8,1.1,8,5):sph(pr,1.2,.8,1.1),s.pauld,.02*q,.03,0,{p:a,ink:.016});for(let i=0;i<(s.spikes||0);i++){const sp=part(new THREE.ConeGeometry(.025*aw,.1*aw,6),s.spikeC||shade(s.pauld,1.5),.02*q+(i-(s.spikes-1)/2)*.05*q,.03+pr*.78,(i-(s.spikes-1)/2)*.04,{p:a,ink:.01});sp.rotation.z=-.5*q}}
    a.rotation.z=.22*q;return a});
   s.acc&&s.acc(this,body,part);g.scale.setScalar(k);this.base=this.arms.map(a=>a.rotation.z)}

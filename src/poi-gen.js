@@ -84,8 +84,8 @@ const POIGEN=(()=>{
      if(tp.vein){const mt=((B.res||{}).mi||[]),lt=L.mi||[];if(mt.length&&lt.length){const q=Math.floor(H(k*131+i,j,70)*mt.length),rc=[p.x-110,p.x+110,p.y+10,p.y+190];if(lt[q]){B.res.mi.push(mt[q].map(([a,m])=>[a,Math.max(2,Math.min(6,Math.round(m*.5)))]));L.mi.push({r:[rc],z:rc});stats.vetas=(stats.vetas||0)+1}}}   // veta del propio bioma pegada a la boca (misma plantilla que sus vetas; game.js la siembra en res.mi/lay.mi)
      pois.push(p);(tp.ev&&FLAV[k]?tp.dec.concat(FLAV[k]):tp.dec).forEach(([nm,dx,dy,o,fp])=>props.push(P(nm,p.x+dx,p.y+dy,o||null,fp?{fp}:undefined)));put=true;n++}
     if(!put)stats.rech++}}
-   (LANDM[k]||[]).forEach(([kind,ang],li)=>{const tp=TPL[kind],c0=B.cen||[B.w/2,B.h/2];let put=false;   // hito grande: se busca el primer sitio válido siguiendo el rayo desde la aldea (±7°, ±14°…), cada vez más lejos
-    for(let rr=2400;rr<=7200&&!put;rr+=240)for(let da=0;da<7&&!put;da++){const a=(ang+(da%2?1:-1)*Math.ceil(da/2)*7)*Math.PI/180,lx=c0[0]+Math.cos(a)*rr,ly=c0[1]+Math.sin(a)*rr;
+   (LANDM[k]||[]).forEach(([kind,ang],li)=>{const tp=TPL[kind],c0=B.cen||[B.w/2,B.h/2];let put=false;   // hito grande: se busca el primer sitio válido siguiendo el rayo desde la aldea (±7°, ±14°… hasta ±91°; desde 1800 px: con K=4 la región es más pequeña, N0), cada vez más lejos
+    for(let rr=1800;rr<=7200&&!put;rr+=240)for(let da=0;da<27&&!put;da++){const a=(ang+(da%2?1:-1)*Math.ceil(da/2)*7)*Math.PI/180,lx=c0[0]+Math.cos(a)*rr,ly=c0[1]+Math.sin(a)*rr;
      if(bad(lx,ly,tp.r)||!ok(B.ox+lx,B.oy+ly,Math.min(tp.r,110),k))continue;
      const p={id:'L'+li,k:tp.pk||'hito',n:tp.n(),x:Math.round(lx),y:Math.round(ly),r:tp.r,tier:2,em:tp.em,rv:tp.rv},pool=tp.mobIds||(POOL.camp.length?POOL.camp:all);
      if(tp.mobs&&pool.length)p.mobs=tp.mobs().map(([dx,dy],m)=>[pool[Math.floor(H(k*131+li,m,77)*pool.length)],dx,dy]);

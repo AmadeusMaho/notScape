@@ -19,6 +19,8 @@ import {Mini,MINI,sword,shieldMesh} from './mini3d.js';
 import {hairFn} from './herom3d.js';
 import {angelWings} from './wings3d.js';   // alas de ángel reutilizables (Lote CINE-2b)
 import {SkirtPhys,flapRig} from './skirt3d.js';
+import {animEnemy} from './enemyanim3d.js';
+import {autoRig,animQuad2,animSlime,animBird2,animFrog2} from './quadanim3d.js';   // N0-ESQUELETOS-2: auto-esqueleto y animación de cuadrúpedos   // N0-ESQUELETOS: animación por arquetipo de los enemigos humanoides (rig2)
 import {MSPEC,makeSpecies} from './mountmodels3d.js';   // DOMAR-D3: animales domables = el mismo modelo que la montura, sin silla
 
 const M4=THREE.Matrix4,V3=THREE.Vector3,QT=THREE.Quaternion;
@@ -132,10 +134,12 @@ function buildQuad(id){const c=QUADS[id],s=c.s||1,k=U*s,P=new Proto(),bx=c.bx*k,
   if(c.fangs)[-1,1].forEach(q=>P.part(cone(sn.ry*k*.16,sn.ry*k*.7,5),'#f4f0e0',q*sn.ry*k*.55,dy-sn.y*k-sn.ry*k*.8,dz+sn.x*k+sn.rx*k*.35,{p:neck,ink:0,rot:[Math.PI,0,0]}));
   if(c.tusk)[-1,1].forEach(q=>P.part(cone(sn.ry*k*.2,sn.ry*k*1.1,5),'#efe6cc',q*sn.ry*k*.8,dy-sn.y*k+sn.ry*k*.2,dz+sn.x*k+sn.rx*k*.2,{p:neck,ink:.006,rot:[-.5,0,q*.35]}))}
  P.eyes(neck,hry*.74,dy+hry*.28,dz+hrz*.34,hry*.17,c.eye||'#1c1410',!!c.eye);P.eyePos=[hry*.74,dy+hry*.28,dz+hrz*.34,hry*.17];   // posición de los ojos (hueso 'head'): el destello de aviso de golpe se cuelga de ahí
- const ek=c.ear;if(ek&&ek!=='none')[-1,1].forEach(q=>{if(ek==='point')P.part(cone(hry*.34,hry*.95,5),hc,q*hry*.62,dy+hry*.95,dz-hrz*.15,{p:neck,ink:.01,rot:[-.15,0,-q*.25]});
-  else if(ek==='side')P.part(sph(hry*.42,1.7,.3,.8,8),c.earC||hc,q*hry*1.25,dy+hry*.5,dz-hrz*.25,{p:neck,ink:.01,rot:[0,0,q*.25]});
-  else if(ek==='round')P.part(sph(hry*.3,1,1.1,.6,8),hc,q*hry*.95,dy+hry*.7,dz-hrz*.2,{p:neck,ink:.01});
-  else P.part(sph(hry*.26,.6,1.5,.5,8),shade(hc,.85),q*hry*1.0,dy+hry*.2,dz-hrz*.2,{p:neck,ink:.01,rot:[0,0,q*.5]})});
+ const ek=c.ear;if(ek&&ek!=='none')[-1,1].forEach(q=>{   /* orejas con HUESO propio (earL/earR): se agitan y se echan atrás (quadanim3d.js) */
+  const E=(x,y,z)=>P.bone(q<0?'earR':'earL',neck,x,y,z);
+  if(ek==='point'){const eb=E(q*hry*.62,dy+hry*.95,dz-hrz*.15);P.part(cone(hry*.34,hry*.95,5),hc,0,0,0,{p:eb,ink:.01,rot:[-.15,0,-q*.25]})}
+  else if(ek==='side'){const eb=E(q*hry*1.25,dy+hry*.5,dz-hrz*.25);P.part(sph(hry*.42,1.7,.3,.8,8),c.earC||hc,0,0,0,{p:eb,ink:.01,rot:[0,0,q*.25]})}
+  else if(ek==='round'){const eb=E(q*hry*.95,dy+hry*.7,dz-hrz*.2);P.part(sph(hry*.3,1,1.1,.6,8),hc,0,0,0,{p:eb,ink:.01})}
+  else{const eb=E(q*hry*1.0,dy+hry*.2,dz-hrz*.2);P.part(sph(hry*.26,.6,1.5,.5,8),shade(hc,.85),0,0,0,{p:eb,ink:.01,rot:[0,0,q*.5]})}});
  if(c.horn)[-1,1].forEach(q=>P.part(cone(hry*.2,hry*(c.hornBig?1.7:.9),6),c.horn,q*hry*.7,dy+hry*(c.hornBig?1.0:.95),dz-hrz*.1,{p:neck,ink:.008,rot:[0,0,-q*(c.hornBig?1.35:.5)]}));
  // cola (hueso propio: se mueve)
  const tail=P.bone('tail',body,0,by*.35,-bx*.92),tc=c.tailC||col,tk=c.tail;
@@ -435,10 +439,10 @@ HUM.gabriel=unit('gabriel',NPC_DEF.gabriel.spec,64);   // ISLA-6: Gabriel como E
 export const NPC_IDS=['ru',...Object.keys(NPC_DEF)];
 
 // plantilla de un humanoide: Mini → bake. La escala k se deja FUERA (grupo del actor) para poder cambiarla sin reconstruir.
-function buildHuman(def){const s=Object.assign({},def.spec);s.k=1;s.id=def.id;Mini.detail=.62;let m;try{m=new Mini(s)}finally{Mini.detail=0}m.setInk(true);m.root.scale.setScalar(1);
+function buildHuman(def){const s=Object.assign({},def.spec);s.k=1;s.id=def.id;Mini.detail=.62;Mini.rig2=!!s.enemy;let m;try{m=new Mini(s)}finally{Mini.detail=0;Mini.rig2=false}m.setInk(true);m.root.scale.setScalar(1);
  const bn=[[m.root,'root'],[m.pelvis,'pelvis'],[m.chest,'chest'],[m.body,'body'],[m.head,'head'],[m.legs[0],'legR'],[m.legs[1],'legL'],[m.knees[0],'kneeR'],[m.knees[1],'kneeL'],[m.ankles[0],'ankR'],[m.ankles[1],'ankL'],
-  [m.arms[0],'armR'],[m.arms[1],'armL'],[m.elbows[0],'elbR'],[m.elbows[1],'elbL'],[m.grips[0],'gripR'],[m.grips[1],'gripL'],...(m.skG||[]).map((g,i)=>[g,'sk'+i]),...(m.flaps||[]).map((f,i)=>[f.g,'fl'+i])];
- const t=bake(m.obj,bn,new THREE.Color(m.skinC).getHex());t.kind='human';t.k=(def.H/52)*HK/1.25*(s.k0||1);t.mini={W:m.W};t.lean=m.lean||0;t.dress=!!m.dress;t.skirt=m.skG?{phi:m.skPhi,y0:m.skY0,rad:m.skRad,hem:m.skHem}:null;t.flaps=m.flaps?m.flaps.map(f=>({dir:f.dir,y0:f.y0,z0:f.z0,h:f.h})):null;t.rad=.9;t.h=def.H/52*HK;t.cycle=.85*def.H/52*HK;t.eye=[.07,.012,.212,.04];t.eyeCol=s.eye||'#ffd36a';
+  [m.arms[0],'armR'],[m.arms[1],'armL'],[m.elbows[0],'elbR'],[m.elbows[1],'elbL'],[m.grips[0],'gripR'],[m.grips[1],'gripL'],...(m.rig2?[[m.ribs,'ribs'],[m.neck,'neck'],[m.clavs[0],'clavR'],[m.clavs[1],'clavL'],[m.wrists[0],'wrR'],[m.wrists[1],'wrL'],[m.toes[0],'toeR'],[m.toes[1],'toeL']]:[]),...(m.skG||[]).map((g,i)=>[g,'sk'+i]),...(m.flaps||[]).map((f,i)=>[f.g,'fl'+i])];
+ const t=bake(m.obj,bn,new THREE.Color(m.skinC).getHex());t.kind='human';t.id=def.id;t.ani=s.ani||null;t.k=(def.H/52)*HK/1.25*(s.k0||1);t.mini={W:m.W};t.lean=m.lean||0;t.dress=!!m.dress;t.skirt=m.skG?{phi:m.skPhi,y0:m.skY0,rad:m.skRad,hem:m.skHem}:null;t.flaps=m.flaps?m.flaps.map(f=>({dir:f.dir,y0:f.y0,z0:f.z0,h:f.h})):null;t.rad=.9;t.h=def.H/52*HK;t.cycle=.85*def.H/52*HK;t.eye=[.07,.012,.212,.04];t.eyeCol=s.eye||'#ffd36a';
  // las órbitas (Morgana) y otros objetos independientes no se hornean: quedan en m; no se usan (se animan sólo con huesos)
  m.obj.traverse(o=>{if(o.geometry)o.geometry.dispose()});return t}
 
@@ -495,6 +499,7 @@ const TPL=new Map();
 function tplFor(key){if(TPL.has(key))return TPL.get(key);let t=null;try{
   if(key==='ru')t=buildHuman(RU);else if(key.startsWith('v:')&&typeof NPCLK!=='undefined'&&NPCLK[key]){t=buildHuman(vdef(key));t.nowave=!NPCLK[key].wave}else if(NPC_DEF[key]){t=buildHuman(NPC_DEF[key]);t.nowave=NPC_DEF[key].wave===false}else if(HUM[key]){const d=HUM[key];const sp=Object.assign({},d.spec);t=buildHuman({id:key,H:d.H,spec:Object.assign(sp,{top:d.spec.top,acc:d.spec.acc})})}
   else if(MSPEC[key])t=buildMountActor(key);else if(PRA[key])t=PRA[key]();else if(QUADS[key])t=buildQuad(key);else if(key==='gallina')t=buildBird();else if(key==='rana')t=buildFrog()}catch(e){console.warn('[R3D actors]',key,e);t=null}
+ if(t&&key==='slime')t.slime=1;if(t&&(t.kind==='quad'||t.kind==='bird'||t.kind==='frog')&&key!=='slime'){try{autoRig(t)}catch(e){console.warn('[R3D autoRig]',key,e)}}
  if(t)console.info('[R3D actors]',key,t.kind,t.tris+' tris');TPL.set(key,t);return t}
 export const ACTOR_IDS=[...new Set([...Object.keys(HUM),...Object.keys(QUADS),...Object.keys(PRA),...Object.keys(MSPEC),'gallina','rana'])];
 
@@ -504,8 +509,8 @@ export class Actor{
  constructor(tpl,key,e,W3){this.tpl=tpl;this.key=key;this.e=e;this.W3=W3;this.grp=new THREE.Group();this.grp.name='actor:'+key;
   const bones=tpl.local.map(l=>{const b=new THREE.Bone();b.position.copy(l.p);b.quaternion.copy(l.q);b.scale.copy(l.s);return b});tpl.parent.forEach((p,i)=>p>=0&&bones[p].add(bones[i]));this.grp.add(bones[0]);
   this.b={};tpl.names.forEach((n,i)=>this.b[n]=bones[i]);
-  if(tpl.flaps){const b=this.b;this.fkp=new SkirtPhys(flapRig({pelvis:b.pelvis,chest:b.chest,body:b.body,legs:[b.legR,b.legL],knees:[b.kneeR,b.kneeL],ankles:[b.ankR,b.ankL],seed:key.length},tpl.flaps.map((f,i)=>Object.assign({g:b['fl'+i]},f)),tpl.skirt&&tpl.skirt.rad))}   /* paños con pivote */
-  /* falda ligera (skirt3d.js) */if(tpl.skirt){const b=this.b;this.skp=new SkirtPhys({pelvis:b.pelvis,chest:b.chest,body:b.body,legs:[b.legR,b.legL],knees:[b.kneeR,b.kneeL],ankles:[b.ankR,b.ankL],groups:tpl.skirt.phi.map((_,i)=>b['sk'+i]),phi:tpl.skirt.phi,y0:tpl.skirt.y0,rad:tpl.skirt.rad,hem:tpl.skirt.hem,seed:(key.length*7+(e&&e.x?e.x%13:0))})}this.rest={};tpl.names.forEach((n,i)=>this.rest[n]=bones[i].quaternion.clone());this.restP={};tpl.names.forEach((n,i)=>this.restP[n]=bones[i].position.clone());
+  if(tpl.flaps){const b=this.b;this.fkp=new SkirtPhys(flapRig({pelvis:b.pelvis,chest:b.chest,ribs:b.ribs,body:b.body,legs:[b.legR,b.legL],knees:[b.kneeR,b.kneeL],ankles:[b.ankR,b.ankL],seed:key.length},tpl.flaps.map((f,i)=>Object.assign({g:b['fl'+i]},f)),tpl.skirt&&tpl.skirt.rad))}   /* paños con pivote */
+  /* falda ligera (skirt3d.js) */if(tpl.skirt){const b=this.b;this.skp=new SkirtPhys({pelvis:b.pelvis,chest:b.chest,ribs:b.ribs,body:b.body,legs:[b.legR,b.legL],knees:[b.kneeR,b.kneeL],ankles:[b.ankR,b.ankL],groups:tpl.skirt.phi.map((_,i)=>b['sk'+i]),phi:tpl.skirt.phi,y0:tpl.skirt.y0,rad:tpl.skirt.rad,hem:tpl.skirt.hem,seed:(key.length*7+(e&&e.x?e.x%13:0))})}this.rest={};tpl.names.forEach((n,i)=>this.rest[n]=bones[i].quaternion.clone());this.restP={};tpl.names.forEach((n,i)=>this.restP[n]=bones[i].position.clone());
   const sk=new THREE.Skeleton(bones,tpl.inv);this.mesh=new THREE.SkinnedMesh(tpl.geo,MATS);this.mesh.bind(sk,new M4());this.hull=new THREE.SkinnedMesh(tpl.hgeo,INK_SK);this.hull.bind(sk,new M4());
   this.mesh.frustumCulled=this.hull.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.hull.castShadow=false;this.grp.add(this.mesh,this.hull);
   this.sc=tpl.k;this.grp.scale.setScalar(this.sc);this.face=0;this.faceT=0;this.ph=hash(e.x,e.y,3)*6.28;this.mv=0;this.last=null;this.state='live';this.td=0;this.hov=false;this.fl=false;this.vis=true;
@@ -586,7 +591,7 @@ function animBird(A,s){const {t,mv,at}=s,ph=A.ph,sn=Math.sin(ph);A.rot('legL',sn
 function animFrog(A,s){const {t,mv,at}=s,ph=A.ph,h=Math.max(0,Math.sin(ph)),sq=1-h;A.b.root.position.y=A.restP.root.y+h*.22*mv;A.rot('body',-.25*h*mv+.12*sq*mv,0,0);
  A.rot('legBL',.9*sq*mv-h*.9*mv,0,0);A.rot('legBR',.9*sq*mv-h*.9*mv,0,0);A.rot('legFL',-h*.7*mv,0,0);A.rot('legFR',-h*.7*mv,0,0);
  const br=Math.sin(t*2.2+A.seed)*.5+.5;A.b.body.scale.set(1,1+br*.04*(1-mv),1+br*.03*(1-mv));let hd=Math.sin(t*.6+A.seed)*.1;if(at>=0)hd=(-.5*ss(0,.18,at)*(1-ss(.18,.3,at))+.9*ss(.18,.3,at))*(1-ss(.3,.85,at));A.rot('head',hd,0,0)}
-export const ANIM={human:animHuman,quad:animQuad,bird:animBird,frog:animFrog};
+export const ANIM={human:(A,s)=>A.b.ribs?animEnemy(A,s):animHuman(A,s),quad:(A,s)=>A.tpl.slime?animSlime(A,s):A.b.hind?animQuad2(A,s):animQuad(A,s),bird:(A,s)=>A.b.kneeL?animBird2(A,s):animBird(A,s),frog:(A,s)=>A.b.kneeBL?animFrog2(A,s):animFrog(A,s)};
 // Para visores y pruebas (sin el juego): un actor suelto de un tipo. Pose = ANIM[A.tpl.kind](A,{t,dt,mv,at,wave,look}); A.ph avanza con la distancia (ver step()).
 export function makeActor(key,W3){const tpl=tplFor(key);return tpl?new Actor(tpl,key,{x:0,y:0},W3||((x,y,z)=>new THREE.Vector3(x,z,y))):null}
 export {tplFor};
@@ -632,7 +637,7 @@ export class Actors{
   if(A.state==='gone'){A.vis=false;A.grp.visible=false;if(A.proxy)A.proxy.visible=false;return}
   const z=TER.standZ(e.x,e.y),p=this.W3(e.x,e.y,z);let dist=0;
   if(A.last){const dx=p.x-A.last.x,dz=p.z-A.last.z,d=Math.hypot(dx,dz);if(d<3)dist=d;if(d>1e-4&&(!isNpc||e.mvr))A.faceT=Math.atan2(dx,dz)}A.last=p.clone();A.grp.position.copy(p);
-  const rn=performance.now(),d=e.d,atkP=!isNpc?(rn-(e.at0||-1e9))/(d&&d.boss?760:640):2,sw=atkP>=0&&atkP<1?atkP:-1,wv=!isNpc&&e.wind&&rn<e.wind.t1,atk=wv?(e.wind.slow?(rn<e.wind.t0?sw:.18*ss(0,1,Math.min(1,(rn-e.wind.t0)/(e.wind.t1-e.wind.t0)))):.17):sw;   // GABRIEL: anticipacion LENTA - el brazo sube poco a poco hasta la pose alzada (at .18) y se queda ahi hasta el tajo;   // aviso de golpe: se mantiene la pose de anticipación (≈ .17) hasta el tajo
+  const rn=performance.now(),d=e.d,atkP=!isNpc?(rn-(e.at0||-1e9))/(d&&d.boss?760:640):2,sw=atkP>=0&&atkP<1?atkP:-1,wv=!isNpc&&e.wind&&rn<e.wind.t1,atk=wv?(e.wind.slow?(rn<e.wind.t0?sw:.18*ss(0,1,Math.min(1,(rn-e.wind.t0)/(e.wind.t1-e.wind.t0)))):.17*ss(0,.7,(rn-e.wind.t0)/Math.max(1,e.wind.t1-e.wind.t0))):sw;   /* el aviso ya no salta a la pose: se ARMA durante ~70 % del aviso (el arquero tensa el arco poco a poco) y se mantiene con un temblor de apuntado */   // GABRIEL: anticipacion LENTA - el brazo sube poco a poco hasta la pose alzada (at .18) y se queda ahi hasta el tajo;   // aviso de golpe: se mantiene la pose de anticipación (≈ .17) hasta el tajo
   // mirar: al atacar o al hablar, hacia el jugador (suave)
   let look=0;const px=P_.x-e.x,py=P_.y-e.y,dp=Math.hypot(px,py);
   if(!isNpc){if(atk>=0||(e.hunt&&dp<120&&dist<1e-4))A.faceT=Math.atan2(px,py)}else if(!(e.mvr&&dist>1e-4)){if(A.baseFace==null)A.baseFace=e.face!=null?e.face:Math.atan2(px,py);A.faceT=(dp<260&&e.face==null)?Math.atan2(px,py):A.baseFace}   /* Fase 25: los que TRABAJAN (e.face) miran a su tajo; los que caminan, hacia donde van */
@@ -642,7 +647,17 @@ export class Actors{
   A.ph+=dist/(A.tpl.cycle*(A.tpl.kind==='human'?1:1))*6.283;
   const wave=isNpc&&!A.tpl.nowave&&dp<110&&Math.sin(t*.35)>.3?1:0;if(isNpc){look=cl(Math.atan2(px,py)-A.face,-1,1)}
   A.b.root.position.z-=A.pz||0;A.pz=0;   // deshace el retroceso del fotograma anterior (antes se ACUMULABA: el modelo se iba lejos del enemigo lógico)
-  ANIM[A.tpl.kind](A,{t,dt,mv:A.mv,at:atk,wave:(isNpc&&e.job)?0:wave,look,job:isNpc?e.job:null});if(A.skp)A.skp.update(dt);if(A.fkp)A.fkp.update(dt);
+  let hurt=0,stunV=0,dieV=0;if(!isNpc){const hh=e.hit;if(hh){const u=(rn-hh.t)/(260+220*hh.k);if(u>=0&&u<1)hurt=(u<.12?u/.12:1)*(1-u)*(1-u)*(.5+.5*hh.k)}   /* reacciones del cuerpo (enemyanim3d.js) */
+   A.stv=(A.stv||0)+((e.stun>rn?1:0)-(A.stv||0))*Math.min(1,dt*8);stunV=A.stv;if(A.state==='dying')dieV=ss(0,.35,(now-A.td)/900)}
+  /* HABILIDADES DE ENEMIGO (N0-ESQUELETOS-3): la animación que toca según lo que está haciendo el enemigo: embestida (`wind.sk:'lunge'` → agazaparse, `e.dash` → carga), lanzamiento (`sk:'knife'` según `o.k`: flecha = disparo, orbe = hechizo, otro = lanzar), golpe pesado telegrafado (`e.tel.k`: slam/met/nov) y señales (`e.sig`: llamar refuerzos, rugido de furia) */
+  let ak=null,at2=atk,charge=0,raw=0;
+  if(!isNpc&&A.state==='live'){const w=e.wind,tl=e.tel,sg=e.sig;
+   if(w&&rn<w.t1&&w.kind==='sk'){const o=e.d.sk&&e.d.sk[w.sk];ak=w.sk==='lunge'?'lunge':o&&o.k==='arrow'?'shoot':o&&o.k==='orb'?'cast':'throw'}
+   else if(tl&&rn<tl.t1){ak=tl.k==='met'?'meteor':tl.k==='nov'?'nova':'slam';at2=.17*Math.min(1,(rn-tl.t0)/Math.max(1,tl.t1-tl.t0)*1.1)}
+   else if(sg&&rn-sg.t0<1100){ak=sg.k;at2=(rn-sg.t0)/1100;raw=1}
+   if(ak&&!raw){A.ak=ak;A.akT=rn}else if(!ak&&A.ak&&rn-(A.akT||0)<900&&atk>=0)ak=A.ak;
+   if(e.dash){const p=(rn-e.dash.t0)/Math.max(1,e.dash.t1-e.dash.t0);charge=ss(0,.12,p)*(1-ss(.9,1,p));A.mv=Math.max(A.mv,1.25*charge)}}
+  ANIM[A.tpl.kind](A,{t,dt,mv:A.mv,at:at2,wave:(isNpc&&e.job)?0:wave,look,job:isNpc?e.job:null,hunt:!isNpc&&!!e.hunt,hurt,stun:stunV,die:dieV,ak,charge,raw});if(A.skp)A.skp.update(dt);if(A.fkp)A.fkp.update(dt);
   // REACCIÓN CORPORAL AL GOLPE (22 oct 2026; «los hits deben sentirse pesados»): el juego deja en `e.hit` = {t, ux, uy, k} (dirección del golpe y fuerza 0..1). El modelo se EMPUJA visualmente en esa dirección (≈ .08–.28 u) y se INCLINA (pitch/roll del `root`, .12–.5 rad) con una curva rápida que decae en ≈ .26–.48 s; solo visual (la posición lógica no se toca: el empuje lógico `knock` desincronizaba el modelo). ATURDIDO (`e.stun`): bamboleo mareado en bucle. La muerte conserva el empuje (`hdx/hdz`).
   if(!isNpc&&A.state==='live'){const h=e.hit;let rx=0,rz=0;
    if(h){const u=(rn-h.t)/(260+220*h.k);if(u>=0&&u<1){const q=this.W3(e.x+h.ux*10,e.y+h.uy*10,z).sub(p),ql=Math.hypot(q.x,q.z)||1;A.hdx=q.x/ql;A.hdz=q.z/ql;
@@ -659,7 +674,7 @@ export class Actors{
   // muerte: cae hacia atrás y se hunde/encoge ~0,9 s
   if(A.state==='dying'){const u=(now-A.td)/900;if(A.hdx!=null&&e.hit){const ff=ss(0,.45,u);A.grp.position.x+=A.hdx*.45*ff*e.hit.k*A.sc;A.grp.position.z+=A.hdz*.45*ff*e.hit.k*A.sc}   /* la muerte conserva el impulso del último golpe */
    const keep=e.skin&&!e.skin.done;   // cadáver desollable: se queda tumbado hasta que se desuella o reaparece
-   if(u>=1&&!keep){A.state='gone';A.vis=false;A.grp.visible=false;if(A.proxy)A.proxy.visible=false;return}const f=ss(0,.45,Math.min(1,u)),h=keep?0:ss(.45,1,u);A.b.root.rotation.x=-1.45*f;A.b.root.position.y=A.restP.root.y-.1*f*A.sc;A.grp.scale.setScalar(A.sc*(1-h*.85));A.grp.position.y-=.25*h*A.sc}
+   if(u>=1&&!keep){A.state='gone';A.vis=false;A.grp.visible=false;if(A.proxy)A.proxy.visible=false;return}const f=ss(0,.45,Math.min(1,u)),h=keep?0:ss(.45,1,u);if(A.tpl.kind==='quad'&&A.b.hind){A.b.root.rotation.z=1.45*f*(A.seed>3.1?-1:1)}else A.b.root.rotation.x=-1.45*f;A.b.root.position.y=A.restP.root.y-.1*f*A.sc;A.grp.scale.setScalar(A.sc*(1-h*.85));A.grp.position.y-=.25*h*A.sc}
   // copia de profundidad: solo si el héroe está cerca (no se dibuja el resto)
   if(A.proxy){const near=Math.hypot(P_.x-e.x,P_.y-e.y)<ISO.TILE*3.5&&A.vis;A.proxy.visible=near;if(near){A.proxy.position.copy(A.grp.position);A.proxy.quaternion.copy(A.grp.quaternion);A.proxy.scale.copy(A.grp.scale)}}
   // aro de jefe

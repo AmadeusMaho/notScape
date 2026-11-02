@@ -21,7 +21,7 @@ export class SkirtPhys{
  constructor(rig){this.r=rig;const n=rig.groups.length;this.a=new Float32Array(n);this.v=new Float32Array(n);this.t=(rig.seed||0)*3.7;this.pen=0;this.dir=rig.phi.map(f=>[Math.sin(f),Math.cos(f)]);this.pts=[]}
  update(dt){const R=this.r;dt=Math.min(dt||.016,.05);this.t+=dt;
   // marco del cuerpo y de cada pierna (las matrices locales se actualizan aquí: las animaciones solo tocan quaternion/position)
-  R.pelvis.updateMatrix();R.chest.updateMatrix();R.body.updateMatrix();MB.copy(R.pelvis.matrix).multiply(R.chest.matrix).multiply(R.body.matrix).invert();
+  R.pelvis.updateMatrix();R.chest.updateMatrix();R.body.updateMatrix();MB.copy(R.pelvis.matrix).multiply(R.chest.matrix);if(R.ribs){R.ribs.updateMatrix();MB.multiply(R.ribs.matrix)}MB.multiply(R.body.matrix).invert();   /* rig2 de los enemigos: chest → ribs → body */
   const pts=this.pts;pts.length=0;
   for(let s=0;s<2;s++){R.legs[s].updateMatrix();R.knees[s].updateMatrix();R.ankles[s].updateMatrix();
    M1.copy(R.pelvis.matrix).multiply(R.legs[s].matrix);const thigh=P.set(0,-.1,0).applyMatrix4(M1).applyMatrix4(MB).clone();pts.push([thigh.x,thigh.y,thigh.z,.085]);

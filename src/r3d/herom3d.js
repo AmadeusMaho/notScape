@@ -10,6 +10,7 @@
 import * as THREE from 'three';
 import {Mini} from './mini3d.js';
 import {HeroAnim} from './heroanim3d.js';
+import './skillanim3d.js';   // N0-HABILIDADES-ANIM: clips de las habilidades del jugador (se registran en HeroAnim.skillClip)
 import {armorHooks} from './armor3d.js';
 import {toon,glow,G} from './materials3d.js';
 const lerp=(a,b,u)=>a+(b-a)*u,sph=(r,x=1,y=1,z=1)=>new THREE.SphereGeometry(r,16,12).scale(x,y,z);
