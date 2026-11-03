@@ -6,14 +6,14 @@
 // ── ATUENDOS DEL HÉROE ── `base` = el que lleva al empezar; el resto se desbloquean (plan F6b: ver GUIA_3D_PORTEO §6). `app` aquí es solo de muestra:
 //    en el juego la apariencia (género, pelo, piel, ojos) la pone el jugador en el editor y el atuendo solo aporta `outfit` + colores de prenda.
 export const OUTFITS=[
- {id:'errante',name:'Errante',sub:'camisa, correas de cuero, cinturón',base:true,unlock:'inicial',
-  look:{app:{g:'m',hair:'cut',hc:'#4a3022',skin:'#d9a878',col:'#5a5a3a'},outfit:{straps:'#5a3e2c',bag:'#6a4a30',pouches:1,knife:1,skirt:'corta'},gear:{wp:{t:'sword',wk:'sword',col:'#b8c0c8'}}}},
- {id:'penitente',name:'Penitente de ceniza',sub:'túnica larga, capelina, vendas',unlock:'Plegaria / Magia (propuesta)',
-  look:{app:{g:'f',hair:'long',hc:'#2a1e18',skin:'#e6c4a0',col:'#6a6460'},outfit:{skirt:'larga',skirtC:'#5a5450',capelet:'#3e3a40',hood:'baja',hoodC:'#3e3a40',wraps:1,rope:'#a08a60',amulet:'#d8b050',scarf:false},gear:{wp:{t:'staff',wk:'staff',col:'#e8a050'}}}},
- {id:'mercenario',name:'Mercenario de frontera',sub:'brigantina, hombrera, piel',unlock:'Cuerpo a cuerpo (propuesta)',
-  look:{app:{g:'m',hair:'cut',hc:'#6a4a2a',skin:'#c88a5a',col:'#4a3a3a',face:3},outfit:{build:'robusto',top:'brigantina',fur:'#6a5a4a',pauldron:'#8a8a90',rolled:1,beard:'corta',pouches:1,scarf:false},gear:{wp:{t:'sword',wk:'great',col:'#9aa0a8'}}}},
- {id:'cazadora',name:'Cazadora del bosque',sub:'chaleco, máscara, carcaj',unlock:'A distancia (propuesta)',
-  look:{app:{g:'f',hair:'pony',hc:'#7a3a22',skin:'#e0b088',col:'#3a4a32'},outfit:{top:'chaleco',topC:'#5a4632',mask:'#3a4436',quiver:1,wraps:1,knife:1,scarf:false},gear:{wp:{t:'bow',wk:'bow',col:'#6a4a2a'}}}}];
+ {id:'errante',name:'Errante',sub:'túnica cruzada, fajín, petate',base:true,unlock:'inicial',
+  look:{app:{g:'m',hair:'cut',hc:'#4a3022',skin:'#d9a878',col:'#5a5a3a'},outfit:{kit:'errante',bag:'#6a4a30',pouches:1},gear:{wp:{t:'sword',wk:'sword',col:'#b8c0c8'}}}},
+ {id:'penitente',name:'Penitente de ceniza',sub:'túnica larga, capelina rasgada, rosario',unlock:'Plegaria / Magia (propuesta)',
+  look:{app:{g:'f',hair:'long',hc:'#2a1e18',skin:'#e6c4a0',col:'#6a6460'},outfit:{kit:'penitente',skirt:'larga',skirtC:'#5a5450',cape:'#3e3a40',rope:'#a08a60',scarf:false},gear:{wp:{t:'staff',wk:'staff',col:'#e8a050'}}}},
+ {id:'mercenario',name:'Mercenario de frontera',sub:'brigantina remachada, hombrera, manto de piel',unlock:'Cuerpo a cuerpo (propuesta)',
+  look:{app:{g:'m',hair:'cut',hc:'#6a4a2a',skin:'#c88a5a',col:'#4a3a3a',face:3},outfit:{kit:'mercenario',build:'robusto',lea:'#4a3428',fur:'#6a5a4a',scarf:false},gear:{wp:{t:'sword',wk:'great',col:'#9aa0a8'}}}},
+ {id:'cazadora',name:'Cazadora del bosque',sub:'corsé de cuero, capelina de hojas, carcaj',unlock:'A distancia (propuesta)',
+  look:{app:{g:'f',hair:'pony',hc:'#7a3a22',skin:'#e0b088',col:'#3a4a32'},outfit:{kit:'cazadora',lea:'#5a4632',cape:'#3e4e34',mask:'#3a4436',quiver:1,scarf:false},gear:{wp:{t:'bow',wk:'bow',col:'#6a4a2a'}}}}];
 
 // ── PNJ Y HUMANOIDES ── `uses` = a qué entidad del juego sustituye (plan F7a).
 export const NPCS=[
@@ -42,6 +42,6 @@ export const outfitUnlocked=id=>OUTFIT_FREE||id==='errante'||!OUTFIT_RULE[id]||!
 //  · Yelmo equipado (look.helm): no se pintan gorro ni capucha alta (el pelo y la cabeza los resuelve hero3d con el yelmo).
 //  · Capa equipada (gear.cp): la bufanda ya se oculta sola en hero3d.js; capelina y capucha del atuendo se quedan.
 export function resolveLook(look){look=look||{};const app=look.app||{},o=Object.assign({},outfitOf(app.outfit).look.outfit),gr=look.gear||{};
- if(look.ar||gr.pl){delete o.top;delete o.topC;delete o.tabard;delete o.emblem;delete o.apron;delete o.apronLeather}
+ if(look.ar||gr.pl){delete o.kit;delete o.top;delete o.topC;delete o.tabard;delete o.emblem;delete o.apron;delete o.apronLeather}
  if(look.helm){delete o.hat;delete o.hatC;if(o.hood==='alta'){delete o.hood;delete o.hoodC}}
  return Object.assign({},look,{outfit:o})}

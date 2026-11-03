@@ -51,13 +51,13 @@ const WMAP=(()=>{
   if(!(gw>0&&gh>0))return;   /* 28 oct 2026: celda fuera del mundo (el héroe dentro de una sala/cueva) → antes lanzaba «createImageData … not of type long» */
   let bI,b32;if(det){bI=q.createImageData(gw,gh);b32=new Uint32Array(bI.data.buffer)}else{if(!cbuf||cbuf.width!==gw||cbuf.height!==gh){cbuf=q.createImageData(gw,gh);cb32=new Uint32Array(cbuf.data.buffer)}bI=cbuf;b32=cb32}
   // clase de cada tile de la celda y su vecindad (1 tile de margen): 0 vacío · 1 mar · 2 agua interior (río/lago) · 3 tierra · 4 montaña
-  const kls=new Uint8Array((w+2)*(h+2)),hh=new Float32Array((w+2)*(h+2));
+  const kls=new Uint8Array((w+2)*(h+2)),hh=new Float32Array((w+2)*(h+2));const ZXP=typeof BIOMES!=='undefined'&&BIOMES.zone?BIOMES.zone.x0:null;
   for(let y=-1;y<=h;y++)for(let x=-1;x<=w;x++){const tx=tx0+x,ty=ty0+y,o=(y+1)*(w+2)+x+1;
    if(tx<0||ty<0||tx>=NX||ty>=NY){kls[o]=1;continue}
    const H=TER.heightAt((tx+.5)*T,(ty+.5)*T);hh[o]=H;let c;if(H===0)c=0;else if(H<1){c=(cD&&cD((tx+.5)*T,(ty+.5)*T)<=0)?1:2}else if(H>=2)c=4;else c=3;kls[o]=c}
   for(let ty=ty0;ty<ty1;ty++)for(let tx=tx0;tx<tx1;tx++){const x=tx-tx0,y=ty-ty0,o=(y+1)*(w+2)+x+1,c=kls[o],wx=(tx+.5)*T,wy=(ty+.5)*T,k=E.biomeAt(wx,wy),bc=BCOL[k<0?0:Math.min(9,k)];
    let col;
-   if(c===0||k<0)col=[14,12,10];
+   if(c===0||k<0){if(ZXP!=null&&wx>=ZXP){const n=hsh(tx>>1,ty>>1,9);col=mx([138,166,206],[172,192,226],n*.7)}else col=[14,12,10]}   /* N0.6: en la columna del Cielo el vacío es MAR DE NUBES (antes negro) */
    else if(c===1){col=mx(PAR,[150,176,176],.42);const d=cD?-cD(wx,wy):0;for(let b=0;b<4;b++){const L=[5,11,18,27][b];if(Math.abs(d-L)<.55){const f=1-(.34-b*.07)*.7;col=[col[0]*f,col[1]*(1-(.34-b*.07)*.55),col[2]*(1-(.34-b*.07)*.35)];break}}}
    else if(c===2){col=[143,182,191]}
    else{col=mx(PAR,bc,.62);const sd=TER.sandAt(tx,ty);if(sd>.45)col=mx(col,[232,214,160],.6);
@@ -100,11 +100,11 @@ const WMAP=(()=>{
   // y al explorar se pintaba una celda en CADA fotograma = tirones al caminar). Mismos colores; la conversión hex→píxel se cachea.
   const gw=(tx1-tx0)*PX,gh=(ty1-ty0)*PX;if(!(gw>0&&gh>0))return;if(!cbuf||cbuf.width!==gw||cbuf.height!==gh){cbuf=q.createImageData(gw,gh);cb32=new Uint32Array(cbuf.data.buffer)}
   q.save();q.beginPath();q.rect(tx0*PX,ty0*PX,(tx1-tx0)*PX,(ty1-ty0)*PX);q.clip();
-  let lk=-2,Pk=null;
+  let lk=-2,Pk=null;const ZK=typeof BIOMES!=='undefined'&&BIOMES.zone?BIOMES.zone.k:-9,ZX=ZK>=0?BIOMES.zone.x0:null;   /* N0.6: x0 = borde oeste de la columna del Cielo: allí el vacío es mar de nubes */
   for(let ty=ty0;ty<ty1;ty++)for(let tx=tx0;tx<tx1;tx++){const wx=(tx+.5)*T,wy=(ty+.5)*T,k=E.biomeAt(wx,wy);let col;
-   if(k<0){col='#0b0a09'}else{if(k!==lk){lk=k;Pk=TER.PAL[k]}
+   if(k<0){col=ZX!=null&&wx>=ZX?'#9ab0d6':'#0b0a09'}else{if(k!==lk){lk=k;Pk=TER.PAL[k]}
     const h=TER.tileH(tx,ty);
-    if(h===0)col='#1a1a1a';else if(h<1)col=Pk.w;
+    if(h===0)col=ZK===k?'#9ab0d6':'#1a1a1a';   /* N0.6: en la zona del Cielo el «vacío» es MAR DE NUBES (antes salía negro) */else if(h<1)col=Pk.w;
     else if(h>=2){const m=TER.mtnAt(wx,wy);col=m>0?mix('#6c675f','#d9d4c8',Math.min(1,m/5.5)):'#8f8a80'}   // cordillera: gris más claro cuanto más alta
     else if(TER.rk(tx,ty))col=mix('#a8a398','#ece8dc',(h-1)*.8);
     else{const sd=TER.sandAt(tx,ty);col=sd>.45?'#e3d199':h>1?mix(Pk.g,'#f2f6c8',Math.min(.6,(h-1)*.9)):Pk.g}}

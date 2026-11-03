@@ -17,6 +17,7 @@ import * as THREE from 'three';
 import {toon,hull,hash,glow,INK,INK_SK} from './materials3d.js';
 import {Mini,MINI,sword,shieldMesh} from './mini3d.js';
 import {hairFn} from './herom3d.js';
+import {HairPhys} from './hair3d.js';
 import {angelWings} from './wings3d.js';   // alas de ángel reutilizables (Lote CINE-2b)
 import {SkirtPhys,flapRig} from './skirt3d.js';
 import {animEnemy} from './enemyanim3d.js';
@@ -441,8 +442,9 @@ export const NPC_IDS=['ru',...Object.keys(NPC_DEF)];
 // plantilla de un humanoide: Mini → bake. La escala k se deja FUERA (grupo del actor) para poder cambiarla sin reconstruir.
 function buildHuman(def){const s=Object.assign({},def.spec);s.k=1;s.id=def.id;Mini.detail=.62;Mini.rig2=!!s.enemy;let m;try{m=new Mini(s)}finally{Mini.detail=0;Mini.rig2=false}m.setInk(true);m.root.scale.setScalar(1);
  const bn=[[m.root,'root'],[m.pelvis,'pelvis'],[m.chest,'chest'],[m.body,'body'],[m.head,'head'],[m.legs[0],'legR'],[m.legs[1],'legL'],[m.knees[0],'kneeR'],[m.knees[1],'kneeL'],[m.ankles[0],'ankR'],[m.ankles[1],'ankL'],
-  [m.arms[0],'armR'],[m.arms[1],'armL'],[m.elbows[0],'elbR'],[m.elbows[1],'elbL'],[m.grips[0],'gripR'],[m.grips[1],'gripL'],...(m.rig2?[[m.ribs,'ribs'],[m.neck,'neck'],[m.clavs[0],'clavR'],[m.clavs[1],'clavL'],[m.wrists[0],'wrR'],[m.wrists[1],'wrL'],[m.toes[0],'toeR'],[m.toes[1],'toeL']]:[]),...(m.skG||[]).map((g,i)=>[g,'sk'+i]),...(m.flaps||[]).map((f,i)=>[f.g,'fl'+i])];
+  [m.arms[0],'armR'],[m.arms[1],'armL'],[m.elbows[0],'elbR'],[m.elbows[1],'elbL'],[m.grips[0],'gripR'],[m.grips[1],'gripL'],...(m.rig2?[[m.ribs,'ribs'],[m.neck,'neck'],[m.clavs[0],'clavR'],[m.clavs[1],'clavL'],[m.wrists[0],'wrR'],[m.wrists[1],'wrL'],[m.toes[0],'toeR'],[m.toes[1],'toeL']]:[]),...(m.skG||[]).map((g,i)=>[g,'sk'+i]),...(m.flaps||[]).map((f,i)=>[f.g,'fl'+i]),...(m.hairJ||[]).map((g,i)=>[g,'hr'+i])];
  const t=bake(m.obj,bn,new THREE.Color(m.skinC).getHex());t.kind='human';t.id=def.id;t.ani=s.ani||null;t.k=(def.H/52)*HK/1.25*(s.k0||1);t.mini={W:m.W};t.lean=m.lean||0;t.dress=!!m.dress;t.skirt=m.skG?{phi:m.skPhi,y0:m.skY0,rad:m.skRad,hem:m.skHem}:null;t.flaps=m.flaps?m.flaps.map(f=>({dir:f.dir,y0:f.y0,z0:f.z0,h:f.h})):null;t.rad=.9;t.h=def.H/52*HK;t.cycle=.85*def.H/52*HK;t.eye=[.07,.012,.212,.04];t.eyeCol=s.eye||'#ffd36a';
+ if(m.hairs&&m.hairs.length)t.hair=m.hairs.map(c=>Object.assign({},c,{js:null,names:c.js.map(j=>'hr'+m.hairJ.indexOf(j))}));   /* pelo con física (hair3d.js): cadenas de huesos 'hr<i>' */
  // las órbitas (Morgana) y otros objetos independientes no se hornean: quedan en m; no se usan (se animan sólo con huesos)
  m.obj.traverse(o=>{if(o.geometry)o.geometry.dispose()});return t}
 
@@ -510,6 +512,7 @@ export class Actor{
   const bones=tpl.local.map(l=>{const b=new THREE.Bone();b.position.copy(l.p);b.quaternion.copy(l.q);b.scale.copy(l.s);return b});tpl.parent.forEach((p,i)=>p>=0&&bones[p].add(bones[i]));this.grp.add(bones[0]);
   this.b={};tpl.names.forEach((n,i)=>this.b[n]=bones[i]);
   if(tpl.flaps){const b=this.b;this.fkp=new SkirtPhys(flapRig({pelvis:b.pelvis,chest:b.chest,ribs:b.ribs,body:b.body,legs:[b.legR,b.legL],knees:[b.kneeR,b.kneeL],ankles:[b.ankR,b.ankL],seed:key.length},tpl.flaps.map((f,i)=>Object.assign({g:b['fl'+i]},f)),tpl.skirt&&tpl.skirt.rad))}   /* paños con pivote */
+  if(tpl.hair&&this.b.head)this.hp=new HairPhys(this.b.head,tpl.hair.map(c=>Object.assign({},c,{js:c.names.map(n=>this.b[n])})),hash(e.x||0,e.y||0,5)*6);   /* pelo que se mece (hair3d.js) */
   /* falda ligera (skirt3d.js) */if(tpl.skirt){const b=this.b;this.skp=new SkirtPhys({pelvis:b.pelvis,chest:b.chest,ribs:b.ribs,body:b.body,legs:[b.legR,b.legL],knees:[b.kneeR,b.kneeL],ankles:[b.ankR,b.ankL],groups:tpl.skirt.phi.map((_,i)=>b['sk'+i]),phi:tpl.skirt.phi,y0:tpl.skirt.y0,rad:tpl.skirt.rad,hem:tpl.skirt.hem,seed:(key.length*7+(e&&e.x?e.x%13:0))})}this.rest={};tpl.names.forEach((n,i)=>this.rest[n]=bones[i].quaternion.clone());this.restP={};tpl.names.forEach((n,i)=>this.restP[n]=bones[i].position.clone());
   const sk=new THREE.Skeleton(bones,tpl.inv);this.mesh=new THREE.SkinnedMesh(tpl.geo,MATS);this.mesh.bind(sk,new M4());this.hull=new THREE.SkinnedMesh(tpl.hgeo,INK_SK);this.hull.bind(sk,new M4());
   this.mesh.frustumCulled=this.hull.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.hull.castShadow=false;this.grp.add(this.mesh,this.hull);
@@ -641,7 +644,7 @@ export class Actors{
   // mirar: al atacar o al hablar, hacia el jugador (suave)
   let look=0;const px=P_.x-e.x,py=P_.y-e.y,dp=Math.hypot(px,py);
   if(!isNpc){if(atk>=0||(e.hunt&&dp<120&&dist<1e-4))A.faceT=Math.atan2(px,py)}else if(!(e.mvr&&dist>1e-4)){if(A.baseFace==null)A.baseFace=e.face!=null?e.face:Math.atan2(px,py);A.faceT=(dp<260&&e.face==null)?Math.atan2(px,py):A.baseFace}   /* Fase 25: los que TRABAJAN (e.face) miran a su tajo; los que caminan, hacia donde van */
-  const df=((A.faceT-A.face+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;A.face+=df*(1-Math.exp(-dt*(dist>0?10:7)));A.grp.rotation.y=A.face;
+  const df=((A.faceT-A.face+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;A.face+=df*(1-Math.exp(-dt*(dist>0?10:7)));A.grp.rotation.y=A.face;if(!isNpc)e.fc=A.face;   /* hacia dónde MIRA la criatura (rumbo del modelo: dirección en el mundo = (sen, cos)); lo lee el «por la espalda» del Asesino (combatskills.js `behind`) */
   // andar: la fase avanza por DISTANCIA recorrida (el pie no patina); la amplitud sigue la velocidad real (1 u/s ≈ trote suave de una criatura de 1 u de alto)
   const spd=dt>0?dist/dt:0;A.mv+=(cl(spd/1.1,0,1.2)-A.mv)*(1-Math.exp(-dt*12));if(A.mv<.03)A.mv=0;
   A.ph+=dist/(A.tpl.cycle*(A.tpl.kind==='human'?1:1))*6.283;
@@ -657,7 +660,7 @@ export class Actors{
    else if(sg&&rn-sg.t0<1100){ak=sg.k;at2=(rn-sg.t0)/1100;raw=1}
    if(ak&&!raw){A.ak=ak;A.akT=rn}else if(!ak&&A.ak&&rn-(A.akT||0)<900&&atk>=0)ak=A.ak;
    if(e.dash){const p=(rn-e.dash.t0)/Math.max(1,e.dash.t1-e.dash.t0);charge=ss(0,.12,p)*(1-ss(.9,1,p));A.mv=Math.max(A.mv,1.25*charge)}}
-  ANIM[A.tpl.kind](A,{t,dt,mv:A.mv,at:at2,wave:(isNpc&&e.job)?0:wave,look,job:isNpc?e.job:null,hunt:!isNpc&&!!e.hunt,hurt,stun:stunV,die:dieV,ak,charge,raw});if(A.skp)A.skp.update(dt);if(A.fkp)A.fkp.update(dt);
+  ANIM[A.tpl.kind](A,{t,dt,mv:A.mv,at:at2,wave:(isNpc&&e.job)?0:wave,look,job:isNpc?e.job:null,hunt:!isNpc&&!!e.hunt,hurt,stun:stunV,die:dieV,ak,charge,raw});if(A.skp)A.skp.update(dt);if(A.fkp)A.fkp.update(dt);if(A.hp&&A.vis!==false)A.hp.update(dt);
   // REACCIÓN CORPORAL AL GOLPE (22 oct 2026; «los hits deben sentirse pesados»): el juego deja en `e.hit` = {t, ux, uy, k} (dirección del golpe y fuerza 0..1). El modelo se EMPUJA visualmente en esa dirección (≈ .08–.28 u) y se INCLINA (pitch/roll del `root`, .12–.5 rad) con una curva rápida que decae en ≈ .26–.48 s; solo visual (la posición lógica no se toca: el empuje lógico `knock` desincronizaba el modelo). ATURDIDO (`e.stun`): bamboleo mareado en bucle. La muerte conserva el empuje (`hdx/hdz`).
   if(!isNpc&&A.state==='live'){const h=e.hit;let rx=0,rz=0;
    if(h){const u=(rn-h.t)/(260+220*h.k);if(u>=0&&u<1){const q=this.W3(e.x+h.ux*10,e.y+h.uy*10,z).sub(p),ql=Math.hypot(q.x,q.z)||1;A.hdx=q.x/ql;A.hdz=q.z/ql;

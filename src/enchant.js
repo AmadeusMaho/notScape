@@ -126,13 +126,16 @@ const ENCH=(()=>{
  // cada fotograma (swingTick): Regeneración de la armadura
  function tick(now){const r=arm('regeneracion');if(!r||typeof P==='undefined'||P.hp<=0||P.hp>=maxHp()){rgT=now;return}if(now-rgT>=6000/r){rgT=now;P.hp=Math.min(maxHp(),P.hp+1);try{splat(P.x,P.y,'+1','#2f9a3a',30)}catch(x){}}}
  const chance=id=>{const e=of(id);if(!e||!D[e].p)return 0;const b=split(id).base.split('~')[0],l=LOOT&&LOOT[b],ti=l?l.k*2:tierIdx(b);return +(D[e].p*(1+.18*ti)*LVP[lvOf(id)]).toFixed(1)};
+ /* N0.7 (TAREA 5.3): SONIDO POR ELEMENTO al saltar el encantamiento = diseño procedural de `SFXS` (src/sfxsynth.js, el mismo de las habilidades); si no suena, el tono antiguo `SND.en` */
+ const ESX={sangre:'blood',hemorragica:'blood',vampirica:'blood',veneno:'poison',toxica:'poison',escarcha:'ice',glacial:'ice',rayo:'shock',tempestad:'shock',fuego:'fire',infernal:'fire',vacio:'void',abisal:'void',sagrada:'holy',arcana:'arcane',aplastante:'hitStone',implacable:'hitMetal',fisico:'hitMetal',cazadora:'bow'};
+ const esx=e=>{try{return typeof SFXS!=='undefined'&&!!ESX[e]&&SFXS.play(ESX[e],{k:.75})}catch(x){return false}};
  function proc(m,dmg,now){const e=cur();if(!e||!m)return;const d=D[e],l=lvOf(S.eq.w);
   if(d.ls&&dmg>0&&typeof P!=='undefined'){lsAcc+=dmg*d.ls*LVB[l]/100;if(lsAcc>=1){const h=Math.floor(lsAcc);lsAcc-=h;P.hp=Math.min(maxHp(),P.hp+h);try{splat(P.x,P.y,'+'+h,'#c0303a',26)}catch(x){}try{if(window.R3D&&R3D.impact)R3D.impact.drain(m)}catch(x){}}}   /* VAMPÍRICA: robo de vida acumulado */
   try{if(window.R3D&&R3D.impact)R3D.impact.touch(m,e,vk(S.eq.w))}catch(x){}   /* chispa del elemento en CADA golpe */
   if(!d.p)return;if((m.ecd||0)>now)return;if(Math.random()*100>=chance(S.eq.w))return;m.ecd=now+d.cd;
   if(d.sts&&typeof STS!=='undefined')STS.add(m,d.sts,{dur:d.dur*LVD[l],n:(d.n2||1)});if(d.mana&&typeof MN!=='undefined')MN=Math.min(mnMax(),MN+d.mana*LVB[l]);if(d.push&&typeof P!=='undefined'){const dx=m.x-P.x,dy=m.y-P.y,dl=Math.hypot(dx,dy)||1,nx=m.x+dx/dl*d.push,ny=m.y+dy/dl*d.push;if(typeof inVilla!=='function'||!inVilla(nx,ny)){m.x=nx;m.y=ny}}if(d.sts2&&typeof STS!=='undefined')STS.add(m,d.sts2,{dur:d.dur*LVD[l]});if(d.stun)m.nt=Math.max(m.nt||0,now)+d.stun*LVD[l];
   if(d.heal&&typeof P!=='undefined'){P.hp=Math.min(maxHp(),P.hp+d.heal*LVB[l]);try{splat(P.x,P.y,d.heal*LVB[l],'#2f9a3a',26)}catch(x){}}
-  try{if(typeof SND!=='undefined'&&SND.en)SND.en(e)}catch(x){}
+  if(!esx(e)){try{if(typeof SND!=='undefined'&&SND.en)SND.en(e)}catch(x){}}
   try{if(window.R3D&&R3D.impact)R3D.impact.burst(m,e,vk(S.eq.w));else{sp(m.x,m.y-10,d.col,16,90,70,0);sp(m.x,m.y-10,d.col2,8,50,50,0)}fText(d.ic+' '+d.pop,d.col,m.x,m.y,(m.d&&m.d.h||30)+30,'ench')}catch(x){}}   /* IMPACTO 3D (src/r3d/impact3d.js) */
  // drop de esencia al morir la criatura (lo llama kill())
  function drop(m){const d=m&&m.d,key=d&&d.id,e=key&&DROP[key];if(!e)return;const lv=(d.lv||1),p=(.04+.0015*lv)*(m.elite||/^[bk]\d/.test(String(key))?3:1);

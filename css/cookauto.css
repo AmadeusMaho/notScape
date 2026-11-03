@@ -1,5 +1,6 @@
 /* COCINA AUTOMÁTICA (src/cookauto.js): ventana #alq.ck-auto. Elegir ingredientes → Cocinar → escena. Estilo del HUD «Susurro»: cristal oscuro, dorado #e8cf94, Cinzel para rótulos. */
-#alq.ck-auto{width:min(1100px,calc(96vw / var(--ui,1)));padding:12px 14px}
+#alq.ck-auto{width:min(1100px,calc(96vw / var(--ui,1)));padding:12px 14px;max-height:calc(100vh / var(--ui,1) - 12px);overflow-y:auto;overscroll-behavior:contain}   /* pantallas bajas: la ventana nunca se sale; se desplaza dentro de sí misma (botón Cocinar siempre alcanzable) */
+@media (max-width:760px),(max-height:620px){.ck-body{grid-template-columns:1fr}.ck-stage canvas{max-height:34vh;width:auto;margin:0 auto}.ck-grid{max-height:min(220px,calc(100vh / var(--ui,1) - 300px))}}
 .ck-root{position:relative;font-size:14px}
 .ck-top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
 .ck-ti{font-family:var(--cap,Cinzel,serif);color:#e8cf94;font-size:17px;letter-spacing:.06em}

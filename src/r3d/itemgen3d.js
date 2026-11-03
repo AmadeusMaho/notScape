@@ -52,6 +52,23 @@ const HSP={
 const flatSph=(a,b,c2)=>sph(a,1,b/a,c2/a,6);
 
 export const GEN2={
+ // ── N0.6 (3 nov 2026): los dos últimos iconos que seguían en 2D ──
+ // MOCHILA (`bag_*`): cuerpo abultado de tela/cuero con solapa, bolsillo, correas y hebilla; `o.w` (0–4) la ensancha y `o.t` = color de los herrajes
+ pack(p,g,c,o){o=o||{};c=cc(c,'#9a6a34');const k=1+(o.w||0)*.05,met=o.t||'#b8a070';
+  p(blobG(.24,1.05*k,1.18,.62,.02),c,0,0,0,{p:g,ink:.014});                                                   // cuerpo
+  p(blobG(.2,1.02*k,.5,.66,.015),shade(c,1.12),0,.19,.05,{p:g,ink:.012});                                     // solapa
+  p(blobG(.11,1.1*k,.8,.42,.012),shade(c,.88),0,-.1,.14,{p:g,ink:.012});                                      // bolsillo delantero
+  for(const x of[-.09,.09])p(box(.035,.36,.02),shade(c,.62),x*k,.02,.16,{p:g,ink:.008});                    // correas de la solapa
+  for(const x of[-.09,.09])p(box(.05,.045,.025),met,x*k,-.02,.175,{p:g,ink:.006,t:{rim:2}});                 // hebillas
+  p(new THREE.TorusGeometry(.075,.018,5,12,PI).rotateZ(0),shade(c,.6),0,.3,-.02,{p:g,ink:.008});            // asa
+  if(o.t)p(new THREE.TorusGeometry(.2*k,.012,4,18).rotateX(PI/2),met,0,.1,0,{p:g,ink:0,t:{rim:2}})},        // ribete de lujo (alforja de viajero)
+ // PATA DE CONEJO (amuleto): pata peluda con almohadillas, puntas de pelo y un cordel con aro
+ paw(p,g,c){c=cc(c,'#c8b49a');p(blobG(.12,.85,1.7,.8,.025),c,0,0,0,{p:g,ink:.012});
+  p(blobG(.1,1,1,1,.03),shade(c,1.15),0,-.2,.02,{p:g,ink:.012});                                              // pie
+  [[-.05,-.29],[0,-.31],[.05,-.29]].forEach(([x,y])=>p(sph(.028,1,1,.8,8),'#d89a8a',x,y,.07,{p:g,ink:0}));   // almohadillas
+  [[-.07,.05],[.07,.0],[-.02,-.08]].forEach(([x,y],i)=>p(new THREE.ConeGeometry(.03,.09,4).rotateZ(i?-.6:.6),shade(c,.85),x,y,.07,{p:g,ink:0}));   // mechones
+  p(cyl(.055,.06,.06,10),'#8a5a32',0,.21,0,{p:g,ink:.01});                                                  // atadura
+  p(new THREE.TorusGeometry(.05,.012,5,12),'#c8a060',0,.29,0,{p:g,ink:.006,t:{rim:2}})},                    // aro del cordel
  // ── botín de criaturas ──
  hide(p,g,c){c=cc(c,'#9a6a34');p(blobG(.25,1.25,.16,.95,.035),c,0,0,0,{p:g,ink:.014});
   p(blobG(.2,1,.1,.7,.03),shade(c,1.18),0,.07,0,{p:g,ink:0});            // cara interior del pellejo, más clara
@@ -143,9 +160,9 @@ export const GEN2={
 };
 
 // pose «en el icono» (rx, ry, rz) de cada modelo nuevo; el resto usa [0,-.4,0]
-export const POSE2={dust:[.45,-.25,0],flask:[0,-.4,0],elixir:[0,-.4,0],herbplant:[.1,.3,0],hide:[.5,-.4,0],wool:[0,0,0],cloth:[.25,-.5,0],bone:[0,-.4,.5],tooth:[0,-.3,-.3],skull:[0,-.4,0],club:[0,-.4,-.7],horn:[0,-.4,.3],nest:[.45,0,0],pearl:[0,0,0],feather:[0,-.3,-.7],butter:[.2,-.5,0],
+export const POSE2={pack:[.12,-.45,0],paw:[0,-.3,-.45],dust:[.45,-.25,0],flask:[0,-.4,0],elixir:[0,-.4,0],herbplant:[.1,.3,0],hide:[.5,-.4,0],wool:[0,0,0],cloth:[.25,-.5,0],bone:[0,-.4,.5],tooth:[0,-.3,-.3],skull:[0,-.4,0],club:[0,-.4,-.7],horn:[0,-.4,.3],nest:[.45,0,0],pearl:[0,0,0],feather:[0,-.3,-.7],butter:[.2,-.5,0],
  steak:[.55,-.4,0],drum:[0,-.3,.5],egg:[0,-.3,0],mush:[0,-.4,0],rice:[.3,0,0],salt:[0,-.4,0],bread:[.3,-.4,0],burger:[.3,-.3,0],fish:[0,-.4,.35],shrimp:[0,-.3,0],squid:[0,-.4,.2],plate:[.7,-.3,0],bowl:[.55,-.3,0],
  crown:[.35,-.3,0],mask:[0,-.35,0],hat:[.2,-.4,0],shuriken:[.9,-.2,0],core:[0,.5,0],rune:[0,-.35,0],scroll:[0,-.4,.6],swirl:[0,.3,0],bag:[0,-.4,0]};
 // pose en el SUELO (drops3d): lo largo se tumba; lo plano queda plano
-export const DPOSE2={dust:[0,0,0],flask:[0,0,PI/2],elixir:[0,0,PI/2],herbplant:[0,0,0],hide:[0,0,0],cloth:[0,0,0],bone:[0,0,0],tooth:[0,0,PI/2],club:[0,0,PI/2],horn:[0,0,PI/2],feather:[0,0,PI/2],scroll:[0,0,0],plate:[0,0,0],bowl:[0,0,0],steak:[0,0,0],fish:[0,0,0],shrimp:[0,0,0],squid:[0,0,PI/2],mask:[-PI/2+.4,0,0],shuriken:[0,0,0],drum:[0,0,.5],rune:[-.5,0,0],nest:[0,0,0],burger:[0,0,0],bread:[0,0,0],butter:[0,0,0],wool:[0,0,0],bag:[0,0,0]};
+export const DPOSE2={pack:[0,0,0],paw:[0,0,PI/2],dust:[0,0,0],flask:[0,0,PI/2],elixir:[0,0,PI/2],herbplant:[0,0,0],hide:[0,0,0],cloth:[0,0,0],bone:[0,0,0],tooth:[0,0,PI/2],club:[0,0,PI/2],horn:[0,0,PI/2],feather:[0,0,PI/2],scroll:[0,0,0],plate:[0,0,0],bowl:[0,0,0],steak:[0,0,0],fish:[0,0,0],shrimp:[0,0,0],squid:[0,0,PI/2],mask:[-PI/2+.4,0,0],shuriken:[0,0,0],drum:[0,0,.5],rune:[-.5,0,0],nest:[0,0,0],burger:[0,0,0],bread:[0,0,0],butter:[0,0,0],wool:[0,0,0],bag:[0,0,0]};
 Object.assign(GEN2,GEN3);Object.assign(POSE2,POSE3);Object.assign(DPOSE2,DPOSE3);   // los kinds de oficio usan la misma firma y las mismas tablas

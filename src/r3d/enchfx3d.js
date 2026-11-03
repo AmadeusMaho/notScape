@@ -237,6 +237,13 @@ const PREMUL={blending:THREE.CustomBlending,blendSrc:THREE.OneFactor,blendDst:TH
 const TY={ember:0,spark:1,glint:1,hang:2,flake:3,mist:4,smoke:5,drop:6,bubble:7,mote:0};
 const AUY={h:.95,c:.62,a:.58,g:.45,s:.5,l:.28,f:.05},AUY_K=Object.keys(AUY),N=96,HS=4,_a=new V3(),_b=new V3(),_d=new V3(),_v=new V3(),_w=new V3(),_c=new THREE.Color(),_x=new V3(),_c2=new THREE.Color(),_vp=new THREE.Vector4();
 const rr=(a)=>a[0]+Math.random()*(a[1]-a[0]);
+/* FUNDA DE FUEGO SUELTA (3 nov 2026, lote N0.7-FORGE3D-PULIDO): el MISMO shader de las armas encantadas (`SHELL_VS/FS`, modo `fuego`, ruido fbm, lenguas que suben en el eje del mundo)
+   para otros usos (horno de la fragua 3D, pieza candente): `const f=makeShell('fuego'); scene.add(f.mesh); f.set(A,D,L,bw,R,t,K,I)` cada fotograma, con A = arranque (mundo), D = eje unitario,
+   L = largo, bw = medio ancho de la «hoja», R = alcance de las llamas (mundo), t = tiempo (s), K = nivel (1 = III; >1 añade humo/ascuas), I = intensidad 0..1. 1 quad, 1 llamada, sin luces. */
+export function makeShell(key){const F=FX[key||'fuego'],g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(12),3));g.setAttribute('aQ',new THREE.BufferAttribute(new Float32Array([0,-1,1,-1,1,1,0,1]),2));g.setIndex([0,1,2,0,2,3]);g.boundingSphere=new THREE.Sphere(new V3(),1e5);
+ const su={uA:{value:new V3()},uD:{value:new V3(0,1,0)},uL:{value:.5},uR:{value:.1},uBw:{value:.03},uW:{value:new THREE.Vector4(F.up,F.dn,F.sym,F.rise)},uE:{value:new THREE.Vector2(F.tip,0)},uM:{value:F.m},uT:{value:0},uI:{value:1},uK:{value:1},uC1:{value:new THREE.Color(F.c1)},uC2:{value:new THREE.Color(F.c2)},uC3:{value:new THREE.Color(F.c3)}};
+ const sm=new THREE.ShaderMaterial(Object.assign({uniforms:su,vertexShader:SHELL_VS,fragmentShader:SHELL_FS,side:THREE.DoubleSide},PREMUL)),mesh=new THREE.Mesh(g,sm);mesh.renderOrder=9;
+ return{mesh,su,set(a,d,L,bw,R,t,K,I){su.uA.value.copy(a);su.uD.value.copy(d);su.uL.value=L;su.uBw.value=bw;su.uR.value=R;su.uT.value=t;su.uK.value=K;su.uI.value=I;mesh.visible=I>.02}}}
 export class EnchFx{
  constructor(ha){this.ha=ha;this.last=performance.now();this.t=0;this.root=null;this.e=null;this.fade=0;this.tPrev=new V3();this.hasPrev=false;this.bv=new V3();
   // FUNDA: un quad (4 vértices) cuya forma la calcula el vertex shader

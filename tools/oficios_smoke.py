@@ -46,10 +46,11 @@ want = sys.argv[1:] or ev('JSON.stringify(Object.keys(WKUI.REG))')
 print('Oficios con hoja de trabajo:', ', '.join(want))
 
 # S.stn se limpia entre llamadas: fijar la estación y arrancar en la MISMA evaluación
-START = "(()=>{const st=ST.find(s=>WKUI.REG['%s'].stn.includes(s.id))||{id:WKUI.REG['%s'].stn[0],x:P.x,y:P.y-30,sks:['%s'],nodraw:1};NSTEST.tp(st.x,st.y+30);S.stn=st;startC('%s',%d);return 1})()"
+# (3 nov 2026) estaciones FUERA de la isla del Cielo: con el tutorial sin terminar las compuertas de nubes devuelven al héroe al camino
+START = "(()=>{const st=ST.find(s=>WKUI.REG['%s'].stn.includes(s.id)&&!(BIOMES.zone&&s.x>=BIOMES.zone.x0))||{id:WKUI.REG['%s'].stn[0],x:P.x,y:P.y-30,sks:['%s'],nodraw:1};NSTEST.tp(st.x,st.y+30);S.stn=st;startC('%s',%d);return 1})()"
 
 # ---- preparación común: estación + materiales de la 1.ª receta posible
-SETUP = r"""(sk=>{stopA();S.inv.length=0;const r=WKUI.REG[sk];const st=ST.find(s=>r.stn.includes(s.id))||{id:r.stn[0],x:P.x,y:P.y-30,sks:[sk],nodraw:1};
+SETUP = r"""(sk=>{stopA();S.inv.length=0;const r=WKUI.REG[sk];const st=ST.find(s=>r.stn.includes(s.id)&&!(BIOMES.zone&&s.x>=BIOMES.zone.x0))||{id:r.stn[0],x:P.x,y:P.y-30,sks:[sk],nodraw:1};
 S.stn=st;if(typeof ISLA!=='undefined')ISLA.lock=()=>false;S.xp[sk]=Math.max(S.xp[sk]||0,XT[30]);const L0=L(sk);
 if(sk==='en'){CHEAT.give('sw_cobre',1);ENCH.rebuild()}   /* Encantamiento: las recetas salen de las armas que llevas */
 let i=ACT[sk].findIndex(a=>a.length===6&&L0>=rq(a)&&!ownT(a));if(i<0)return JSON.stringify({err:'sin receta'});

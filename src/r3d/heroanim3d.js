@@ -307,6 +307,28 @@ function smithV(v){const ax=[1,0,0],S=P(SM0,{re:edge(ax,SM0.slice(C.rd,C.rd+3))}
   return full([K(0,S),K(.45,k,'i2'),K(.9,P(k,{cy:-.15}),'l'),K(1,k),K(2,S)])}
  const o=P(S,{py:-.09,cx:.36,hx:.38,cy:.08,rp:[-.15,.64,.28],rd:nrm([0,.3,.95]),re:E([0,.3,.95])});   // observar: se inclina a mirar la pieza
  return full([K(0,S),K(.45,o,'i2'),K(.9,o,'l'),K(1,o),K(2,S)])}
+// ── OFICIOS CON HOJA (3 nov 2026, N0.7): clip y herramienta propios por oficio (antes todos usaban el martillo del herrero). Mismo protocolo que smith(): u=.65 pose armada, u=1 impacto, 1..2 seguimiento.
+//    Claves de clip: wcr Artesanía (serrucho) · wpe Peletería (lezna) · wsa Sastrería (aguja) · wes Escultor (cincel y maceta) · wjo Joyería (martillito y pinzas) · wing Ingeniería (llave). Se eligen con `reg(sk,{clip})` en workui.js.
+const WB0=P(DEF,{py:-.06,cx:.25,yaw:-.1,fl:[.12,.08,0,0,.25],fr:[-.12,-.08,0,0,-.3],rp:[-.15,.62,.28],rd:nrm([0,.3,.95]),re:[0,-1,0],lp:[.1,.6,.3],ld:nrm([-.2,-.3,.9]),le:[0,1,0],pr:[-.7,-.5,-.3],pl:[.6,-.6,-.2]});
+function wk4(S,a,b,c,d){return full([K(0,S),K(.65,a),K(.86,b,'i2'),K(1,c,'i2'),K(1.15,d,'o2'),K(2,S)])}
+function wcrC(){const E=d=>edge([1,0,0],d),S=P(WB0,{re:E(WB0.slice(C.rd,C.rd+3))}),r=(y,z,dd)=>({rp:[-.14,y,z],rd:nrm(dd),re:E(dd)});   // serrucho: tira hacia atrás y empuja largo sobre el madero (la izquierda lo sujeta)
+ const a=P(S,Object.assign({cx:.28,py:-.05},r(.62,.12,[0,-.25,.97]))),b=P(S,Object.assign({cx:.34,py:-.07},r(.6,.2,[0,-.2,.98]))),c=P(S,Object.assign({cx:.46,py:-.12,cy:.1},r(.56,.42,[0,-.15,1]))),d=P(c,{cx:.42,rp:[-.14,.58,.34]});
+ return wk4(S,a,b,c,d)}
+function wpeC(){const E=d=>edge([1,0,0],d),S=P(WB0,{re:E(WB0.slice(C.rd,C.rd+3))});   // lezna: alza la mano y pincha hacia abajo sobre el cuero; al seguir tira del hilo hacia arriba
+ const a=P(S,{cx:.18,cy:-.12,rp:[-.2,.9,.14],rd:nrm([0,.7,.5]),re:E([0,.7,.5]),pr:[-.8,.1,.2]}),b=P(S,{cx:.24,rp:[-.18,.8,.24],rd:nrm([0,.3,.9]),re:E([0,.3,.9])}),c=P(S,{cx:.4,py:-.12,cy:.1,rp:[-.12,.55,.34],rd:nrm([0,-.7,.7]),re:E([0,-.7,.7])}),d=P(S,{cx:.3,py:-.05,rp:[-.18,.88,.2],rd:nrm([0,.5,.8]),re:E([0,.5,.8])});
+ return wk4(S,a,b,c,d)}
+function wsaC(){const E=d=>edge([1,0,0],d),S=P(WB0,{re:E(WB0.slice(C.rd,C.rd+3)),lp:[.06,.66,.3]});   // aguja: pasa la tela hacia delante (pinchazo corto) y estira el hilo en un gran arco lateral
+ const a=P(S,{cx:.22,rp:[-.08,.66,.2],rd:nrm([.1,.1,1]),re:E([.1,.1,1])}),b=P(S,{cx:.26,rp:[-.06,.64,.26],rd:nrm([0,0,1]),re:E([0,0,1])}),c=P(S,{cx:.34,py:-.08,rp:[-.04,.62,.36],rd:nrm([-.1,0,1]),re:E([-.1,0,1])}),d=P(S,{cx:.26,cy:-.18,rp:[-.5,.82,.12],rd:nrm([-.8,.3,.4]),re:E([-.8,.3,.4]),pr:[-.9,.2,0]});
+ return wk4(S,a,b,c,d)}
+function wesC(){const E=d=>edge([1,0,0],d),S=P(WB0,{re:E(WB0.slice(C.rd,C.rd+3)),lp:[.06,.7,.32],ld:nrm([0,.5,.86])});   // maceta sobre el cincel (la izquierda lo apoya en la piedra): golpe corto desde el hombro
+ const a=P(S,{cx:.18,cy:-.3,rp:[-.2,.98,.1],rd:nrm([0,.9,-.4]),re:E([0,.9,-.4]),pr:[-.9,.2,.3]}),b=P(S,{cx:.2,cy:-.15,rp:[-.18,.88,.2],rd:nrm([0,.9,.4]),re:E([0,.9,.4])}),c=P(S,{cx:.34,py:-.1,cy:.12,rp:[-.08,.68,.34],rd:nrm([0,.15,1]),re:E([0,.15,1])}),d=P(S,{cx:.3,rp:[-.12,.72,.3],rd:nrm([0,.4,.92]),re:E([0,.4,.92])});
+ return wk4(S,a,b,c,d)}
+function wjoC(){const E=d=>edge([1,0,0],d),S=P(WB0,{py:-.1,cx:.38,hx:.25,re:E(WB0.slice(C.rd,C.rd+3)),lp:[.04,.58,.3],ld:nrm([-.1,-.4,.9])});   // joyería: cabeza muy inclinada sobre la pieza, golpecitos cortos con la muñeca (la izquierda sostiene con pinzas)
+ const a=P(S,{rp:[-.1,.7,.26],rd:nrm([0,.6,.8]),re:E([0,.6,.8])}),b=P(S,{rp:[-.1,.66,.3],rd:nrm([0,.35,.94]),re:E([0,.35,.94])}),c=P(S,{rp:[-.09,.6,.33],rd:nrm([0,-.2,1]),re:E([0,-.2,1]),cx:.42}),d=P(S,{rp:[-.1,.68,.28],rd:nrm([0,.5,.86]),re:E([0,.5,.86])});
+ return wk4(S,a,b,c,d)}
+function wingC(){const E=d=>edge([1,0,0],d),S=P(WB0,{re:E(WB0.slice(C.rd,C.rd+3)),lp:[.1,.64,.3]});   // llave: la sube, la encaja y gira la muñeca con un tirón de todo el cuerpo
+ const a=P(S,{cx:.2,cy:-.15,rp:[-.18,.84,.18],rd:nrm([.4,.6,.7]),re:E([.4,.6,.7])}),b=P(S,{cx:.26,rp:[-.14,.72,.28],rd:nrm([.2,.2,1]),re:E([.2,.2,1])}),c=P(S,{cx:.36,py:-.1,cy:.2,rp:[-.1,.58,.36],rd:nrm([-.5,-.3,.8]),re:E([-.5,-.3,.8])}),d=P(c,{cx:.3,cy:.1,rp:[-.12,.62,.32]});
+ return wk4(S,a,b,c,d)}
 // PESCA (u = ph del juego, 0→.99 en 2,4 s): echar la caña atrás, latigazo adelante, esperar (los tirones van aparte)
 const FI0=P(DEF,{py:-.03,yaw:-.25,cy:.05,cx:.05,fl:[.11,.08,0,0,.2],fr:[-.11,-.08,0,0,-.35],two:1,lh:.14,rp:[-.08,.7,.22],rd:nrm([0,.55,.83]),re:[1,0,0],pr:[-.7,-.6,-.2],pl:[.6,-.7,.1]});
 function fishC(){const k1=P(FI0,{cy:-.35,cx:-.06,pz:-.02,rp:[-.12,.94,.06],rd:nrm([-.15,.8,-.58])});
@@ -331,12 +353,13 @@ export const LOOPS={
   lp:[.1,.58,.29],ld:[0,0,1],cy:.05*s,pz:.01*s})},
  se:t=>P(DEF,Object.assign({},CROUCH,{py:-.22,cx:.55,hx:.32,fl:[.14,.12,0,0,.35],fr:[-.13,-.08,0,.3,-.4],rp:[-.14+.05*Math.cos(t*4),.42,.34+.05*Math.sin(t*4)],rd:nrm([.1,-.9,.4]),re:[1,0,0],lp:[.16+.05*Math.sin(t*3.3),.4,.32+.04*Math.cos(t*3.3)],ld:nrm([-.1,-.9,.4]),le:[-1,0,0],cy:.07*Math.sin(t*4)})),   // BUSCAR (21 oct 2026): agachado rebuscando con las dos manos (castear en el suelo)
  he:(t,ph)=>{const s=ph<1?Math.sin(Math.max(0,ph)*Math.PI):0,c=ph<1?Math.sin(Math.max(0,ph)*Math.PI*2):0;return P(DEF,Object.assign({},CROUCH,{py:-.2,cx:.5,hx:.3,fl:[.13,.1,0,0,.3],fr:[-.12,-.06,0,.25,-.3],rp:[-.12+.02*s,.46,.34+.03*s],rd:nrm([.05,-.55,.8]),re:[1,0,0],lp:[.13,.42,.3],ld:nrm([-.05,-.7,.7]),le:[-1,0,0],cy:.04*s,pz:.01*c}))},   // HERBOLARIA: agachado, la izquierda sujeta el tallo y la derecha corta (ph<1 = justo después de un corte)
+ ds:(t,ph)=>{const c=Math.sin(t*5.5),s=Math.sin(ph*Math.PI*14);return P(DEF,Object.assign({},CROUCH,{py:-.2,cx:.52,hx:.3,yaw:-.12,fl:[.13,.1,0,0,.3],fr:[-.12,-.06,0,.25,-.3],rp:[-.12+.07*s,.4+.02*c,.3+.06*s],rd:nrm([.3*s,-.8,.55]),re:[1,0,0],lp:[.15,.38,.3],ld:nrm([-.1,-.7,.7]),le:[-1,0,0],cy:.05*s,pz:.012*s}))},   // DESOLLAR (3 nov 2026): agachado, la izquierda sujeta la piel y la derecha corta con vaivén largo del cuchillo (ph 0→1 = progreso del casteo)
  ins:t=>P(DEF,{hx:.35,cx:.08,lp:[.06,.7,.24],ld:nrm([0,.35,.94]),le:[-1,0,0],rp:[-.02+.015*Math.cos(t*7),.73,.25+.012*Math.sin(t*9)],rd:nrm([.1,.7,-.5]),re:[1,0,0],pl:[.7,-.6,.1]})};
 
 // golpes de trabajo: clave → constructor (se cachean)
-const WORK={wc:chop,mi:mine,sm:smith,smH:()=>smithV('H'),smB:()=>smithV('B'),smt:()=>smithV('t'),smc:()=>smithV('c'),smm:()=>smithV('m'),smo:()=>smithV('o'),smf:()=>smithV('f')};
+const WORK={wcr:wcrC,wpe:wpeC,wsa:wsaC,wes:wesC,wjo:wjoC,wing:wingC,wc:chop,mi:mine,sm:smith,smH:()=>smithV('H'),smB:()=>smithV('B'),smt:()=>smithV('t'),smc:()=>smithV('c'),smm:()=>smithV('m'),smo:()=>smithV('o'),smf:()=>smithV('f')};
 // tiempos del seguimiento (s) tras el impacto: pesado = más largo
-const FOLLOW={dual:.36,fist:.3,sword:.4,dagger:.26,great:.7,scepter:.45,staff:.5,bow:.6,xbow:.85,wc:.45,mi:.5,sm:.35,smH:.45,smB:.55,smt:.3,smc:.4,smm:.4,smo:.4,smf:.5};
+const FOLLOW={dual:.36,fist:.3,sword:.4,dagger:.26,great:.7,scepter:.45,staff:.5,bow:.6,xbow:.85,wcr:.35,wpe:.35,wsa:.4,wes:.4,wjo:.25,wing:.4,wc:.45,mi:.5,sm:.35,smH:.45,smB:.55,smt:.3,smc:.4,smm:.4,smo:.4,smf:.5};
 
 // ════════════════════════════ IK ════════════════════════════
 const _d=new V3(),_p=new V3(),_u=new V3(),_f=new V3(),_X=new V3(),_Y=new V3(),_Z=new V3(),_m=new M4(),_q=new QT(),_q2=new QT(),_v=new V3(),_w=new V3(),_sp=new V3();
@@ -409,6 +432,14 @@ export const BUILD={
  shears:(p,g,o)=>{const gs=[-1,1].map(q=>{const bg=new THREE.Group();bg.position.set(0,.02,0);g.add(bg);   // cada hoja = un grupo articulado en el pivote (los contornos «ink» copian la pose AL CREARSE: nunca girar la malla después, girar el grupo)
    p(new THREE.ConeGeometry(.02,.27,4).rotateY(Math.PI/4).scale(1,1,.35).translate(0,.135,0).rotateZ(0),o.col||STEEL,0,0,0,{p:bg,ink:.005});p(box(.014,.13,.012).translate(0,-.065,0),WOOD,0,0,0,{p:bg,ink:.004});p(new THREE.TorusGeometry(.028,.007,5,8),WOOD,0,-.155,0,{p:bg,ink:.004});return bg});
   p(sph(.012),'#c8c0a8',0,.02,.008,{p:g,ink:0});const snip=a=>{gs[0].rotation.z=-a;gs[1].rotation.z=a};snip(.22);return{snip}},   // snip(a): ángulo de apertura de cada hoja (0 = cerradas)
+ knife:(p,g,o)=>{p(cyl(.017,.02,.14,6).translate(0,-.02,0),WOOD,0,0,0,{p:g,ink:.008});p(box(.05,.02,.035),DWOOD,0,.06,0,{p:g,ink:.006});   // cuchillo de desollar: mango corto, guarda y hoja ancha y curva (filo hacia +x)
+  p(new THREE.ConeGeometry(.032,.2,4).rotateY(Math.PI/4).scale(1.1,1,.3).translate(.012,.17,0).rotateZ(-.12),o.col||STEEL,0,0,0,{p:g,ink:.006});return{}},
+ awl:(p,g,o)=>{p(sph(.032,1,1.15,1).translate(0,-.02,0),WOOD,0,0,0,{p:g,ink:.007});p(cyl(.006,.012,.2,5).translate(0,.14,0),STEEL,0,0,0,{p:g,ink:.005});return{}},   // lezna (Peletería): mango redondo y punzón
+ needle:(p,g,o)=>{p(cyl(.004,.004,.2,4).translate(0,.06,0),STEEL,0,0,0,{p:g,ink:.003});p(sph(.014),'#c8b078',0,-.05,0,{p:g,ink:0});p(tube([[0,-.05,0],[.05,-.12,.02],[.1,-.2,0]],.003,6),'#d8c8a0',0,0,0,{p:g,ink:0});return{}},   // aguja con hilo (Sastrería)
+ chisel:(p,g,o)=>{p(box(.03,.12,.03).translate(0,-.02,0),WOOD,0,0,0,{p:g,ink:.006});p(box(.026,.15,.012).translate(0,.12,0),STEEL,0,0,0,{p:g,ink:.005});return{}},   // cincel (Escultor, mano izquierda)
+ mallet:(p,g,o)=>{p(cyl(.015,.018,.26,6).translate(0,0,0),WOOD,0,0,0,{p:g,ink:.007});p(cyl(.05,.05,.1,8).rotateZ(Math.PI/2).translate(0,.14,0),DWOOD,0,0,0,{p:g,ink:.009});return{}},   // maceta de madera
+ jhammer:(p,g,o)=>{p(cyl(.01,.012,.16,6),WOOD,0,0,0,{p:g,ink:.005});p(box(.065,.03,.03),STEEL,0,.09,0,{p:g,ink:.005});return{}},   // martillito de joyero
+ wrench:(p,g,o)=>{p(box(.03,.3,.012).translate(0,.08,0),'#8a8e96',0,0,0,{p:g,ink:.006});p(box(.1,.05,.014),'#8a8e96',0,.25,0,{p:g,ink:.006});p(box(.04,.05,.016),'#2a2a30',0,.26,0,{p:g,ink:0});return{}},   // llave inglesa (Ingeniería)
  hammer:(p,g,o)=>{p(cyl(.017,.02,.3,6).translate(0,0,0),WOOD,0,0,0,{p:g,ink:.009});p(box(.12,.065,.065),IRON,0,.15,0,{p:g,ink:.009});return{}},
  tongs:(p,g,o)=>{[-1,1].forEach(q=>p(box(.012,.3,.012).translate(0,.15,0),'#4a4a52',.012*q,0,0,{p:g,ink:.006}).rotation.z=-q*.05);
   p(box(.07,.025,.04),'#ff8a3a',0,.31,0,{p:g,ink:0,mat:glow('#ff7a2a',1.6)});return{}},
@@ -436,7 +467,7 @@ const BACK={great:1,staff:1,bow:1,xbow:1};
 const PULL={sword:.42,dagger:.26,scepter:.12,great:.1,staff:.1,bow:0,xbow:.05,shield:.06};
 const SWAP=.5,DRAW_T=.5,SHEATH_T=.55,DUR_K={great:1.4,staff:1.2,bow:1.1,xbow:1.15};   // duración por arma (el mandoble pesa: se saca más despacio)   // s=SWAP: la mano agarra el objeto y este cambia de sitio (funda/espalda ↔ mano)
 const TOOLKIND={tongsR:'tongs'};
-const TOOL={he:['shears'],wc:['axe'],mi:['pick'],sm:['hammer','tongs'],fu:['tongsR'],co:['ladle'],fi:['rod'],cr:['saw'],es:['saw'],ins:['quill','book'],eat:['food']};
+const TOOL={wcr:['saw'],wpe:['awl'],wsa:['needle'],wes:['chisel','mallet'],wjo:['jhammer','tongs'],wing:['wrench'],ds:['knife'],he:['shears'],wc:['axe'],mi:['pick'],sm:['hammer','tongs'],fu:['tongsR'],co:['ladle'],fi:['rod'],cr:['saw'],es:['saw'],ins:['quill','book'],eat:['food']};
 
 // ════════════════════════════ EL ANIMADOR ════════════════════════════
 // ARMAS → ANIMACIÓN (reciclar): un arma nueva NO necesita animaciones nuevas. Añade una fila: anim = clase de animación existente
@@ -481,7 +512,7 @@ export class HeroAnim{
  tool(name){if(!this.it[name]){const g=new THREE.Group();g.name='it_'+name;const kind=TOOLKIND[name]||name,info=BUILD[kind](this.m.part,g,{})||{};
    this.it[name]=Object.assign({g,kind,hand:name==='tongs'||name==='book'||(name==='food'&&this.eatL())?1:0},info);g.visible=false;this.m.body.add(g)}return this.it[name]}
  // ── estado → pose viva ──
- update(st,dt,t){dt=Math.min(.1,Math.max(1e-4,dt||1/60));this.t=t;const sw=st.mv&&st.act&&st.act.k==='f'&&st.act.mv?1:0,a=(st.mv&&!sw)?null:st.act,v=this.live;   // sw = GOLPE MIENTRAS TE MUEVES (combate dirigido): el tren superior hace el golpe y las piernas siguen caminando
+ update(st,dt,t){dt=Math.min(.1,Math.max(1e-4,dt||1/60));this.t=t;const sw=st.mv&&st.act&&st.act.k==='f'&&st.act.mv?1:0,a=(st.mv&&!sw&&!(st.act&&st.act.k==='ck'))?null:st.act,v=this.live;   /* una habilidad (k:'ck') NO se corta al moverte: el clip es de cuerpo entero y game.js frena al héroe mientras dura */   // sw = GOLPE MIENTRAS TE MUEVES (combate dirigido): el tren superior hace el golpe y las piernas siguen caminando
   const fight=!!(a&&(a.k==='f'||a.k==='sp'||a.k==='ck')),combat=!!(st.cb||fight);
   // armas guardadas fuera de combate: al entrar se DESENFUNDAN (mano → empuñadura → guardia), al salir se ENFUNDAN; con herramienta en la mano el arma queda en su sitio
   this.holster(combat,fight,a,a?(a.k==='sm'&&a.id==='furnace'?'fu':a.k):null,dt);

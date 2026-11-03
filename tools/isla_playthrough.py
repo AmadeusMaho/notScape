@@ -31,9 +31,24 @@ def hitsAt(n,key,b='left',gap=.75):   # pulsa LMB apuntando a un cordero hasta s
   return ev(f"S.st['{key}']||0")-k0>=n
 # ── COCINA con RATÓN REAL: estación de Rafael → (camarón ya elegido) → tocar la Parrilla en la vista general → echar → voltear → SERVIR → SERVIR del emplatado
 def canvasXY(x,y):return ev(f"(()=>{{const r=document.querySelector('#alq canvas').getBoundingClientRect();return {{x:r.x+{x}/800*r.width,y:r.y+{y}/460*r.height}}}})()")
+def cook_auto():
+  # COCINA AUTOMÁTICA (src/cookauto.js): el encargo de Rafael ya deja el camarón elegido; cantidad 2 → botón de cocinar con el RATÓN REAL → esperar el resultado
+  if not wait("COOKA.active&&COOKA.stage==='pick'",8):return 'no abre la cocina'
+  ev("COOKA.pick.qty(2)");time.sleep(.3)
+  p=ev("(()=>{const b=document.querySelector('.ck-act .ck-go');if(!b)return null;b.scrollIntoView({block:'center'});const r=b.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,t=document.elementFromPoint(x,y);return{x,y,ok:!!(t&&b.contains(t)),n:b.innerText}})()")
+  if not p:return 'sin botón de cocinar'
+  if not p['ok']:return 'el botón %s está tapado o fuera de pantalla'%p['n']
+  click(p['x'],p['y'])
+  if not wait("COOKA.stage!=='pick'",6):return 'el clic no empezó a cocinar'
+  t0=time.time()
+  while ev("COOKA.stage==='cook'") and time.time()-t0<60:
+    ev("COOKA.skip&&COOKA.skip()");time.sleep(.5)
+  r=ev("COOKA.res?JSON.stringify({id:COOKA.res.out,n:COOKA.res.n}):'(sin resultado)'")
+  ev("COOKA.close()");return 'ok '+str(r)
 def cook_once():
   ev("(()=>{const st=ST.find(s=>s.id==='cocina'&&!s.inroom);IBOT.near(st.x,st.y,40);return 1})()");time.sleep(.6)
   ev("(()=>{const st=ST.find(s=>s.id==='cocina'&&!s.inroom);S.stn=st;openIW(st);return 1})()")
+  if ev("typeof COOKA!=='undefined'&&!/[?&]cookmg/.test(location.search)"):return cook_auto()   # cocina nueva (COOKA, por defecto); la manual solo con ?cookmg
   if not wait("!!(COC.G&&COC.G.stage==='pick')",8):return 'no abre la cocina'
   sel=ev("COC.G&&JSON.stringify((document.querySelector('#alq .aq-sh')||{}).innerText||'').slice(0,160)")
   # vista general: tocar la Parrilla con el ratón (centro de su celda proyectado con la cámara)
@@ -67,7 +82,7 @@ def main():
   def S_(js,label=None,to=180):
     e=E[0];E[0]+=1
     if step()>e:print('%2d %-62s (ya cumplido por el juego)'%(e,ev(f"ISLA.STEPS[{e}].txt")[:62]),flush=True);return
-    ev("(()=>{if(COC.G)COC.close();return 1})()")
+    ev("(()=>{if(COC.G)COC.close();if(typeof COOKA!=='undefined'&&COOKA.active)COOKA.close();return 1})()")
     t=time.time();s0=step();r=(js() if callable(js) else ev(js)) if js else None
     ok=wait(f"ISLA.step>{s0}||(ISLA.state&&ISLA.state.done)",to)
     print('%2d %-62s %-28s %5.1fs %s'%(s0,ev(f"ISLA.STEPS[{s0}].txt")[:62],str(r)[:28],time.time()-t,'OK' if ok else 'NO AVANZA'),flush=True)
@@ -91,7 +106,7 @@ def main():
     for k in range(4):
       r=cook_once();print('   cocina (ratón real):',r,flush=True)
       if step()>s0:break
-    ev("COC.G&&COC.close();1")
+    ev("COC.G&&COC.close();typeof COOKA!=='undefined'&&COOKA.active&&COOKA.close();1")
   S_(cook2,to=5)
   Q('v:9:rafael');Q('v:9:miguel')
   ev("(()=>{const i=S.inv.indexOf('sw_cobre');if(i>=0)use(i);return 1})()")
@@ -105,7 +120,12 @@ def main():
     while ev("S.st.dash||0")-k0<2 and time.time()-t<20:mouse([{'t':'key','k':'Space'}]);n+=1;time.sleep(1.5)
     return 'pulsaciones %d · %.1f s'%(n,time.time()-t)
   S_(dashes,to=4)
-  S_(lambda:mouse([{'t':'move','x':800,'y':420},{'t':'down','b':'right'},{'t':'wait','ms':700},{'t':'up','b':'right'}]),to=5)
+  def block():   # tras las esquivas hay que esperar a recuperar aliento (S.sta ≥ 6) y a que acabe el impulso; se reintenta
+    k0=ev("S.st.bstart||0");n=0
+    while ev("S.st.bstart||0")-k0<1 and n<5:
+      wait("!DSH.on&&S.sta>=12&&!swSlow(performance.now())",8);mouse([{'t':'move','x':800,'y':420},{'t':'down','b':'right'},{'t':'wait','ms':700},{'t':'up','b':'right'}]);n+=1;time.sleep(.4)
+    return 'intentos %d · aliento %s'%(n,ev("Math.round(S.sta)"))
+  S_(block,to=8)
   S_("(()=>{use(S.inv.indexOf('bw_pino'));return S.eq.w})()",to=5)
   S_(lambda:hitsAt(3,'shot',gap=1.1),to=6)
   S_("(()=>{use(S.inv.indexOf('st_pino'));return S.eq.w})()",to=5)
@@ -139,8 +159,11 @@ def main():
     return ev("(async()=>{const g=ISLA.boss;IBOT.near(g.x,g.y,-36);await IBOT.sl(500);return await IBOT.gabriel(200)})()")
   S_(gabriel,to=8)
   S_(None,to=90)   # cinemática «caída»
-  s0=step();ev("(()=>{const q=IBOT.wp(26,-.4);IBOT.near(q.x,q.y,0);return 1})()");time.sleep(1.5)
-  ev("(()=>{const q=IBOT.wp(28.5,-.4);IBOT.near(q.x,q.y,0);return 1})()")
+  # «ESCAPA» POR TRAMOS (N0.5): calzada → Palestra → borde este (cada tramo con tiempo; el bot salta al final de cada uno)
+  for (x,y,nm) in [(6,18,'calzada'),(17,3,'Palestra')]:
+    s0=step();ev("(()=>{const q=IBOT.wp(%s,%s);IBOT.near(q.x,q.y,0);return 1})()"%(x,y))
+    okt=wait("ISLA.step>%d"%s0,10);print('%2d %-62s %33s %s'%(s0,'¡Escapa! tramo '+nm,'','OK' if okt else 'NO'),flush=True)
+  s0=step();ev("(()=>{const q=IBOT.wp(28.5,-.4);IBOT.near(q.x,q.y,0);return 1})()")
   ok=wait("ISLA.state.done==1",20);print('%2d %-62s %33s %s'%(s0,'¡Escapa! (borde este)','','OK' if ok else 'NO'),flush=True)
   ok2=wait("typeof PLAYA!=='undefined'&&curB===0&&!(CINE&&CINE.on)",90)
   info=ev("JSON.stringify({bioma:curB,inv:S.inv.length,coins:S.coins,t:ISLA.state.t,playa:typeof PLAYA!=='undefined'?(PLAYA.step!=null?PLAYA.step:'?'):'-'})")

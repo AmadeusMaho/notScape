@@ -8,8 +8,8 @@
 //  solo vuelve al 2D si el 3D falla de verdad (boot deja R3D_ON=false, o la vista previa falla 60 fotogramas seguidos). Nuevo: color de BUFANDA (S.app.scarf, solo 3D).
 // NO hay botón para reabrirlo: cambiar el aspecto será un ítem de pago en la tienda que llame a CREATOR.open(false) (nombre bloqueado, con Guardar/Cancelar).
 const CREATOR=(()=>{
- const HAIRS={m:[['bald','Calvo'],['cut','Corto'],['spiky','Puntas'],['side','Flequillo'],['curly','Rizado'],['mane','Melena']],
-   f:[['bald','Calvo'],['long','Largo'],['bun','Moño'],['pony','Coleta'],['bob','Media melena'],['twin','Dos coletas']]}, // calvo = predeterminado (guiño al OSRS); 5 peinados por género
+ const HAIRS={m:[['cut','Corto'],['spiky','Puntas'],['side','Flequillo'],['curly','Rizado'],['mane','Melena'],['buzz','Rapado'],['pomp','Tupé'],['mohawk','Cresta'],['bowl','Tazón'],['warrior','Coleta guerrera'],['locs','Rastas'],['afro','Afro'],['topknot','Moño samurái'],['slick','Peinado atrás'],['messy','Despeinado'],['bald','Calvo']],
+   f:[['long','Largo'],['bun','Moño'],['pony','Coleta'],['bob','Media melena'],['twin','Dos coletas'],['wavy','Ondulado'],['braid','Trenza'],['pixie','Pixie'],['hipony','Coleta alta'],['lowbun','Moño bajo'],['ringlets','Tirabuzones'],['sidepony','Coleta lateral'],['bangs','Flequillo recto'],['plaits','Dos trenzas'],['crown','Corona'],['bald','Calvo']]}, // calvo = predeterminado (guiño al OSRS); 16 peinados por género (N0.5-PEINADOS)
   GEN=[['m','Hombre'],['f','Mujer']],FACE=[[0,'Clásica'],[1,'Pecas'],[2,'Dulce'],[3,'Seria']],
   SKIN=['#f6d4b0','#f0c08a','#d9a066','#b5764a','#8a5232','#5e3a25'],
   HC=['#5a3a22','#2a1a12','#c08a3a','#e8c872','#a83a22','#dcdcdc','#3a5aa0','#7a3aa8'],
@@ -26,7 +26,7 @@ const CREATOR=(()=>{
   el.innerHTML=`<div class="ce-card panel"><h2>Crea tu personaje</h2><div class="ce-body"><div class="ce-pv"><canvas id="ce-cv" width="300" height="310"></canvas><canvas id="ce-cv3" width="300" height="310" hidden></canvas>
    <div class="ce-nav"><button type="button" class="bt" data-r="-1" title="Girar">↺</button><span>Vista</span><button type="button" class="bt" data-r="1" title="Girar">↻</button></div>
    <div class="ce-ch" id="ce-modes">${MODES.map(([v,l])=>`<button type="button" class="bt ce-b" data-m="${v}">${l}</button>`).join('')}</div></div>
-   <div class="ce-op"><div id="ce-of" hidden><label>Atuendo <span class="hint" id="ce-ofsub" style="display:inline"></span></label><div class="ce-ch" data-k="outfit" id="ce-outfits"></div></div><div id="ce-sc" hidden><label>Bufanda</label>${sw('scarf',SCARF)}</div><label>Nombre</label><input id="ce-name" maxlength="16" placeholder="Tu nombre (3-16)" autocomplete="off" spellcheck="false"><div class="hint" id="ce-err" style="margin:2px 0 0;min-height:20px"></div><label>Cuerpo</label>${chips('g',GEN)}<label>Peinado</label><div class="ce-ch" data-k="hair" id="ce-hair"></div><label>Color de pelo</label>${sw('hc',HC)}<label>Piel</label>${sw('skin',SKIN)}<label>Cara</label>${chips('face',FACE)}<label>Ojos</label>${sw('eye',EYE)}
+   <div class="ce-op"><div id="ce-of" hidden><label>Atuendo <span class="hint" id="ce-ofsub" style="display:inline"></span></label><div class="ce-ch" data-k="outfit" id="ce-outfits"></div></div><div id="ce-sc" hidden><label>Bufanda</label>${sw('scarf',SCARF)}</div><label>Nombre</label><input id="ce-name" maxlength="16" placeholder="Tu nombre (3-16)" autocomplete="off" spellcheck="false"><div class="hint" id="ce-err" style="margin:2px 0 0;min-height:20px"></div><label>Cuerpo</label>${chips('g',GEN)}<label>Peinado</label><div class="ce-st" data-k="hair" id="ce-hair"></div><label>Color de pelo</label>${sw('hc',HC)}<label>Piel</label>${sw('skin',SKIN)}<label>Cara</label>${chips('face',FACE)}<label>Ojos</label>${sw('eye',EYE)}
    <label>Ropa base <input type="color" id="ce-col" title="Color propio"></label>${sw('col',COL)}</div></div>
    <div class="ce-ft"><button type="button" class="bt" id="ce-rnd">Aleatorio</button><span style="flex:1"></span><button type="button" class="bt" id="ce-no">Cancelar</button><button type="button" class="bt ce-go" id="ce-ok">¡Empezar!</button></div></div>`;
   cv=$$('#ce-cv');g=cv.getContext('2d');cv3=$$('#ce-cv3');
@@ -34,6 +34,7 @@ const CREATOR=(()=>{
   el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
    if(b.dataset.r){dir=((dir+ +b.dataset.r)%8+8)%8}
    else if(b.dataset.m){mode=b.dataset.m;t0=performance.now()}
+   else if(b.dataset.s){const L=hairList(),i=Math.max(0,L.findIndex(h=>h[0]===A.hair));A.hair=L[((i+ +b.dataset.s)%L.length+L.length)%L.length][0]}   // selector 1/x: ◀ ▶ recorren la lista (con vuelta)
    else if(b.dataset.v!=null){const k=b.parentNode.dataset.k;A[k]=k==='face'?+b.dataset.v:b.dataset.v}
    sync()});
   $$('#ce-name').oninput=e=>{A.name=e.target.value;check()};
@@ -44,7 +45,7 @@ const CREATOR=(()=>{
  const NAME=/^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9_ -]{3,16}$/,clean=n=>String(n||'').replace(/\s+/g,' ').trim(),valid=n=>NAME.test(clean(n));
  function check(){const ok=valid(A.name),n=clean(A.name);$$('#ce-ok').disabled=!ok;$$('#ce-err').textContent=!n?'':n.length<3?'Mínimo 3 caracteres.':ok?'':'Solo letras, números, espacio, _ y -.'}
  function hairList(){return HAIRS[A.g==='f'?'f':'m']}
- function sync(){if(!hairList().some(h=>h[0]===A.hair))A.hair='bald';$$('#ce-hair').innerHTML=hairList().map(([v,l])=>`<button type="button" class="bt ce-b" data-v="${v}">${l}</button>`).join('');
+ function sync(){if(!hairList().some(h=>h[0]===A.hair))A.hair='bald';{const L=hairList(),i=Math.max(0,L.findIndex(h=>h[0]===A.hair));$$('#ce-hair').innerHTML=`<button type="button" class="bt" data-s="-1" title="Anterior">◀</button><span class="ce-sn"><b>${L[i][1]}</b><em>${i+1}/${L.length}</em></span><button type="button" class="bt" data-s="1" title="Siguiente">▶</button>`}
   el.querySelectorAll('.ce-ch[data-k]').forEach(c=>c.querySelectorAll('button').forEach(b=>b.classList.toggle('on',String(A[c.dataset.k])===b.dataset.v)));
   el.querySelectorAll('.ce-sw').forEach(c=>c.querySelectorAll('button').forEach(b=>b.classList.toggle('on',A[c.dataset.k]===b.dataset.v)));
   $$('#ce-modes').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));

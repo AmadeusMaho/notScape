@@ -7,13 +7,13 @@ body{margin:0;background:#14100a;color:var(--tx);font:500 17px/1.25 var(--f);use
 h1,h2{font-family:var(--f);color:var(--or);margin:0;font-weight:600}h2{font-size:19px;margin:0 0 6px}
 #cw{position:fixed;inset:0;margin:0;z-index:0}#cw canvas#c{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:0;box-shadow:none;display:block;touch-action:none;background:#a6d24c;cursor:var(--cur-arrow,auto)}
 #hud{position:fixed;inset:0;z-index:5;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
-#hud>*{pointer-events:none}#hud .panel,#hud button,#hud label,#hud #hd,#hud #log,#hud #goalp h2,#hud #pn,#hud #pw,#hud #goals,#hud #ctl{pointer-events:auto}
+#hud>*{pointer-events:none}#hud .panel,#hud button,#hud label,#hud #log,#hud #goalp h2,#hud #pn,#hud #pw,#hud #goals,#hud #ctl{pointer-events:auto}
 /* marcos pintados */
 .panel,#pw,#sw{position:relative;isolation:isolate;color:var(--tx)}
 .panel::before,#pw::before,#sw::before{content:"";position:absolute;inset:0;z-index:-1;border:3px solid var(--ink);border-radius:15px 12px 16px 11px/12px 16px 11px 15px;background:var(--grain),var(--paper);background-blend-mode:multiply;box-shadow:3px 4px 0 var(--sh),inset 0 0 0 3px var(--bev);filter:url(#wob);pointer-events:none}
 .panel{padding:9px 12px}
 #topl{position:absolute;left:8px;top:8px;display:flex;flex-direction:column;gap:8px;max-width:min(300px,46vw)}
-#hd{background:var(--paper);border:2.5px solid var(--ink);border-radius:12px 10px 12px 9px;box-shadow:2px 3px 0 var(--sh);padding:2px 10px;font-size:15px;font-weight:600;line-height:1.35;align-self:flex-start}#hd b,.gold{color:var(--or);font-weight:600}#hd .bt{font-size:13px;padding:0 6px;margin-left:4px}
+.gold{color:var(--or);font-weight:600}
 #goalp h2{cursor:var(--cur-hand,pointer);margin:0 0 4px;font-size:16px}#goalp.min #goals{display:none}#goalp.min h2{margin:0}#goals{font-size:15px;max-height:32vh;overflow:auto;padding-right:2px}
 #botl{position:absolute;left:8px;bottom:12vh;display:flex;flex-direction:column;gap:6px;max-width:min(430px,52vw)}
 #log{margin:0;min-height:0;background:rgba(58,50,40,.9);border:2.5px solid var(--ink);border-radius:10px 8px 11px 8px;box-shadow:2px 3px 0 var(--sh);padding:3px 10px;font-size:15px;color:#cdbb92}#log div:first-child{color:var(--tx);font-weight:600}#log:empty{display:none}
@@ -135,3 +135,5 @@ button.slot:hover{background:#4a3f31;border-color:var(--or)!important}
 .ce-op.of-only>*:not(#ce-of):not(#ce-sc){display:none}.ce-pv #ce-cv3{width:100%;height:auto;aspect-ratio:300/310;background:radial-gradient(ellipse at 50% 80%,#4a4a42,#24221e);border-radius:6px}.ce-b.dis{opacity:.4}
 /* casillas con rareza/tier (oct 2026): el HUD antiguo (?hud=old) solo pinta el borde con el color que da sfx() */
 .slot[data-g]{border-color:var(--rc)}
+
+.ce-st{display:flex;align-items:center;gap:6px}.ce-st .bt{min-width:2.2em}.ce-sn{flex:1;text-align:center;display:flex;flex-direction:column;line-height:1.15}.ce-sn b{font-weight:600}.ce-sn em{font-style:normal;opacity:.7;font-size:.85em}

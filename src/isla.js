@@ -4,7 +4,7 @@
 //     correr casillas, conseguir/fabricar un objeto, derrotar, depositar en el banco; `n` veces) · `have` (llevar encima todos los objetos de `k`) · `offer` (dejar cada ofrenda junto a su brasero) · `cine` (ver la cinemática de Gabriel).
 //   · ESTADO (se guarda): `S.isla = {step, bs (base del contador), off:[0|1 ×4] (ofrendas dejadas), t:{capítulo: segundos}, done}`. Activo SOLO mientras el héroe está sobre la isla (columna de la zona) y no se ha terminado; en el resto
 //     del mundo manda el tutorial de siempre (GOALS). `?isla=1` o `ISLA.go()` llevan al héroe al varadero; `ISLA.go(n)` salta al paso n; `ISLA.reset()` reinicia.
-//   · DESVIACIONES CONOCIDAS (ver el lote ISLA-5 de AGENTS.md): ISLA-9 (21 oct 2026): Gabriel SÍ se pelea, en la ARENA DEL VIGÍA (fuera de la isla) con intro cinemática `gabrielIntro`; «Escapa» se reduce a hablar con Remiel; sin bancos de nubes.
+//   · DESVIACIONES CONOCIDAS (ver el lote ISLA-5 de AGENTS.md): ISLA-9 (21 oct 2026): Gabriel SÍ se pelea, en la ARENA DEL VIGÍA (fuera de la isla) con intro cinemática `gabrielIntro`; N0.5 (3 nov 2026): vuelven las COMPUERTAS de nubes (`GATES`, 3: Ágora, Palestra, Arena) y «Escapa» son 3 TRAMOS con tiempo y sin daño (`tr`); falta la barca de viento de Remiel y el puente de nubes que se rompe (el tramo 1 es la calzada de rocas).
 // Para AÑADIR un paso: una fila en STEPS (y, si hace falta una condición nueva, una rama en `done()`); los diálogos de los maestros están en villagers.js (`EXILES`).
 const ISLA=(()=>{
  const T=32,CAPS=['Llegada','Manos de tierra','Fuego','Agua y cocina','La Palestra','El cofre','El ritual','Escapa'];
@@ -55,12 +55,17 @@ const ISLA=(()=>{
   {cap:6,txt:'Deja las 4 ofrendas en los braseros',at:AR,g:{t:'offer'}},
   {cap:6,txt:'Derrota a Gabriel',at:AR,g:{t:'kill',k:'gabriel',n:1}},
   {cap:6,txt:'…',g:{t:'cine'}},
-  {cap:7,txt:'¡Escapa! Corre al borde este',at:[28.5,-0.4],esc:1,g:{t:'reach',at:[28.5,-0.4],r:6}}];
+  /* N0.5 «ESCAPA» POR TRAMOS (3 nov 2026): 3 tramos con tiempo (`tr.t` s) y SIN daño: si se acaba el tiempo, el fuego te corta el paso y vuelves al inicio del tramo (`tr.s`, tiles). El reloj solo corre mientras juegas (dt de tick). */
+  {cap:7,txt:'¡Escapa! Sube por la calzada antes de que se desmorone',at:[6,18],esc:1,tr:{s:[6,31],t:24,nm:'La calzada'},g:{t:'reach',at:[6,18],r:3}},
+  {cap:7,txt:'Cruza la Palestra en llamas',at:[17,3],esc:1,tr:{s:[6,18],t:24,nm:'La Palestra'},g:{t:'reach',at:[17,3],r:3}},
+  {cap:7,txt:'Llega hasta Remiel, en el borde este',at:[28.5,-0.4],esc:1,tr:{s:[17,3],t:22,nm:'El borde'},g:{t:'reach',at:[28.5,-0.4],r:6}}];
  // 21 oct 2026 (FIX-OFRENDAS): `have` (game.js) cuenta mochila + BANCO, así que «Saca las 4 ofrendas» se daba por cumplido al depositar, y la espada de cobre EQUIPADA no estaba ni en la mochila ni en el banco (el paso no se podía completar). `own` = mochila + equipo (nunca el banco); `give` entrega desde la mochila o, si no, desequipa la pieza.
  const own=k=>S.inv.filter(x=>x===k).length+Object.values(S.eq).filter(x=>x===k).length;
  const give=k=>{const j=S.inv.indexOf(k);if(j>=0){S.inv.splice(j,1);return}const sl=Object.keys(S.eq).find(x=>S.eq[x]===k);if(sl){S.eq[sl]=null;try{syncTools()}catch(e){}}};
  // ANTI-BRICK: en los pasos «saca» y «deja» las ofrendas que falten (aún no entregadas) se vuelven a poner en el BANCO, pase lo que pase
  const grantOfr=()=>{const i=S.isla,g=cur().g;if(!i||(g.t!=='have'&&g.t!=='offer'))return;let n=0;OFR.forEach(([it],k)=>{if(g.t==='offer'&&i.off[k])return;if(own(it)+(S.bank[it]||0)<1){S.bank[it]=1;n++}});if(n){dirty=1;try{toast('Aparecen ofrendas en tu <b>banco</b>',2600);snd('rare')}catch(e){}}}
+ /* N0.5 «KIT DEL EXILIADO» (3 nov 2026): el tutorial NO usa herramientas (talar, minar y pescar van a mano con `S.tool`=0), así que no hace falta un cofre de herramientas; lo único que se podía perder y ATASCAR la cadena son las armas que presta Miguel antes de «Equipa el arco/bastón». Si en uno de esos pasos no la tienes (mochila, equipo ni banco), vuelve a la mochila (o al banco si está llena). */
+ const grantEq=()=>{const g=cur().g;if(!st()||g.t!=='eq'||own(g.k)+(S.bank[g.k]||0)>=1)return;if(typeof room==='function'&&!room(g.k))S.bank[g.k]=(S.bank[g.k]||0)+1;else add(g.k);dirty=1;try{toast('Miguel te vuelve a prestar: <b>'+nm(g.k)+'</b>',2600);snd('coin')}catch(e){}};
  const st=()=>S.isla||(S.isla={step:0,bs:0,off:[0,0,0,0],t:{},done:0});
  const zone=()=>BIOMES.zone,B9=()=>BIOMES.list[9],wp=(tx,ty)=>{const b=B9();return{x:b.ox+b.w/2+tx*T,y:b.oy+b.h/2+ty*T}};
  const cur=()=>STEPS[Math.min(st().step,STEPS.length-1)];
@@ -68,7 +73,7 @@ const ISLA=(()=>{
  const base=()=>{const g=cur().g;st().bs=(g.t==='kill'||g.t==='got'||g.t==='make'||g.t==='run'||g.t==='dep'||g.t==='dash'||g.t==='cnt')?(S.st[key(g)]||0):0};
  const on=()=>{try{const z=zone();return !!z&&!st().done&&P.x>=z.x0&&!(typeof INT!=='undefined'&&INT)}catch(e){return false}};
  const prog=()=>{const g=cur().g,i=st();if(g.t==='offer')return[i.off.reduce((a,b)=>a+b,0),4];if(g.n)return[Math.min(g.n,(S.st[key(g)]||0)-i.bs),g.n];if(g.t==='have')return[g.k.filter(k=>own(k)>=1).length,g.k.length];return null};
- function adv(){const i=st(),c=cur().cap;i.step++;cs=0;i.off=[0,0,0,0];if(i.step>=STEPS.length){finish();return}base();if(cur().esc)startEscape();dirty=1;try{snd('quest')}catch(e){}
+ function adv(){const i=st(),c=cur().cap;i.step++;cs=0;i.off=[0,0,0,0];i.et=0;if(i.step>=STEPS.length){finish();return}base();if(cur().esc)startEscape();dirty=1;try{snd('quest')}catch(e){}
   const n=cur();toast('✔ '+(n.cap!==c?'<b>'+CAPS[n.cap]+'</b>':'Hecho'),1800);save()}
  function finish(){const i=st();i.done=1;i.lock=0;try{MUSIC.scene('all_i_had_to_do',false)}catch(e){}   // 22 oct 2026: el FUNDIDO A NEGRO empieza YA (antes se apagaba el cielo en llamas ANTES de oscurecer y se veía regenerarse): `endEscape` y el reseteo ocurren con la pantalla en negro (callback de PLAYA.start)
  const rest=()=>{endEscape();
@@ -90,10 +95,37 @@ const ISLA=(()=>{
  function boxInit(){if(box&&PO.includes(box))return;if(typeof PO==='undefined')return;const q=wp(BOXP[0],BOXP[1]),got=st().step>1||st().done;box=PO.find(p=>p.pk==='cajaIsla')||null;if(!box){box={po:1,id:'isla_caja',pk:'cajaIsla',n:got?'cofreAbierto':'cofre',nm:'Caja de pertenencias',x:q.x,y:q.y,k:9,_oa:1};PO.push(box)}}
  function search(e){const n=cur();if(!on()||n.g.t!=='item'||have('pendiente')>=1){toast('Una caja vieja. Ya no queda nada dentro.',1800);return}
   if(typeof castStart==='function')castStart('Buscando entre tus cosas…',5000,()=>{add('pendiente');if(e)e.n='cofreAbierto';try{toast('Encuentras: <b>Pendiente de plata</b>',2800);snd('rare')}catch(x){}dirty=1},{e})}
- const CHK=[[8.5,7],[14.5,4.8],[20,6.5],[10.5,14],[16.2,10.6],[21.5,11.5]];   // corderos de nube NEUTRALES (como las gallinas), bien separados (≥ 5 tiles) por la Palestra
+ /* N0.5 · COMPUERTAS = BANCOS DE NUBES (3 nov 2026; PLAN_ISLA_CIELO §6.3): muros de nubes que cortan la isla (la isla es abierta: una compuerta corta de 5 tiles se rodearía, así que cada una es una POLILÍNEA de costa a costa, salvo la de la calzada de la Arena).
+    `op` = paso de STEPS desde el que se abre (cerrada = paso < op; nunca depende de la animación) · `p` = polilínea en tiles desde el centro · `bey(tx,ty)` = el punto está al otro lado (zona aún cerrada) · `safe` = adonde vuelve un héroe que aparece al otro lado (partida cargada, teletransporte) · `look` = adonde mira la cámara al abrirse.
+    Colisión: `gate(x,y)` (game.js la suma a `blk` y a `inVilla`: héroe, criaturas y ruta). El 3D (skyzone3d.js) lee `gates()` y dibuja los puffs (1 InstancedMesh) con el progreso de apertura `u`. Al abrirse: campana, paneo de CINE (1,8 s, saltable) y letrero. */
+ const GHW=.9*T,GOPEN=2500;
+ const GATES=[
+  {id:'agora',op:9,nm:'Ágora',p:[[-8,27],[-8,-4],[0,-11],[0,-27]],safe:[-19,-1.6],look:[-6,-4.5],bey:(x,y)=>x>(y>=-4?-8:y<=-11?0:-8+(-4-y)/7*8)},
+  {id:'palestra',op:17,nm:'Palestra y Acrópolis',p:[[2,25.5],[2,4.8],[19.5,4.8],[19.5,-27]],safe:[9,-6.4],look:[11,5],bey:(x,y)=>(x>2&&y>4.8)||x>19.5},
+  {id:'arena',op:30,nm:'Arena del Vigía',p:[[1.5,25],[10.5,25]],safe:[6,19.5],look:[6,26],bey:(x,y)=>y>25&&x>1.5}];
+ let GSEG=null;const GT={};
+ function gsegs(){const b=B9();if(!b)return null;const ox=b.ox+b.w/2,oy=b.oy+b.h/2;GSEG=GATES.map(g=>{const s=[];for(let k=0;k+1<g.p.length;k++){const a=g.p[k],c=g.p[k+1];s.push([ox+a[0]*T,oy+a[1]*T,ox+c[0]*T,oy+c[1]*T])}return s});return GSEG}
+ const gClosed=g=>{const i=S.isla;return !(i&&i.done)&&(i?i.step:0)<g.op};
+ function gate(x,y){const z=BIOMES.zone;if(!z||x<z.x0)return false;if(!GSEG&&!gsegs())return false;
+  for(let n=0;n<GATES.length;n++){if(!gClosed(GATES[n]))continue;for(const q of GSEG[n]){const dx=q[2]-q[0],dy=q[3]-q[1],l2=dx*dx+dy*dy,t=Math.max(0,Math.min(1,((x-q[0])*dx+(y-q[1])*dy)/l2)),ex=x-q[0]-dx*t,ey=y-q[1]-dy*t;if(ex*ex+ey*ey<GHW*GHW)return true}}return false}
+ // progreso de apertura 0 (cerrada) → 1 (abierta) para el 3D
+ function gates(){const i=S.isla,nw=performance.now();return GATES.map(g=>({id:g.id,p:g.p,u:gClosed(g)?0:GT[g.id]?Math.min(1,(nw-GT[g.id])/GOPEN):1}))}
+ function gTickGates(){const i=st(),b=B9();if(!b)return;i.gt=i.gt||{};const ox=b.ox+b.w/2,oy=b.oy+b.h/2,tx=(P.x-ox)/T,ty=(P.y-oy)/T;
+  for(const g of GATES){
+   if(gClosed(g)){if(g.bey(tx,ty)){const q=wp(g.safe[0],g.safe[1]);P.x=q.x;P.y=q.y;P.g=P.mv=null;try{toast('Un banco de nubes te devuelve al camino.',2400)}catch(e){}}continue}
+   if(i.gt[g.id])continue;i.gt[g.id]=1;if(!sp2)continue;   // partida cargada con la compuerta ya superada: abierta sin ceremonia
+   GT[g.id]=performance.now();try{snd('rare');if(typeof SFXS!=='undefined'&&SFXS.play)SFXS.play('holy')}catch(e){}
+   try{RECN.unlock({title:'Se abre el paso',sub:g.nm,items:[{em:'☁️',name:'Las nubes se apartan'}],foot:'Sigue el camino hacia la zona siguiente.'})}catch(e){try{toast('☁️ Las nubes se apartan: <b>'+g.nm+'</b>',2600)}catch(x){}}
+   if(typeof CINE!=='undefined'&&!/[?&]gatecine=0\b/.test(location.search)){const q=wp(g.look[0],g.look[1]);CINE.start({dur:1.8,shots:[{t:0,d:1.8,from:{x:0,y:0,zoom:1},to:{x:q.x-P.x,y:q.y-P.y,zoom:.85},ease:'io'}]})}}}
+ let sp2=0,trS=-1;
+ const CHK=[[8.5,7],[14.5,7.5],[20,6.5],[10.5,14],[16.2,10.6],[21.5,11.5]];   // corderos de nube NEUTRALES (como las gallinas), bien separados (≥ 5 tiles) por la Palestra
  // asegura `n` corderos de nube vivos en la Palestra: crea las que falten en los puntos de CHK (en orden, determinista)
  function chickens(n){if(typeof mob!=='function'||!zone())return;const nw=performance.now();let live=M.filter(m=>m.d.id==='cordero'&&m.hx>=zone().x0&&alive(m,nw)).length;for(let k=0;k<CHK.length&&live<n;k++){const [x,y]=CHK[(chI+k)%CHK.length],q=wp(x,y);if(M.some(m=>m.d.id==='cordero'&&alive(m,nw)&&Math.hypot(m.x-q.x,m.y-q.y)<40))continue;mob('cordero',q.x,q.y);live++}chI=(chI+1)%CHK.length}
- function tick(dt){if(!zone())return;
+ /* N0.5: SALTAR TUTORIAL (Opciones → Partida): usa el mismo final que terminarlo (`finish`: fundido, «Despiertas…» y la Pradera). No se ofrece durante el combate de Gabriel ni su intro. */
+ let skA=0,skT=0,skV=-1;
+ function skip(){const b=document.getElementById('isk');if(!on()||gAlive()||intro)return;if(!skA){skA=1;if(b)b.textContent='¿Seguro? LMB otra vez';clearTimeout(skT);skT=setTimeout(()=>{skA=0;if(b)b.textContent='Saltar tutorial'},4000);return}skA=0;clearTimeout(skT);if(b)b.textContent='Saltar tutorial';const i=st();i.step=STEPS.length-1;try{endEscape()}catch(e){}finish()}
+ function skipBtn(){const v=on()&&!gAlive()&&!intro?1:0;if(v===skV)return;skV=v;const b=document.getElementById('isk');if(b)b.hidden=!v}
+ function tick(dt){if(!zone())return;skipBtn();
   if(!S.islaInit){S.islaInit=1;if((S.goal||0)===0&&!(S.st&&S.st.talk)&&!/[?&](at=|zone=0)/.test(location.search)){st().lock=1;go(0);save()}}
   if(on()&&st().lock&&!S.islaTip){S.islaTip=1}   // 21 oct 2026: la tarjeta gigante de controles del principio se QUITÓ; los controles se enseñan poco a poco (hintsTick)
   //   // PARTIDA NUEVA: se empieza en la isla (varadero); las partidas con progreso en la Pradera no se tocan
@@ -101,11 +133,13 @@ const ISLA=(()=>{
   if(qpNpc){const e=ST.find(x=>x.id===qpNpc);if(!e||Math.hypot(e.x-P.x,e.y-P.y)>230)qpHide()}
   if(!sp){sp=1;base();chickens(6);   // PUNTO DE GUARDADO (22 oct 2026): si se carga la partida con el combate de Gabriel pendiente, el jugador aparece en el camino de rocas ANTES de la arena (nunca dentro del combate) y la intro empieza al entrar en ella
   {const g0=cur().g;if(g0.t==='kill'&&g0.k==='gabriel'&&!gm){const q=wp(AR[0],AR[1]-11);P.x=q.x;P.y=q.y;P.g=P.mv=null;try{toast('Retomas el camino hacia la Arena del Vigía.',2600)}catch(e){}}}}
+  gTickGates();sp2=1;
   boxInit()   // 6 gallinas en la Palestra (los cangrejos de nube del plan llegarán con su modelo)
   if(cur().cap===4&&(now_=performance.now())>chT){chT=now_+1500;chickens(4)}   // durante la misión de la Palestra siempre hay ≥ 4 gallinas VIVAS: no hay que esperar al reaparecer para seguir la cadena
   if(cur().esc&&!es)startEscape();
   i.t[cur().cap]=(i.t[cur().cap]||0)+dt;
-  grantOfr();
+  {const tr=cur().tr;if(tr){i.et=(i.et||0)+dt;{const sc=Math.ceil(tr.t-i.et);if(sc!==trS){trS=sc;dirty=1}}if(i.et>tr.t){i.et=0;const q=wp(tr.s[0],tr.s[1]);P.x=q.x;P.y=q.y;P.g=P.mv=null;try{stopA()}catch(e){}try{snd('miss')}catch(e){}try{toast('🔥 El fuego te corta el paso. Vuelve a intentarlo: <b>'+tr.nm+'</b>',2600)}catch(e){}}}}
+  grantOfr();grantEq();
   {const g0=cur().g;if(g0.t==='kill'&&g0.k==='gabriel'&&!gm&&!intro&&Math.hypot(wp(AR[0],AR[1]).x-P.x,wp(AR[0],AR[1]).y-P.y)<7.5*T){if(!fAt)fAt=performance.now()+1400;else if(performance.now()>=fAt){fAt=0;fight()}}}   // última ofrenda → pausa de 1,4 s y arranca la intro del jefe
   if(cur().g.t==='offer'){OFR.forEach(([it,x,y],k)=>{if(i.off[k])return;const q=wp(x,y);if(Math.hypot(q.x-P.x,q.y-P.y)<2.4*T&&own(it)>=1){give(it);i.off[k]=1;dirty=1;try{snd('rare')}catch(e){}toast('El brasero acepta la ofrenda ('+i.off.reduce((a,b)=>a+b,0)+'/4)',1600)}})}
   if(cur().learn&&typeof learnSkill==='function')learnSkill(cur().learn);   // la habilidad se aprende al llegar a su paso
@@ -205,6 +239,7 @@ const ISLA=(()=>{
  function tipHide(){if(tipEl){tipEl.remove();tipEl=null}}
  function lock(){return !!(S.isla&&S.isla.lock&&!S.isla.done)}
  function html(){const n=cur(),i=st(),p=prog();
+  if(n.tr){const r=Math.max(0,n.tr.t-(i.et||0));return `<div class="hint" style="margin:0 0 3px;color:#d8c9a3">${CAPS[n.cap]} · ${n.tr.nm}</div><div style="color:var(--yl);font-size:25px">${n.txt}</div><div class="hint" style="margin:2px 0;color:${r<6?'#ff8a5a':'#d8c9a3'}">⏳ ${Math.ceil(r)} s</div><div class="bar"><i style="width:${r/n.tr.t*100}%"></i></div>`}
   return `<div class="hint" style="margin:0 0 3px;color:#d8c9a3">${CAPS[n.cap]} · Despertar</div><div style="color:var(--yl);font-size:25px">${n.txt}</div>`+(p?`<div class="hint" style="margin:2px 0">${p[0]}/${p[1]}</div><div class="bar"><i style="width:${p[0]/p[1]*100}%"></i></div>`:'')}
  // objetivo de la flecha dorada (px de mundo) del paso actual: el PNJ pedido o el punto `at`; en el ritual, el brasero que falte
  function target(){if(!on())return null;const n=cur();if(n.g.t==='offer'){const k=st().off.indexOf(0);if(k>=0){const q=wp(OFR[k][1],OFR[k][2]);return q}}
@@ -213,4 +248,4 @@ const ISLA=(()=>{
   const q=wp(-26,12.4);if(typeof CHEAT!=='undefined'&&CHEAT.tp)CHEAT.tp(q.x,q.y);return i.step}
  function reset(){try{if(typeof PLAYA!=='undefined')PLAYA.reset()}catch(e){}const bi=PO.findIndex(p=>p.pk==='cajaIsla');if(bi>=0)PO.splice(bi,1);box=null;endEscape();tipHide();if(gm&&M.includes(gm))M.splice(M.indexOf(gm),1);gm=null;gph=0;cs=0;intro=0;fAt=0;S.isla={step:0,bs:0,off:[0,0,0,0],t:{},done:0,lock:1};S.awk={};S.islaTip=0;sp=0;if(S.cine)delete S.cine.gabriel;dirty=1;return go(0)}
  if(/[?&]isla=1\b/.test(typeof location!=='undefined'?location.search:''))setTimeout(()=>{try{go()}catch(e){}},4000);
- return{fightOn:()=>!!(gAlive()||intro),bossOn:()=>!!(gAlive()&&!intro),STEPS,QUESTS,CAPS,OFR,lock,on,tick,talk,mark,dlg,search,altar,html,target,go,reset,prog,adv,altar2:fight,fight,noDie,get boss(){return gm},get step(){return st().step},get state(){return st()}}})();
+ return{gate,gates,GATES,skip,fightOn:()=>!!(gAlive()||intro),bossOn:()=>!!(gAlive()&&!intro),STEPS,QUESTS,CAPS,OFR,lock,on,tick,talk,mark,dlg,search,altar,html,target,go,reset,prog,adv,altar2:fight,fight,noDie,get boss(){return gm},get step(){return st().step},get state(){return st()}}})();

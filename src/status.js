@@ -49,7 +49,8 @@ const STS=(()=>{
  const STRONG={};for(const k in D)if(D[k].rep)STRONG[D[k].rep]=k;   // débil → fuerte
  const UNDEAD=new Set(['esqueleto','espantapajaros','demonio','k5','b5','bruja']);
  const ONHIT={lobo:['bleed',.25,6000],jabali:['bleed',.2,6000],oso:['bleed',.25,6000],rana:[['poison',.3,7000],['wet',.35,7000]],bruja:[['poison',.3,8000],['silence',.18,3500],['curse',.15,6000]],lagarto:['poison',.25,7000],demonio:['burn',.3,4000],k5:['burn',.35,4000],
-  yak:[['slow',.3,4000],['chill',.3,6000]],gigante:[['slow',.3,4000],['chill',.25,6000]],golem:['root',.2,2500],k3:['freeze',.25,3500],k2:['poison',.35,8000],oni:['weak',.3,6000],shinobi:['blind',.25,4000],k4:['blind',.25,4000],bandido:['bleed',.2,6000],orco:['vuln',.25,6000]};
+  yak:[['slow',.3,4000],['chill',.3,6000]],gigante:[['slow',.3,4000],['chill',.25,6000]],golem:['root',.2,2500],k3:['freeze',.25,3500],k2:['poison',.35,8000],oni:['weak',.3,6000],shinobi:['blind',.25,4000],k4:['blind',.25,4000],bandido:['bleed',.2,6000],orco:['vuln',.25,6000],
+  espantapajaros:['fear',.18,1800],goblinsha:['silence',.25,3500]};   /* N0.7 (TAREA 5.2): Pradera: el Espantapájaros embrujado asusta (sin atacar ni habilidades) y el chamán goblin silencia (sin habilidades de maná) */
 
  // ICONOS SVG de línea (sin emojis: regla del HUD). `svg(k)` devuelve el <svg> del estado `k` (usa currentColor); estado nuevo = una clave en IC hacia un glifo de GL
  const GL={flame:'<path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-6 1-9z"/>',drop:'<path d="M12 3C9 8 6 11 6 15a6 6 0 0 0 12 0c0-4-3-7-6-12z"/>',snow:'<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/>',bolt:'<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>',

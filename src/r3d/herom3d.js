@@ -21,25 +21,16 @@ export const TAME={robe:[.85,.78],scarf:[.84,.97]};   // #c0392b → #a6453e (ro
 const fsph=(r,sx,sy,sz)=>{const g=new THREE.SphereGeometry(r,8,5).scale(sx,sy,sz).toNonIndexed();g.computeVertexNormals();return g};
 const shade=(c,k)=>'#'+new THREE.Color(c).multiplyScalar(k).getHexString(),mixc=(a,b,t)=>'#'+new THREE.Color(a).lerp(new THREE.Color(b),t).getHexString();
 import {HK} from './scale3d.js';
+import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {torsoWear,maskWear,penitentCross,strapsWear,mixc as mix2} from './outfitwear3d.js';
+import {kitWear,TX} from './kits3d.js';   // atuendos iniciales rehechos (lote N0.5-ATUENDOS-2)
 import {Mount3D,setMountTint,SEAT as MOUNT_SEAT} from './mount3d.js';   // Lote DOMAR-D1: la montura cuelga del héroe
 export const HERO_SCALE=.8*HK;      // el mundo se ve ×1,25 más grande (zoom en game.js) con el héroe del mismo tamaño en pantalla: casas y terreno ganan proporción sin tocar la lógica
 const HEIGHT=1.25*HERO_SCALE;
 
-export function hairFn(style,c,helm){return(F,head,part)=>{if(helm)return;if(style==='bald')return;const P=(g,x,y,z,o={})=>part(g,c,x,y,z,Object.assign({p:head,ink:.016},o));
- const cap=(k=1,a=1.75)=>P(new THREE.SphereGeometry(.205*k,18,12,0,6.2832,0,a).scale(1,1.04,1.02),0,.03,-.03);
- switch(style){
-  case'cut':cap(1,1.62);P(sph(.1,1.5,.5,.5),0,.15,.16,{ink:.01});break;
-  case'spiky':cap(1,1.55);for(let i=0;i<7;i++){const a=i/7*Math.PI*2;P(new THREE.ConeGeometry(.045,.13,5),Math.cos(a)*.11,.21,Math.sin(a)*.1-.03,{ink:.01}).rotation.set(Math.sin(a)*.5,0,-Math.cos(a)*.5)}P(new THREE.ConeGeometry(.05,.15,5),0,.27,-.02,{ink:.01});break;
-  case'side':cap(1,1.7);P(sph(.13,1.4,.55,.5),.05,.14,.15,{ink:.01}).rotation.z=-.35;break;
-  case'curly':cap(1,1.5);for(let i=0;i<9;i++){const a=i/9*Math.PI*2;P(sph(.055),Math.cos(a)*.16,.12+(i%2)*.05,Math.sin(a)*.15-.03,{ink:.01})}P(sph(.07),0,.25,-.02,{ink:.01});break;
-  case'mane':cap(1,1.8);P(new THREE.CapsuleGeometry(.15,.28,6,12).scale(1,1,.7),0,-.12,-.13,{ink:.016});break;
-  case'long':cap(1,1.8);P(new THREE.CapsuleGeometry(.16,.36,6,12).scale(1,1,.6),0,-.16,-.12,{ink:.016});[-1,1].forEach(q=>P(new THREE.CapsuleGeometry(.04,.3,4,8),.17*q,-.07,.0,{ink:.01}));P(sph(.11,1.4,.5,.5),0,.15,.16,{ink:.01});break;
-  case'bun':cap(1,1.7);P(sph(.085),0,.24,-.1,{ink:.012});P(sph(.1,1.4,.5,.5),0,.15,.16,{ink:.01});break;
-  case'pony':cap(1,1.7);P(sph(.06),0,.17,-.2,{ink:.01});P(new THREE.CapsuleGeometry(.05,.3,4,8),0,-.02,-.26,{ink:.012}).rotation.x=.2;P(sph(.1,1.4,.5,.5),0,.15,.16,{ink:.01});break;
-  case'bob':cap(1,1.8);P(new THREE.SphereGeometry(.23,16,10,0,6.2832,.9,1.2).scale(1,1,.95),0,-.02,-.04,{ink:.016});P(sph(.1,1.4,.5,.5),0,.15,.16,{ink:.01});break;
-  case'twin':cap(1,1.7);[-1,1].forEach(q=>P(new THREE.CapsuleGeometry(.05,.26,4,8),.2*q,-.06,-.04,{ink:.012}));P(sph(.1,1.4,.5,.5),0,.15,.16,{ink:.01});break;
- }}}
+/* PEINADOS: rehechos en hair3d.js (lote N0.5-PELO-REWORK): casquete esculpido + mechones con física ligera. Se reexporta para actors3d.js. */
+import {hairFn} from './hair3d.js';
+export {hairFn};
 
 // radio del torso (camisa) a la altura y (aprox. del lathe de mini3d.js: cintura .155 → pecho .19) y cinta CURVA de bandolera que lo abraza (lazo diagonal: alta en el hombro derecho x−, baja en la cadera izquierda x+)
 const torsoR=y=>{const t=Math.max(0,Math.min(1,(y-.5)/.2));return .155+.04*t*t*(3-2*t)};
@@ -47,25 +38,31 @@ function bandolier(w=.05,off=0,lift=0){const N=48,P=[],I=[],V=THREE.Vector3;for(
   for(const s of[-1,1]){const ww=w/2*s+lift*s;P.push(R*rx+u.x*ww,y+u.y*ww,R*rz+u.z*ww)}}
  for(let i=0;i<N;i++){const a=i*2;I.push(a,a+2,a+1,a+1,a+2,a+3)}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setIndex(I);g.computeVertexNormals();return g}
-export function lookToSpec(look){look=look||{};const a=Object.assign({g:'m',hair:'cut',hc:'#5a3a22',skin:'#e0b48a',col:'#8a3a34',eye:'#2a1a14',face:0},look.app||{}),O=look.outfit||{},GR=look.gear||{},fem=a.g==='f';
+export function lookToSpec(look){look=look||{};const a=Object.assign({g:'m',hair:'cut',hc:'#5a3a22',skin:'#e0b48a',col:'#8a3a34',eye:'#2a1a14',face:0},look.app||{}),O=a.under?{}:(look.outfit||{}),GR=look.gear||{},fem=a.g==='f';   /* sin ropa: NINGUNA pieza del atuendo (antes quedaban los tirantes y la bandolera del Errante: las «correas») */
  const robe=tame(a.col,TAME.robe[0],TAME.robe[1]),trim=shade(robe,.62),skin=a.skin,AH=armorHooks(look.arm,{robe}),helm=look.helm||(AH&&AH.hasHelm?'#':null),arm=!AH&&(look.ar||GR.pl)?(look.ar||'#9a9aa8'):null,wide=O.build==='robusto'?1.14:O.build==='anciano'?.95:1;
  const longRobe=O.skirt==='larga'&&O.cross!==false&&!AH&&!arm&&O.build!=='anciano';   // PENITENTE: túnica larga de tela fina hasta los pies (el Anciano PNJ usa otro camino)
  const scarfC=(O.scarf===false||a.under)?null:tame(typeof a.scarf==='string'?a.scarf:'#b8862e',TAME.scarf[0],TAME.scarf[1]);
- const sp={id:'heroe',k:HERO_SCALE,facet:true,inkK:.8,pants:O.pantsC||mixc('#4a4338',robe,.18),robe,trim,belt:O.rope||shade(robe,.5),skin,w:wide*(fem?.94:1),irisC:mixc(a.eye,'#000000',.15),browT:[.12,.1,-.04,.26][a.face|0]??.12,freckles:a.face===1,boot:look.boot||'#3a2a20',blush:fem&&a.face===2,
+ const sp={id:'heroe',k:HERO_SCALE,texOf:a.under?null:(c,isSkin)=>isSkin?null:c===sp.boot||c===sp.belt?TX('cuero').t:(c===sp.robe||c===sp.pants||c===sp.trim||c===sp.sleeve)?TX('tela').t:null,facet:true,inkK:.8,pants:O.pantsC||mixc('#4a4338',robe,.18),robe,trim,belt:O.rope||shade(robe,.5),skin,w:wide*(fem?.94:1),irisC:mixc(a.eye,'#000000',.15),browT:[.12,.1,-.04,.26][a.face|0]??.12,freckles:a.face===1,boot:look.boot||'#3a2a20',blush:fem&&a.face===2,
   top(F,head,part){hairFn(a.hair,a.hc,helm)(F,head,part);if(!helm)maskWear(O,part,head);
    if(helm&&!AH){const c=helm;part(new THREE.SphereGeometry(.215,16,10,0,6.2832,0,1.6).scale(1,1.05,1),c,0,.04,0,{p:head,ink:.018});part(new THREE.CylinderGeometry(.235,.235,.03,18),c,0,.045,0,{p:head,ink:.014});part(new THREE.BoxGeometry(.03,.14,.03),shade(c,.85),0,0,.22,{p:head,ink:.01})}
    if(O.hat==='panuelo'){const c=O.hatC||'#8a3a2a';part(new THREE.SphereGeometry(.21,16,10,0,6.2832,0,1.45).scale(1,1,1.02),c,0,.04,-.03,{p:head,ink:.016});part(sph(.05),c,0,.07,-.22,{p:head,ink:.01})}},
   acc(F,g,part){
    if(scarfC){part(new THREE.TorusGeometry(.135,.04,8,20).rotateX(Math.PI/2),scarfC,0,.8,.0,{p:g,ink:.014});part(new THREE.BoxGeometry(.085,.3,.03),shade(scarfC,.9),.08,.66,.14,{p:g,ink:.012}).rotation.z=.08}
-   if(!AH&&!arm){const Wf=wide*(fem?.94:1),Rn=y=>torsoR(y)*Wf;if(longRobe)penitentCross(part,g,yy=>{const PD=[[.3,0],[.31,.04],[.24,.3],[.19,.55],[.17,.74],[.12,.84],[0,.86]];for(let i=0;i<PD.length-1;i++){const p0=PD[i],p1=PD[i+1];if(yy>=p0[1]&&yy<=p1[1])return(p0[0]+(p1[0]-p0[0])*(yy-p0[1])/(p1[1]-p0[1]))*Wf}return .1},O.cross||'#c9a95e');else{if(O.top)torsoWear(O,part,g,Rn);strapsWear(O,part,g,Rn)}}
-   if(O.capelet)part(new THREE.CylinderGeometry(.15,.3,.26,18,1,true).translate(0,.8,0),O.capelet,0,0,0,{p:g,ink:.014,t:{side:THREE.DoubleSide}});
+   if(!AH&&!arm){const Wf=wide*(fem?.94:1),Rn=y=>torsoR(y)*Wf,DRf=yy=>{const PD=[[.3,0],[.31,.04],[.24,.3],[.19,.55],[.17,.74],[.12,.84],[0,.86]];for(let i=0;i<PD.length-1;i++){const p0=PD[i],p1=PD[i+1];if(yy>=p0[1]&&yy<=p1[1])return(p0[0]+(p1[0]-p0[0])*(yy-p0[1])/(p1[1]-p0[1]))*Wf}return .1};
+    if(longRobe)penitentCross(part,g,DRf,O.cross||'#c9a95e');
+    if(O.kit)kitWear(O.kit,F,g,part,{Rf:Rn,DRf,W:Wf,aw:Math.max(1,Math.min(Wf,1.5)),lw:Math.min(Wf,1.4),robe:longRobe?sp.robe:robe,sash:O.sash,cape:O.cape,lea:O.lea,fur:O.fur});
+    else if(!longRobe){if(O.top)torsoWear(O,part,g,Rn);strapsWear(O,part,g,Rn)}}
+   if(O.capelet&&!O.kit)part(new THREE.CylinderGeometry(.15,.3,.26,18,1,true).translate(0,.8,0),O.capelet,0,0,0,{p:g,ink:.014,t:{side:THREE.DoubleSide}});
    if(O.bag||O.pouches){   // R3D-HEROE-CORREA (20 oct 2026): la bandolera era una caja RECTA flotando sobre el pecho y la bolsa un cubo suelto fuera del cuerpo. Ahora: cinta CURVA que abraza el torso (hélice del hombro derecho a la cadera izquierda, pasando por la espalda) y una bolsa de cinturón COLGADA de la cintura con solapa, hebilla y dos correas.
     part(bandolier(.052),O.bagC||'#5a3e2c',0,0,0,{p:g,ink:0,t:{side:THREE.DoubleSide}});part(bandolier(.012,.0,.018),'#2a1c14',0,0,0,{p:g,ink:0,t:{side:THREE.DoubleSide}});   // cinta + canto oscuro
     {const ph=-1.0,R=torsoR(.4)+.05,pg=new THREE.Group();pg.position.set(R*Math.sin(ph),.4,R*Math.cos(ph));pg.rotation.y=ph;g.add(pg);
      part(sph(.062,1,1.12,.78),'#6a4a30',0,0,0,{p:pg,ink:.012});part(new THREE.SphereGeometry(.066,12,7,0,6.2832,0,1.25).scale(1,.85,.82),'#58381f',0,.016,.006,{p:pg,ink:.01});
      part(new THREE.BoxGeometry(.022,.03,.012),'#c8a050',0,-.008,.052,{p:pg,ink:0});[-1,1].forEach(q=>part(new THREE.BoxGeometry(.013,.11,.01),'#3a2616',q*.034,.085,-.008,{p:pg,ink:0}));   // correas a la cintura (y≈.5)
      part(new THREE.BoxGeometry(.2,.022,.012),'#3a2616',0,.145,-.012,{p:pg,ink:0}).rotation.y=0}}
-   if(O.quiver){part(new THREE.CylinderGeometry(.05,.045,.4,8),'#5a3e2c',-.08,.62,-.22,{p:g,ink:.012}).rotation.z=.25;[0,1,2].forEach(i=>part(new THREE.CylinderGeometry(.006,.006,.15,4),'#e8e0c8',-.13+i*.02,.86,-.22,{p:g,ink:0}))}
+   if(O.quiver){const qg=new THREE.Group();qg.position.set(-.07,.64,-.235);qg.rotation.z=.32;g.add(qg);const ql='#5a3e2c';   /* carcaj de cuero con aros, flechas emplumadas y correa curva (N0.5-ATUENDOS-2) */
+    part(new THREE.LatheGeometry([[.0,-.2],[.04,-.2],[.05,-.17],[.052,.14],[.056,.17],[.05,.18]].map(p=>new THREE.Vector2(p[0],p[1])),14),ql,0,0,0,{p:qg,ink:.012,...TX('cuero',1)});[-.12,.1].forEach(y=>part(new THREE.TorusGeometry(.053,.007,6,16).rotateX(Math.PI/2),'#2e2018',0,y,0,{p:qg,ink:0,...TX('cuero')}));
+    for(let i=0;i<5;i++){const x=(i-2)*.017,z=(i%2?.012:-.01);part(new THREE.CylinderGeometry(.004,.004,.14,4),'#8a6a40',x,.24,z,{p:qg,ink:0});part(new THREE.ConeGeometry(.013,.05,3),i%2?'#e8e0c8':'#a83a2a',x,.3,z,{p:qg,ink:.003,t:{side:THREE.DoubleSide}})}
+    part(bandolier(.03,.002),ql,0,0,0,{p:g,ink:0,...TX('cuero',1)})}
    if(O.pauldron||O.fur){const c=O.pauldron||'#8a8a90';part(fsph(.1,1.2,.8,1.1),c,-.22,.8,0,{p:g,ink:.016});if(O.fur)part(new THREE.TorusGeometry(.15,.05,8,18).rotateX(Math.PI/2),O.fur,0,.84,0,{p:g,ink:.014})}
    if(arm){part(new THREE.CylinderGeometry(.19,.25,.5,18,1,true).translate(0,.55,0).scale(1,1,1),arm,0,0,0,{p:g,ink:.014,t:{side:THREE.DoubleSide}});[-1,1].forEach(q=>part(sph(.09,1.2,.8,1.1),arm,.2*q,.8,0,{p:g,ink:.014}))}
    if(O.tabard)part(new THREE.BoxGeometry(.2,.62,.02),O.tabard,0,.45,.25,{p:g,ink:.012});
@@ -74,9 +71,14 @@ export function lookToSpec(look){look=look||{};const a=Object.assign({g:'m',hair
  if(AH){Object.assign(sp,AH.spec);const t0=sp.top,a0=sp.acc;sp.top=(F,h,p)=>{t0(F,h,p);AH.top(F,h,p)};sp.acc=(F,g,p)=>{a0(F,g,p);AH.acc(F,g,p)}}   // Lote R3D-ARMADURAS: equipo estructurado look.arm → armor3d.js
 
  /* ROPA INTERIOR (22 oct 2026; despertar en la playa): `app.under` = el personaje solo lleva ropa interior (calzón corto de lino, y una banda en el pecho si es femenino); sin camisa, bufanda ni botas (todo del color de la piel). Se quita al vestirse (`S.app.under=0`). */
- if(a.under){const lin='#d9cdb0',sk=a.skin;Object.assign(sp,{robe:sk,trim:sk,belt:sk,sleeve:sk,pants:sk,boot:sk});const a1=sp.acc;sp.acc=(F,g,part)=>{a1&&a1(F,g,part);
-  part(new THREE.CylinderGeometry(.178,.19,.17,14),lin,0,.47,0,{p:g,ink:.014});part(new THREE.TorusGeometry(.18,.016,6,18).rotateX(Math.PI/2),shade(lin,.8),0,.55,0,{p:g,ink:.01});
-  if(fem)part(new THREE.CylinderGeometry(.152,.152,.09,14),lin,0,.86,0,{p:g,ink:.012})}}
+ if(a.under){const lin='#d9cdb0',sk=a.skin;Object.assign(sp,{robe:sk,trim:null,belt:null,sleeve:sk,pants:sk,boot:sk});const a1=sp.acc;sp.acc=(F,g,part)=>{a1&&a1(F,g,part);
+  /* N0.5-ATUENDOS-2: calzón de lino de revolución (sin tapas planas) con cintura enrollada y cordón anudado, perneras que siguen a los muslos; banda de pecho con nudo a la espalda */
+  const LT=(pts,n=24)=>new THREE.LatheGeometry(pts.map(p=>new THREE.Vector2(p[0],p[1])),n),W1=sp.w,lw=Math.min(W1,1.4);
+  part(LT([[.135*W1,.4],[.158*W1,.43],[.168*W1,.47],[.162*W1,.52],[.15*W1,.545]]),lin,0,0,0,{p:g,ink:.012,...TX('lino',1)});
+  part(new THREE.TorusGeometry(.157*W1,.013,6,24).rotateX(Math.PI/2),shade(lin,.86),0,.54,0,{p:g,ink:.006,...TX('lino')});
+  part(new THREE.SphereGeometry(.016,8,6).scale(1.3,.8,.7),shade(lin,.8),0,.535,.158*W1+.006,{p:g,ink:.004});[-1,1].forEach(q=>part(new THREE.CylinderGeometry(.004,.004,.07,4).rotateZ(.25*q),shade(lin,.75),.012*q,.5,.158*W1+.008,{p:g,ink:0}));
+  F.legs.forEach(l=>{part(LT([[.074*lw,.01],[.082*lw,-.02],[.08*lw,-.075],[.072*lw,-.085]],14),lin,0,0,0,{p:l,ink:.01,...TX('lino',1)});part(new THREE.TorusGeometry(.079*lw,.007,5,14).rotateX(Math.PI/2),shade(lin,.88),0,-.078,0,{p:l,ink:0})});
+  if(fem){part(LT([[.15*W1,.79],[.168*W1,.81],[.175*W1,.86],[.16*W1,.9],[.142*W1,.905]]),lin,0,0,0,{p:g,ink:.012,...TX('lino',1)});part(new THREE.SphereGeometry(.02,8,6).scale(1.2,.8,.7),shade(lin,.8),0,.85,-.172*W1,{p:g,ink:.004})}}}
  return sp}
 
 export class MiniHero{

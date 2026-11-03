@@ -12,7 +12,7 @@ JS = r"""(()=>{const sv=JSON.stringify(S),out={rows:[],pra:[],up:CSK.UPLIFT};
  const xpL=l=>XT[Math.max(1,Math.min(99,l))]||0,setL=l=>{S.xp.cb=xpL(l);S.xp.ra=xpL(l)};
  const swOf=l=>{let b=null;for(const t of TI)if(t[3]<=l)b='sw_'+t[0];return b},bwOf=l=>{let b=null;WO.forEach((w,i)=>{if(w[3]<=l&&BOW['bw_'+WON[i]])b='bw_'+WON[i]});return b},
   kOf=l=>{let b=0;for(let k=0;k<6;k++)if((BI[k].lv||1)<=l)b=k;return b};
- const per=(w,m)=>{S.eq.w=w;const h=hitChance(m),mx=mxs(),cr=Math.max(0,pv('crit'))/100;return h*(1+mx)/2*(1+cr*.75)*1.2/(manMs()/1000)};
+ const per=(w,m)=>{S.eq.w=w;const h=hitChance(m),mx=mxs(),cr=Math.max(0,pv('crit'))/100;return h*dAvg(mx)*(1+cr*.75)*1.2/(manMs()/1000)};
  const fake=(id,lv,f)=>({d:MD[id]||MD.goblin,lv,x:P.x+40,y:P.y,hp:1,mh:1,f});
  const ROLE={comun:1,elite:3,capitan:MSF.k0[0],jefe:MSF.b0[0]};
  for(const L of [5,10,15,25,35,50,65,80,95]){setL(L);const k=kOf(L),sw=swOf(L),ws={espada:sw,daga:'lw_'+k+'d2',mandoble:'lw_'+k+'m2',arco:bwOf(L),ballesta:'lw_'+k+'b2'};

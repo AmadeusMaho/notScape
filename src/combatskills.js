@@ -77,10 +77,10 @@ const SP={
   kit:[{id:'gd_provocar',n:'Provocar',e:'up',lv:30,cd:30,c:16,aoe:160,self:1,sts:['weak',8000,1],d:'Los enemigos cercanos quedan Debilitados: hacen menos daño.'},
    {id:'gd_escudo',n:'Embestida de escudo',e:'shield',lv:50,cd:18,c:24,coef:.95,stun:2000,d:'Embistes con el escudo y aturdes al enemigo.'},
    {id:'gd_muro',n:'Muro inamovible',e:'shield',lv:75,cd:60,c:25,buf:['unbreak',8000],d:'Inquebrantable: inmune a aturdimientos y raíces durante 8 s.'}]},
- asesino:{sk:'cb',fam:['dagger'],n:'Asesino',em:'🗡️',idn:'Los enemigos que aún no te han visto reciben ×1,8 de daño.',
+ asesino:{sk:'cb',fam:['dagger'],n:'Asesino',em:'🗡️',idn:'Los enemigos que aún no te han visto reciben ×1,8 de daño; por la espalda, ×1,3 más.',
   key:[{n:'Sombra',d:'El daño a enemigos desprevenidos sube a ×2,4.'},{n:'Hemorragia en cadena',d:'Cada golpe tiene un 20 % de provocar Sangrado.'}],
   kit:[{id:'as_marca',n:'Marca de muerte',e:'skull',lv:30,cd:14,c:14,coef:.5,sts:['vuln',8000,1],d:'Marca al enemigo: recibe más daño.'},
-   {id:'as_sombra',n:'Paso sombrío',e:'up',lv:50,cd:14,c:22,coef:.95,n2:2,buf:['haste',4000],d:'Te lanzas sobre el enemigo, golpeas dos veces y ganas Celeridad.'},
+   {id:'as_sombra',n:'Paso sombrío',e:'up',lv:50,cd:14,c:22,coef:.95,n2:2,buf:['haste',4000],d:'Te lanzas a través del enemigo hasta su espalda, golpeas dos veces y ganas Celeridad.'},
    {id:'as_sombrio',n:'Tajo de sombra',e:'skull',lv:75,cd:30,c:30,coef:.6,exec:[.4,3.6],d:'Daño enorme si el enemigo tiene menos del 40 % de vida.'}]},
  verdugo:{sk:'cb',fam:['great'],n:'Verdugo',em:'⚔️',idn:'+40 % de daño a enemigos con menos del 30 % de vida; +15 % si tu vida está por debajo del 50 %.',
   key:[{n:'Sed de sangre',d:'El umbral de remate sube al 40 %.'},{n:'Furia creciente',d:'Con poca vida el bonus sube a +30 %.'}],
@@ -260,11 +260,12 @@ function fxHit(a,f,o,k){if(!o||!(o.hp>0))return;const el=elemOf(a,f),K=SK3(),col
  try{if(R3D.impact)R3D.impact.burst(o,el,k)}catch(e){}
  try{if(K){if(a.stun||el==='aplastante')K.play('grietas',{x:o.x,y:o.y,r:46*k,ang:Math.random()*6.28,col:'#ffc070',col2:'#7a3010',life:1});else if(f.sk==='mg'&&(a.coef||0)>=1.3)K.play('orbe',{x:o.x,y:o.y,r:34*k,col,col2:dk(col,.45),life:.55})}}catch(e){}
  if(!SX(a.stun?'stun':a.exec?'execute':SKS[el]||'hitFlesh',k)){try{if(SND&&SND.en)SND.en(SNDE[el]||'fisico')}catch(e){}}}
+const LUNGE={gr_embestida:{max:130,gap:26,u0:.08,u1:.5},gd_escudo:{max:110,gap:26,u0:.08,u1:.55},as_sombra:{max:190,gap:24,u0:.04,u1:.4,thru:1}};   /* habilidades que desplazan al héroe */
 function use(slot){
  if(!active()||P.hp<=0||CK||(typeof inRoom==='function'&&inRoom()))return false;
  const f=fam(),a=bar()[slot];if(!a)return false;const now=performance.now();
  if(now<gcd||now<(cd[a.id]||0))return false;
- if(typeof STS!=='undefined'){if(STS.frozen&&STS.frozen(P))return false;if(f.res==='MN'&&STS.has(P,'silence')){toast('🤐 Estás silenciado.',1200);return false}}
+ if(typeof STS!=='undefined'){if(STS.frozen&&STS.frozen(P))return false;if(STS.has(P,'fear')){toast('😱 El miedo te paraliza.',1200);return false}if(f.res==='MN'&&STS.has(P,'silence')){toast('🤐 Estás silenciado.',1200);return false}}
  const mg=f.res==='MN',cost=costOf(a),have=mg?MN:EN;if(have<cost){toast(mg?'💧 Te falta maná.':'⚡ Te falta energía.',1200);return false}
  let m=null;
  if(a.coef){m=spellTarget();if(!m){toast('No hay ningún enemigo cerca.',1200);return false}
@@ -278,6 +279,9 @@ function use(slot){
  /* ANIMACIÓN (skillanim3d.js, `window.SKA[id]` = {d ms, ip fracción del impacto, hits}): el héroe hace lo que describe la habilidad y los efectos y el daño caen en el impacto del clip */
  const KA=(typeof window!=='undefined'&&window.SKA&&window.SKA[a.id])||null,imp=KA?KA.d*KA.hits[0]:0;
  if(KA&&typeof P==='object')P.ck={id:a.id,t0:now,d:KA.d};
+ /* EMBESTIDA FÍSICA (u0..u1 = tramo del clip en que se desplaza; llega a `gap` px del objetivo, máx. `max` px; lo mueve game.js `ckStep`) */
+ const LG=LUNGE[a.id];if(KA&&LG&&m&&P.ck){const dd=Math.hypot(m.x-P.x,m.y-P.y),dist=Math.max(0,Math.min(LG.max,LG.thru?dd+LG.gap:dd-LG.gap));   /* thru: atraviesa al enemigo y acaba A SU ESPALDA */
+ if(LG.thru)P.ck.bk=m;if(dist>4)P.ck.lg={ux:(m.x-P.x)/dd,uy:(m.y-P.y)/dd,dist,u0:LG.u0,u1:Math.max(LG.u0+.1,Math.min(LG.u1,KA.hits[0]-.03)),p:0}}
  if(KA&&imp>90){const f0=f,m0=m,sk0=f.sk==='cb';Q.push({t:now+imp-(sk0?70:0),fn:()=>{if(P.hp>0)fxCast(a,f0,m0,sk0)}})}else fxCast(a,f,m,f.sk==='cb');
  if(a.buf){STS.add(P,a.buf[0],{dur:a.buf[1]});try{snd('magic')}catch(e){}sp(P.x,P.y-14,f.col,12,70,60,120)}
  if(tg0){const rk0=rank(a.id);tg0.forEach(o=>STS.add(o,a.sts[0],{dur:a.sts[1]*(1+.08*rk0)*(1+pas('stsD')),v:a.sts[2]}));HFX.push({k:'star',tx:P.x,ty:P.y,th:4,t0:now,d:380});sp(P.x,P.y-6,a.col||f.col,16,a.aoe*1.6,50,120);try{snd('magic')}catch(e){}}
@@ -317,12 +321,15 @@ const IC={slash:'<path d="M5 19L17 5l2 2L7 21z"/><path d="M15 4l5 5-2 2-5-5z" op
 const icon=k=>'<svg viewBox="0 0 24 24" fill="currentColor">'+(IC[k]||IC.burst)+'</svg>';
 
 /* ── REGLAS DE IDENTIDAD de las especializaciones (enganchadas en game.js: `out` multiplica el daño que haces, `inMul` el que recibes, `onHit` aplica efectos al golpear) ── */
+/* POR LA ESPALDA (Asesino): el héroe está en el arco trasero (>101°) de hacia donde mira la criatura (`m.fc`, lo publica actors3d.js; dirección = (sen, cos)). Sin `fc` (sin modelo 3D aún) no cuenta. */
+const behind=m=>{if(P.ck&&P.ck.bk===m&&performance.now()<P.ck.t0+P.ck.d)return true;   /* Paso sombrío: atraviesa al enemigo, así que todos sus golpes cuentan como por la espalda aunque el enemigo ya esté girando */
+ if(m.fc==null||!m.d||m.poi)return false;const hx=P.x-m.x,hy=P.y-m.y,l=Math.hypot(hx,hy)||1;return(Math.sin(m.fc)*hx+Math.cos(m.fc)*hy)/l<-.2};
 const HU=()=>typeof HURT!=='undefined'?HURT:-1e9;
 function out(m,sk,wt,now){if(!m)return 1;const pb=(1+pas('dmgB'))*(m.hp<=m.mh*.35?1+pas('exec'):1);return pb*out0(m,sk,wt,now)}   /* pasivas de los árboles × regla del Camino */
 function out0(m,sk,wt,now){const sp=spec(sk);if(!sp||!m)return 1;const k=keyOn(),n=now||performance.now();let r=1;
  switch(sp.id){
   case 'guardian':if(k===2&&n-HU()<4000)r*=1.2;break;
-  case 'asesino':if(!m.hunt)r*=k===1?2.4:1.8;break;
+  case 'asesino':{if(!m.hunt)r*=k===1?2.4:1.8;if(behind(m)){r*=k===1?1.4:1.3;if(n-(T.bk||0)>1500){T.bk=n;try{fText('¡Por la espalda!','#c8a0ff',m.x,m.y-(m.d.h||30),36)}catch(e){}}}break}
   case 'verdugo':if(m.hp<=m.mh*(k===1?.4:.3))r*=1.4;if(P.hp<maxHp()*.5)r*=k===2?1.3:1.15;break;
   case 'monje':{if(HU()>T.hurt){T.hurt=HU();T.st=0}r*=1+.04*T.st;T.st=Math.min(k===1?8:5,T.st+1);break}
   case 'cazador':{if(T.m!==m){T.m=m;T.n=0;if(k===2)STS.add(m,'mark',{dur:6000})}r*=1+.05*T.n;T.n=Math.min(k===1?8:5,T.n+1);break}

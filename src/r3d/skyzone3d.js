@@ -70,6 +70,9 @@ void main(){vec3 N=normalize(vN);float ndl=dot(N,normalize(uL));float hh=clamp(v
  float wsp=n2(vec2(vW.x*.05+vW.z*.012+uT*.012,vW.z*.3));c=mix(c,uHi,smoothstep(.6,.88,wsp)*.16*smoothstep(.15,.6,hh));   // hebras de viento estiradas
  float d=length(vW.xz-uCam)/105.;c=mix(c,uHor,smoothstep(uHS-.1,1.1,d)*uHK);
  gl_FragColor=vec4(c,1.);\n#include <colorspace_fragment>\n}`;
+// N0.5 COMPUERTAS DE NUBES (isla.js `GATES`): mismo puff pintado + instanceColor (r = brillo dorado tenue, g = opacidad de la apertura)
+const GPUFF_V=PUFF_V.replace('varying vec3 vW;void main(){','varying vec3 vW;varying vec3 vC;void main(){\n#ifdef USE_INSTANCING_COLOR\n vC=instanceColor;\n#else\n vC=vec3(0.,1.,0.);\n#endif\n');
+const GPUFF_F=PUFF_F.replace('varying vec3 vW;','varying vec3 vW;varying vec3 vC;').replace('gl_FragColor=vec4(clamp(c,0.,1.),al);','c=mix(c,vec3(.93,.81,.55),clamp(vC.x,0.,1.)*(.18+.4*pow(1.-ndv,2.)));al*=clamp(vC.y,0.,1.);gl_FragColor=vec4(clamp(c,0.,.93),al);');
 const seaMat=()=>new THREE.ShaderMaterial({uniforms:CU,vertexShader:SEA_V,fragmentShader:SEA_F}),puffMat=()=>new THREE.ShaderMaterial({uniforms:CU,vertexShader:PUFF_V,fragmentShader:PUFF_F,transparent:true,depthWrite:false});
 const SPILL_F=`uniform float uT;uniform vec3 uCA,uCB;varying vec2 vUv;
 float h2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
@@ -147,6 +150,20 @@ export class SkyZone{
   ring(.8,5,26,-3.6,1.9,1);ring(5,13,34,-5.4,2.7,2);ring(13,30,52,-7.4,3.7,3);ring(30,66,84,-9.2,5.2,4);ring(2,9,40,-3.0,.9,5);
   const NC=this.cd.length;this.puffMat=puffMat();this.pm=new THREE.InstancedMesh(geo,this.puffMat,NC);
   this.pm.frustumCulled=false;this.grp.add(this.pm);this.dm=new THREE.Object3D();this.pmT=0}
+ // ── N0.5 COMPUERTAS DE NUBES: racimos de puffs a lo largo de cada polilínea de `ISLA.GATES` (solo sobre tierra), 1 InstancedMesh; al abrirse suben, se apartan y se desvanecen en 2,5 s ──
+ gatesInit(){this.gI=1;if(typeof ISLA==='undefined'||!ISLA.GATES||typeof TER==='undefined')return;const b=BIOMES.list[9];if(!b)return;const ox=(b.ox+b.w/2)/T,oz=(b.oy+b.h/2)/T,LVY=this.W3(0,0,2).y,L=[];
+  const land=(x,z)=>{for(const[dx,dz]of[[0,0],[1.2,0],[-1.2,0],[0,1.2],[0,-1.2]])if(TER.isLand(TER.heightAt((x+dx)*T,(z+dz)*T)))return true;return false};
+  ISLA.GATES.forEach((g,gi)=>{for(let k=0;k+1<g.p.length;k++){const a=g.p[k],c=g.p[k+1],dx=c[0]-a[0],dz=c[1]-a[1],len=Math.hypot(dx,dz),nx=-dz/len,nz=dx/len,n=Math.ceil(len/.8);
+   for(let j=0;j<=n;j++){if(j===n&&k+2<g.p.length)continue;const x=ox+a[0]+dx*j/n,z=oz+a[1]+dz*j/n;if(!land(x,z))continue;const h=TER.standZ(x*T,z*T),gy=Math.max(0,(h-1)*LVY);
+    for(let q=0;q<3;q++){const r=hash(gi*997+k*131+j,q,201),s=[1.7,1.3,.95][q]*(.8+r*.45),o=(hash(gi*997+k*131+j,q,202)-.5)*1.1;L.push({gi,x:x+nx*o+(hash(j,q,203)-.5)*.5,y:gy+[.55,1.65,2.6][q]+(r-.5)*.4,z:z+nz*o+(hash(j,q,204)-.5)*.5,sx:s*1.25,sy:s*.8,sz:s,ph:hash(j,q,205)*6.28,sd:(hash(j,q,206)<.5?-1:1),nx,nz})}}}});
+  if(!L.length)return;this.gd=L;this.gm=new THREE.InstancedMesh(this.pm.geometry,new THREE.ShaderMaterial({uniforms:CU,vertexShader:GPUFF_V,fragmentShader:GPUFF_F,transparent:true,depthWrite:false}),L.length);
+  this.gm.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(L.length*3),3);this.gc=new THREE.Color();this.gU=null;this.updGates(0,true);this.gm.computeBoundingSphere();if(this.gm.boundingSphere)this.gm.boundingSphere.radius+=9;this.grp.add(this.gm)}
+ updGates(t,force){const st=ISLA.gates(),U=st.map(g=>g.u);if(U.every(u=>u>=1)){this.gm.visible=false;this.gU=U;return}this.gm.visible=true;
+  const d=this.dm,L=this.gd,m=this.gm,c=this.gc,o=this.gOrd;for(let ii=0;ii<L.length;ii++){const p=L[o?o[ii]:ii],u=U[p.gi],e=u*u*(3-2*u),br=Math.sin(t*.45+p.ph);
+   if(u>=1){d.scale.set(0,0,0);d.position.set(p.x,p.y,p.z)}else{d.position.set(p.x+p.nx*p.sd*e*3.2+Math.sin(t*.3+p.ph)*.12,p.y+e*e*7+br*.12,p.z+p.nz*p.sd*e*3.2+Math.cos(t*.3+p.ph)*.12);const k=(1+.04*br)*(1+e*.6);d.scale.set(p.sx*k,p.sy*k,p.sz*k)}
+   d.rotation.y=p.ph;d.updateMatrix();m.setMatrixAt(ii,d.matrix);c.setRGB(.35+.25*Math.sin(t*1.1+p.ph*2)+e*1.4*(1-e)*2,1-sm(.3,1,u),0);m.setColorAt(ii,c)}
+  m.instanceMatrix.needsUpdate=true;m.instanceColor.needsUpdate=true;this.gU=U}
+ sortGates(cam){const f=new THREE.Vector3();cam.getWorldDirection(f);const cp=cam.position,k=this.gd.map((c,i)=>[(c.x-cp.x)*f.x+(c.y-cp.y)*f.y+(c.z-cp.z)*f.z,i]);k.sort((a,b)=>b[0]-a[0]);this.gOrd=k.map(q=>q[1])}
  sortPuffs(cam){const f=new THREE.Vector3();cam.getWorldDirection(f);const cp=cam.position,k=this.cd.map((c,i)=>[(c.x-cp.x)*f.x+(c.y-cp.y)*f.y+(c.z-cp.z)*f.z,i]);k.sort((a,b)=>b[0]-a[0]);this.ord=k.map(q=>q[1])}   // lejos → cerca (transparencia sin parpadeos)
  updPuffs(t){const d=this.dm,cd=this.cd,m=this.pm,o=this.ord;for(let ii=0;ii<cd.length;ii++){const i=o?ii:ii,c=cd[o?o[ii]:ii];d.position.set(c.x+Math.sin(t*c.sp+c.ph)*.8,c.y+Math.sin(t*c.sp*1.7+c.ph)*.25,c.z+Math.cos(t*c.sp+c.ph)*.8);d.scale.set(c.sx,c.sy,c.sz);d.rotation.y=c.ph;d.updateMatrix();m.setMatrixAt(ii,d.matrix)}m.instanceMatrix.needsUpdate=true}
  // ── cascadas: [ángulo (rad, 0 = este, +90° = sur), ancho en tiles, longitud del riachuelo en tiles] ──
@@ -181,6 +198,7 @@ this.mouth.push({x:mx[0],z:mx[2],t:hash(k,1,90)*2});
   const st=this.seaStep;this.seaM.position.x=Math.round(tgt.x/st)*st;this.seaM.position.z=Math.round(tgt.z/st)*st;   // se mueve en pasos de 1 celda de la malla: el relieve (fijo en el MUNDO) no «nada»
   CU.uT.value=t;CU.uCam.value.set(tgt.x,tgt.z);{const sp=TOD.dia&&TOD.dia.sunP;if(sp)CU.uL.value.set(sp[0],sp[1],sp[2]).normalize()}   // el relieve de nubes queda fijo en el MUNDO y deriva despacio
   this.poolM.uniforms.uT.value=t;this.spillM.uniforms.uT.value=t;if(this.mist)this.updMist(t);this.mats[0].uniforms.uT.value=t;this.mats[1].uniforms.uT.value=t;if(cam&&(this.pmT%24===0||!this.ord))this.sortPuffs(cam);if((this.pmT++&1)===0)this.updPuffs(t);
+  if(!this.gI)this.gatesInit();if(this.gm&&(this.gm.visible||!this.gU||this.gU.some(u=>u<1)||(this.pmT%30)===0)){if(cam&&(this.pmT%24===0||!this.gOrd))this.sortGates(cam);if((this.pmT&1)===0)this.updGates(t)}
   if(water&&water.on&&this.mouth)for(const m of this.mouth){if(Math.hypot(m.x-tgt.x,m.z-tgt.z)>26)continue;m.t-=dt;if(m.t<=0){m.t=.5+.5*hash(Math.floor(t),m.x,91);try{water.pulse(m.x,m.z,'tug',.5)}catch(e){}}}   // gotas y ondas del agua real al caer por el labio
   for(const p of this.pulse){const s=p.b*(1+.18*Math.sin(t*1.3+p.ph));p.m.scale.set(s,.8+.15*Math.sin(t*.9+p.ph),s)}}
  dispose(){if(!this.on)return;this.scene.remove(this.grp)}

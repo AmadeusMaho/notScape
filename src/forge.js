@@ -40,7 +40,7 @@ const FORGE=(()=>{
   const OFSKIN={sm:'forge',cr:'carp',pe:'tan',sa:'sew',es:'stone',jo:'jewel',en:'arcane',ing:'tinker'};
   const STONEC={caliza:'#d8d0b8',granito:'#8a8a92',arenisca:'#d4a468',basalto:'#55525a',marmol:'#ece6dc',obsidiana:'#3a2a4a',astral:'#9aaaf0'},GEMC={cuarzo:'#e6e2f2',ambar:'#e8a030',jade:'#3aa86a',zafiro:'#3a6aff',opalo:'#d8eef0',rubi:'#e02a3a',amatista:'#9a5ae0',topacio:'#f0b040',coral:'#ff7a6a',diamante:'#e8f8ff'};
   let TH=T_FORGE,HS=null,hsx=null,hsT=-1e9,hand=null,el=null,cv=null,g=null,raf=0,last=0,on=false,bg=null,stn=null,ro=null,kind='bar',tcol='#8d8f9c',pname='',SC=null,SC2=null;const PC={};
-  const PA=[],F=[];
+  const PA=[],F=[];let F3A=false,f3c=null;   /* N0.7: FORGE3D (src/r3d/forge3d.js): los 8 oficios se dibujan en 3D (un diorama por tema) y se copian a `f3c` */
   const st={prog:0,pg:0,q:0,qg:0,dur:1,heat:0,cond:'normal',exc:false,streak:0,lastAct:0,shake:0,flash:0,flashC:'#fff',squash:0,lift:0,ring:[],tool:null,glow:0,end:null,fire:0,zp:0,kick:0,mood:0,moodT:0,pendText:null};
   const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t*t*(3-2*t);
   const mix=(a,b,t)=>{const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),A=p(a),B=p(b);return'#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')};
@@ -48,7 +48,7 @@ const FORGE=(()=>{
   let seed=1;const rnd=()=>hash(seed++);
   const tierOf=id=>{const m=/_(cobre|bronce|hierro|acero|plata|alba|mitril|adam|runita|oricalco|infernita|celestita)$/.exec(String(id||''));return m?m[1]:'hierro'};
   const woodOf=id=>{const m=/_(pino|abedul|roble|fresno|sauce|arce|tejo|ebano|caoba|baobab|ceniza|mundo)$/.exec(String(id||''));return m?m[1]:'pino'};
-  function kindOf(id){id=String(id||'');return /^sw_|^lw_/.test(id)?'sword':/^ax_/.test(id)?'axe':/^pk_/.test(id)?'pick':/^(ar|sh|lg|gl)_(cu|tu)_/.test(id)?(id[0]==='a'?'chest':id[0]==='s'?'shield':id[0]==='l'?'legs':'glove'):/^ar_/.test(id)?'chest':/^sh_/.test(id)?'shield':/^lg_/.test(id)?'legs':/^gl_/.test(id)?'glove':/^og_/.test(id)?'hammer':
+  function kindOf(id){id=String(id||'');return /^sw_|^lw_/.test(id)?'sword':/^ax_/.test(id)?'axe':/^kd_/.test(id)?'sword':/^pk_/.test(id)?'pick':/^(ar|sh|lg|gl)_(cu|tu)_/.test(id)?(id[0]==='a'?'chest':id[0]==='s'?'shield':id[0]==='l'?'legs':'glove'):/^ar_/.test(id)?'chest':/^sh_/.test(id)?'shield':/^lg_/.test(id)?'legs':/^gl_/.test(id)?'glove':/^og_/.test(id)?'hammer':
     /^(ls|bl)_/.test(id)?'block':/^ta_columna_/.test(id)?'column':/^ta_/.test(id)?'statue':/^(eg|an)_/.test(id)?'ring':/^cl_/.test(id)?'amulet':/^(gm|gb)_/.test(id)?'gem':/^tb_/.test(id)?'plank':/^mn_/.test(id)?'handle':/^bw_/.test(id)?'bow':/^st_/.test(id)?'staff':/^rd_/.test(id)?'rod':/^(fl|vi)_/.test(id)?'arrows':/^qv_/.test(id)?'quiver':/^cu_/.test(id)?'leather':/^mj_/.test(id)?'thread':/^(tela|te_)/.test(id)?'cloth':/^eng_engranaje/.test(id)?'gear':/^eng_resorte/.test(id)?'spring':/^bm_/.test(id)?'bomb':/^tr_/.test(id)?'trap':/^mk_/.test(id)?'rig':/^ln_/.test(id)?'lens':/^mr_/.test(id)?'scope':'bar'}
   function colOf(id){id=String(id||'');{const m=/_(caliza|granito|arenisca|basalto|marmol|obsidiana|astral)$/.exec(id);if(m)return STONEC[m[1]]}{const m=/_(cuarzo|ambar|jade|zafiro|opalo|rubi|amatista|topacio|coral|diamante)$/.exec(id);if(m)return GEMC[m[1]]}if(id==='b_oro'||/_oro$/.test(id))return TIERC.oro;if(/^(tb|mn|bw|st|rd)_/.test(id))return WOODC[woodOf(id)];if(/_cu_|^cu_|^qv_/.test(id))return mix('#8a5a2a',TIERC[tierOf(id)]||'#8d8f9c',.28);if(/_tu_|^tela|^te_|^mj_/.test(id))return mix('#d8d0e8',TIERC[tierOf(id)]||'#c8c0d8',.35);return TIERC[tierOf(id)]||'#8d8f9c'}
   function mk(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c}
@@ -173,7 +173,7 @@ const FORGE=(()=>{
   function text(s,x,y,c,sz,o){if(st.end&&st.end.ok)return;if(F.length>5)F.shift();F.push({s,x,y,c,sz:sz||15,t:0,life:(o&&o.life)||1.1,vy:-38,pop:(o&&o.pop)||1})}
   function ring(x,y,c,r1,life){st.ring.push({x,y,c,r:4,r1:r1||70,t:0,life:life||.45})}
   const STR=['Bien','¡Bien!','¡Genial!','¡Magnífico!','¡INCREÍBLE!'];
-  const heroOn=()=>USE_HERO&&!!HS&&performance.now()-hsT<500;
+  const heroOn=()=>F3A||(USE_HERO&&!!HS&&performance.now()-hsT<500);
   const handPt=()=>hand?[HX-HSZ/2+hand[0]*HSZ,HY-HSZ/2+hand[1]*HSZ]:[HX+52,HY+8];   // mano derecha del héroe en la escena (sin traslación de estación)
   const heroFeet=()=>HY+.196*HSZ;
 
@@ -191,7 +191,7 @@ const FORGE=(()=>{
     if(sc>=3&&(t==='p'||t==='q'))text('x'+sc+' '+STR[sc-1],470,40,sc>=4?'#ffd36b':'#e8dfc8',12+sc*2.2,{pop:1.4});
     if(big){st.flash=Math.max(st.flash,.28);st.flashC=exc?'#ffe9a0':'#ffd8a0'}}
   function impact(w){
-    const fx=w.fx,p=w.pow,ex=w.exc,c=fx.c;st.kick=1;st.zp=Math.max(st.zp,.04*p);
+    const fx=w.fx,p=w.pow,ex=w.exc,c=fx.c;if(F3A){try{R3D.forge3d.burst(fx.spr,p,ex,fx.c,fx.k)}catch(e){}}st.kick=1;st.zp=Math.max(st.zp,.04*p);
     if(fx.spr==='hammer'||fx.spr==='saw'||fx.spr==='knife'||fx.spr==='needle'){st.shake=Math.max(st.shake,(fx.spr==='hammer'?5:2)*p);st.squash=fx.spr==='hammer'?.1*p:.03}
     if(fx.spr==='hammer'){st.flash=Math.max(st.flash,.18*p);st.flashC='#fff3d8';spark(300,134,Math.round(16*p)+(ex?16:0),ex?'#fff1b0':c,1.1,{a:-Math.PI/2,spread:Math.PI*.95,v:230,life:.8});spark(300,134,Math.round(8*p),'#ff6a1a',.8,{spread:Math.PI,v:150,life:1,r:3.2});ring(300,136,ex?'#ffe9a0':'#ffb347',50+40*p,.4)}
     else if(fx.k===4){spark(300,132,Math.round(12*p)+(ex?10:0),c,.8,{a:-Math.PI/2,spread:Math.PI*.9,v:130,g:380,life:.8,k:4,r:2.2})}
@@ -201,7 +201,7 @@ const FORGE=(()=>{
     if(st.pendText&&!w.shown){w.shown=true;text(st.pendText.s,300,100,st.pendText.c,st.pendText.sz,{pop:1.3});if(fx.spr!=='hammer')ring(300,134,c[0],60,.4)}}
 
   // ---------- bucle ----------
-  function frame(now){if(!on)return;raf=requestAnimationFrame(frame);if(document.hidden||!cv||!cv.isConnected||!cv.offsetParent)return;const dt=Math.min(.05,(now-last)/1000||.016);last=now;update(dt);draw(now/1000)}
+  function frame(now){if(!on)return;raf=requestAnimationFrame(frame);if(document.hidden||!cv||!cv.isConnected||!cv.offsetParent)return;if(F3A){try{const F=R3D.forge3d;F.setAct(typeof actState==='function'?actState(performance.now()):null);F.setSt(st)}catch(e){}}const dt=Math.min(.05,(now-last)/1000||.016);last=now;update(dt);draw(now/1000)}
   function update(dt){
     st.pg=lerp(st.pg,st.prog,1-Math.exp(-dt*7));st.qg=lerp(st.qg,st.q,1-Math.exp(-dt*7));
     st.heat=Math.max(0,st.heat-dt*.28);st.fire=Math.max(0,st.fire-dt*.5);st.glow=lerp(st.glow,st.cond==='excelente'?1:st.cond==='buena'?.55:0,1-Math.exp(-dt*5));
@@ -216,6 +216,7 @@ const FORGE=(()=>{
       if(w.t>(w.dbl?.8:.75))st.tool=null}
     if(PA.length<MAXP-30&&TH.id==='forge'&&hash((performance.now()|0)*3)>.88)spark(540+hash(performance.now()|0)*40,176,1,'#ff9a3a',.5,{a:-Math.PI/2,spread:.5,v:60,g:-70,life:1.6,r:1.6,k:1});
     if(st.glow>.3&&hash((performance.now()|0)*5)>.8)spark(300+(hash(performance.now()|0)-.5)*180,128,1,st.cond==='excelente'?'#fff1b0':'#ffb347',.4,{a:-Math.PI/2,spread:.4,v:50,g:-40,life:1.2,r:1.6,k:1});
+    if(F3A)PA.length=0;   // en 3D las chispas son de forge3d.js
     for(let i=PA.length-1;i>=0;i--){const p=PA[i];p.t+=dt;if(p.t>p.life){PA.splice(i,1);continue}p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;if((p.k===0||p.k===4)&&p.y>134&&p.vy>0&&p.x>210&&p.x<390){p.y=134;p.vy*=-.35;p.vx*=.7}}
     for(let i=F.length-1;i>=0;i--){const f=F[i];f.t+=dt;f.y+=f.vy*dt;f.vy*=.96;if(f.t>f.life)F.splice(i,1)}
     for(let i=st.ring.length-1;i>=0;i--){const r=st.ring[i];r.t+=dt;r.r=lerp(4,r.r1,ease(clamp(r.t/r.life,0,1)));if(r.t>r.life)st.ring.splice(i,1)}
@@ -238,18 +239,18 @@ const FORGE=(()=>{
     if(st.mood<0&&st.moodT>0){g.globalAlpha=clamp(st.moodT,0,1);g.fillStyle='#9fd8ff';g.beginPath();g.ellipse(HX+34,hy+8+(1.2-st.moodT)*14,2.6,4,0,0,7);g.fill();g.globalAlpha=1}}
   function draw(t){
     const w=cv.width,k=w/VW;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,w,cv.height);
-    const sx=(hash(t*60)-.5)*st.shake,sy=(hash(t*60+5)-.5)*st.shake;
+    const f3on=F3A&&f3c&&f3c.width>0,sx=f3on?0:(hash(t*60)-.5)*st.shake,sy=f3on?0:(hash(t*60+5)-.5)*st.shake;
     // CÁMARA DE CINE: pulso de zoom en los golpes grandes y acercamiento lento al héroe durante el remate
-    const en=st.end&&st.end.ok?st.end:null,em=en?ease(clamp(en.t/.7,0,1))*(1-ease(clamp((en.t-2.7)/.7,0,1))):0,zz=1+st.zp+em*.14,fcx=lerp(320,HX+90,em),fcy=lerp(120,100,em);
+    const en=st.end&&st.end.ok?st.end:null,em=en?ease(clamp(en.t/.7,0,1))*(1-ease(clamp((en.t-2.7)/.7,0,1))):0,zz=f3on?1:1+st.zp+em*.14,fcx=lerp(320,HX+90,em),fcy=lerp(120,100,em);
     g.setTransform(k,0,0,k,sx*k,sy*k);g.translate(fcx,fcy);g.scale(zz,zz);g.translate(-fcx,-fcy);
-    g.drawImage(bg,0,0,VW,VH);
+    if(f3on){g.setTransform(k,0,0,k,0,0);g.drawImage(f3c,0,0,VW,VH)}else{g.drawImage(bg,0,0,VW,VH);
     if(TH.id==='forge'){const fi=.55+st.heat*.35+st.fire*.5+Math.sin(t*9)*.05+Math.sin(t*23)*.04;g.globalCompositeOperation='lighter';const rg=g.createRadialGradient(545,170,4,545,150,150*fi);rg.addColorStop(0,'rgba(255,190,90,'+clamp(.7*fi,0,1)+')');rg.addColorStop(.4,'rgba(255,110,30,'+.28*fi+')');rg.addColorStop(1,'rgba(255,80,10,0)');g.fillStyle=rg;g.fillRect(380,40,260,200);
       for(let i=0;i<5;i++){const fx=510+i*20,fh=(26+hash(i*9+Math.floor(t*8))*26)*(.7+st.fire*.5+st.heat*.4);g.fillStyle='rgba(255,'+(130+i*18)+',40,.55)';g.beginPath();g.moveTo(fx-9,196);g.quadraticCurveTo(fx-6,196-fh*.6,fx+Math.sin(t*10+i)*5,196-fh);g.quadraticCurveTo(fx+7,196-fh*.5,fx+9,196);g.fill()}g.globalCompositeOperation='source-over'}
     g.globalCompositeOperation='lighter';const lg=g.createRadialGradient(300+DX,134,10,300+DX,134,200);lg.addColorStop(0,'rgba(255,150,60,'+((TH.hot?.12:.05)+st.heat*(TH.hot?.28:.1)+st.glow*.12)+')');lg.addColorStop(1,'rgba(255,100,30,0)');g.fillStyle=lg;g.fillRect(0,0,520,240);g.globalCompositeOperation='source-over';
     if(heroOn()){g.fillStyle='rgba(0,0,0,.4)';g.beginPath();g.ellipse(HX,FLOOR+3,34,6,0,0,7);g.fill()}
     g.save();g.translate(DX,0);g.drawImage(stn,0,0,VW,VH);g.restore();
-    drawHero(t);
-    g.save();g.translate(DX,0);drawPiece(t);drawTools(t);
+    drawHero(t)}
+    g.save();g.translate(DX,0);if(!f3on){drawPiece(t);drawTools(t)}
     g.globalCompositeOperation='lighter';
     for(const p of PA){const a=1-p.t/p.life;if(p.k===2){g.globalCompositeOperation='source-over';g.fillStyle='rgba(200,205,210,'+a*.28+')';g.beginPath();g.arc(p.x,p.y,p.r*(1+p.t*2.5),0,7);g.fill();g.globalCompositeOperation='lighter';continue}
       if(p.k===4){g.globalCompositeOperation='source-over';g.globalAlpha=clamp(a*1.4,0,1);g.fillStyle=p.c;g.fillRect(p.x,p.y,p.r,p.r*.5);g.globalCompositeOperation='lighter';continue}
@@ -309,16 +310,19 @@ const FORGE=(()=>{
     g.restore()}
 
   // ---------- API ----------
-  function fit(){if(!cv)return;const d=Math.min(2,window.devicePixelRatio||1),w=Math.max(320,Math.round(cv.clientWidth*d));if(cv.width!==w){cv.width=w;cv.height=Math.round(w*VH/VW)}}
+  function fit(){if(!cv)return;const d=Math.min(2,window.devicePixelRatio||1),w=Math.max(320,Math.round(cv.clientWidth*d));if(cv.width!==w){cv.width=w;cv.height=Math.round(w*VH/VW);if(f3c){f3c.width=cv.width;f3c.height=cv.height}}}
   function tap(c,hs){const w=Math.min(448,c.width||0);if(!w)return;if(!HS){HS=mk(w,w);hsx=HS.getContext('2d')}if(HS.width!==w)HS.width=HS.height=w;hsx.clearRect(0,0,w,w);hsx.drawImage(c,0,0,w,w);hsT=performance.now();
     if(hs&&hs.hand&&hs.w)hand=[clamp((hs.hand.x-hs.x)/hs.w,-.2,1.2),clamp((hs.hand.y-hs.y)/hs.h,-.2,1.2)]}
   function faceDir(){if(!USE_HERO)return null;try{const z=TER.standZ(P.x,P.y),c0=ISO.toCanvas(P.x,P.y,z),c1=ISO.toCanvas(P.x+100,P.y,z),c2=ISO.toCanvas(P.x,P.y+100,z),ax=c1.x-c0.x,ay=c1.y-c0.y,bx=c2.x-c0.x,by=c2.y-c0.y,det=ax*by-ay*bx;if(!det)return null;const tx=1,ty=.25,a=(tx*by-ty*bx)/det,b=(ax*ty-ay*tx)/det,l=Math.hypot(a,b)||1;return[a/l,b/l]}catch(e){return null}}
   function mount(root){if(cv)return;el=root;cv=el.querySelector('#wk-cv');if(!cv)return;g=cv.getContext('2d');fit();if(window.ResizeObserver){ro=new ResizeObserver(fit);ro.observe(cv)}}
   function open(rec,outId,skin){
     TH=THEMES[skin]||T_FORGE;kind=kindOf(outId);tcol=colOf(outId);pname=rec&&rec.name||'';PC.k='';bake(TH.id);
+    F3A=false;try{if(!/[?&]forge3d=0/.test(location.search)&&window.R3D&&R3D.forge3d&&R3D.forge3d.ok&&cv){if(!f3c)f3c=document.createElement('canvas');f3c.width=cv.width;f3c.height=cv.height;
+      const look=R3D.outfits.resolve({app:S.app,ar:S.eq.a?ARC(S.eq.a):null,helm:S.eq.h?ARC(S.eq.h):null,boot:S.eq.f?ARC(S.eq.f):null,gear:gearOpts(),hood:'down',arm:armorInfo()});const ofg=(()=>{try{const e=(S.eqt&&A&&S.eqt[A.sk])||{},o={};for(const sl of['h','d','g'])if(e[sl])o[sl]=ITEMICON.info(String(e[sl]).split('~')[0]).c||'#8a6a4a';return o}catch(x){return{}}})();   /* N0.7: gorro, mandil y guantes de OFICIO equipados (colores del tier) → se ven en el héroe del taller */
+      R3D.forge3d.open({theme:TH.id,outId,look,ofg,out:f3c,rectFn:()=>cv.getBoundingClientRect()});F3A=true}}catch(e){console.warn('[FORGE3D]',e);F3A=false}
     st.heat=TH.hot?.5:.15;st.streak=0;st.end=null;st.prog=st.pg=0;st.q=st.qg=0;st.tool=null;st.mood=0;PA.length=0;F.length=0;st.ring.length=0;
     on=true;hsT=-1e9;hand=null;if(window.R3D&&USE_HERO)R3D.heroTap=tap;last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(frame)}
-  function close(){on=false;cancelAnimationFrame(raf);raf=0;if(window.R3D)R3D.heroTap=null}
+  function close(){on=false;cancelAnimationFrame(raf);raf=0;F3A=false;try{if(window.R3D&&R3D.forge3d)R3D.forge3d.close()}catch(e){}if(window.R3D)R3D.heroTap=null}
   function sync(s){st.prog=s.progMax?clamp(s.prog/s.progMax,0,1):0;st.q=clamp(WK.hq(s)/100,0,1);st.dur=s.dur;st.cond=s.cond;st.exc=s.cond==='excelente'}
   function end(ok,q,msg){if(!on)return;st.end={ok,q:q||0,t:0,msg:msg||pname};if(ok){st.flash=.45;st.flashC='#ffe9a0';st.shake=7;st.mood=1;st.moodT=3;ring(300,130,'#ffd36b',150,.8);ring(300,130,'#fff1b0',100,.6);for(let i=0;i<4;i++)spark(300,110,24,i%2?'#ffd36b':'#fff1b0',1.3,{a:-Math.PI/2,spread:Math.PI*1.6,v:260,g:260,life:1.3,r:2.8});try{tone(660,.2,'triangle',.06,330);tone(990,.3,'triangle',.05,440,.12)}catch(e){}}else{st.mood=-1;st.moodT=1.6;spark(300,126,30,'#8a867e',.5,{k:2,g:-50,life:1.6,spread:Math.PI*1.2})}}
   const toolsOf=sk=>(THEMES[sk]||T_FORGE).tools;

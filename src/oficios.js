@@ -1,12 +1,19 @@
 // OFGEAR — Equipo de OFICIO por tier (estilo FF14), L1c, 22 oct 2026. Plan: docs/PLAN_OFICIOS_FF14.md §5c, §5d, §5g, §5i.
-// Hoy: Herrería (sm) con 5 ranuras (martillo, tenazas, gorro, delantal, guantes) × 11 tiers; Maña/Pulso/PO alimentan la Hoja de trabajo (workui.js → gear()).
+// Hoy (N0.7, 3 nov 2026): los 7 oficios con hoja (sm, cr, pe, sa, es, jo, ing) con 5 ranuras (martillo, tenazas, gorro, delantal, guantes) × 11 tiers; Maña/Pulso/PO alimentan la Hoja de trabajo (workui.js → gear()).
 // Los demás oficios entran añadiendo una fila a OFD. Se carga DESPUÉS de game.js (usa I, ACT, TI, WO, L, S, add, cap, log, snd, dirty, sfx…).
 // Las herramientas de recolección (hacha, pico, caña) siguen en S.tool/TOOLT hasta el rework de recolección (Puntos de Recolección).
 const OFGEAR=(()=>{
   // Un tier cada 9 niveles de oficio (X = 9, decidido 22 oct). Aspecto por cultura (solo estético): CULT[i] = cultura del bioma del tier (0 Pradera … ; el resto se rellena con cada bioma).
   const TLV=[1,9,17,26,34,43,52,61,70,79,88,97],CULT=[0,0,1,1,2,3,3,4,4,5,10,9];
   const OFD={
-    sm:{n:'Herrería',slots:{m:'Martillo',s:'Tenazas',h:'Gorro de fragua',d:'Delantal de herrero',g:'Guantes de herrero'},mk:{m:'sm',s:'sm',h:'pe',d:'pe',g:'pe'}}
+    sm:{n:'Herrería',slots:{m:'Martillo',s:'Tenazas',h:'Gorro de fragua',d:'Delantal de herrero',g:'Guantes de herrero'},mk:{m:'sm',s:'sm',h:'pe',d:'pe',g:'pe'}},
+    /* N0.7 (3 nov 2026): equipo propio de los demás oficios con hoja (mismas 5 ranuras y atributos; herramientas de metal en la Herrería, ropa de cuero en la Peletería). Icono 3D por oficio: OGK en item-icons.js */
+    cr:{n:'Artesanía',slots:{m:'Serrucho',s:'Gubia',h:'Gorro de carpintero',d:'Mandil de carpintero',g:'Guantes de carpintero'},mk:{m:'sm',s:'sm',h:'pe',d:'pe',g:'pe'}},
+    pe:{n:'Peletería',slots:{m:'Cuchilla de curtidor',s:'Lezna',h:'Gorro de curtidor',d:'Delantal de curtidor',g:'Guantes de curtidor'},mk:{m:'sm',s:'sm',h:'pe',d:'pe',g:'pe'}},
+    sa:{n:'Sastrería',slots:{m:'Aguja de sastre',s:'Tijeras de sastre',h:'Boina de sastre',d:'Chaleco de sastre',g:'Dedales de sastre'},mk:{m:'sm',s:'sm',h:'pe',d:'pe',g:'pe'}},
+    es:{n:'Escultor',slots:{m:'Cincel',s:'Maceta',h:'Gorro de cantero',d:'Mandil de cantero',g:'Guantes de cantero'},mk:{m:'sm',s:'sm',h:'pe',d:'pe',g:'pe'}},
+    jo:{n:'Joyería',slots:{m:'Martillo de joyero',s:'Pinzas de joyero',h:'Gorro de joyero',d:'Delantal de joyero',g:'Guantes de joyero'},mk:{m:'sm',s:'sm',h:'pe',d:'pe',g:'pe'}},
+    ing:{n:'Ingeniería',slots:{m:'Llave de ingeniero',s:'Tenazas de ingeniero',h:'Gafas de ingeniero',d:'Mandil de ingeniero',g:'Guantes de ingeniero'},mk:{m:'sm',s:'sm',h:'pe',d:'pe',g:'pe'}}
   };
   const SLOT_ORD=['m','s','h','d','g'];
   // reparto de atributos por ranura (× unidad del tier): mana = Maña (avance), pulso = Pulso (calidad), po = Puntos de oficio
@@ -50,14 +57,14 @@ const OFGEAR=(()=>{
   function render(){
     if(!el||el.style.display==='none')return;
     const d=OFD[cur],e=eq(cur),b=bonus(cur),T={mana:'Maña',pulso:'Pulso',po:'PO'};
-    el.querySelector('#ofw-tabs').innerHTML=Object.keys(OFD).map(k=>'<button class="'+(k===cur?'on':'')+'" data-o="'+k+'">'+OFD[k].n+'<small>nv '+L(k)+'</small></button>').join('')+'<span class="mu">Más oficios pronto</span>';
+    el.querySelector('#ofw-tabs').innerHTML=Object.keys(OFD).map(k=>'<button class="'+(k===cur?'on':'')+'" data-o="'+k+'">'+OFD[k].n+'<small>nv '+L(k)+'</small></button>').join('');
     el.querySelector('#ofw-sl').innerHTML=SLOT_ORD.map(sl=>{const id=e[sl],s=id&&stats(id);
-      return '<button class="ofs'+(id?' f':'')+'" data-s="'+sl+'"'+(id?' data-x="'+String(desc(id)).replace(/"/g,'&quot;')+'"':'')+'><span class="k">'+d.slots[sl]+'</span><b>'+(id?nm(id):'vacío')+'</b><small>'+(s?Object.keys(s).map(k=>'+'+s[k]+' '+T[k]).join(' · '):'Equípalo desde la mochila (clic)')+'</small></button>'}).join('');
+      return '<button class="ofs'+(id?' f':'')+'" data-s="'+sl+'"'+(id?' data-x="'+String(desc(id)).replace(/"/g,'&quot;')+'"':'')+'><span class="k">'+d.slots[sl]+'</span><b>'+(id?nm(id):'vacío')+'</b><small>'+(s?Object.keys(s).map(k=>'+'+s[k]+' '+T[k]).join(' · '):'Equípalo desde la mochila (LMB)')+'</small></button>'}).join('');
     const ms=WK.mkStats(L(cur),b);el.querySelector('#ofw-st').innerHTML='<div><small>Maña</small><b>'+Math.round(ms.mana)+'</b><span>+'+b.mana+'</span></div><div><small>Pulso</small><b>'+Math.round(ms.pulso)+'</b><span>+'+b.pulso+'</span></div><div><small>Puntos de oficio</small><b>'+ms.po+'</b><span>+'+b.po+'</span></div>'}
   function open(of){
     if(of)cur=of;
     if(!el){el=document.createElement('div');el.id='ofw';
-      el.innerHTML='<div class="ofh"><b>Equipo de oficio</b><button class="x" aria-label="Cerrar">✕</button></div><div id="ofw-tabs" class="oft"></div><div id="ofw-sl" class="ofl"></div><div id="ofw-st" class="ofst"></div><div class="mu ofn">Fabrica tus herramientas y ropa de oficio (Herrería y Artesanía). Un tier nuevo cada 9 niveles: el equipo sube Maña, Pulso y puntos de oficio.</div>';
+      el.innerHTML='<div class="ofh"><b>Equipo de oficio</b><button class="x" aria-label="Cerrar">✕</button></div><div id="ofw-tabs" class="oft"></div><div id="ofw-sl" class="ofl"></div><div id="ofw-st" class="ofst"></div><div class="mu ofn">Herramientas en la Herrería y ropa en la Peletería. Un tier nuevo cada 9 niveles: el equipo sube Maña, Pulso y puntos de oficio.</div>';
       document.body.appendChild(el);
       el.addEventListener('mousedown',ev=>ev.stopPropagation());
       el.addEventListener('click',ev=>{const t=ev.target.closest('[data-o]'),s=ev.target.closest('[data-s]'),x=ev.target.closest('.x');if(x){close();return}if(t){cur=t.dataset.o;render();return}if(s)unequip(cur,s.dataset.s)});

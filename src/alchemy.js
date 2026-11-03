@@ -417,6 +417,8 @@ const ALQ=(()=>{
   else if(f.type==='vigor'){done();S.buf.dmg=Date.now()+(40+str*4)*1000*gm;snd('quest');log('Bebes '+I[id][0]+': fuerza aumentada '+Math.round((40+str*4)*gm)+' s.')}
   else if(f.type==='rapidez'){done();S.buf.spd=Date.now()+(40+str*4)*1000*gm;snd('quest');log('Bebes '+I[id][0]+': velocidad aumentada '+Math.round((40+str*4)*gm)+' s.')}
   else if(f.type==='antidoto'){done();try{STS.clear(P,true);STS.add(P,'shield',{dur:2500+str*400*gm})}catch(e){}snd('magic');log('Bebes '+I[id][0]+': tus males se disipan.')}
+  /* N0.7 (TAREA 5.1 de PENDIENTES_ENCANTAMIENTO): las pociones PERFECTAS (g 2) dan además el ESTADO POSITIVO afín, que hasta hoy solo existía en los pasivos de armadura: vida → Regeneración, rapidez → Celeridad, vigor → Espinas, antídoto → Inquebrantable */
+  if(f.g===2&&!sk){const PB={vida:['regen',12000],rapidez:['haste',9000],vigor:['thorns',12000],antidoto:['unbreak',5000]}[f.type];if(PB){try{STS.add(P,PB[0],{dur:PB[1]});log('Destilación perfecta: <b>'+STS.D[PB[0]].n+'</b> '+Math.round(PB[1]/1000)+' s.')}catch(e){}}}
   if(sk){const K={tox:'poison',fue:'burn',hie:'slow',som:'blind'}[sk];try{STS.add(P,K,{dur:2500})}catch(e){}log('Efecto secundario leve: '+SIDE[sk][1]+'.')}
   return true}
  const LIQ={vida:'#d8382a',mana:'#4a7ae0',vigor:'#e8a030',rapidez:'#6ad0e8',antidoto:'#6ad04a'};

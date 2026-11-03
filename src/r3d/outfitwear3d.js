@@ -8,9 +8,9 @@ export function ribbon(pts,w,Rf,off=.01){const V=THREE.Vector3,pos=pts.map(([ph,
  for(let i=0;i<N;i++){const t=pos[Math.min(N-1,i+1)].clone().sub(pos[Math.max(0,i-1)]).normalize(),n=new V(Math.sin(pts[i][0]),0,Math.cos(pts[i][0])),u=new V().crossVectors(t,n).normalize();for(const s of[-1,1])P.push(pos[i].x+u.x*w/2*s,pos[i].y+u.y*w/2*s,pos[i].z+u.z*w/2*s)}
  for(let i=0;i<N-1;i++){const a=i*2;I.push(a,a+2,a+1,a+1,a+2,a+3)}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setIndex(I);g.computeVertexNormals();return g}
-const arc=(f0,f1,y0,y1,n=10)=>Array.from({length:n+1},(_,i)=>{const u=i/n;return[f0+(f1-f0)*u,y0+(y1-y0)*u]});
+export const arc=(f0,f1,y0,y1,n=10)=>Array.from({length:n+1},(_,i)=>{const u=i/n;return[f0+(f1-f0)*u,y0+(y1-y0)*u]});
 // carcasa de revolución (prenda de torso): de y0 a y1, radio = Rf(y)+off; phi0/phiL recortan la abertura (chaleco abierto por delante)
-function shell(Rf,y0,y1,off,phi0=0,phiL=Math.PI*2){const pts=[];for(let i=0;i<=10;i++){const y=y0+(y1-y0)*i/10;pts.push(new THREE.Vector2(Rf(y)+off,y))}return new THREE.LatheGeometry(pts,28,phi0,phiL)}
+export function shell(Rf,y0,y1,off,phi0=0,phiL=Math.PI*2){const pts=[];for(let i=0;i<=10;i++){const y=y0+(y1-y0)*i/10;pts.push(new THREE.Vector2(Rf(y)+off,y))}return new THREE.LatheGeometry(pts,28,phi0,phiL)}
 const DS={t:{side:THREE.DoubleSide}};
 // prendas de torso según O.top: gambesón acolchado (Errante) · brigantina de láminas (Mercenario) · chaleco abierto de cuero (Cazadora y Bandido)
 export function torsoWear(O,part,g,Rf){const c=O.topC||'#7a6a4a';

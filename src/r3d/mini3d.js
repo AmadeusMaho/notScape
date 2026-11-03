@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import {toon,hull,hash,glow} from './materials3d.js';
 import {SkirtPhys,flapRig,splitProfile,radAt,SK_N,SK_OV} from './skirt3d.js';
+import {HairPhys} from './hair3d.js';   // pelo con física ligera (lote N0.5-PELO-REWORK)
 const V=THREE.Vector3;
 const T=(c,o)=>toon(c,Object.assign({chr:1,rim:1.4},o||{}));
 // Mini.detail (1 por defecto = el héroe): factor de teselación para figuras secundarias (actors3d.js lo baja a ~.62 al hornear enemigos: −55 % de triángulos, imperceptible a su tamaño)
@@ -39,7 +40,7 @@ export class Mini{
   if(R2){low=this.low=new THREE.Group();low.position.set(0,-.42,0);chest.add(low);   /* torso bajo (abdomen): gira con la cintura */
    const ribs=this.ribs=new THREE.Group();ribs.position.set(0,.24,0);chest.add(ribs);body=this.body=new THREE.Group();body.position.set(0,-.66,0);ribs.add(body)}   /* torso alto: todo lo demás (cabeza, brazos, accesorios) cuelga de aquí */
   else{body=this.body=new THREE.Group();body.position.set(0,-.42,0);chest.add(body);low=body}
-  const part=(geo,col,x,y,z,o={})=>{const m=new THREE.Mesh(geo,o.mat||T(col,col===skin?Object.assign({rim:.3},o.t):o.t));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=col!==skin;(o.p||body).add(m);
+  const part=(geo,col,x,y,z,o={})=>{const tt=s.texOf&&!o.t&&!o.mat?s.texOf(col,col===skin):null;const m=new THREE.Mesh(geo,o.mat||T(col,col===skin?Object.assign({rim:.3},o.t):(o.t||tt)));   /* s.texOf(color): textura de clase para la ropa base del héroe (N0.5-ATUENDOS-2) */m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=col!==skin;(o.p||body).add(m);
    if(o.ink!==0){const h=hull(geo,(o.ink||.022)*(s.inkK||1));h.visible=!!this.inkOn;m.add(h);   /* el contorno es HIJO de la malla: gira/escala/mueve con ella aunque se cambie después (antes copiaba la pose al crearse y quedaba una cuña negra) */this.hulls.push(h);m.userData.h=h}return m};
   this.part=part;this.skinC=skin;
   // TORSO (Lote R3D-SINVESTIDO, 18 oct 2026, pedido del dueño: «el vestidito se ve horrible»): camisa/chaleco hasta la cintura + abdomen y cadera en color de pantalón, con las
@@ -98,6 +99,7 @@ export class Mini{
    part(new THREE.BoxGeometry(.14,.05,.03),'#c8bea0',0,-.1,.17,{p:head,ink:.008})}
   // capucha / pelo / casco / sombrero (según diseño)
   s.top&&s.top(this,head,part);
+  if(this.hairs&&this.hairs.length)this.hairP=new HairPhys(head,this.hairs,this.ph);   /* mechones/colas que cuelgan (hair3d.js): el héroe los mueve en tickSkirt; los PNJ los hornean como huesos 'hr<i>' (actors3d.js) */
   // brazos: hombro → codo → mano (grip). Cápsulas con la semiesfera centrada en la articulación
   this.elbows=[];this.grips=[];this.hands=[];
   this.arms=[-1,1].map(q=>{const a=new THREE.Group();let cv=null;
@@ -117,7 +119,7 @@ export class Mini{
  /* CONVENCIÓN (28 oct 2026, corrige «el arma se toma del mango hacia atrás»): `rx` se escribe NEGATIVO en los datos (−0,9 … −1,2 = inclinación hacia DELANTE) y aquí se invierte: el eje +y del arma apunta hacia delante (+z del personaje) y algo hacia arriba. 0 = arma vertical (báculo, lanza). */
  hold(i,rx,fn){const h=new THREE.Group();h.rotation.x=-rx;this.grips[i].add(h);fn(this,h,this.part);return h}
  setInk(on){this.inkOn=!!on;this.hulls.forEach(h=>h.visible=!!on)}
- tickSkirt(dt){if(this.skp)this.skp.update(dt);if(this.flaps&&this.flaps.length){if(!this.fkp)this.fkp=new SkirtPhys(flapRig({pelvis:this.pelvis,chest:this.chest,body:this.body,legs:this.legs,knees:this.knees,ankles:this.ankles,seed:this.ph},this.flaps,this.skRad));this.fkp.update(dt)}}   // falda ligera: la llaman MiniHero.update y (con huesos) actors3d.js
+ tickSkirt(dt){if(this.skp)this.skp.update(dt);if(this.hairP)this.hairP.update(dt);if(this.flaps&&this.flaps.length){if(!this.fkp)this.fkp=new SkirtPhys(flapRig({pelvis:this.pelvis,chest:this.chest,body:this.body,legs:this.legs,knees:this.knees,ankles:this.ankles,seed:this.ph},this.flaps,this.skRad));this.fkp.update(dt)}}   // falda ligera: la llaman MiniHero.update y (con huesos) actors3d.js
  update(t){const b=Math.sin(t*1.9+this.ph),root=this.root;root.position.y=Math.abs(b)*.006*this.k;this.head.rotation.y=Math.sin(t*.4+this.ph)*.14;this.head.rotation.x=Math.sin(t*.6+this.ph)*.03;
   this.arms.forEach((a,i)=>a.rotation.z=this.base[i]+(i?-1:1)*b*.012)}
 }

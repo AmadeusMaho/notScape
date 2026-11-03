@@ -53,7 +53,7 @@ const AMB=(()=>{
   if(now-evT>60000){evT=now;for(const g in BUF)if(now-(USE[g]||0)>180000&&!/^weather\.wind\.wind$/.test(g)){delete BUF[g];delete LD[g]}}}
  // sonido al equipar un objeto
  function take(id){if(!on||typeof UNL==='undefined'||!UNL||(typeof S!=='undefined'&&S.mute))return;const a=ac_();if(!a)return;id=String(id||'');
-  const g=/^lw_\d+[dm]/.test(id)||/^sw_/.test(id)?'takesword':/^bw_|^lw_\d+b/.test(id)?'takebow':/^(ar_|lg_|gl_|sh_|lt_|cl_|hl_|bt_)/.test(id)?'takearme':/^(ax_|pk_|rd_|tl:)/.test(id)?'takeutility':id==='food'?'takefood':'takegeneric';
+  const g=/^lw_\d+[dm]/.test(id)||/^sw_/.test(id)?'takesword':/^bw_|^lw_\d+b/.test(id)?'takebow':/^(ar_|lg_|gl_|sh_|lt_|cl_|hl_|bt_)/.test(id)?'takearme':/^(ax_|pk_|rd_|kd_|tl:)/.test(id)?'takeutility':id==='food'?'takefood':'takegeneric';
   load(g,a);const e=pick(g);if(!e)return;if(!bus)layer('x');const src=a.createBufferSource(),gn=a.createGain();src.buffer=e.d;gn.gain.value=Math.min(1.5,e.g*.6);src.connect(gn);gn.connect(bus);src.start()}
  function thunder(){if(!on||typeof UNL==='undefined'||!UNL||(typeof S!=='undefined'&&S.mute))return false;const a=ac_();if(!a)return false;load('weather.thunder.thunder',a);const e=pick('weather.thunder.thunder');if(!e)return false;if(!bus)layer('x');const src=a.createBufferSource(),gn=a.createGain();src.buffer=e.d;gn.gain.value=Math.min(1.6,e.g*.9);src.connect(gn);gn.connect(bus);src.start();return true}
  return{tick,take,food:()=>take('food'),thunder,CFG,stats:st,get on(){return on},set on(v){on=!!v},get vol(){return vol},set vol(v){vol=Math.max(0,Math.min(1,+v||0))},get cur(){return cur}}})();
