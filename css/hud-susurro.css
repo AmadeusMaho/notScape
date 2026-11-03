@@ -1192,3 +1192,63 @@ body.hs-on .slot[data-en]{box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 0 1.
 /* N0-DASH: anillo interior de enfriamiento del dash (se llena; destello al estar listo) */
 .hs-wh .dc{fill:none;stroke:#9fe0ff;stroke-width:2.4;stroke-linecap:round;opacity:0;transition:opacity .15s}
 .hs-wh.dcd .dc{opacity:.9}.hs-wh.dcr .dc{opacity:1;stroke:#fff;filter:drop-shadow(0 0 .3em #9fe0ff)}
+
+/* BARRA DE XP DE COMBATE (lote MAESTRIA-ARMAS, 2 nov 2026; src/xpbar.js): fina, bajo el marco del jugador, cristal + trazo dorado fino; violeta = Combate, hilo dorado = maestría del arma. Sin backdrop-filter. */
+#xpb{position:absolute;top:calc(100% + .42em);left:50%;transform:translateX(-50%);width:24em;display:flex;align-items:center;gap:.45em;pointer-events:auto;font-family:var(--cap);font-size:.62em;color:var(--cream);opacity:.92}
+#xpb .xb-l{min-width:1.6em;text-align:right;color:#cbb6ff;font-weight:700;text-shadow:0 1px 2px #000}
+#xpb .xb-p{min-width:2.6em;color:rgba(241,231,210,.75);text-shadow:0 1px 2px #000;font-variant-numeric:tabular-nums}
+#xpb .xb-t{position:relative;flex:1;height:.62em;border-radius:.35em;background:linear-gradient(180deg,rgba(14,10,24,.78),rgba(26,18,40,.7));box-shadow:inset 0 0 0 1px rgba(232,207,148,.32),0 1px 3px rgba(0,0,0,.55);overflow:hidden}
+#xpb .xb-f{display:block;position:absolute;left:0;top:0;bottom:.14em;width:0;border-radius:.35em 0 0 .35em;background:linear-gradient(180deg,#d8c4ff 0%,#a17cf4 45%,#6b47c4 100%);box-shadow:0 0 .5em rgba(170,130,255,.55);transition:width .6s cubic-bezier(.2,.8,.2,1)}
+#xpb .xb-s{display:block;position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(5% - 1px),rgba(10,6,16,.55) calc(5% - 1px) 5%);pointer-events:none}
+#xpb .xb-m{display:block;position:absolute;left:0;bottom:0;height:.14em;width:0;background:linear-gradient(90deg,#b8954e,#e8cf94);transition:width .6s ease}
+#xpb.hit .xb-f{filter:brightness(1.35);box-shadow:0 0 .9em rgba(190,150,255,.9)}
+#xpb.hit .xb-t{box-shadow:inset 0 0 0 1px rgba(232,207,148,.6),0 0 .7em rgba(170,130,255,.45)}
+/* pestaña Habilidades: maestría e hitos cada 20 */
+.kw-ms{margin:.2em 0 .5em}.kw-msb{height:.5em;border-radius:.3em;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px rgba(232,207,148,.3);overflow:hidden}.kw-msb i{display:block;height:100%;background:linear-gradient(90deg,#b8954e,#e8cf94)}
+.kw-hit{display:flex;justify-content:space-between;margin-top:.3em;gap:.3em}.kw-hit span{flex:1;text-align:center;font-size:.8em;opacity:.5;border-top:1px solid rgba(232,207,148,.25);padding-top:.2em}.kw-hit span.on{opacity:1;color:#e8cf94;border-color:#e8cf94}.kw-hit b{display:block;font-size:1.05em}
+.kw-pick{display:flex;gap:.4em;margin:.2em 0 .4em}.kw-pick button{flex:1;text-align:left;padding:.4em .5em;border-radius:.4em;background:rgba(0,0,0,.28);border:1px solid rgba(232,207,148,.25);color:inherit;font:inherit;cursor:pointer}
+.kw-pick button.on{border-color:#e8cf94;box-shadow:0 0 .5em rgba(232,207,148,.35)}.kw-pick button.lk{opacity:.45}.kw-pick b{display:block;color:var(--c,#e8cf94)}.kw-pick small{opacity:.8}.kw-pick .ki{float:left;width:1.4em;height:1.4em;margin-right:.35em;color:var(--c,#e8cf94)}
+.skc.ms .ski{font-size:1.2em;display:flex;align-items:center;justify-content:center}
+.hs-col:has(#xpb){bottom:2.05em}   /* deja sitio a la barra de XP bajo el marco */
+
+/* PESTAÑA HABILIDADES ESTILO NEW WORLD (lote MAESTRIA-NW, 2 nov 2026; combatskills.js `tab`): solo el arma equipada, dos árboles, activas = círculos, pasivas = rombos, última = estrella. Nada cambia el layout al pasar el ratón. */
+.nw{display:flex;flex-direction:column;gap:.55em}
+.nw-top{display:flex;align-items:center;gap:.6em;padding:.5em .65em;border:1px solid rgba(232,207,148,.3);border-radius:.55em;background:linear-gradient(180deg,rgba(46,34,20,.6),rgba(14,11,8,.6))}
+.nw-em{font-size:1.9em;line-height:1;filter:drop-shadow(0 2px 3px #000)}
+.nw-tt{flex:1;min-width:0}.nw-tt b{display:block;font-family:Cinzel,serif;color:#e8cf94;letter-spacing:.06em;font-size:1.08em}.nw-tt small{opacity:.75}
+.nw-bar{height:.38em;margin-top:.3em;border-radius:.3em;background:rgba(0,0,0,.45);box-shadow:inset 0 0 0 1px rgba(232,207,148,.25);overflow:hidden}.nw-bar i{display:block;height:100%;background:linear-gradient(90deg,#9a7a3e,#e8cf94)}
+.nw-pt{text-align:center;min-width:3.4em;padding:.25em .4em;border-radius:.45em;border:1px solid rgba(232,207,148,.25);background:rgba(0,0,0,.3)}.nw-pt b{display:block;font-size:1.45em;font-family:Cinzel,serif;color:rgba(232,207,148,.55)}.nw-pt small{font-size:.75em;opacity:.7}
+.nw-pt.on{border-color:#e8cf94;box-shadow:0 0 .7em rgba(232,207,148,.45)}.nw-pt.on b{color:#ffe7a8}
+.nw-ot{padding:.45em .7em;border-radius:.4em;border:1px solid rgba(232,207,148,.35);background:rgba(0,0,0,.35);color:#e8cf94;font:inherit;font-size:.85em;cursor:pointer;white-space:nowrap}
+.nw-arms{display:grid;grid-template-columns:repeat(4,1fr);gap:.35em}.nw-arms button{display:flex;flex-direction:column;align-items:center;padding:.35em .2em;border-radius:.4em;border:1px solid rgba(232,207,148,.2);background:rgba(0,0,0,.3);color:inherit;font:inherit;cursor:pointer}
+.nw-arms button.on{border-color:#e8cf94}.nw-arms button.eq::after{content:'equipada';font-size:.65em;color:#9bd04f}.nw-arms span{font-size:1.25em}.nw-arms b{font-size:.8em}.nw-arms small{font-size:.7em;opacity:.7}
+.nw-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:.35em}
+.nw-slots button{position:relative;display:flex;flex-direction:column;align-items:center;gap:.1em;padding:.35em .2em .3em;border-radius:.45em;border:1px solid rgba(232,207,148,.3);background:radial-gradient(circle at 50% 30%,rgba(232,207,148,.1),rgba(0,0,0,.4));color:var(--c,#e8cf94);font:inherit;cursor:pointer}
+.nw-slots button.e{color:rgba(232,207,148,.3);border-style:dashed}.nw-slots button.sel{border-color:#fff6d8;box-shadow:0 0 .5em rgba(255,246,216,.4)}
+.nw-slots b{position:absolute;left:.3em;top:.15em;font-size:.7em;color:#e8cf94}.nw-slots span svg{width:1.5em;height:1.5em}.nw-slots small{font-size:.7em;color:var(--cream,#f1e7d2);text-align:center;line-height:1.1}
+.nw-trees{display:grid;grid-template-columns:1fr 1fr;gap:.5em}
+.nt{border:1px solid rgba(232,207,148,.22);border-radius:.55em;padding:.45em .3em .55em;background:radial-gradient(ellipse at 50% 0%,rgba(232,207,148,.09),transparent 60%),rgba(10,8,6,.5)}
+.nt-h{display:flex;align-items:center;justify-content:center;gap:.35em;margin-bottom:.45em}.nt-h b{font-family:Cinzel,serif;color:#e8cf94;font-size:.92em;letter-spacing:.05em}
+.nt-h em{font-style:normal;min-width:1.5em;text-align:center;font-size:.75em;padding:0 .3em;border-radius:1em;background:rgba(232,207,148,.18);color:#ffe7a8}
+.nt-g{position:relative;display:flex;flex-direction:column;gap:.6em;background:linear-gradient(90deg,transparent calc(16.66% - 1px),rgba(232,207,148,.16) calc(16.66% - 1px) calc(16.66% + 1px),transparent calc(16.66% + 1px) calc(50% - 1px),rgba(232,207,148,.16) calc(50% - 1px) calc(50% + 1px),transparent calc(50% + 1px) calc(83.33% - 1px),rgba(232,207,148,.16) calc(83.33% - 1px) calc(83.33% + 1px),transparent calc(83.33% + 1px))}
+.nt-r{position:relative;display:grid;grid-template-columns:repeat(3,1fr);justify-items:center;align-items:center}.nt-r.lk .nn{filter:grayscale(.7) brightness(.7)}
+.nt-r.ult{margin-top:.2em;padding-top:.45em;border-top:1px solid rgba(232,207,148,.2)}
+.nt-need{position:absolute;left:-.15em;top:50%;transform:translateY(-50%);font-style:normal;font-size:.62em;color:#c9b07a;background:rgba(0,0,0,.6);border-radius:.3em;padding:0 .25em}
+.nn{position:relative;width:2.6em;height:2.6em;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#15110c;border:2px solid rgba(232,207,148,.2);color:rgba(232,207,148,.35);cursor:pointer;font:inherit}
+.nn .ni{display:flex}.nn .ni svg{width:1.3em;height:1.3em}
+.nn.p{width:1.9em;height:1.9em;border-radius:.3em;transform:rotate(45deg)}.nn.p .ni{transform:rotate(-45deg)}.nn.p .ni svg{width:.9em;height:.9em}
+.nn.k{width:2.1em;height:2.1em;border-radius:.4em}.nn.k .ni svg{width:1em;height:1em}
+.nn.u{width:3.3em;height:3.3em;border-width:2.5px}.nn.u .ni svg{width:1.7em;height:1.7em}
+.nn.on{border-color:#e8cf94;color:var(--c,#e8cf94);background:radial-gradient(circle,rgba(232,207,148,.22),#1e170e 72%);box-shadow:0 0 .6em rgba(232,207,148,.35)}
+.nn.on.p,.nn.on.k,.nn.on.u{color:#ffe7a8}.nn.u.on{box-shadow:0 0 1em rgba(255,214,120,.55)}
+.nn.can{border-color:rgba(232,207,148,.8);border-style:dashed;color:#e8cf94;animation:nwp 1.8s ease-in-out infinite}
+@keyframes nwp{0%,100%{box-shadow:0 0 0 rgba(232,207,148,0)}50%{box-shadow:0 0 .7em rgba(232,207,148,.55)}}
+.nn.sel{outline:2px solid #fff6d8;outline-offset:2px}.nn.e{visibility:hidden}
+.nn u{position:absolute;right:-.3em;bottom:-.3em;text-decoration:none;font-size:.62em;min-width:1.3em;height:1.3em;line-height:1.3em;border-radius:50%;background:#e8cf94;color:#1a140c;font-weight:700}
+.nd{padding:.5em .65em;border-radius:.5em;border:1px solid rgba(232,207,148,.25);background:rgba(0,0,0,.35)}.nd.hint{opacity:.75;font-size:.85em}
+.nd-h{display:flex;align-items:center;gap:.45em}.nd-h .ni svg{width:1.4em;height:1.4em}.nd-h b{color:#e8cf94}.nd-h small{margin-left:auto;opacity:.65;font-size:.75em}
+.nd p{margin:.35em 0}.nd small{opacity:.8}.nd-w{color:#d8a070;font-size:.85em}.nd-ok{color:#9bd04f;font-size:.85em;margin-top:.3em}
+.nd-go{margin-top:.45em;width:100%;padding:.5em;border-radius:.45em;border:1px solid #e8cf94;background:linear-gradient(180deg,rgba(232,207,148,.3),rgba(120,90,40,.3));color:#ffe7a8;font:inherit;font-family:Cinzel,serif;letter-spacing:.05em;cursor:pointer}
+.nd-s{margin-top:.4em;display:flex;align-items:center;gap:.3em;font-size:.85em}.nd-s button{width:1.9em;height:1.9em;border-radius:.35em;border:1px solid rgba(232,207,148,.35);background:rgba(0,0,0,.35);color:#e8cf94;font:inherit;cursor:pointer}.nd-s button.on{background:#e8cf94;color:#1a140c}
+.nw-ft{display:flex;align-items:center;justify-content:space-between;gap:.5em;font-size:.8em;opacity:.85}.nw-ft button{padding:.3em .6em;border-radius:.35em;border:1px solid rgba(232,120,90,.45);background:rgba(0,0,0,.3);color:#e8a080;font:inherit;cursor:pointer}
+#whl.au{width:calc(var(--hu,16px)*6.2);height:calc(var(--hu,16px)*6.2)}   /* recolección automática: la rueda se llena sola (RECOLECCION-NW) */

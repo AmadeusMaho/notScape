@@ -59,10 +59,11 @@ function drawTel(now){const s=ISO.scale();for(const m of M){if(!m.tel)continue;c
 // lunge = EMBESTIDA: avisa `wind` ms (ojos + brazo, como un golpe normal), corre en línea recta `dur` ms hacia donde estabas y golpea una vez al pasar a rango; ESPACIO la esquiva.
 // knife = CUCHILLO: avisa y lo lanza en línea recta (vuela `life` ms); ESPACIO lo atraviesa. Un enemigo nuevo con estas habilidades solo necesita la fila `sk` en MD (y `lh` si debe perseguir más lejos).
 const KNV=[];
-function skPick(m,now,dx,dy,dp){const s=m.d.sk;if(!s||STS.has(m,'silence')||m.dash||m.wind||m.stun>now||STS.frozen(m)||P.hp<=0)return false;const c=m.skc||(m.skc={});
- for(const k of ['lunge','knife']){const o=s[k];if(!o||dp<o.min||dp>o.max)continue;
+function skPick(m,now,dx,dy,dp,wait){const s=m.d.sk;if(!s||STS.has(m,'silence')||m.dash||m.wind||m.stun>now||STS.frozen(m)||P.hp<=0)return false;const c=m.skc||(m.skc={});
+ for(const k of ['lunge','knife']){const o=s[k];if(!o||dp<o.min||dp>o.max||(wait&&k==='lunge'))continue;   /* COMBATE-GRUPO: sin turno no embiste (sí lanza) */
   if(c[k]==null){c[k]=now+R(500,2000);continue}
   if(now<c[k]||now<(m.skg||0))continue;
+  if(typeof CROWD!=='undefined'&&CROWD.on){if(!CROWD.gap(m,now))continue;CROWD.mark(m,now)}   /* separación entre ataques de enemigos distintos */
   c[k]=now+o.cd*(.8+Math.random()*.4);m.skg=now+1500;
   m.wind={t0:now,t1:now+o.wind,d:o.wind,ang:Math.atan2(dy,dx),big:false,slow:0,kind:'sk',sk:k};m.nt=Math.max(m.nt||0,now+o.wind+500);return true}
  return false}

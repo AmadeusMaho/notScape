@@ -26,7 +26,7 @@ const NPL=(()=>{
  function prune(){if(frame%60)return;for(const [m,s] of ST)if(frame-s.f>120)ST.delete(m)}
  function one(x,m,cx,by,u,kc,now){const d=m.d,boss=d.boss,s=ST.get(m)||(ST.set(m,{g:1,gt:0,hp:1,f:frame}),ST.get(m));s.f=frame;
   const pct=Math.max(0,Math.min(1,m.hp/m.mh));if(pct!==s.hp){if(pct>s.hp)s.g=pct;else s.gt=now+320;s.hp=pct}if(now>s.gt&&s.g>pct)s.g=Math.max(pct,s.g-(now-(s.lt||now))/500);s.lt=now;
-  const gap=m.lv-CBL(),lc=gap>10?'#ff7a66':gap>4?'#f0b45a':gap<-6?'#8fd48a':'#f1e7d2',ac=boss===1?'#d9a441':boss===2?'#b9a5e8':'#e8cf94',seal=typeof sealed==='function'&&sealed(m);
+  const gap=m.lv-CBL(),lc=typeof lvTier==='function'?lvTier(m).c:gap>10?'#ff7a66':gap>4?'#f0b45a':gap<-6?'#8fd48a':'#f1e7d2',ac=boss===1?'#d9a441':boss===2?'#b9a5e8':'#e8cf94',seal=typeof sealed==='function'&&sealed(m);
   const bw=(boss===1?8.4:boss===2?7.4:6.2)*u,bh=(boss===1?1.3:boss===2?1.22:1.08)*u,lvT=txt(String(m.lv),.58*u,lc,fnt(),700),lw=Math.max(.754*u,lvT.tw+.32*u),gp=.28*u;
   const q=m.sgM?Math.max(0,m.sg/m.sgM):1,stn=m.stun>now,sgOn=q<.999||stn,sgH=.22*u,sgM=.18*u;
   const W=bw+gp+lw,H=bh+sgM+sgH+2,X=Math.round(cx-W/2),Y=Math.round(by-H);

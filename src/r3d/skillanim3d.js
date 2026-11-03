@@ -272,6 +272,10 @@ const SKA={};
 function hitsOf(s){const o=s.o;if(s.b==='flurry'){const n=o.n||4,r=[];for(let i=0;i<n;i++)r.push(.16+.68*(i+.5)/n);return r}
  if(s.b==='shoot'){const n=o.n||1,per=(o.span||.62)/n,r=[];for(let i=0;i<n;i++)r.push(.12+i*per+per*(.28+(o.hold||.4)));return r}
  if(s.b==='twice')return[.33,.83];return[s.ip]}
+/* TÉCNICAS EXCLUSIVAS de maestría 40 (lote MAESTRIA-ARMAS, combatskills.js `EXC`): reutilizan el clip de una habilidad con el mismo gesto */
+{const AX={sw_x_contra:'sw_aturde',sw_x_hoja:'dg_danza',dg_x_humo:'dg_paso',dg_x_mil:'dg_danza',gr_x_terremoto:'gr_barrido',gr_x_titan:'gr_decap',fs_x_ciclon:'sw_giro',fs_x_chakra:'fs_meditar',
+ bw_x_triple:'bw_lluvia',bw_x_red:'bw_escarcha',xb_x_explosivo:'xb_salva',xb_x_arpon:'xb_perf',st_x_singular:'st_nova',st_x_eco:'st_orbe',sc_x_pacto:'sc_drenar',sc_x_plaga:'sc_nube'};
+ for(const k in AX)if(SKILLS[AX[k]]&&!SKILLS[k])SKILLS[k]=SKILLS[AX[k]]}
 for(const id in SKILLS){const s=SKILLS[id];SKA[id]={d:s.d,ip:s.ip,hits:hitsOf(s)}}
 if(typeof window!=='undefined')window.SKA=SKA;
 export{SKA};

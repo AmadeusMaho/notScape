@@ -198,7 +198,7 @@ _mp = re.search(r"const sks=\[(.*?)\]", rd('tools/meas_progresion.py'))
 _mps = set(re.findall(r"'(\w+)'", _mp.group(1))) if _mp else set()
 _m1 = _sks - _skik
 (ok if not _m1 and _sks else bad)('SKILL NUEVA: toda habilidad de SK tiene icono en SKI', 'sin icono: ' + ', '.join(sorted(_m1)))
-_m2 = _sks - (_grp[0] | _grp[1] | _grp[2])
+_m2 = _sks - (_grp[0] | _grp[1] | _grp[2]) - {'ra', 'mg'}   # MAESTRIA-ARMAS: Arquería y Magia son alias de Combate (L/gain los redirigen), no tienen tarjeta
 (ok if not _m2 else bad)('SKILL NUEVA: toda habilidad de SK sale en el panel de Habilidades (grupo G)', 'sin tarjeta: ' + ', '.join(sorted(_m2)))
 _m3 = (_grp[1] | _grp[2]) - _mps
 (ok if not _m3 else bad)('SKILL NUEVA: recolección y oficios con fila en tools/meas_progresion.py', 'sin fila: ' + ', '.join(sorted(_m3)))
@@ -283,6 +283,19 @@ for p in sorted((R / 'src').rglob('*.js')):
             if not re.search(r"const MB=|function (bossKill|capKill)|const sealed=|lootK=|d\.boss===1\?BRESP|sealed\(e\)\)\{const k=", ctx + l[m.start():m.start() + 40]): _mbu.append(f'{p.name}:{i}')
 (bad if _mbu else ok)('BOTÍN: MB[id] solo en jefes/capitanes/lootK (los ids de áreas, campamentos y fauna NO están en MB → undefined)', ', '.join(_mbu[:6]))
 (ok if 'T.killAll=' in rd('src/testhooks.js') else bad)('PRUEBA: NSTEST.killAll() (mata cada criatura de MD con botín forzado) existe', 'testhooks.js')
+
+# 17. COMBATE EN GRUPO Y PESO DE LAS ARMAS (lote COMBATE-GRUPO-PESO, 2 nov 2026)
+_ix = rd('index.html')
+(ok if 'src="src/crowd.js"' in _ix and _ix.index('src="src/crowd.js"') < _ix.index('src="src/game.js"') and 'CROWD.tick(now)' in _g and 'CROWD.orbit(' in _g and 'CROWD.draw(ctx,now)' in _g else bad)('GRUPO: crowd.js cargado antes de game.js y conectado (tick, rodear, aviso de espalda)', 'index.html / game.js')
+(ok if re.search(r"const STRK=\{d:[\d.]+,m:[\d.]+,b:[\d.]+\}", _g) and '(tk/4)' not in _g else bad)('ARMAS: la fuerza del botín no escala con la lentitud (STRK, sin tk/4)', 'game.js')
+(ok if 'const GRT=' in _g and 'grtLock(now)' in _g and "wKind()!=='great'){" in _g else bad)('ARMAS: mandoble con contrapartida (GRT: aguante, compromiso, bloqueo sin parada perfecta)', 'game.js')
+(ok if (R / 'tools/ttk_check.py').exists() else bad)('PRUEBA: tools/ttk_check.py (tiempos para matar) existe', '')
+
+# 18. NIVEL ÚNICO DE COMBATE + MAESTRÍA (lote MAESTRIA-ARMAS, 2 nov 2026): pegar no da XP; matar sí; Arquería/Magia = alias de Combate
+(ok if "const L=sk=>lvlOf(S.xp[sk==='ra'||sk==='mg'?'cb':sk])" in _g and 'function killXp(' in _g and 'killReward(m,now)' in _g and 'gain(sk||WSK(),d*xpMul(m))' not in _g else bad)('XP: Combate único que sube al matar (killXp/killReward; el golpe ya no da XP)', 'game.js')
+(ok if 'src="src/xpbar.js"' in _ix and 'XPB.draw(ctx,now)' in _g else bad)('XP: barra de XP inferior y partículas (xpbar.js) conectadas', 'index.html / game.js')
+_cs = rd('src/combatskills.js')
+(ok if 'L(f.sk)' not in _cs and 'const TRD={' in _cs and 'function canLearn(' in _cs and 'const SLOTS=' in _cs and 'PTS=fid=>' in _cs else bad)('MAESTRÍA: árboles estilo New World por arma (TRD, puntos por maestría, canLearn, casillas SLOTS; sin L(f.sk))', 'combatskills.js')
 
 for lv, r, d in res: print(f'{lv:7} {r}' + (f'  → {d}' if d else ''))
 nf = sum(1 for x in res if x[0] == 'FALLO'); nw = sum(1 for x in res if x[0] in ('AVISO', 'REVISAR'))

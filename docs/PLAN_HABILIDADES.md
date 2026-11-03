@@ -3,6 +3,20 @@
 > Decidido con el dueño el 29 oct 2026. **Manda sobre la Ronda 6 de `PLAN_POSTPORTEO.md` en lo de «sin habilidades de arma»** (el dueño cambió de opinión: ahora SÍ hay kit por arma). Del plan anterior se conserva: subclases/Caminos, estados alterados como base de las mutaciones, nada de barras nuevas en el HUD, poco texto.
 > Estado: **motor + los 8 kits (espada, daga, mandoble, puños, arco, ballesta, báculo, cetro) implementados** (`src/combatskills.js`, global `CSK`). **Las 10 especializaciones también (29 oct, lote HABILIDADES-3).** Quedan FX/animaciones, mutaciones y equilibrio (§6 pasos 5–6).
 
+## 0. REWORK DEL 2 NOV 2026 — NIVEL ÚNICO DE COMBATE + MAESTRÍA POR ARMA (manda sobre §1, §4 y §5 donde choquen; lote MAESTRIA-ARMAS)
+> Decidido con el dueño el 2 nov 2026: «unificar combate (arquería y magia irían en combate) como niveles del WoW y que cada arma tenga su propio árbol; matar da XP, no pegar; cada arma es una clase distinta». Opción **a) lineal** (sin puntos de talento) con **Camino a 20 y algo divertido cada 20 niveles**. Partidas anteriores se descartan (`S.ver` 17).
+
+| Pieza | Regla |
+|---|---|
+| **Nivel de Combate** (`cb`, 1–99) | ÚNICO nivel de combate: Arquería (`ra`) y Magia (`mg`) dejan de existir como niveles (`L('ra')`/`L('mg')` = `L('cb')`, y su XP va a `cb`). Da vida, precisión, daño base y requisitos de equipo. **Sube SOLO al matar** (`killXp`), con un «+N XP» morado y partículas que vuelan a la barra de XP inferior. |
+| **XP por muerte** | `KXP(nv)` = XP de un enemigo común de TU nivel, calculada para que el 99 llegue en ~55 h (tiempo por nivel lineal: 60 s a nv 1 → ~66 min a nv 98; constante 20,4 ajustada con `meas_progresion`: 55,0 h). × **color** (`lvTier`, igual que la placa): gris 0 · verde ½→1 · amarillo 1 · naranja ×1,15–1,25 · rojo ×1,3–1,5; × **rol**: élite/campeón ×3, capitán ×8, jefe ×20, fauna pacífica ×0,6. Gris = enemigo ≤ nv − (5 + nv/10). |
+| **Maestría por arma** (8: espada, daga, mandoble, puños, arco, ballesta, báculo, cetro; `S.ms`, 1–99, misma tabla `XT`) | Es «la clase». Sube con la **parte del daño** que hiciste con esa arma a cada enemigo que muere (`m.dmB`), con la misma XP que el Combate (grises = 0). NO da daño ni estadísticas: solo desbloquea. Cambiar de arma = cambiar de clase sin perder el nivel de Combate. |
+| Habilidades del arma | Se APRENDEN con puntos en los árboles (ya no por nivel); rango por uso como antes. |
+| **Árboles estilo New World** (lote MAESTRIA-NW, sustituye a los hitos 20/40/60/80) | Dos árboles por arma (`TRD` en combatskills.js): activas, pasivas y la ÚLTIMA al fondo con 2 nodos de elección. 1 punto + 1 cada 4 niveles de maestría (máx. 25); fila r = 2·r puntos en ese árbol, última = 8. 4 casillas. La última de los árboles con Camino activa su regla y las elecciones son sus piedras clave. Reinicio: gratis hasta maestría 10. |
+| **Nv 99 · Maestro** | Todas las habilidades del arma al dominio IV. |
+| Tutorial de la isla | `ISLA.lock()` sigue recortando la XP (de combate y de maestría) bajo el nivel 2. |
+| Pruebas | `tools/meas_progresion.py` (Combate 99 por muertes ≈ 55 h), `tools/ttk_check.py`, `NSTEST.killAll()`. |
+
 ## 1. Idea en una frase
 Cada **familia de arma** da un **kit de 6 habilidades** que se aprenden **solos al subir el nivel de la skill** (Combate, Arquería, Magia) y mejoran de **rango USÁNDOLAS**. La **especialización** (subclase, se elige a nivel 30) añade habilidades y una regla propia encima del kit. Cambiar de arma cambia la barra.
 

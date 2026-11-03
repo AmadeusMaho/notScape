@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Progresión v2 · medición: horas (idealizadas, sin comida/mejoras) para llegar a 30/50/60/70/80/90/99 en cada oficio, nivel de Combate necesario para vencer a cada capitán y jefe
 (pérdida de vida ≤ 80 % sin comer, con el equipo fabricable a ese nivel) y horas de combate hasta 15/30/46/62/78/94/98. Usa las funciones reales del juego (dur, hitChance, maxHit, monAcc, xpMul, HPF/DMF/MSF).
-Uso: python3 -I tools/meas_progresion.py   ·  Objetivos: oficios 99 en ~50-70 h; needBoss ≈ 14/30/46/62/78/95; needCap ≈ 12/25/42/58/74/92; combate 99 en ~55 h. Ver AGENTS.md «Progresión v2»."""
+Uso: python3 -I tools/meas_progresion.py   ·  Objetivos: oficios 99 en ~50-70 h; needBoss ≈ 14/30/46/62/78/95; needCap ≈ 12/25/42/58/74/92; combate 99 en ~55 h (desde MAESTRIA-ARMAS, 2 nov 2026: XP por muerte con `killXp`). Ver AGENTS.md «Progresión v2»."""
 import sys, os, subprocess, time, json
 from playwright.sync_api import sync_playwright
 srv=subprocess.Popen([sys.executable,'-m','http.server','8803','--bind','127.0.0.1'],cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
@@ -30,7 +30,7 @@ JS=r"""()=>{const out={};const save=JSON.stringify(S);
   const cid='k'+k,cl=LVR[cid][0];let nc=null;for(let l=1;l<=99;l++){const f=fight(l,cid,cl);if(f.loss<=.8){nc=l;break}}
   out.boss.push({k,bossLv:mlv,needBoss:need,capLv:cl,needCap:nc})}
  // horas de combate: mejor mob por XP/s con pérdida<.6 por pelea, nivel mob ≤ l+8; 12 s reaparición, 4 bichos
- const hrsTo=L2=>{let t=0;const best={};for(let l=1;l<L2;l++){let b=0,bid=null;for(const id of ids){const r=LVR[id];if(MD[id].boss)continue;const ml=Math.round((r[0]+r[1])/2);if(ml>l+8)continue;const f=fight(l,id,ml);if(f.loss>.6)continue;const cyc=Math.max(f.kt+3,(12+f.kt)/4)/.7,xp=f.xps*f.kt,rate=xp/cyc;if(rate>b){b=rate;bid=id}}
+ const hrsTo=L2=>{let t=0;const best={};for(let l=1;l<L2;l++){let b=0,bid=null;for(const id of ids){const r=LVR[id];if(MD[id].boss)continue;const ml=Math.round((r[0]+r[1])/2);if(ml>l+8)continue;const f=fight(l,id,ml);if(f.loss>.6)continue;const cyc=Math.max(f.kt+3,(12+f.kt)/4)/.7,xp=typeof killXp==='function'?killXp({d:MD[id],lv:ml},l):f.xps*f.kt,rate=xp/cyc;   /* MAESTRIA-ARMAS: la XP de Combate sale por MUERTE (killXp, gris = 0) */if(rate>b){b=rate;bid=id}}
    if(!b){b=.5;bid='-'}t+=(XT[l+1]-XT[l])/b;if([15,30,46,62,78,94,98].includes(l+1))best[l+1]=[+(t/3600).toFixed(1),bid,+b.toFixed(1)]}return best};
  out.combat=hrsTo(99);
  S=JSON.parse(save);return out}"""
