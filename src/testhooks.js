@@ -24,6 +24,12 @@ T.nearMob=(id)=>{let b=null,bd=1e9;for(const m of M){if(id&&m.d.id!==id)continue
 T.spawn=(id,dx=40,dy=0)=>{if(!MD[id])throw new Error('mob desconocido: '+id+' · '+Object.keys(MD).slice(0,20).join(','));mob(id,P.x+dx,P.y+dy);const m=M[M.length-1];return {id,x:m.x,y:m.y,i:M.length-1}};
 T.target=(id,dmg)=>{const m=T.nearMob(id);if(!m)throw new Error('no hay '+(id||'ningún mob'));A={ty:'f',e:m,pr:0};if(dmg&&m.hp!=null)m.hp=Math.max(1,m.hp-dmg);return {id:m.d.id,hp:m.hp}};
 T.untarget=()=>{A=null;P.g=null};
+/* killAll (lote FIX-CONGELA-SLIMES, 2 nov 2026): crea y MATA cada criatura de MD forzando el azar (botín épico, azul, verde y ninguno) y devuelve los ids que lanzan error.
+   Un error al matar = el mundo se congelaba (lo atrapaba el bucle). Obligatorio tras añadir/tocar enemigos, fauna, botín o kill(): `ns.py eval "JSON.stringify(NSTEST.killAll())"` → {n, err:[]}.
+   Restaura S, el suelo y Math.random; no guardes la partida de prueba después. */
+T.killAll=(ids)=>{const S0=JSON.stringify(S),gd=GD.length,rnd=Math.random,err=[],now=performance.now();let n=0;
+ for(const id of ids||Object.keys(MD))for(const r of [0,.0005,.005,.9]){Math.random=()=>r;const k=M.length;try{mob(id,P.x+60,P.y);const m=M[M.length-1];m.hp=0;kill(m,now);n++}catch(e){err.push(id+'@'+r+': '+(e&&e.stack||e).toString().split('\n').slice(0,3).join(' | '))}finally{Math.random=rnd;M.splice(k)}}
+ const s=JSON.parse(S0);for(const key of Object.keys(S))if(!(key in s))delete S[key];Object.assign(S,s);GD.splice(gd);dirty=1;return {n,err}};
 /* ---- modo rápido: render 3D mínimo / sin 3D (solo HUD DOM) ---- */
 let f0=null;
 T.no3d=on=>{if(!window.R3D)return 'sin R3D';if(on&&!f0){f0=R3D.frame;R3D.frame=()=>{}}else if(!on&&f0){R3D.frame=f0;f0=null}return !!f0};

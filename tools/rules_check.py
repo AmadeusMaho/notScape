@@ -266,6 +266,24 @@ for k, b in _dd.items():
 _rl = [str(b) for b in range(9) if not 1 <= _rr.get(b, 0) <= 2]
 (bad if _rl else ok)('MONTURAS: 1–2 únicas raras por bioma (decisión del dueño, 29 oct)', ', '.join(_rl))
 
+# 16. BUCLE BLINDADO Y BOTÍN SEGURO (lote FIX-CONGELA-SLIMES, 2 nov 2026): un error dentro de un fotograma congelaba el mundo para siempre (el HUD seguía vivo)
+_g = rd('src/game.js')
+_lp = re.search(r"function loop\(now\)\{(.*)", _g)
+_lb = _lp.group(1) if _lp else ''
+(ok if _lb.startswith('requestAnimationFrame(loop);') and re.search(r"try\{[^}]*upd\(DT,now\)", _lb) and re.search(r"try\{draw\(now\)\}catch", _lb) and _lb.count('requestAnimationFrame(loop)') == 1 else bad)(
+    'BUCLE: loop() pide el siguiente fotograma AL EMPEZAR y protege upd/draw con try/catch (un error no congela el juego)', 'game.js loop')
+(ok if re.search(r"function rollLoot\(m,bm\)\{const k=lootK\(m\)", _g) and re.search(r"function addLoot\(id,gx,gy\)\{const it=LOOT\[id\];if\(!it\)", _g) else bad)(
+    'BOTÍN: rollLoot usa lootK(m) y addLoot ignora ids inexistentes (MB no conoce los monstruos de áreas/fauna)', 'game.js rollLoot/addLoot')
+#  MB[id] solo se lee en sitios de JEFE/CAPITÁN (que sí están en BI[k].mobs); cualquier uso nuevo debe pasar por lootK o comprobar null
+_mbu = []
+for p in sorted((R / 'src').rglob('*.js')):
+    for i, l in enumerate(rd(str(p.relative_to(R))).split('\n'), 1):
+        for m in re.finditer(r"MB\[", l):
+            ctx = l[max(0, m.start() - 160):m.start()]
+            if not re.search(r"const MB=|function (bossKill|capKill)|const sealed=|lootK=|d\.boss===1\?BRESP|sealed\(e\)\)\{const k=", ctx + l[m.start():m.start() + 40]): _mbu.append(f'{p.name}:{i}')
+(bad if _mbu else ok)('BOTÍN: MB[id] solo en jefes/capitanes/lootK (los ids de áreas, campamentos y fauna NO están en MB → undefined)', ', '.join(_mbu[:6]))
+(ok if 'T.killAll=' in rd('src/testhooks.js') else bad)('PRUEBA: NSTEST.killAll() (mata cada criatura de MD con botín forzado) existe', 'testhooks.js')
+
 for lv, r, d in res: print(f'{lv:7} {r}' + (f'  → {d}' if d else ''))
 nf = sum(1 for x in res if x[0] == 'FALLO'); nw = sum(1 for x in res if x[0] in ('AVISO', 'REVISAR'))
 print(f'\nRESULTADO: {"OK" if not nf else "FALLO"} ({nf} fallos, {nw} avisos)'); sys.exit(1 if nf else 0)

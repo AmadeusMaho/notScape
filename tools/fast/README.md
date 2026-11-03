@@ -24,7 +24,7 @@ Opciones de `start`: `--url '?r3d=1&test=1&noedit&at=4600,15152'` · `--w 800 --
 | Errores JS tras un cambio | `logs` (y `reload` si tocaste JS) | — |
 
 ## Ganchos `NSTEST` (src/testhooks.js, solo con `?test=1`; **añade aquí los que necesites** y documéntalos)
-`tp(x,y)` · `hour('dia'|'atardecer'|'noche'|'amanecer'|segundos)` / `time(s|null)` (congela el reloj de juego; el reloj del HUD no cambia) · `hp(n)` `mana(n)` `xp(sk,n)` · `banner(t,s)` · `tab('inv'|…)` · `zoom(i)` · `quality(0..4|'a')` · `spawn(id,dx,dy)` `mobs(r)` `target(id,dmg)` `untarget()` · `no3d(true|false)` · `frames(n)` · `info()` · `ready()`.
+`tp(x,y)` · `hour('dia'|'atardecer'|'noche'|'amanecer'|segundos)` / `time(s|null)` (congela el reloj de juego; el reloj del HUD no cambia) · `hp(n)` `mana(n)` `xp(sk,n)` · `banner(t,s)` · `tab('inv'|…)` · `zoom(i)` · `quality(0..4|'a')` · `spawn(id,dx,dy)` `mobs(r)` `target(id,dmg)` `untarget()` · `killAll(ids?)` (crea y mata cada criatura de `MD` con botín forzado → `{n, err}`; obligatorio tras tocar criaturas/botín: `err` debe ser `[]`) · `no3d(true|false)` · `frames(n)` · `info()` · `ready()`.
 También por URL: `?test=1&hour=noche&at=x,y&hp=5&spawn=goblin&target=goblin&no3d=1`.
 
 ## Trampas
