@@ -9,7 +9,8 @@ const SLOTFX=(()=>{
  const CFG={
   2:{col:[90,170,255],core:[205,235,255],max:14,rate:9,rad:2.3,int:.62,type:'mote'},
   3:{col:[185,80,255],core:[240,200,255],max:24,rate:16,rad:2.8,int:.8,type:'wisp'},
-  4:{col:[255,130,25],core:[255,226,140],max:40,rate:32,rad:3.4,int:1,type:'ember'}};
+  4:{col:[255,130,25],core:[255,226,140],max:40,rate:32,rad:3.4,int:1,type:'ember'},
+  5:{col:[255,42,58],core:[255,190,196],max:52,rate:42,rad:3.8,int:1.15,type:'ember'}};   // 5 = MÍTICO (rojo)
  const SPR={},sprite=(c,k)=>{const key=c.join()+k;if(SPR[key])return SPR[key];const s=document.createElement('canvas');s.width=s.height=48;const g=s.getContext('2d'),r=g.createRadialGradient(24,24,0,24,24,24);
   r.addColorStop(0,`rgba(255,255,255,${k})`);r.addColorStop(.25,`rgba(${c},${k*.85})`);r.addColorStop(1,`rgba(${c},0)`);g.fillStyle=r;g.fillRect(0,0,48,48);return SPR[key]=s};
  let cv=null,x=null,cell=null,cfg=null,A=0,tgt=0,raf=0,last=0,LS=48,t0=0,mx=-1,my=-1,px=0,py=0,PT=[],acc=0,hotEl=null;
@@ -51,7 +52,7 @@ const SLOTFX=(()=>{
   x.globalAlpha=1;x.globalCompositeOperation='source-over'}
 // color del efecto = el del MARCO de la casilla (`--rc`: rareza, o tier si el objeto es común), así una espada de adamantita echa luz verde y una legendaria naranja; el nivel (`data-g` ≥2) solo elige el estilo
  const hex=h=>{h=(h||'').trim().replace('#','');if(h.length===3)h=h.split('').map(q=>q+q).join('');const n=parseInt(h,16);return h.length===6&&!isNaN(n)?[n>>16&255,n>>8&255,n&255]:null};
- const mk=c=>{const f=CFG[Math.min(4,Math.max(2,+c.dataset.g))],col=hex(c.style.getPropertyValue('--rc'))||f.col;return Object.assign({},f,{col,core:col.map(v=>Math.round(v+(255-v)*.62))})};
+ const mk=c=>{const f=CFG[Math.min(5,Math.max(2,+c.dataset.g))],col=hex(c.style.getPropertyValue('--rc'))||f.col;return Object.assign({},f,{col,core:col.map(v=>Math.round(v+(255-v)*.62))})};
  function bind(c){if(cell===c)return;if(hotEl)hotEl.classList.remove('fxhot');cell=c;hotEl=c;c.classList.add('fxhot');cfg=mk(c);tgt=1;ensure();if(!raf){last=0;t0=0;px=py=0;raf=requestAnimationFrame(loop)}}
  function leave(){tgt=0;cell=null;if(hotEl){hotEl.classList.remove('fxhot');hotEl=null}}
  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY},{passive:true});

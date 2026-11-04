@@ -19,6 +19,7 @@ import * as THREE from 'three';
 import {glow} from './materials3d.js';
 import {shield as armorShield} from './armor3d.js';
 import {cultWeapon,SCAB_COL} from './weapons3d.js';
+import {SETW} from './monstersets3d.js';   // N0.9: modelos propios de las armas de set (BUILD['ms:<set>'])
 import {EnchFx} from './enchfx3d.js';   // Lote ENCANTAMIENTO: aspecto de las armas encantadas
 
 const V3=THREE.Vector3,QT=THREE.Quaternion,M4=THREE.Matrix4,EU=THREE.Euler;
@@ -460,12 +461,13 @@ export const BUILD={
 const hipD=nrm([-.12,-.45,-.88]);
 const M3=(p,d,e)=>({p,d:nrm(d),e});
 const MOUNT={sword:M3([-.16,.55,0],hipD,crs([1,0,0],hipD)),dagger:M3([-.155,.545,-.01],hipD,crs([1,0,0],hipD)),scepter:M3([-.18,.62,-.02],[-.35,.45,-.82],[0,1,0]),
- great:M3([-.12,.97,-.2],[.5,-.85,-.1],[0,0,-1]),staff:M3([-.12,.8,-.215],[-.3,.95,-.05],[0,0,-1]),bow:M3([.02,.68,-.21],[.55,.83,0],[0,0,-1]),xbow:M3([0,.62,-.23],[0,1,0],[1,0,0]),
+ great:M3([-.12,.97,-.2],[.5,-.85,0],[.85,.5,0]),   /* N0.9: el mandoble va PLANO contra la espalda: el filo (e) en el plano del torso, perpendicular a la hoja, y las caras planas hacia la espalda (antes e=[0,0,-1] lo ponía de canto) */staff:M3([-.12,.8,-.215],[-.3,.95,-.05],[0,0,-1]),bow:M3([.02,.68,-.21],[.55,.83,0],[0,0,-1]),xbow:M3([0,.62,-.23],[0,1,0],[1,0,0]),
  shield:M3([0,.68,-.225],[0,1,0],[-1,0,0])};
 const BACK={great:1,staff:1,bow:1,xbow:1};
 // recorrido de la mano al sacar: tirón a lo largo del arma (desenvainar) antes de ir a la guardia
 const PULL={sword:.42,dagger:.26,scepter:.12,great:.1,staff:.1,bow:0,xbow:.05,shield:.06};
 const SWAP=.5,DRAW_T=.5,SHEATH_T=.55,DUR_K={great:1.4,staff:1.2,bow:1.1,xbow:1.15};   // duración por arma (el mandoble pesa: se saca más despacio)   // s=SWAP: la mano agarra el objeto y este cambia de sitio (funda/espalda ↔ mano)
+Object.assign(BUILD,SETW);   // armas de set (monstersets3d.js)
 const TOOLKIND={tongsR:'tongs'};
 const TOOL={wcr:['saw'],wpe:['awl'],wsa:['needle'],wes:['chisel','mallet'],wjo:['jhammer','tongs'],wing:['wrench'],ds:['knife'],he:['shears'],wc:['axe'],mi:['pick'],sm:['hammer','tongs'],fu:['tongsR'],co:['ladle'],fi:['rod'],cr:['saw'],es:['saw'],ins:['quill','book'],eat:['food']};
 
@@ -489,8 +491,8 @@ export class HeroAnim{
   // objetos
   this.it={};const mk=(name,kind,o,hand)=>{const g=new THREE.Group();g.name='it_'+name;const info=cultWeapon(kind,m.part,g,o||{})||BUILD[kind](m.part,g,o||{})||{};this.it[name]=Object.assign({g,kind,hand},info);if(name==='off')this.it[name].mount='off';g.visible=false;m.body.add(g);return this.it[name]};
   if(this.wk){const o={col:this.wk==='staff'||this.wk==='scepter'?(w.col||'#9cf'):(w.col||STEEL)};if(this.wk==='bow'||this.wk==='xbow')o.col=w.col||(this.wk==='bow'?'#7a5030':IRON);o.cu=w.cu;
-   const mi=mk('main',W.mesh||this.wk,Object.assign(o,W.o||{}),this.wk==='bow'?1:0);mi.mc=this.wk;
-   if((W.mesh||this.wk)==='sword'||(W.mesh||this.wk)==='dagger')mi.scab=this.scabbard('scab_main',Object.assign({len:this.wk==='dagger'?.24:.5,wid:this.wk==='dagger'?.038:.05,cu:w.cu},W.o||{}))}
+   const sm=w.ms&&BUILD['ms:'+w.ms]?'ms:'+w.ms:null,mi=mk('main',sm||W.mesh||this.wk,Object.assign(o,W.o||{}),this.wk==='bow'?1:0);mi.mc=this.wk;if(sm)mi.kind=W.mesh||this.wk;   /* arma de set: modelo propio, pero se comporta como su familia */
+   if(!sm&&((W.mesh||this.wk)==='sword'||(W.mesh||this.wk)==='dagger'))mi.scab=this.scabbard('scab_main',Object.assign({len:this.wk==='dagger'?.24:.5,wid:this.wk==='dagger'?.038:.05,cu:w.cu},W.o||{}))}
   if(this.dual){const oi=mk('off',W2.mesh||W2.anim,Object.assign({col:w2.col||STEEL,cu:w2.cu},W2.o||{}),1);oi.mc=W2.anim;
    if((W2.mesh||W2.anim)==='sword'||(W2.mesh||W2.anim)==='dagger')oi.scab=this.scabbard('scab_off',Object.assign({len:W2.anim==='dagger'?.24:.5,wid:W2.anim==='dagger'?.038:.05,cu:w2.cu},W2.o||{}))}
   if(this.hasSh)mk('shield','shield',{col:typeof GR.sh==='string'?GR.sh:'#7a5a3a',sh:look&&look.arm&&look.arm.s},1);

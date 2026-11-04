@@ -8,7 +8,7 @@ Acaba en RESULTADO: OK / FALLO."""
 import asyncio,sys,re
 from playwright.async_api import async_playwright
 NM=['Pradera','Bosque','Pantano','Cumbres','Oriental','Volcán','Páramo','Desierto','Costa','Cielo','Infierno']
-FILES=['actors3d','figure3d','mini3d','armor3d','armorcult3d','hero3d','herom3d','outfitwear3d','heroanim3d','helmets3d']
+FILES=['actors3d','figure3d','mini3d','armor3d','armorcult3d','hero3d','herom3d','outfitwear3d','heroanim3d','helmets3d','monstersets3d']
 PAT=re.compile(r"box\(\s*(\d*\.?\d+)\s*,\s*(\d*\.?\d+)\s*,\s*(\d*\.?\d+)\s*\)")
 def placas():
     out=[]

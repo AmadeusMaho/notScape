@@ -50,7 +50,7 @@ export function torsoR(F){const W=F.W,rw=(F.rw||.15*W)*1.045,rc=.19*W*(F.cw||1)*
  const pts=[[.5,rw],[.56,rw*1.03],[.68,rc],[.76,rc],[.83,rc*.68]];
  return y=>{if(y<=pts[0][0])return pts[0][1];for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];if(y<=b[0])return a[1]+(b[1]-a[1])*(y-a[0])/(b[0]-a[0])}return pts[pts.length-1][1]}}
 const shell=(P,F,col,o={})=>{const W=F.W,rw=(F.rw||.15*W)*1.045,rc=.19*W*(F.cw||1)*1.045;
- P(lathe([[rw,.5],[rw*1.03,.56],[rc,.68],[rc,.76],[rc*.68,.83],[.07,.86],[0,.865]]),col,0,0,0,o.t?o:Object.assign({t:{rim:2}},o))};
+ P(lathe([[rw*.92,.37],[rw*1.1,.42],[rw*1.05,.46],[rw,.5],[rw*1.03,.56],[rc,.68],[rc,.76],[rc*.68,.83],[.07,.86],[0,.865]]),col,0,0,0,o.t?o:Object.assign({t:{rim:2}},o))};
 
 // ── ayudas de decoración ──
 // arco de toro centrado delante (+z) en el plano horizontal a altura y

@@ -14,13 +14,13 @@ select,button{background:#202426;color:var(--fg);border:1px solid var(--line);bo
 #err{position:absolute;left:12px;bottom:12px;color:#ffb3b3;font:12px monospace;white-space:pre-wrap}
 </style>
 <header><h1>Armaduras 3D · catálogo</h1>
-<select id="set"><option value="metal">Peto+pantalón+guantes de METAL (11 niveles)</option><option value="cuero">CUERO tachonado (11 niveles)</option><option value="tela">TELA / túnica (11 niveles)</option><option value="cascos">Cascos (bioma × rareza)</option><option value="botas">Botas (bioma × rareza)</option><option value="capas">Capas (bioma × rareza)</option><option value="escudos">Escudos (familia × nivel)</option><option value="armas">Armas por cultura (10 tipos × 11 culturas)</option><option value="culturas">Culturas (6 biomas × metal/cuero/tela)</option><option value="conjuntos">Conjuntos completos</option></select>
+<select id="set"><option value="metal">Peto+pantalón+guantes de METAL (11 niveles)</option><option value="cuero">CUERO tachonado (11 niveles)</option><option value="tela">TELA / túnica (11 niveles)</option><option value="monstruo">SETS DE MONSTRUO (7)</option><option value="cascos">Cascos (bioma × rareza)</option><option value="botas">Botas (bioma × rareza)</option><option value="capas">Capas (bioma × rareza)</option><option value="escudos">Escudos (familia × nivel)</option><option value="armas">Armas por cultura (10 tipos × 11 culturas)</option><option value="culturas">Culturas (6 biomas × metal/cuero/tela)</option><option value="conjuntos">Conjuntos completos</option></select>
 <button id="baz">↻ Girar cámara</button></header>
 <div id="st"><canvas id="gl"></canvas><div id="lb"></div><div id="err"></div></div>
 <script type="importmap">{"imports":{"three":"../../../vendor/three/build/three.module.js","three/addons/":"../../../vendor/three/examples/jsm/"}}</script>
 <script type="module">
 // Visor de las armaduras del jugador (Lote R3D-ARMADURAS). MISMO código que el juego: MiniHero (herom3d.js) + armor3d.js. Parámetros:
-//   ?set=metal|cuero|tela|cascos|botas|capas|escudos|conjuntos   ?az=<grados> (45 = la del juego; 225 = de espaldas)   ?still   ?cols=<n>   ?ids=0,3,6 (solo esos índices del set)   ?draw (escudo/arma en la mano, no envainados)
+//   ?set=metal|cuero|tela|monstruo|cascos|botas|capas|escudos|conjuntos   ?az=<grados> (45 = la del juego; 225 = de espaldas)   ?still   ?cols=<n>   ?ids=0,3,6 (solo esos índices del set)   ?draw (escudo/arma en la mano, no envainados)
 import * as THREE from 'three';
 import {MiniHero} from '../../../src/r3d/herom3d.js';
 import {TIER_IDS} from '../../../src/r3d/armor3d.js';
@@ -46,6 +46,7 @@ const SETS={
  capas:()=>[...[0,1,2,3,4,5].flatMap(k=>[1,2,3].map(q=>mk({c:{k,q}},BIO[k]+' q'+q))),mk({c:{k:5,q:4,leg:1}},'legendario')],
  escudos:()=>['m','cu','tu'].flatMap(f=>TIER_IDS.map(t=>mk({s:{f,t}},f+' · '+t,{gear:{wp:null,sh:'#888'}}))),
  armas:()=>['sword','dagger','great','staff','scepter','bow','xbow','mace','hatchet','greataxe'].flatMap(k=>[['bronce','#c8742a'],['acero','#cfd8e0'],['plata','#e8e8f0'],['mitril','#6a90ff'],['adam','#3adf6a'],['oricalco','#e89a3a'],['runita','#9a8ad8'],['alba','#d8c890'],['acero','#8a8e96'],['celestita','#bcd8ff'],['infernita','#b8301c']].map(([t,c],cu)=>mk(null,k+' · '+BIO[cu],{gear:{wp:{t:k==='bow'?'bow':k==='staff'||k==='scepter'?'staff':'sword',wk:k,col:k==='staff'||k==='scepter'?'#9cf':c,cu},sh:null}}))),
+ monstruo:()=>[['gel','h a f'],['caz','h a g f'],['gob','h a l g f'],['esp','h a l g f'],['ban','h a l g f'],['orc','h a l g f'],['gru','h a l g f c']].map(([set,sl])=>mk(Object.fromEntries(sl.split(' ').map(k=>[k,'hfc'.includes(k)?{k:0,q:1,set}:{f:'tu',t:'cobre',cu:0,set}])),'set '+set)),   // sets de monstruo (N0.9, src/r3d/monstersets3d.js)
  culturas:()=>['m','cu','tu'].flatMap(f=>[['cobre',0],['hierro',1],['plata',2],['mitril',3],['adam',4],['oricalco',5],['runita',6],['alba',7],['acero',8],['celestita',9],['infernita',10]].map(([t,k])=>mk({a:{f,t,cu:k},l:{f,t,cu:k},g:{f,t,cu:k},s:{f,t,cu:k},h:{k,q:3},f:{k:Math.min(k,5),q:2},c:{k:Math.min(k,5),q:2}},f+' '+t+' · '+BIO[k]))),
  conjuntos:()=>[['cobre',0,'m'],['bronce',0,'cu'],['hierro',1,'m'],['acero',1,'cu'],['plata',2,'m'],['mitril',3,'m'],['adam',4,'m'],['runita',4,'tu'],['oricalco',5,'cu'],['celestita',5,'m']].map(([t,k,f])=>mk({a:{f,t},l:{f,t},g:{f,t},s:{f,t},h:{k,q:3},f:{k,q:2},c:{k,q:2}},f+' '+t+' · '+BIO[k],{gear:{wp:null,sh:'#888'}}))};
 const setName=Q.get('set')||'metal';let list=(SETS[setName]||SETS.metal)();if(Q.get('ids')){const ix=Q.get('ids').split(',').map(Number);list=ix.map(i=>list[i]).filter(Boolean)}

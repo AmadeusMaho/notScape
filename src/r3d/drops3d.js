@@ -26,7 +26,7 @@ const SIZE={sword:.62,dagger:.4,greatsword:.8,staff:.9,scepter:.55,mace:.55,axe:
  fish:.4,shrimp:.28,squid:.4,plate:.36,bowl:.3,crown:.3,mask:.28,hat:.4,shuriken:.24,core:.22,rune:.26,scroll:.3,swirl:.24,bag:.32};
 Object.assign(SIZE,SIZE3);   // OFICIOS-D4
 const SZK=1.35;   // sobredimensión para que se vea y se pueda pulsar (a zoom normal 1 unidad ≈ 60 px)
-const BEAM_H=[0,1.1,2.6,3.6,4.8],BEAM_W=[0,.05,.1,.13,.16],GLOW_R=[0,.5,.7,.85,1];   // por rareza (rr: 0 común … 4 legendario)
+const BEAM_H=[0,1.1,2.6,3.6,4.8,6],BEAM_W=[0,.05,.1,.13,.16,.19],GLOW_R=[0,.5,.7,.85,1,1.15];   // por rareza (rr: 0 común … 4 legendario · 5 mítico)
 
 const radial=(a=1)=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,'+a+')');r.addColorStop(.35,'rgba(255,255,255,'+a*.45+')');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t};
 
@@ -60,7 +60,7 @@ export class Drops{
   catch(e){this.stats.fallos++;console.warn('[DROPS3D]',id,e)}
   this.tpls.set(id,t);return t}
  // ── alta de un drop ──
- make(e){const T=this.tpl(e.it),W3=this.W3,q=clamp(e.q|0,0,4),g=new THREE.Group(),d={e,g,q,T,ph:e.ph||0,spin:null,hh:0,hs:1,land:false,ring:null,spk:[]};
+ make(e){const T=this.tpl(e.it),W3=this.W3,q=clamp(e.q|0,0,5),g=new THREE.Group(),d={e,g,q,T,ph:e.ph||0,spin:null,hh:0,hs:1,land:false,ring:null,spk:[]};
   const p0=W3(e.ox,e.oy,TER.standZ(e.ox,e.oy)),p1=W3(e.x,e.y,TER.standZ(e.x,e.y));d.p0=p0;d.p1=p1;g.position.copy(p0);
   const blob=new THREE.Mesh(this.gBlob,this.mBlob);blob.renderOrder=1;const rd=T?Math.max(.14,T.rad):.2;blob.scale.setScalar(rd*2.1);blob.position.y=.015;g.add(blob);d.blob=blob;
   const spin=new THREE.Group();g.add(spin);d.spin=spin;

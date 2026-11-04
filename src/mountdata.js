@@ -63,7 +63,8 @@ const MTD=(()=>{
   ['espectral',6,'Lobo espectral','Lobo espectral',90,2100,'#8ab0c8',63,1.3,1.5,'🐺',1]];
  const RARE_P=.04,RARE_WAIT=[10,20],RARE_GONE=40;   // MUY baja (decisión del dueño): 4 % cada vez que «toca» aparecer; si no sale, vuelve a tirar en 10–20 min (≈ 4–6 h de juego cerca de su claro); domada, 40 min   // probabilidad de estar al reaparecer · minutos hasta volver a tirar si no estaba · minutos tras domarla
  const E={};L.forEach(r=>E[r[0]]={id:r[0],k:r[1],n:r[2],mt:r[3],lv:r[4],xp:r[5],c:r[6],h:r[7],v:r[8],a:r[9],ic:r[10],rare:!!r[11]});
- const get=id=>E[id]||null,rar=e=>e.rare?4:e.lv<20?1:e.lv<50?2:3;
+ const get=id=>E[id]||null,rar=e=>e.rare?(LEGMT.has(e.id)?4:3):0;   /* N0.9 (3 nov 2026, decisión del dueño): el NIVEL no da rareza. Monturas normales = COMÚN (blanco); las raras de cada bioma = ÉPICO; solo 3 son LEGENDARIAS (las más emblemáticas). Mítico queda libre. */
+ const LEGMT=new Set(['dragon','grifo','corcelinfernal']);
  // objetos de montura (los llama MOUNT.reg)
  function reg(){for(const id in E){const e=E[id];I['mt_'+id]=[e.mt,e.ic,e.rare?6000:120+e.lv*18];LOOT['mt_'+id]={s:'mt',r:rar(e),k:0,st:{},mt:{sp:id}}}}
  // criaturas salvajes (game.js, tras definir LVR/MSF y antes de calcular sus niveles)

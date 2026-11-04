@@ -2,7 +2,7 @@
 
 > Pedido del dueño (3 nov 2026): «sets de equipamiento con partes de monstruos (armaduras y armas), así los materiales de monstruos también sirven para equipo y agrega variedad, como en Dofus; minerales de X tier representan el tier del objeto; el equipo antiguo puede servir para craftear equipo de más tier, así los materiales antiguos siempre son relevantes».
 > Aclaraciones y decisiones del dueño (mismo día): **no hay «ascensión»**: hay sets de nivel superior cuya receta puede (o no) pedir piezas de un set anterior, como en Dofus · bonus **por piezas equipadas**, como en Dofus · también el **equipo base de cada tier** tiene bonus de set (parecidos entre sí, ligados a su cultura) · **cada set es TODO nuevo** (modelos y colores propios: el Gelatinoso es verde slime) · **las capas SÍ se fabrican desde el inicio en Sastrería**, y siguen existiendo capas exclusivas más bonitas por logros · sets de **4, 6 u 8 piezas** (el de 8 incluye capa) · el equilibrio lo decide el agente · **los sets de la Pradera se cierran en N0** y luego cada bioma trae los suyos.
-> **Estado: PLAN.** No se implementa sin que el dueño lo pida.
+> **Estado (3 nov 2026): EN CURSO.** Hecho S1 parcial (sistema `MSET`), S2 (Gelatinoso) y S3–S6 (los otros 6 sets) en los lotes N0.9-SETS-S1S2 y S3S6; S1 completo (sets base por cultura y capas fabricables), armas de set con modelo propio y objetos únicos por monstruo (`UQ`, fuera del plan original) en el lote N0.9-SETS-CIERRE; S7: `tools/sets_balance.py` (los % del plan no se cumplen a niveles bajos por la escala pequeña; ver el lote).
 
 ## 1 · Viabilidad: sí
 | Hace falta | Ya existe | Falta |

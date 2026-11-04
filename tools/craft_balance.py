@@ -26,6 +26,7 @@ JS = """(()=>{
  out.tsrc=typeof TSRC!=='undefined'?TSRC:{};
  out.shop=[];try{for(const v in TRADE.VEND){const s=TRADE.VEND[v].stock?TRADE.VEND[v].stock(5):[];s.forEach(r=>out.shop.push(r[0]))}}catch(e){}
  out.rare=typeof RARE!=='undefined'?RARE:{};
+ out.mrare=[...new Set(Object.values(MD).filter(m=>m.rare).map(m=>m.rare[0]))];   // drops RAROS de criaturas (MD[id].rare: pata de conejo, núcleo de gelatina, trofeos de capitán y jefe…)
  out.gems=typeof EJ!=='undefined'?EJ.GEMS.map(g=>'gb_'+g[0]):[];   // ESC-JOY: gemas en bruto que caen al picar (EJ.gemDrop)
  return out})()"""
 
@@ -42,7 +43,7 @@ async def main():
         for i, r in enumerate(rows):
             gather_item[r['item']] = (sk, i)
     made = {r['out'] for r in d['recipes']}
-    shop = set(d['shop']); drops = d['drops']; tsrc = d['tsrc']; rare = {v[0] for v in d['rare'].values()}; gems = set(d.get('gems', []))
+    shop = set(d['shop']); drops = d['drops']; tsrc = d['tsrc']; rare = {v[0] for v in d['rare'].values()} | set(d.get('mrare', [])); gems = set(d.get('gems', []))
 
     def src(item):
         if item in gather_item: return 'gather'

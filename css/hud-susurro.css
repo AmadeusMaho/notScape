@@ -269,7 +269,7 @@ body.hs-on #ctl{background:rgba(16,13,10,.9)}
 body.hs-on .inv button.slot>img.ic{width:74%;height:auto;aspect-ratio:1/1;max-width:56px}
 
 /* ══ CASILLAS ESTILO WoW (oct 2026) ═════════════════════════════════════════════════════════════════════════
-   Cada casilla con objeto lleva `data-g` (grado 0–4) y `--rc` (color de rareza, o del tier si es común) y `--ac` (aura = color del propio icono; ver `sfx()` en game.js).
+   Cada casilla con objeto lleva `data-g` (grado 0–5; 5 = mítico) y `--rc` (color de rareza, o del tier si es común) y `--ac` (aura = color del propio icono; ver `sfx()` en game.js).
    Capas (de atrás adelante): fondo teñido → aura radial (::before) → icono a casilla llena con halo en su silueta → destello que barre en grados altos (::after) → contador.
    SOLO afecta al icono en reposo: el hover (el icono se levanta y el modelo 3D vivo de icons3d.js) no cambia. Sin animaciones por debajo del grado 3. */
 body.hs-on .slot[data-g]{position:relative;overflow:hidden;
@@ -299,6 +299,10 @@ body.hs-on .slot[data-g="3"]::after,body.hs-on .slot[data-g="4"]::after{content:
  background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.28) 50%,transparent 58%);transform:translateX(-120%);animation:slotsheen 4.6s ease-in-out infinite}
 body.hs-on .slot[data-g="4"]::before{animation-duration:2.4s}
 body.hs-on .slot[data-g="4"]::after{animation-duration:3.4s}
+/* grado 5 = MÍTICO (rojo): igual que el 4, más rápido y con halo más intenso (N0.9) */
+body.hs-on .slot[data-g="5"]{box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 1.5px 0 rgba(255,255,255,.3),inset 0 -2px 0 rgba(0,0,0,.45),inset 0 0 1.3em color-mix(in srgb,var(--rc) 65%,transparent),0 0 1.05em color-mix(in srgb,var(--rc) 75%,transparent)}
+body.hs-on .slot[data-g="5"]::before{opacity:.9;animation:slotbreath 1.9s ease-in-out infinite}
+body.hs-on .slot[data-g="5"]::after{content:"";position:absolute;inset:-30%;z-index:2;pointer-events:none;background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.34) 50%,transparent 58%);transform:translateX(-120%);animation:slotsheen 2.8s ease-in-out infinite}
 @keyframes slotbreath{0%,100%{opacity:.55;transform:scale(.94)}50%{opacity:.95;transform:scale(1.06)}}
 @keyframes slotsheen{0%,55%{transform:translateX(-120%)}85%,100%{transform:translateX(120%)}}
 /* la casilla de equipo (48 px) también llena con el icono */

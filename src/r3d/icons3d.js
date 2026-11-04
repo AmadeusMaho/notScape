@@ -31,6 +31,9 @@ const GOLD='#d8a24a',WOOD='#5a3e2c',LEATH='#4a3424';
 const TI=['cobre','bronce','hierro','acero','plata','alba','mitril','adam','runita','oricalco','infernita','celestita'];
 const cl=t=>TI.includes(t)?t:t==='cuero'?'bronce':t==='madera'?'cobre':'hierro';
 function armorOf(kind,info){const id=(info.id||'').split('~')[0];let m;
+ if(info.o&&info.o.un&&(info.o.un==='h'||info.o.un==='c'))return{slot:info.o.un,arm:{[info.o.un]:{k:info.o.k||0,q:3}}}   // objetos únicos de casco/capa
+ if((m=/^cp_([a-z]+)$/.exec(id))&&TI.includes(m[1])){const ti=TI.indexOf(m[1]),ck=[0,0,1,1,2,3,3,4,4,5,5,5][ti];return{slot:'c',arm:{c:{k:ck,q:ti<4?1:ti<8?2:3}}}}   // capas fabricables por tier
+ if(info.o&&info.o.set&&(m=/^ms_[a-z0-9]+_([halgfnc])_/.exec(id))){const sl=m[1],set=info.o.set;if(sl==='h'||sl==='f'||sl==='c')return{slot:sl,arm:{[sl]:{k:0,q:1,set}}};if(sl==='a'||sl==='l'||sl==='g')return{slot:sl,arm:{[sl]:{f:'tu',t:'cobre',cu:0,set}}}}   // N0.9: piezas de set de monstruo
  if(m=/^lt_(\d)([a-z])(\d)$/.exec(id)){const k=+m[1],s=m[2],q=+m[3];
   if(s==='h'||s==='f'||s==='c')return{slot:s,arm:{[s]:{k,q}}};
   const pc={f:['m','cu','tu'][k%3],t:TI[Math.min(11,k*2+q-1)],cu:k};if(s==='l'||s==='g'||s==='s')return{slot:s,arm:{[s]:pc}};return null}
@@ -87,7 +90,7 @@ const poseOf=(kind,info)=>(info.ground&&DPOSE[kind])||POSE[kind]||POSE2[kind]||[
 // ── una «escena de estudio» por render: se construye, se pinta y se libera ──
 export function build(kind,info){const root=new THREE.Group(),keep=[],part=mkPart(root,keep),c=info.c||'#aaaaaa',o=info.o||{};let mini=null;
  if(WK[kind]){const k=WK[kind],cu=info.cu||0,oo=Object.assign({col:c,cu},o,k==='staff'||k==='scepter'?{col:o.orb||c}:{}),g=new THREE.Group();root.add(g);
-  const r=cultWeapon(k,part,g,oo)||BUILD[k](part,g,oo);void r;const q=poseOf(kind,info);g.rotation.set(q[0],q[1],q[2],'ZYX')}
+  const bk=o.set&&BUILD['ms:'+o.set]?'ms:'+o.set:k,r=cultWeapon(k,part,g,oo)||BUILD[bk](part,g,oo);void r;const q=poseOf(kind,info);g.rotation.set(q[0],q[1],q[2],'ZYX')}
  else if(kind==='shield'){const a=armorOf(kind,info);if(!a)return null;const g=new THREE.Group();root.add(g);BUILD.shield(part,g,{sh:a.arm.s});g.rotation.set(0,-.45,0);g.scale.setScalar(1.1)}
  else if(ARM_K.has(kind)){const a=armorOf(kind,info);if(!a)return null;const AH=armorHooks(a.arm,{robe:'#555560'});if(!AH)return null;const kept=new Set(),wrap=p=>(geo,col,x,y,z,oo)=>{const m=p(geo,col,x,y,z,oo);kept.add(m);if(m.userData.h)kept.add(m.userData.h);return m};
   const sp=Object.assign({id:'heroe',k:1,facet:true,inkK:.8,pants:'#44444c',robe:'#555560',trim:'#777782',belt:'#333338',skin:'#8a7a70',w:1,boot:'#33333a'},AH.spec,{top:(F,h,p)=>AH.top(F,h,wrap(p)),acc:(F,g,p)=>AH.acc(F,g,wrap(p))});

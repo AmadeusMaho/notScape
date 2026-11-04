@@ -18,6 +18,7 @@ import * as THREE from 'three';
 import {glow} from './materials3d.js';
 import {cultOf,clothC,chestC,robeC,legsC,glovesC,shieldC,JBLK,JRED} from './armorcult3d.js';
 import {helmC} from './helmets3d.js';
+import {setHelm,setChest,setBoots,setLegs,setGloves,setCape,setPal} from './monstersets3d.js';   // N0.9: sets de monstruo (piezas con `set` en look.arm)
 
 const sph=(r,x=1,y=1,z=1,n=14)=>new THREE.SphereGeometry(r,n,Math.max(7,n*.7|0)).scale(x,y,z);
 const cyl=(a,b,h,n=12)=>new THREE.CylinderGeometry(a,b,h,n),cone=(r,h,n=6)=>new THREE.ConeGeometry(r,h,n),box=(x,y,z)=>new THREE.BoxGeometry(x,y,z);
@@ -65,7 +66,8 @@ function dome(P,head,c,o={}){P(new THREE.SphereGeometry(.212,18,12,0,6.2832,0,o.
  if(!o.nobrim)P(cyl(.226,.226,.026,20),o.brim||c,0,.047,-.005,Object.assign({p:head},MET));
  if(o.neck)P(new THREE.SphereGeometry(.214,16,8,PI*1.2,PI*.6,1.3,1.1).scale(1,1.05,1.02),o.neck,0,.04,-.005,Object.assign({p:head,t:{side:THREE.DoubleSide}},MET))}
 const HELM_DZ=.035,HELM_K=1.06;   // el cráneo del Mini está en z=.04 y los cascos se modelaron centrados en z≈0: se adelantan y agrandan un poco
-export function helm(F,head,P,h){const k=Math.max(0,Math.min(10,h.k|0)),q=h.leg?4:h.q||1,B=BOOT[k],G=h.leg?'#e0b84a':null;
+export function helm(F,head,P,h){if(h.set){const hs=new THREE.Group();hs.name='casco';hs.position.set(0,0,HELM_DZ);hs.scale.setScalar(HELM_K);head.add(hs);if(setHelm(h.set,F,hs,P,GLO))return;head.remove(hs)}
+ const k=Math.max(0,Math.min(10,h.k|0)),q=h.leg?4:h.q||1,B=BOOT[k],G=h.leg?'#e0b84a':null;
  if(h.leg){dome(P,head,'#2a2430',{neck:'#2a2430'});P(tor(.215,.02,22,7).rotateX(PI/2),'#e0b84a',0,.12,-.005,{p:head,t:{rim:2}});for(let i=0;i<7;i++){const a=(i/7-.5)*PI*1.7;P(cone(.026,.14+(i===3?.07:0),5),'#e0b84a',Math.sin(a)*.2,.2,Math.cos(a)*.14-.005,Object.assign({p:head,t:{rim:2}}))}P(sph(.03,1,1,.8,8),'#c07aff',0,.14,.2,Object.assign({p:head},GLO('#c07aff',2.2)));return}
  {const hg=new THREE.Group();hg.name='casco';hg.position.set(0,0,HELM_DZ);hg.scale.setScalar(HELM_K);head.add(hg);if(helmC(P,hg,k,q,GLO))return;head.remove(hg)}   // E3 (26 oct): un casco por cultura 0–10 (src/r3d/helmets3d.js) en un subgrupo ADELANTADO y algo mayor para que la cara no asome (tools/r3d/helmet_check.py); lo de abajo queda como reserva
  if(k===0){if(q===1){dome(P,head,'#7a4e28',{nobrim:1,th:1.55});P(box(.2,.024,.1),'#5a3418',0,.07,.2,{p:head});P(tor(.2,.012,22,6).rotateX(PI/2),'#d8b050',0,.1,-.005,{p:head,t:{rim:2}})}
@@ -89,17 +91,23 @@ export function helm(F,head,P,h){const k=Math.max(0,Math.min(10,h.k|0)),q=h.leg?
 
 // ═══════════════════════════════ CAPA (por bioma) ═══════════════════════════════
 const CAPE=[{c:'#a8946a',e:'#d8b050'},{c:'#4a6a3a',e:'#8ac060'},{c:'#8a8a4a',e:'#c0c070'},{c:'#e8eef4',e:'#9fe0ff'},{c:'#241a1e',e:'#b01f1c'},{c:'#241a1e',e:'#ff7a2a'}];
-export function cape(F,g,P,c){const k=Math.max(0,Math.min(5,c.k|0)),q=c.leg?4:c.q||1,C=CAPE[k],W=F.W,rc=.19*W*(F.cw||1),n=10,m=12;
- const geo=new THREE.PlaneGeometry(1,1,n,m);const pos=geo.attributes.position;
- for(let i=0;i<pos.count;i++){const u=pos.getX(i)+.5,v=pos.getY(i)+.5;      // v=1 hombros, v=0 bajo
-  const w=(.2+(1-v)*.22)*W,ang=(u-.5)*(.9+(1-v)*.5);const x=Math.sin(ang)*(w*1.1),z=-rc*1.02-(1-Math.cos(ang))*w*.4-(1-v)*(1-v)*.16-(.0+Math.sin(u*PI)*.015);
-  pos.setXYZ(i,x,.84-(1-v)*.64+(k===5?-(Math.sin(u*14)*.02)*(1-v):0),z)}
+export function cape(F,g,P,c){const k=Math.max(0,Math.min(5,c.k|0)),q=c.leg?4:c.q||1,C=CAPE[k],W=F.W,rc=.19*W*(F.cw||1),n=12,m=14,e=C.e;
+ // punto de la capa en (u: 0–1 de lado a lado, v: 1 hombros → 0 bajo). Pliegues verticales que crecen hacia el bajo, caída curva y bajo en festón (N0.9-capas).
+ const at=(u,v)=>{const w=(.2+(1-v)*.22)*W,ang=(u-.5)*(.9+(1-v)*.5),fold=Math.sin(u*PI*6+.5)*.024*(1-v)*(1-v*.3)+Math.sin(u*PI*2.3)*.01*(1-v);
+  const x=Math.sin(ang)*(w*1.1),z=-rc*1.02-(1-Math.cos(ang))*w*.4-(1-v)*(1-v)*.16-(Math.sin(u*PI)*.015)+fold,
+   y=.84-(1-v)*.64+(k===5?-(Math.sin(u*14)*.02)*(1-v):0)-(v<.1?Math.abs(Math.sin(u*PI*6+.5))*.04*(1-v*10):0);return[x,y,z]};
+ const geo=new THREE.PlaneGeometry(1,1,n,m),pos=geo.attributes.position;
+ for(let i=0;i<pos.count;i++){const a=at(pos.getX(i)+.5,pos.getY(i)+.5);pos.setXYZ(i,a[0],a[1],a[2])}
  geo.computeVertexNormals();
- const mesh=P(geo,C.c,0,0,0,{p:g,t:{side:THREE.DoubleSide},ink:.012});
- P(tor(.13,.022,18,6).rotateX(PI/2),k===3?'#ffffff':shade(C.c,1.25),0,.835,-.015,{p:g});                         // cuello de la capa
- const e=C.e;P(box(.34*W*.9,.02,.01),shade(C.c,.6),0,.25,-rc*1.02-.145,{p:g});if(q>=2)P(box(.3,.018,.008),e,0,.3,-rc*1.02-.14,Object.assign({p:g},k===5?GLO(e,1.5):{}));
- if(k===1)for(let i=0;i<9;i++)P(cone(.03,.07,4),'#8ac060',Math.sin(i*2.4)*.22,.76-i*.065,-rc*1.02-.05-i*.008,{p:g,rx:-PI/2*.8});
- if(q>=3||c.leg)P(sph(.026,1,1,.8,8),e,0,.82,-rc*1.02+.0,Object.assign({p:g},GLO(e,2)))}
+ P(geo,C.c,0,0,0,{p:g,t:{side:THREE.DoubleSide},ink:.012});
+ const edge=(us,vs,r,col,o)=>{const pts=us.map((u,ix)=>new THREE.Vector3(...at(u,vs[ix]))),tb=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),24,r,5,false);P(tb,col,0,0,-.004,Object.assign({p:g,ink:.006},o||{}))};
+ const U=Array.from({length:21},(_,i)=>i/20);
+ edge(U,U.map(()=>.02),.011,q>=2?e:shade(C.c,.6));                                                     // ribete del bajo (sigue el festón)
+ if(q>=2){edge(U.map(()=>.025),U.map((_,i)=>1-i/20*.98),.008,e);edge(U.map(()=>.975),U.map((_,i)=>1-i/20*.98),.008,e)}   // ribetes laterales
+ P(tor(.13,.024,18,6).rotateX(PI/2),k===3?'#ffffff':shade(C.c,1.25),0,.835,-.015,{p:g});                  // cuello de la capa
+ if(q>=2)[-1,1].forEach(sd=>{P(sph(.034,1,1,.8,8),e,.12*sd,.835,.0,Object.assign({p:g,t:{rim:2}}));P(tor(.04,.008,10,5),shade(e,.7),.12*sd,.835,.01,{p:g})});   // broches en los hombros
+ if(q>=3||c.leg){P(sph(.03,1,1,.8,8),e,0,.82,-rc*1.02+.0,Object.assign({p:g},GLO(e,2)))}   // gema del cuello
+ if(k===1)for(let i=0;i<9;i++)P(cone(.03,.07,4),'#8ac060',Math.sin(i*2.4)*.22,.76-i*.065,-rc*1.02-.05-i*.008,{p:g,rx:-PI/2*.8})}
 
 // ═══════════════════════════════ ESCUDO (se construye desde heroanim3d BUILD.shield) ═══════════════════════════════
 export function shield(part,h,s){const T=tierPal(s.t),P=mkP(part);return shieldC(P,h,T,s.f||'m',s.cu!=null?s.cu:cultOf(s.t),GLO)}
@@ -108,17 +116,17 @@ export function shield(part,h,s){const T=tierPal(s.t),P=mkP(part);return shieldC
 // armorHooks(arm, base): devuelve {spec(sp)→parche del spec, top, acc, helm}. `base` = spec ya calculado por lookToSpec (colores del jugador).
 export function armorHooks(arm,base){if(!arm)return null;const keys=['a','l','g','s','h','f','c'];if(!keys.some(k=>arm[k]))return null;
  const sp={},pal=o=>tierPal(o&&o.t);let robeDress=false,T0=null;
- if(arm.a){const T=pal(arm.a);T0=T;if(arm.a.f==='m'){const jp=(arm.a.cu!=null?arm.a.cu:cultOf(arm.a.t))===4;sp.sleeve=jp?JBLK:mixc(base.robe,T.d,.45);sp.robe=jp?JBLK:mixc(base.robe,T.d,.6)}
+ if(arm.a){const T=pal(arm.a);T0=T;if(arm.a.set){sp.sleeve=sp.robe=setPal(arm.a.set).robe}else if(arm.a.f==='m'){const jp=(arm.a.cu!=null?arm.a.cu:cultOf(arm.a.t))===4;sp.sleeve=jp?JBLK:mixc(base.robe,T.d,.45);sp.robe=jp?JBLK:mixc(base.robe,T.d,.6)}
   else if(arm.a.f==='cu'){const jp=(arm.a.cu!=null?arm.a.cu:cultOf(arm.a.t))===4;sp.sleeve=jp?'#241a18':mixc('#5a3a22',T.c,.06);sp.robe=jp?'#2a1e1a':mixc('#7a4c26',T.c,.07)}
   else{robeDress=true;const cl=clothC(arm.a.cu!=null?arm.a.cu:cultOf(arm.a.t),T);sp.robe=cl;sp.sleeve=cl;sp.trim=T.t;sp.dress=true;sp.hem=.05;sp.flare=.78;sp.id='heroe-mago'}}
- if(arm.l){const T=pal(arm.l);const jp=(arm.l.cu!=null?arm.l.cu:cultOf(arm.l.t))===4;sp.pants=jp?(arm.l.f==='tu'?clothC(4,T):JBLK):arm.l.f==='m'?T.d:arm.l.f==='cu'?shade(mixc('#7a4c26',T.c,.07),.8):clothC(arm.l.cu!=null?arm.l.cu:cultOf(arm.l.t),T)}
- if(arm.f)sp.boot=shade(BOOT[Math.max(0,Math.min(5,arm.f.k|0))].c,arm.f.leg?.85:1);
+ if(arm.l&&arm.l.set){sp.pants=setPal(arm.l.set).pants}else if(arm.l){const T=pal(arm.l);const jp=(arm.l.cu!=null?arm.l.cu:cultOf(arm.l.t))===4;sp.pants=jp?(arm.l.f==='tu'?clothC(4,T):JBLK):arm.l.f==='m'?T.d:arm.l.f==='cu'?shade(mixc('#7a4c26',T.c,.07),.8):clothC(arm.l.cu!=null?arm.l.cu:cultOf(arm.l.t),T)}
+ if(arm.f)sp.boot=arm.f.set?setPal(arm.f.set).boot:shade(BOOT[Math.max(0,Math.min(5,arm.f.k|0))].c,arm.f.leg?.85:1);
  return{spec:sp,hasHelm:!!arm.h,dress:robeDress,
   top(F,head,part){if(!arm.h)return;helm(F,head,mkP(part),arm.h)},
   acc(F,g,part){const P=mkP(part);
    const cuo=o=>o.cu!=null?o.cu:cultOf(o.t);
-   if(arm.a){const T=pal(arm.a),cu=cuo(arm.a);if(arm.a.f==='tu'){const TT=cu===4?Object.assign({},T,{c:JRED,g:null}):T;chestRobe(F,g,P,TT,sp.robe);robeC(F,g,P,TT,cu,GLO)}else chestC(F,g,P,T,arm.a.f||'m',cu,GLO)}
-   if(arm.l)legsC(F,g,P,pal(arm.l),arm.l.f||'m',cuo(arm.l),GLO);
-   if(arm.g)glovesC(F,g,P,pal(arm.g),arm.g.f||'m',cuo(arm.g),GLO);
-   if(arm.f)boots(F,g,P,arm.f);
-   if(arm.c)cape(F,g,P,arm.c)}}}
+   if(arm.a&&arm.a.set)setChest(arm.a.set,F,g,P,GLO);else if(arm.a){const T=pal(arm.a),cu=cuo(arm.a);if(arm.a.f==='tu'){const TT=cu===4?Object.assign({},T,{c:JRED,g:null}):T;chestRobe(F,g,P,TT,sp.robe);robeC(F,g,P,TT,cu,GLO)}else chestC(F,g,P,T,arm.a.f||'m',cu,GLO)}
+   if(arm.l&&arm.l.set)setLegs(arm.l.set,F,g,P,GLO);else if(arm.l)legsC(F,g,P,pal(arm.l),arm.l.f||'m',cuo(arm.l),GLO);
+   if(arm.g&&arm.g.set)setGloves(arm.g.set,F,g,P,GLO);else if(arm.g)glovesC(F,g,P,pal(arm.g),arm.g.f||'m',cuo(arm.g),GLO);
+   if(arm.f&&!(arm.f.set&&setBoots(arm.f.set,F,g,P,GLO)))boots(F,g,P,arm.f);
+   if(arm.c&&arm.c.set&&setCape(arm.c.set,F,g,P,GLO)){}else if(arm.c)cape(F,g,P,arm.c)}}}
