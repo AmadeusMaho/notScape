@@ -94,7 +94,7 @@ const HUDSU=(()=>{
  function buffs(now){const list=[],tN=Date.now();
   for(const k in BF){const r=(S.buf[k]||0)-tN;if(r>0){tot[k]=Math.max(tot[k]||0,r);list.push({id:'b'+k,i3:BF[k][1],img:(typeof ITEMICON!=='undefined'?ITEMICON.url(BF[k][1]):''),tip:BF[k][0],p:r/tot[k],tx:fmt(r)})}else tot[k]=0}
   if(typeof ING!=='undefined')ING.chips().forEach(c=>list.push(c));   // aparejos de Ingeniería
-  if(typeof STS!=='undefined')STS.list(P).forEach(s=>list.push({id:'s'+s.k,emo:STS.svg(s.k),svg:s.d.col,tip:s.d.n+(s.n>1?' ×'+s.n:''),p:s.rem/s.tot,tx:fmt(s.rem),bad:s.d.bad}));   // estados alterados (status.js)
+  if(typeof STS!=='undefined')STS.list(P).forEach(s=>list.push({id:'s'+s.k,emo:STS.svg(s.k),svg:s.d.col,tip:s.d.n+(s.n>1?' ×'+s.n:''),p:s.d.ghost?1:s.rem/s.tot,tx:s.d.ghost?'':fmt(s.rem),bad:s.d.bad}));   /* el espíritu no caduca: sin cuenta atrás */   // estados alterados (status.js)
   if(typeof PRA!=='undefined'&&PRA.length)list.push({id:'pray',emo:'🙏',tip:'Oración activa · puntos: '+Math.floor(PP||0),p:Math.min(1,(PP||0)/Math.max(1,prMax())),tx:String(Math.floor(PP||0))});
   const seen={};list.forEach(o=>{seen[o.id]=1;let e=chips[o.id];
    if(!e){const d=document.createElement('div');d.className='chip'+(o.bad?' bad':'');d.innerHTML=(o.img?'<img alt="" data-i3="'+(o.i3||'')+'" src="'+o.img+'">':'<s'+(o.svg?' class="sv" style="color:'+o.svg+'"':'')+'>'+o.emo+'</s>')+'<b></b>';fxr.appendChild(d);e=chips[o.id]={d,b:d.lastChild,tx:'',p:-1}}

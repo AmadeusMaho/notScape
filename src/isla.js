@@ -138,7 +138,7 @@ const ISLA=(()=>{
   if(cur().cap===4&&(now_=performance.now())>chT){chT=now_+1500;chickens(4)}   // durante la misión de la Palestra siempre hay ≥ 4 gallinas VIVAS: no hay que esperar al reaparecer para seguir la cadena
   if(cur().esc&&!es)startEscape();
   i.t[cur().cap]=(i.t[cur().cap]||0)+dt;
-  {const tr=cur().tr;if(tr){i.et=(i.et||0)+dt;try{const a=wp(tr.s[0],tr.s[1]),b=wp(cur().at[0],cur().at[1]),u=Math.min(1,i.et/tr.t);R3D.skyFront={x:a.x+(b.x-a.x)*u,y:a.y+(b.y-a.y)*u,dx:b.x-a.x,dy:b.y-a.y}}catch(e){}{const sc=Math.ceil(tr.t-i.et);if(sc!==trS){trS=sc;dirty=1}}if(i.et>tr.t){i.et=0;const q=wp(tr.s[0],tr.s[1]);P.x=q.x;P.y=q.y;P.g=P.mv=null;try{stopA()}catch(e){}try{snd('miss')}catch(e){}try{toast('🔥 El fuego te corta el paso. Vuelve a intentarlo: <b>'+tr.nm+'</b>',2600)}catch(e){}}}}
+  {const tr=cur().tr;if(tr){i.et=(i.et||0)+dt;try{const a=wp(tr.s[0],tr.s[1]),b=wp(cur().at[0],cur().at[1]),u=Math.min(1,i.et/tr.t);R3D.skyFront={x:a.x+(b.x-a.x)*u,y:a.y+(b.y-a.y)*u,dx:b.x-a.x,dy:b.y-a.y};R3D.skyBoat=tr.nm==='El borde'?(boatP||(boatP=Object.assign(wp(30.2,-0.4),{ang:0}))):null}catch(e){}{const sc=Math.ceil(tr.t-i.et);if(sc!==trS){trS=sc;dirty=1}}if(i.et>tr.t){i.et=0;const q=wp(tr.s[0],tr.s[1]);P.x=q.x;P.y=q.y;P.g=P.mv=null;try{stopA()}catch(e){}try{snd('miss')}catch(e){}try{toast('🔥 El fuego te corta el paso. Vuelve a intentarlo: <b>'+tr.nm+'</b>',2600)}catch(e){}}}}
   grantOfr();grantEq();
   {const g0=cur().g;if(g0.t==='kill'&&g0.k==='gabriel'&&!gm&&!intro&&Math.hypot(wp(AR[0],AR[1]).x-P.x,wp(AR[0],AR[1]).y-P.y)<7.5*T){if(!fAt)fAt=performance.now()+1400;else if(performance.now()>=fAt){fAt=0;fight()}}}   // última ofrenda → pausa de 1,4 s y arranca la intro del jefe
   if(cur().g.t==='offer'){OFR.forEach(([it,x,y],k)=>{if(i.off[k])return;const q=wp(x,y);if(Math.hypot(q.x-P.x,q.y-P.y)<2.4*T&&own(it)>=1){give(it);i.off[k]=1;dirty=1;try{snd('rare')}catch(e){}toast('El brasero acepta la ofrenda ('+i.off.reduce((a,b)=>a+b,0)+'/4)',1600)}})}
@@ -226,11 +226,11 @@ const ISLA=(()=>{
  function noDie(){if(!on()||!gAlive())return false;P.dot=null;STS.clear(P);try{HOT=[]}catch(e){}P.pjM=null;M.forEach(m=>m.hunt=0);P.hp=maxHp();const q=wp(AR[0],AR[1]-5.2);P.x=q.x;P.y=q.y;try{FD=performance.now()}catch(e){}P.g=P.mv=null;stopA();
   const g=wp(AR[0],AR[1]);gm.x=gm.hx=gm.tx=g.x;gm.y=gm.hy=gm.ty=g.y;gm.hp=gm.mh;gm.hunt=0;gm.tel=null;gm.sgM=null;gm.stun=0;gm.sgIm=0;gm.rip=0;gm.asx=1;gm.en=0;gm.dm=2;gph=0;BM.gabriel=[];try{snd('die')}catch(e){}toast('☠️ Gabriel te derriba. Despiertas al borde de la arena.',2800);return true}
  // «ESCAPA»: la isla arde. Desaparecen TODOS los PNJ (y los corderos), el cielo se vuelve rojo (`R3D.skyBurn`), el pasto naranja (`uBurn`), las nubes de fuego y caen brasas (r3d.js `burnFx`). Se invoca al entrar en el paso `esc`.
- let es=0;const gone=[];
+ let es=0,boatP=null;const gone=[];
  function startEscape(){if(es)return;es=1;try{MUSIC.scene('all_i_had_to_do',true)}catch(e){}for(let k=ST.length-1;k>=0;k--){const e=ST[k];if(e.k===9&&e.npc){gone.push(e);ST.splice(k,1)}}
   for(let k=M.length-1;k>=0;k--){const m=M[k];if(zone()&&m.hx>=zone().x0&&m.d.id==='cordero'){gone.push({mob:m});M.splice(k,1)}}
-  try{R3D.skyBurn=1}catch(e){}try{banner('¡Escapa!','El cielo arde','#ff6a3a',3600)}catch(e){}try{log('🔥 El cielo arde. Todo lo que conocías desaparece… ¡corre!')}catch(e){}}
- function endEscape(){es=0;try{R3D.skyFront=null}catch(e){}try{MUSIC.scene('all_i_had_to_do',false)}catch(e){}try{R3D.skyBurnReset()}catch(e){}gone.splice(0).forEach(e=>{if(e.mob)M.push(e.mob);else ST.push(e)})}
+  try{R3D.skyBurn=1}catch(e){}try{R3D.skyBridge={a:wp(6,18),b:wp(17,3)}}catch(e){}try{banner('¡Escapa!','El cielo arde','#ff6a3a',3600)}catch(e){}try{log('🔥 El cielo arde. Todo lo que conocías desaparece… ¡corre!')}catch(e){}}
+ function endEscape(){es=0;try{R3D.skyFront=null;R3D.skyBridge=null;R3D.skyBoat=null}catch(e){}try{MUSIC.scene('all_i_had_to_do',false)}catch(e){}try{R3D.skyBurnReset()}catch(e){}gone.splice(0).forEach(e=>{if(e.mob)M.push(e.mob);else ST.push(e)})}
  // tarjeta de bienvenida (UI Susurro: cristal + trazo dorado): cómo moverse, correr, esquivar y golpear; se cierra con el botón o con cualquier tecla de acción
  let tipEl=null;
  function tipShow(){if(tipEl||S.islaTip)return;const R=(k,t)=>`<div class="rw"><div class="ks">${k}</div><span>${t}</span></div>`;tipEl=document.createElement('div');tipEl.id='isla-tip';

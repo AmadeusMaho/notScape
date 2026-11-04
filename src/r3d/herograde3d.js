@@ -56,12 +56,12 @@ export class HeroGrade{
   u.uK.value=o.K||0;u.uThick.value=o.thick||0;u.uHs.value=o.hs||1;u.uBrush.value=o.brush||0;u.uVig.value=o.vig||0;u.uSc.value=o.sc||1;if(o.lift!=null)u.uLift.value.set(o.lift);else u.uLift.value.setRGB(0,0,0);
   const off=o.off||[0,0],scr=o.scr||[rt.width,rt.height];u.uOff.value.set(off[0],off[1]);u.uScr.value.set(scr[0],scr[1]);
   r.setRenderTarget(this.out);const ac=r.autoClear;r.autoClear=false;r.clear(true,false,false);r.render(this.scene,this.cam);r.autoClear=ac;r.setRenderTarget(null)}
- composite(r,x,y,w,h,cw,ch){if(!this.out)return;if(!this.cmat){this.cmat=new THREE.ShaderMaterial({uniforms:{t:{value:null},uRect:{value:new THREE.Vector4()},uScr:{value:new THREE.Vector2(1,1)}},
+ composite(r,x,y,w,h,cw,ch){if(!this.out)return;if(!this.cmat){this.cmat=new THREE.ShaderMaterial({uniforms:{t:{value:null},uG:{value:0},uT:{value:0},uRect:{value:new THREE.Vector4()},uScr:{value:new THREE.Vector2(1,1)}},
    vertexShader:'uniform vec4 uRect;uniform vec2 uScr;varying vec2 vUv;void main(){vUv=uv;vec2 p=uRect.xy+vec2(uv.x,1.-uv.y)*uRect.zw;gl_Position=vec4(p.x/uScr.x*2.-1.,1.-p.y/uScr.y*2.,0.,1.);}',
-   fragmentShader:'uniform sampler2D t;varying vec2 vUv;void main(){gl_FragColor=texture2D(t,vUv);}',
+   fragmentShader:'uniform sampler2D t;uniform float uG,uT;varying vec2 vUv;void main(){vec4 c=texture2D(t,vUv);if(uG>.001){float a=c.a,l=dot(c.rgb,vec3(.3,.55,.15))/max(a,.001);vec3 sp=vec3(.42,.95,.88)*(.3+l*1.2)*a;c.rgb=mix(c.rgb,sp,uG*.8)+vec3(.04,.22,.2)*a*uG*(.55+.45*sin(uT*3.));c*=1.-.22*uG;}gl_FragColor=c;}',   /* N1: espíritu del jugador = héroe teñido de azul-verde y traslúcido */
    depthTest:false,depthWrite:false,transparent:true,blending:THREE.CustomBlending,blendSrc:THREE.OneFactor,blendDst:THREE.OneMinusSrcAlphaFactor,blendSrcAlpha:THREE.OneFactor,blendDstAlpha:THREE.OneMinusSrcAlphaFactor,toneMapped:false});
    this.cq=new THREE.Mesh(new THREE.PlaneGeometry(1,1),this.cmat);this.cq.position.z=-.5;this.cs=new THREE.Scene();this.cs.add(this.cq)}   // quad de pantalla: su posición real la calcula el shader; z=-.5 = dentro de la cámara ortográfica (no se recorta y no hace falta desactivar el recorte por frustum)
-  const u=this.cmat.uniforms;u.t.value=this.out.texture;u.uRect.value.set(x,y,w,h);u.uScr.value.set(cw,ch);
+  const u=this.cmat.uniforms;u.t.value=this.out.texture;u.uRect.value.set(x,y,w,h);u.uScr.value.set(cw,ch);u.uG.value=this.ghost||0;u.uT.value=(performance.now()/1000)%1000;
   r.setRenderTarget(null);const ac=r.autoClear;r.autoClear=false;r.render(this.cs,this.cam);r.autoClear=ac}
  // copia el héroe a un lienzo 2D (solo cuando hace falta: imágenes fantasma del perfect dodge). Lectura síncrona de la GPU: NO llamarla cada fotograma.
  toCanvas(r){const o=this.out;if(!o)return null;const w=o.width,h=o.height,px=new Uint8Array(w*h*4);r.readRenderTargetPixels(o,0,0,w,h,px);

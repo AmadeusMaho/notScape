@@ -14,6 +14,7 @@
 // TRAMPAS: (1) el material `chr` lee G.uChrB (pies→cabeza del héroe): r3d.js lo pone a (0,0) antes del pase del mundo; (2) los SkinnedMesh no se recortan solos
 // (frustumCulled=false): Actors.update() descarta por distancia; (3) el casco (hull) comparte esqueleto con el cuerpo: ambos deben vivir en el mismo grupo.
 import * as THREE from 'three';
+import {Ragdoll} from './ragdoll3d.js';   // N1 (4 nov 2026): muerte con ragdoll procedural
 import {toon,hull,hash,glow,INK,INK_SK} from './materials3d.js';
 import {Mini,MINI,sword,shieldMesh} from './mini3d.js';
 import {hairFn} from './herom3d.js';
@@ -636,7 +637,7 @@ export class Actors{
   // vida / muerte
   if(!alive_&&A.state==='live'){A.state='dying';A.td=now}
   if(!alive_&&e.gone&&A.state==='dying')A.state='gone';   /* DOMAR-D2: un animal domado desaparece sin cadáver */
-  if(alive_&&A.state!=='live'){A.state='live';A.vis=true;A.last=null;A.grp.visible=true;A.grp.scale.setScalar(A.sc);A.b.root.rotation.set(0,0,0);A.b.root.position.copy(A.restP.root)}
+  if(alive_&&A.state!=='live'){A.state='live';A.vis=true;A.last=null;A.grp.visible=true;A.grp.scale.setScalar(A.sc);A.b.root.rotation.set(0,0,0);A.b.root.position.copy(A.restP.root);A.rag=null}
   if(A.state==='gone'){A.vis=false;A.grp.visible=false;if(A.proxy)A.proxy.visible=false;return}
   const z=TER.standZ(e.x,e.y),p=this.W3(e.x,e.y,z);let dist=0;
   if(A.last){const dx=p.x-A.last.x,dz=p.z-A.last.z,d=Math.hypot(dx,dz);if(d<3)dist=d;if(d>1e-4&&(!isNpc||e.mvr))A.faceT=Math.atan2(dx,dz)}A.last=p.clone();A.grp.position.copy(p);
@@ -674,10 +675,12 @@ export class Actors{
   let ei=0;if(!isNpc&&A.state==='live'){if(e.wind&&rn<e.wind.t1){const u=(rn-e.wind.t0)/(e.wind.t1-e.wind.t0);ei=Math.min(.55,u*4)+(u>.72?(u-.72)/.28*.45:0)+.06*Math.sin(now*.045)}else if(e.flare&&rn-e.flare<160)ei=.9*(1-(rn-e.flare)/160)}
   A.eyeFx(Math.max(0,Math.min(1,ei)));
   if(!isNpc&&fl){const u=Math.min(1,(e.fl-rn)/120);A.pz=-.05*u;A.b.root.position.z+=A.pz}
-  // muerte: cae hacia atrás y se hunde/encoge ~0,9 s
-  if(A.state==='dying'){const u=(now-A.td)/900;if(A.hdx!=null&&e.hit){const ff=ss(0,.45,u);A.grp.position.x+=A.hdx*.45*ff*e.hit.k*A.sc;A.grp.position.z+=A.hdz*.45*ff*e.hit.k*A.sc}   /* la muerte conserva el impulso del último golpe */
-   const keep=e.skin&&!e.skin.done;   // cadáver desollable: se queda tumbado hasta que se desuella o reaparece
-   if(u>=1&&!keep){A.state='gone';A.vis=false;A.grp.visible=false;if(A.proxy)A.proxy.visible=false;return}const f=ss(0,.45,Math.min(1,u)),h=keep?0:ss(.45,1,u);if(A.tpl.kind==='quad'&&A.b.hind){A.b.root.rotation.z=1.45*f*(A.seed>3.1?-1:1)}else A.b.root.rotation.x=-1.45*f;A.b.root.position.y=A.restP.root.y-.1*f*A.sc;A.grp.scale.setScalar(A.sc*(1-h*.85));A.grp.position.y-=.25*h*A.sc}
+  // muerte con RAGDOLL (ragdoll3d.js, 4 nov 2026): cae como un cuerpo rígido hacia donde lo empujó el último golpe, rebota y los miembros cuelgan/ruedan por la gravedad; ~2,4 s y se hunde/encoge los últimos .7 s
+  if(A.state==='dying'){const keep=e.skin&&!e.skin.done,TD=2.4,el=A.rag?A.rag.t:0;   // cadáver desollable: se queda tumbado hasta que se desuella o reaparece
+   if(!A.rag){const k=A.tpl.kind,hum=k==='human'&&!!A.b.ribs,quad=k==='quad'&&!!A.b.hind,hk=e.hit?e.hit.k:1,fx=A.hdx!=null?A.hdx:0,fz=A.hdx!=null?A.hdz:-1,c=Math.cos(A.face),s2=Math.sin(A.face);
+    A.rag=new Ragdoll({kind:hum?'hum':quad?'quad':'tip',seed:A.seed||1,fall:[fx*c-fz*s2,fx*s2+fz*c],power:.45+.55*hk,hgt:A.tpl.h||A.tpl.hh||1,rad:Math.min(.3,(A.tpl.rad||.3)*.28)});A.rag.A=A}
+   if(el>=TD&&!keep){A.state='gone';A.vis=false;A.grp.visible=false;if(A.proxy)A.proxy.visible=false;A.rag=null;return}
+   A.rag.step(dt);A.rag.apply(A);const h=keep?0:ss(TD-.7,TD,el);A.grp.scale.setScalar(A.sc*(1-h*.85));A.grp.position.y-=.25*h*A.sc}
   // copia de profundidad: solo si el héroe está cerca (no se dibuja el resto)
   if(A.proxy){const near=Math.hypot(P_.x-e.x,P_.y-e.y)<ISO.TILE*3.5&&A.vis;A.proxy.visible=near;if(near){A.proxy.position.copy(A.grp.position);A.proxy.quaternion.copy(A.grp.quaternion);A.proxy.scale.copy(A.grp.scale)}}
   // aro de jefe

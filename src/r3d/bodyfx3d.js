@@ -120,7 +120,21 @@ void main(){
   float vv=abs(fbm(vec2(y*7.,x*4.-t*.25))-.5);float vein=ss(.05,0.,vv)*ins;
   add=vC2*vein*(.25+.55*hb)*(1.+.5*hi)+vC1*exp(-o/(rb*.35))*(.1+.22*hb)*(1.+.6*hi);
   mc=vC3;ma=ins*.12*(1.+hi);
- } else if(M==10||M==11){ // VAPOR (blanco, sube) / NUBE TÓXICA (verde, rasante): nube que se hincha con la edad
+ } else if(M==16){ // ESPÍRITU / FANTASMA (estado ghost del jugador y cuerpo caído): relleno frío traslúcido que respira, borde etéreo y LLAMITAS pequeñas que nacen alrededor y suben
+  float br=.55+.45*sin(t*2.2+x*3.);
+  add+=vC1*ins*(.07+.06*br);
+  add+=vC2*exp(-abs(sd)/.035)*.4*ss(.2,.7,fbm(vec2(y*6.+sd0,x*3.-t*1.2)));
+  float fl=0.;
+  for(int i=0;i<6;i++){float fi=float(i);
+   float ph=fract(t*(.28+.05*h21(vec2(fi,3.)))+fi*.173+h21(vec2(fi,sd0)));            // fase de ascenso de esta llamita
+   float fx=(h21(vec2(fi*3.7,sd0+1.))-.5)*rb*3.4+sin(t*1.7+fi*2.)*rb*.22;               // posición lateral que ondula
+   float fy=-.05*L+ph*L*1.45;                                                            // sube de los pies a sobre la cabeza
+   vec2 d=vec2((y-fx)/(rb*.3*(1.-ph*.55)),(x-fy)/(rb*.75*(1.-ph*.3)));
+   fl+=exp(-(d.x*d.x*(1.+max(d.y,0.)*1.5)+d.y*d.y*.9))*(1.-ph)*ss(0.,.12,ph);}          // gota de llama: ancha abajo, afilada arriba
+  fl=clamp(fl,0.,1.6);
+  add+=mix(vC1,vC2,clamp(fl,0.,1.))*fl*1.15+vec3(1.)*ss(.85,1.5,fl)*.22;
+  ma=ins*.14*br;mc=vC3*.5;
+} else if(M==10||M==11){ // VAPOR (blanco, sube) / NUBE TÓXICA (verde, rasante): nube que se hincha con la edad
   float tox=float(M==11);
   vec2 c=vec2(y,(x-L*mix(.5,.25,tox)-u*L*mix(.45,.1,tox))*mix(.85,1.4,tox));
   float rr=R*(.35+.75*ss(0.,.6,u))*mix(1.,1.15,tox);
@@ -176,7 +190,8 @@ const ST={
  judgement:{m:7,c:['#ffc030','#fffbe0','#806020'],R:2.4},
  wet:{m:8,c:['#5aa8ff','#dff2ff','#0a2038'],R:1.6},
  bleed:{m:9,c:['#b0080e','#ff3a2a','#200002'],R:2},
- hemorrhage:{m:9,c:['#e0100e','#ff5a3a','#280002'],R:2.4,hi:1}};
+ hemorrhage:{m:9,c:['#e0100e','#ff5a3a','#280002'],R:2.4,hi:1},
+ ghost:{m:16,c:['#6fe8d4','#eafffa','#06242a'],R:2.6}};   // N1: espíritu del jugador
 for(const k in ST)ST[k].cc=ST[k].c.map(col);
 // ── DESTELLOS de un solo uso (impact3d.js): modo, colores, R (× radio), vida (s), alto extra sobre la cabeza (× alto)
 const SHOT={
@@ -236,7 +251,7 @@ export class BodyFx{
     const el=s.tot-s.rem,I=Math.min(1,el/220)*Math.min(1,s.rem/380)*(s.k==='chill'?.75+.05*s.n:1);   // aparece en 0,22 s y se apaga en los últimos 0,38 s
     this.body(W,f,I,(e._sd||(e._sd=Math.random())),s.k==='doom'?el/s.tot:-1,s.n||1);if(++c>=mx)break}
    if(this.n>=NMAX-8)break}}
- update(dt){dt*=this.ts;this.t+=dt;   /* ts: escala de tiempo (solo PRUEBAS: R3D.body.ts=0 congela para capturar) */this.u.uT.value=this.t%1000;this.n=0;this.scan();
+ update(dt){dt*=this.ts;this.t+=dt;   /* ts: escala de tiempo (solo PRUEBAS: R3D.body.ts=0 congela para capturar) */this.u.uT.value=this.t%1000;this.n=0;this.scan();if(this.corp)this.body(this.corp.W,ST.ghost,.8,this.corp.seed||.37,-1,1,.9);   /* N1: cuerpo caído (corpse3d.js) */;if(typeof STS!=='undefined'&&typeof P!=='undefined'&&P.sts&&STS.has(P,'ghost')&&!(this.refs.actors&&this.refs.actors.map.has(P))){try{this.body(this.where({x:P.x,y:P.y}),ST.ghost,1,.5,-1,1,.6)}catch(e){}}
   for(let i=this.shots.length-1;i>=0;i--){const S=this.shots[i],u=(this.t-S.t0)/S.life;if(u>=1||!S.m){this.shots.splice(i,1);continue}
    const f=S.f,I=Math.min(1,u/.08)*Math.pow(1-u,1.2)*(f.m===12||f.m===14||f.m===15?1:Math.min(1.3,.75+.35*S.k));   // sube rápido, cae lento
    if(S.arc){const a=this.where(S.m).c,b=this.where(S.b).c;_d.subVectors(b,a);const L=_d.length();if(L<.05)continue;_d.multiplyScalar(1/L);this.put(a.x,a.y,a.z,_d.x,_d.y,_d.z,L,.55,.05,.05,f.m,f.cc,Math.min(1,u/.05)*(1-u*u),S.seed,u,0,.2,0,.6);continue}

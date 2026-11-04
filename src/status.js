@@ -44,7 +44,8 @@ const STS=(()=>{
   regen:{n:'Regeneración',ic:'💚',col:'#5ad06a',dur:10000,regen:1,every:2000},
   haste:{n:'Celeridad',ic:'💨',col:'#bfffef',dur:6000,spd:1.15},
   thorns:{n:'Espinas',ic:'🌵',col:'#a8c87a',dur:10000,thorns:.1},
-  unbreak:{n:'Inquebrantable',ic:'🗿',col:'#d8c8a0',dur:4000,unbreak:1}
+  unbreak:{n:'Inquebrantable',ic:'🗿',col:'#d8c8a0',dur:4000,unbreak:1},
+  ghost:{n:'Espíritu',ic:'👻',col:'#7af0d8',dur:36e8,spd:1.22,ghost:1}   /* N1 (4 nov 2026): el jugador tras morir: ×1,22 de velocidad, invulnerable, sin aguante que gastar y sin atacar hasta recuperar su cuerpo */
  };
  const STRONG={};for(const k in D)if(D[k].rep)STRONG[D[k].rep]=k;   // débil → fuerte
  const UNDEAD=new Set(['esqueleto','espantapajaros','demonio','k5','b5','bruja']);
@@ -110,7 +111,7 @@ const STS=(()=>{
  const frozen=e=>has(e,'freeze');
  const spd=e=>frozen(e)?0:prod(e,'spd'), out=e=>prod(e,'outM'), acc=e=>prod(e,'acc'), healM=e=>prod(e,'heal'), noMana=()=>any(P,'manaburn');
  // daño que RECIBE el jugador: vulnerable, la congelación se rompe con el golpe (crítico), el escudo absorbe; ESPINAS devuelve parte al atacante (`src`)
- function inP(d,now,src){if(!(d>0))return d;const e=P;if(!e.sts)return d;if(has(e,'freeze')){d=Math.round(d*C.critFreeze);thaw(e,now);say(P,'¡Crítico!','#bfeaff',10)}
+ function inP(d,now,src){if(!(d>0))return d;const e=P;if(e.sts&&has(e,'ghost'))return 0;if(!e.sts)return d;if(has(e,'freeze')){d=Math.round(d*C.critFreeze);thaw(e,now);say(P,'¡Crítico!','#bfeaff',10)}
   d=Math.max(1,Math.round(d*prod(e,'inM')));const th=get(e,'thorns'),ae=typeof ENCH!=='undefined'?ENCH.arm('espinas'):0;if((th||ae)&&src&&src!==P)hurt(src,Math.max(1,Math.round(d*((th?D.thorns.thorns:0)+.06*ae))),now,'thorns');   /* Espinas: estado + encantamiento de armadura */return shieldAbs(e,d)}
  // daño que RECIBE un enemigo (golpes del jugador): congelación (crítico), Juicio (crítico), Marcado (distancia), cargas de Corrosión/Desgarro, Disolución por golpe pesado,
  // cadena de Electrizado/Sobrecarga y acumulado de la Condena. Devuelve {d,crit}

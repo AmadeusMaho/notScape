@@ -169,12 +169,13 @@ export class Kitchen3D{
  P3(x,y,z=0){return new THREE.Vector3(x-400,(230-y)/Math.cos(this.TH),z)}
  buildAlch(T){const {sc,add,gt}=T,c=Math.cos(this.TH),L=[],part=mkPart(L),Y=1/c;
   // pared de piedra oscura, estante de frascos, repisa de bases, mesa de madera, cuerdas con hierbas, viga
-  const wall=(w,h,x,y,z,col)=>part(Bx(w,h,6),col,x,y,z);
-  wall(860,420,0,(230-170)*Y,-70,'#2a2018');for(let r=0;r<9;r++)for(let k=0;k<14;k++){const w=48+hash(r,k)*26,xx=-420+k*62+(r%2)*30+hash(k,r)*6,yy=(230-r*46-14)*Y;if(hash(r*3,k)>.12)part(Bx(w,34,8),['#3a2e24','#33281f','#40342a','#2e241b'][(r+k)%4],xx,yy,-66)}
-  part(Bx(860,10,60),'#5a3f26',0,(230-132)*Y,-30);part(Bx(860,6,60),'#6a4a2c',0,(230-129)*Y,-30);   // estante de frascos (y=132)
-  part(Bx(180,8,40),'#5a3f26',(480-400),(230-208)*Y,-30);   // repisa de las 4 botellas de base (y≈208)
-  part(Bx(900,150,10),'#8a6238',0,(230-405)*Y,-48);part(Bx(900,12,26),'#a07844',0,(230-338)*Y,-40);for(let i=0;i<7;i++)part(Bx(3,150,12),'#3a2815',-390+i*130,(230-405)*Y,-47);for(let i=0;i<5;i++)part(Bx(900,2,12),'#5a3f26',0,(230-352-i*24)*Y,-47);   // mesa: tablero de frente (los objetos van delante; la elipse de las bocas ya da la perspectiva)
-  for(let k=0;k<5;k++){const bx=70+k*170;part(Cy(1.2,1.2,26,4),'#3a2a1a',bx-400,(230-10)*Y,-20)}
+  const BZ=-60,BY=BZ*Math.tan(this.TH),bp=(g,col,x,y,z,o)=>part(g,col,x,y+BY,z+BZ,o);this.BZ=BZ;this.BY=BY;   /* 4 nov: fondo (pared, estante, mesa) 60 u más atrás y bajado BY para conservar los píxeles: la olla (radio 100) y el mortero (84) atravesaban la pared */
+  const wall=(w,h,x,y,z,col)=>bp(Bx(w,h,6),col,x,y,z);
+  wall(860,420,0,(230-170)*Y,-70,'#2a2018');for(let r=0;r<9;r++)for(let k=0;k<14;k++){const w=48+hash(r,k)*26,xx=-420+k*62+(r%2)*30+hash(k,r)*6,yy=(230-r*46-14)*Y;if(hash(r*3,k)>.12)bp(Bx(w,34,8),['#3a2e24','#33281f','#40342a','#2e241b'][(r+k)%4],xx,yy,-66)}
+  bp(Bx(860,10,60),'#5a3f26',0,(230-132)*Y,-30);bp(Bx(860,6,60),'#6a4a2c',0,(230-129)*Y,-30);   // estante de frascos (y=132)
+  bp(Bx(180,8,40),'#5a3f26',(480-400),(230-208)*Y,-30);   // repisa de las 4 botellas de base (y≈208)
+  bp(Bx(900,150,10),'#8a6238',0,(230-405)*Y,-48);bp(Bx(900,12,26),'#a07844',0,(230-338)*Y,-40);for(let i=0;i<7;i++)bp(Bx(3,150,12),'#3a2815',-390+i*130,(230-405)*Y,-47);for(let i=0;i<5;i++)bp(Bx(900,2,12),'#5a3f26',0,(230-352-i*24)*Y,-47);   // mesa: tablero de frente (los objetos van delante; la elipse de las bocas ya da la perspectiva)
+  for(let k=0;k<5;k++){const bx=70+k*170;bp(Cy(1.2,1.2,26,4),'#3a2a1a',bx-400,(230-10)*Y,-20)}
   const bg=bake(L,1.4);sc.add(bg);
   // — OLLA (lathe) + fuego + troncos —
   const CX=480,CY=290,pot=new THREE.Group();pot.position.copy(this.P3(CX,CY));pot.scale.y=Y;sc.add(pot);
@@ -225,9 +226,9 @@ export class Kitchen3D{
   D.cork.visible=true;D.cork.position.copy(g.cork&&g.cork.on?p3(C.BOT.x,C.BOT.ny-6,12):p3(g.cork?g.cork.x:772,g.cork?g.cork.y:344,12));D.cork.scale.y=Y;
   D.pitch.visible=!!pt.ready;if(pt.ready){const p=g.p;D.pitch.position.copy(p3(p.x,p.y,16));D.pitch.scale.y=Y;D.pitch.rotation.z=-p.tilt*1.9;D.pitch.userData.f.material.color.copy(rgb(g.col))}
   // botellas de base (en la repisa) y la que se agarra
-  C.BASEV.forEach((b,i)=>{const o=D.baseBots[i];const grabbed=g.bgrab&&g.bgrab.k===b.k;o.visible=true;if(grabbed){o.position.copy(p3(g.bx,g.by+10,20));o.rotation.z=-(g.btilt||0)*1.6}else{o.position.copy(p3(b.x,b.y+14,-4));o.rotation.z=0}o.scale.y=Y;const col=v.solv&&v.solv[b.k]?v.solv[b.k].col:'#8ab0c8';o.children[0].material.color.set(col)});
+  C.BASEV.forEach((b,i)=>{const o=D.baseBots[i];const grabbed=g.bgrab&&g.bgrab.k===b.k;o.visible=true;if(grabbed){o.position.copy(p3(g.bx,g.by+10,20));o.rotation.z=-(g.btilt||0)*1.6}else{o.position.copy(p3(b.x,b.y+14,-4));o.position.z+=this.BZ;o.position.y+=this.BY;o.rotation.z=0}o.scale.y=Y;const col=v.solv&&v.solv[b.k]?v.solv[b.k].col:'#8ab0c8';o.children[0].material.color.set(col)});
   // frascos del estante
-  D.jars.forEach((j,i)=>{const jj=g.jars[i];j.visible=!!jj;if(!jj)return;j.position.copy(p3(jj.x,jj.y-(jj.drag?4:0),jj.drag?30:4));j.scale.y=Y;j.rotation.z=jj.drag?.15:0;const col=v.icol?v.icol(jj.id):[136,170,102];j.userData.f.material.color.copy(rgb(col));j.children.forEach(c=>{if(c.material&&c.material.type==='MeshLambertMaterial'){c.material.transparent=true;c.material.opacity=c===j.userData.f?(jj.used?.12:1):(jj.used?.1:.5)}})});
+  D.jars.forEach((j,i)=>{const jj=g.jars[i];j.visible=!!jj;if(!jj)return;j.position.copy(p3(jj.x,jj.y-(jj.drag?4:0),jj.drag?30:4));if(!jj.drag){j.position.z+=this.BZ;j.position.y+=this.BY}j.scale.y=Y;j.rotation.z=jj.drag?.15:0;const col=v.icol?v.icol(jj.id):[136,170,102];j.userData.f.material.color.copy(rgb(col));j.children.forEach(c=>{if(c.material&&c.material.type==='MeshLambertMaterial'){c.material.transparent=true;c.material.opacity=c===j.userData.f?(jj.used?.12:1):(jj.used?.1:.5)}})});
   // cuchara
   const rm=g.pot.stirring;D.ladle.visible=!!rm;if(rm){const pr=v.ptr;D.ladle.position.copy(p3(clamp(pr.x,C.CAULD.x-C.CAULD.rx+10,C.CAULD.x+C.CAULD.rx-10),clamp(pr.y,C.CAULD.y-C.CAULD.ry+4,C.CAULD.y+C.CAULD.ry-4)+6,30));D.ladle.scale.y=Y;D.ladle.rotation.z=clamp(pr.vx/900,-.4,.4)}
   // partículas del estado 2D (vapor, motas, burbujas, polvo…) → plano z=40 de la escena; 1 solo Points

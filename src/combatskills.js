@@ -262,7 +262,7 @@ function fxHit(a,f,o,k){if(!o||!(o.hp>0))return;const el=elemOf(a,f),K=SK3(),col
  if(!SX(a.stun?'stun':a.exec?'execute':SKS[el]||'hitFlesh',k)){try{if(SND&&SND.en)SND.en(SNDE[el]||'fisico')}catch(e){}}}
 const LUNGE={gr_embestida:{max:130,gap:26,u0:.08,u1:.5},gd_escudo:{max:110,gap:26,u0:.08,u1:.55},as_sombra:{max:190,gap:24,u0:.04,u1:.4,thru:1}};   /* habilidades que desplazan al héroe */
 function use(slot){
- if(!active()||P.hp<=0||CK||(typeof inRoom==='function'&&inRoom()))return false;
+ if(!active()||P.hp<=0||S.corpse||CK||(typeof inRoom==='function'&&inRoom()))return false;
  const f=fam(),a=bar()[slot];if(!a)return false;const now=performance.now();
  if(now<gcd||now<(cd[a.id]||0))return false;
  if(typeof STS!=='undefined'){if(STS.frozen&&STS.frozen(P))return false;if(STS.has(P,'fear')){toast('😱 El miedo te paraliza.',1200);return false}if(f.res==='MN'&&STS.has(P,'silence')){toast('🤐 Estás silenciado.',1200);return false}}
