@@ -181,6 +181,8 @@ const COC=(()=>{
  let regT=0;function FOODtick(now){const fo=S.food;if(!fo||!fo.reg||fo.reg.exp<Date.now()||now<regT)return;regT=now+3000;if(P.hp>0&&P.hp<maxHp()){P.hp=Math.min(maxHp(),P.hp+fo.reg.per);dirty=1}}
  /* consulta para efectos AMBIENTALES (todavía ninguna zona los pide): COC.has('abr') */
  const has=k=>{const fo=S.food;return !!(fo&&fo[k]&&fo[k].exp>Date.now())},hpBonus=()=>{const fo=S.food;return fo&&fo.hpm&&fo.hpm.exp>Date.now()?fo.hpm.hp||0:0};
+ /* N0.9-ATRIBUTOS: los platos dan atributos mientras duran: Vigor→Fuerza, Celeridad→Agilidad, Maná→Espíritu, Dureza→Constitución (la magnitud es `per`, 1–4) */
+ const FATT={vig:'fue',vel:'agi',man:'esp',def:'con'},attr=k=>{const fo=S.food;let t=0;if(fo)for(const f in FATT)if(FATT[f]===k&&fo[f]&&fo[f].exp>Date.now())t+=fo[f].per||1;return t};
  const skipOnce=()=>{const s=SKIP;SKIP=false;return s};
 
  // ── COCINA AUTOMÁTICA: capa de datos para src/cookauto.js (`COC.X`). Sin minijuegos: la calidad sale de receta + sabor; preparación y fuego se dan por buenos (.85/.8) ────────────────────────────
@@ -202,4 +204,4 @@ const COC=(()=>{
   const per=portionXP(M,sel.length,q),xp=Math.round(per*(isNew?1.5:1)*n);gain('co',xp);dirty=1;
   return{out,q,n,M,rec,score:r.score,xp,isNew,m}}
  const X={FX,FXI,FL,FLK,MET,SPFX,ROM,RECIPES,nm,props,known,prepOf,tutRec,recFor,keyOf,idOf,ensure,healOf,candidates,maxIng,autoMeth,autoScore,maxPortions,cookAuto,L:k=>L(k)};
- return{X,stationClick,ready:()=>!!G&&idle()&&ready(),recM:()=>{const r=G&&idle()?recFor(SEL):null;return r?r.m:null},tutM:()=>{const T=tutRec();return T?T.m:null},HB,herbsHave,reg,sweep,open,close,tick,use,mix,props,parse,ensure,FX,FXI,SPFX,FL,MET,healOf,RECIPES,prepOf,has,hpBonus,skipOnce,setMeth,prepDone,cookDone,plateDone,get active(){return !!G||OPEN||(AUTO()&&COOKA.active)},get cooking(){return (AUTO()&&COOKA.cooking)||(!!G&&!G.res&&G.stage!=='pick')},get stn(){return STN},get G(){return G}}})();
+ return{X,stationClick,ready:()=>!!G&&idle()&&ready(),recM:()=>{const r=G&&idle()?recFor(SEL):null;return r?r.m:null},tutM:()=>{const T=tutRec();return T?T.m:null},HB,herbsHave,reg,sweep,open,close,tick,use,mix,props,parse,ensure,FX,FXI,SPFX,FL,MET,healOf,RECIPES,prepOf,has,hpBonus,attr,skipOnce,setMeth,prepDone,cookDone,plateDone,get active(){return !!G||OPEN||(AUTO()&&COOKA.active)},get cooking(){return (AUTO()&&COOKA.cooking)||(!!G&&!G.res&&G.stage!=='pick')},get stn(){return STN},get G(){return G}}})();

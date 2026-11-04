@@ -86,11 +86,11 @@ const STS=(()=>{
  function add(e,k,o){o=o||{};if(!D[k]||!e)return false;const now=now0();if(isP(e)?P.hp<=0:(typeof alive==='function'&&!alive(e,now)))return false;
   if(!isP(e)&&e.d&&(e.d.dmg===0&&!e.d.boss)&&D[k].bad&&k!=='burn')return false;   // neutrales (gallinas, corderos) no sufren estados de control
   if(STRONG[k]&&has(e,STRONG[k]))k=STRONG[k];
-  const pur=isP(e)&&D[k].bad&&typeof ENCH!=='undefined'?Math.min(.6,.15*ENCH.arm('purificacion')):0;   /* PURIFICACIÓN de la armadura: dura menos */   // la versión débil sobre la fuerte refresca la fuerte
+  const pur=isP(e)&&D[k].bad&&typeof ENCH!=='undefined'?Math.min(.6,.15*ENCH.arm('purificacion')):0;const pur2=isP(e)&&D[k].bad&&typeof ATT!=='undefined'?ATT.sts():0;   /* N0.9-ATRIBUTOS: Espíritu recorta estados negativos */   /* PURIFICACIÓN de la armadura: dura menos */   // la versión débil sobre la fuerte refresca la fuerte
   k=react(e,k,now);if(!k)return true;const d=D[k];
   if(d.hard&&has(e,'unbreak'))return false;
   e.stsImm=e.stsImm||{};if(e.stsImm[k]>now)return false;
-  let dur=(o.dur||d.dur)*(1-pur);if(d.hard&&!isP(e)&&e.d&&(e.d.boss||e.elite))dur*=C.bossHard;
+  let dur=(o.dur||d.dur)*(1-pur)*(1-pur2);if(d.hard&&!isP(e)&&e.d&&(e.d.boss||e.elite))dur*=C.bossHard;
   e.sts=e.sts||{};let s=e.sts[k];const fresh=!s||s.t1<=now;
   let inh=0;if(d.rep&&e.sts[d.rep]){const w=e.sts[d.rep];if(w.t1>now)inh=w.n||0;delete e.sts[d.rep]}   // la fuerte hereda las cargas de la débil
   const v0=o.v!=null?o.v:d.dot?Math.max(1,Math.round((isP(e)?maxHp()*.03:e.mh*.04)*(d.vm||1))):d.shield?Math.max(1,Math.round(mhOf(e)*C.shield)):0,add1=Math.max(1,o.n||1);

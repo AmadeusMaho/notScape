@@ -266,3 +266,5 @@ export class Forge3D{
   const o=this.out;if(o.width>0&&o.height>0)this.cx.drawImage(dom,x,y,w,h,0,0,o.width,o.height);
   r.setScissorTest(sci);r.setScissor(sz);r.setViewport(vp);r.setClearColor(cc,ca);r.autoClear=ac;this.stats.ms+=(performance.now()-t0-this.stats.ms)*.1}
 }
+/* N0.7-COCINA-ALQUIMIA-3D: utilidades compartidas con kitchen3d.js (Cocina y Alquimia en 3D) */
+export {hearth,hash,Bx,Cy,Sp,Fr,shell,barrel,table,glowTex,cl,STONE,WOODS,MAXS,HX,HS,AX,ATOP};

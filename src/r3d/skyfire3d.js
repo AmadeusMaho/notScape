@@ -4,7 +4,7 @@
 // Posiciones deterministas (hash) sobre una elipse alrededor del centro de la zona (BIOMES.zone), en 2 anillos y con alturas/anchos variados. Verificar con `?` el aspecto en la escena de la huida.
 import * as THREE from 'three';
 
-const N=64;
+const N=64,F=15,NT=N+F;   // N = anillo de llamaradas · F = FRENTE de fuego que persigue al héroe en «Escapa» (lote N0.5-FRENTE-FUEGO)
 const hh=(a,b)=>{const s=Math.sin(a*127.1+b*311.7)*43758.5453;return s-Math.floor(s)};
 const VS=`attribute float aSeed;varying vec2 vUv;varying float vSeed;
 void main(){vUv=uv;vSeed=aSeed;vec3 c=(modelMatrix*instanceMatrix*vec4(0.,0.,0.,1.)).xyz;float sx=length(instanceMatrix[0].xyz),sy=length(instanceMatrix[1].xyz);
@@ -22,15 +22,20 @@ void main(){vec2 uv=vUv;float y=uv.y,w=abs(uv.x-.5)*2.,t=uT*(.8+vSeed*.5)+vSeed*
 
 export class SkyFire{
  constructor(scene,W3){this.scene=scene;this.W3=W3;this.t=0;this.on=false;
-  const g=new THREE.PlaneGeometry(1,1),seed=new Float32Array(N);for(let i=0;i<N;i++)seed[i]=hh(i,7);g.setAttribute('aSeed',new THREE.InstancedBufferAttribute(seed,1));
+  const g=new THREE.PlaneGeometry(1,1),seed=new Float32Array(NT);for(let i=0;i<NT;i++)seed[i]=hh(i,7);g.setAttribute('aSeed',new THREE.InstancedBufferAttribute(seed,1));
   this.U={uT:{value:0},uK:{value:0}};
   const m=new THREE.ShaderMaterial({vertexShader:VS,fragmentShader:FS,uniforms:this.U,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false});
-  this.mesh=new THREE.InstancedMesh(g,m,N);this.mesh.frustumCulled=false;this.mesh.renderOrder=7;this.mesh.visible=false;scene.add(this.mesh);this.built=false}
+  this.mesh=new THREE.InstancedMesh(g,m,NT);this.mesh.frustumCulled=false;this.mesh.renderOrder=7;this.mesh.visible=false;scene.add(this.mesh);this.built=false}
  // coloca las llamaradas (se llama una vez que BIOMES.zone existe)
  build(){const Z=typeof BIOMES!=='undefined'&&BIOMES.zone;if(!Z)return false;const c=this.W3(Z.cx,Z.cy,1),rx=Z.rx*1.1+3,rz=Z.ry*1.12+3,M=new THREE.Matrix4(),q=new THREE.Quaternion(),p=new THREE.Vector3(),s=new THREE.Vector3();
   for(let i=0;i<N;i++){const ring=i%2,a=i/N*Math.PI*2+hh(i,1)*.12,k=1+ring*.16+hh(i,2)*.08,w=4.5+hh(i,3)*5,hgt=8.5+hh(i,4)*10+ring*3;
    p.set(c.x+Math.cos(a)*rx*k,-.6+hh(i,5)*1.8-ring*1.2,c.z+Math.sin(a)*rz*k);s.set(w,hgt,1);M.compose(p.clone().add(new THREE.Vector3(0,hgt*.42,0)),q,s);this.mesh.setMatrixAt(i,M)}
   this.mesh.instanceMatrix.needsUpdate=true;this.built=true;return true}
- update(t,dt,burn){this.t+=dt;const k=Math.max(0,Math.min(1,burn));this.U.uT.value=this.t;this.U.uK.value=k*.95;const vis=k>.02;if(vis&&!this.built)this.build();this.mesh.visible=vis&&this.built}
+ /* frente de fuego: f={x,y,dx,dy} en px de mundo (centro y dirección de avance) o null; una fila de F llamas perpendicular al avance, sobre el suelo de la isla */
+ front(f){this.fr=f||null}
+ placeFront(){const M=new THREE.Matrix4(),q=new THREE.Quaternion(),p=new THREE.Vector3(),s=new THREE.Vector3(),f=this.fr,T=ISO.TILE,cx=f.x/T,cz=f.y/T,l=Math.hypot(f.dx,f.dy)||1,px=-f.dy/l,pz=f.dx/l;
+  for(let j=0;j<F;j++){const u=(j-(F-1)/2)*1.25,x=cx+px*u,z=cz+pz*u;let gy=0;try{gy=Math.max(0,this.W3(0,0,TER.standZ(x*T,z*T)).y)}catch(e){}const w=2.4+hh(j,3)*1.6,hgt=4.2+hh(j,4)*3.2;p.set(x,gy+hgt*.42,z);s.set(w,hgt,1);M.compose(p,q,s);this.mesh.setMatrixAt(N+j,M)}
+  this.mesh.instanceMatrix.needsUpdate=true}
+ update(t,dt,burn){this.t+=dt;const k=Math.max(0,Math.min(1,burn));this.U.uT.value=this.t;this.U.uK.value=k*.95;const vis=k>.02;if(vis&&!this.built)this.build();this.mesh.visible=vis&&this.built;this.mesh.count=this.fr?NT:N;if(this.fr&&vis)this.placeFront()}
  dispose(){this.scene.remove(this.mesh);this.mesh.geometry.dispose();this.mesh.material.dispose()}
 }

@@ -27,6 +27,8 @@ T.untarget=()=>{A=null;P.g=null};
 /* killAll (lote FIX-CONGELA-SLIMES, 2 nov 2026): crea y MATA cada criatura de MD forzando el azar (botín épico, azul, verde y ninguno) y devuelve los ids que lanzan error.
    Un error al matar = el mundo se congelaba (lo atrapaba el bucle). Obligatorio tras añadir/tocar enemigos, fauna, botín o kill(): `ns.py eval "JSON.stringify(NSTEST.killAll())"` → {n, err:[]}.
    Restaura S, el suelo y Math.random; no guardes la partida de prueba después. */
+/* attrCoverage (lote N0.9-ATRIBUTOS-3): lista los objetos EQUIPABLES (ranuras h f r n w c s l g a) que NO dan ningún atributo (ni explícito ni implícito). Debe devolver []; objeto nuevo equipable = `attrOf` lo cubre o lleva `st:{fue…}`. */
+T.attrCoverage=()=>{const out=[];for(const id of Object.keys(I)){if(id.includes('^')||id.includes('@'))continue;const sl=slotOfId(id);if(!sl||!AWT[sl])continue;const L0=LOOT[id.split('~')[0]],ex=L0&&L0.st&&ATTRB.some(k=>L0.st[k]);if(ex)continue;const a=attrOf(sl,id);if(!a||!Object.values(a).some(v=>v>0))out.push(id)}return out};
 T.killAll=(ids)=>{const S0=JSON.stringify(S),gd=GD.length,rnd=Math.random,err=[],now=performance.now();let n=0;
  for(const id of ids||Object.keys(MD))for(const r of [0,.0005,.005,.9]){Math.random=()=>r;const k=M.length;try{mob(id,P.x+60,P.y);const m=M[M.length-1];m.hp=0;kill(m,now);n++}catch(e){err.push(id+'@'+r+': '+(e&&e.stack||e).toString().split('\n').slice(0,3).join(' | '))}finally{Math.random=rnd;M.splice(k)}}
  const s=JSON.parse(S0);for(const key of Object.keys(S))if(!(key in s))delete S[key];Object.assign(S,s);GD.splice(gd);dirty=1;return {n,err}};

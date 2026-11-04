@@ -93,3 +93,7 @@
 .ck-sp{position:absolute;width:var(--s);height:var(--s);background:#ffe48a;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);pointer-events:none;box-shadow:0 0 8px #ffd84a;animation:ckfly var(--d) ease-out forwards}
 @keyframes ckfly{0%{transform:translate(0,0) scale(0) rotate(0);opacity:1}25%{transform:translate(calc(var(--x)*.3),calc(var(--y)*.3)) scale(1.2) rotate(90deg)}100%{transform:translate(var(--x),var(--y)) scale(.2) rotate(260deg);opacity:0}}
 .ck-s.on:hover{animation:ckwig .3s}@keyframes ckwig{0%,100%{transform:rotate(0)}30%{transform:rotate(-6deg)}70%{transform:rotate(6deg)}}
+
+/* N0.7-COCINA-ALQUIMIA-3D: con el diorama 3D la tarjeta de resultado se pone sobre el panel izquierdo y deja ver el plato 3D en la escena */
+.ck-3d .ck-res{background:linear-gradient(90deg,rgba(10,8,6,.86) 0,rgba(10,8,6,.86) 42%,transparent 44%);justify-content:flex-start;padding-left:2.2%}
+.ck-3d .ck-card{max-width:36%}

@@ -330,6 +330,17 @@ function wjoC(){const E=d=>edge([1,0,0],d),S=P(WB0,{py:-.1,cx:.38,hx:.25,re:E(WB
 function wingC(){const E=d=>edge([1,0,0],d),S=P(WB0,{re:E(WB0.slice(C.rd,C.rd+3)),lp:[.1,.64,.3]});   // llave: la sube, la encaja y gira la muñeca con un tirón de todo el cuerpo
  const a=P(S,{cx:.2,cy:-.15,rp:[-.18,.84,.18],rd:nrm([.4,.6,.7]),re:E([.4,.6,.7])}),b=P(S,{cx:.26,rp:[-.14,.72,.28],rd:nrm([.2,.2,1]),re:E([.2,.2,1])}),c=P(S,{cx:.36,py:-.1,cy:.2,rp:[-.1,.58,.36],rd:nrm([-.5,-.3,.8]),re:E([-.5,-.3,.8])}),d=P(c,{cx:.3,cy:.1,rp:[-.12,.62,.32]});
  return wk4(S,a,b,c,d)}
+// COCINA 3D (4 nov 2026, lote N0.7-COCINA-ALQUIMIA-3D): clips de los pasos de la escena «Cocinando…». wck = picar/cortar (cuchillo: alza y baja, es el de la lezna) · wtoss = echar el ingrediente en el recipiente ·
+//    wshk = sazonar (el salero sobre la cabeza, sacudiendo) · wfl = voltear la sartén (el giro de la llave sin herramienta) · wplt = emplatar (las dos manos al frente sirviendo). Fregar pescado = LOOPS.ds; remover = LOOPS.co.
+function wtossC(){const E=d=>edge([1,0,0],d),S=P(WB0,{re:E(WB0.slice(C.rd,C.rd+3))});
+ const a=P(S,{cx:.1,cy:-.05,rp:[-.2,.6,.16],rd:nrm([0,-.3,.9]),re:E([0,-.3,.9])}),b=P(S,{cx:.16,rp:[-.12,.88,.24],rd:nrm([0,.2,.95]),re:E([0,.2,.95])}),c=P(S,{cx:.3,py:-.08,rp:[-.02,.76,.5],rd:nrm([0,-.5,.85]),re:E([0,-.5,.85])}),d=P(c,{cx:.2,rp:[-.1,.7,.3]});
+ return wk4(S,a,b,c,d)}
+function wshkC(){const E=d=>edge([1,0,0],d),S=P(WB0,{re:E(WB0.slice(C.rd,C.rd+3))});
+ const a=P(S,{cx:.22,cy:-.12,rp:[-.12,.98,.4],rd:nrm([0,-.7,.7]),re:E([0,-.7,.7]),pr:[-.9,0,0]}),b=P(S,{cx:.24,cy:-.12,rp:[-.12,1.02,.46],rd:nrm([0,-.8,.6]),re:E([0,-.8,.6]),pr:[-1,.2,0]}),c=P(S,{cx:.24,cy:-.12,rp:[-.1,.95,.48],rd:nrm([0,-.7,.7]),re:E([0,-.7,.7]),pr:[-.7,-.2,0]}),d=P(a,{});
+ return wk4(S,a,b,c,d)}
+function wpltC(){const E=d=>edge([1,0,0],d),S=P(WB0,{re:E(WB0.slice(C.rd,C.rd+3))});
+ const a=P(S,{rp:[-.1,.66,.22],rd:nrm([0,0,1]),re:E([0,0,1]),lp:[.1,.66,.22],ld:nrm([0,0,1]),le:[0,1,0]}),b=P(S,{cx:.12,rp:[-.1,.72,.34],rd:nrm([0,.1,1]),re:E([0,.1,1]),lp:[.1,.72,.34],ld:nrm([0,.1,1]),le:[0,1,0]}),c=P(S,{cx:.28,py:-.06,rp:[-.1,.7,.5],rd:nrm([0,-.1,1]),re:E([0,-.1,1]),lp:[.1,.7,.5],ld:nrm([0,-.1,1]),le:[0,1,0]}),d=P(c,{cx:.18});
+ return wk4(S,a,b,c,d)}
 // PESCA (u = ph del juego, 0→.99 en 2,4 s): echar la caña atrás, latigazo adelante, esperar (los tirones van aparte)
 const FI0=P(DEF,{py:-.03,yaw:-.25,cy:.05,cx:.05,fl:[.11,.08,0,0,.2],fr:[-.11,-.08,0,0,-.35],two:1,lh:.14,rp:[-.08,.7,.22],rd:nrm([0,.55,.83]),re:[1,0,0],pr:[-.7,-.6,-.2],pl:[.6,-.7,.1]});
 function fishC(){const k1=P(FI0,{cy:-.35,cx:-.06,pz:-.02,rp:[-.12,.94,.06],rd:nrm([-.15,.8,-.58])});
@@ -358,9 +369,9 @@ export const LOOPS={
  ins:t=>P(DEF,{hx:.35,cx:.08,lp:[.06,.7,.24],ld:nrm([0,.35,.94]),le:[-1,0,0],rp:[-.02+.015*Math.cos(t*7),.73,.25+.012*Math.sin(t*9)],rd:nrm([.1,.7,-.5]),re:[1,0,0],pl:[.7,-.6,.1]})};
 
 // golpes de trabajo: clave → constructor (se cachean)
-const WORK={wcr:wcrC,wpe:wpeC,wsa:wsaC,wes:wesC,wjo:wjoC,wing:wingC,wc:chop,mi:mine,sm:smith,smH:()=>smithV('H'),smB:()=>smithV('B'),smt:()=>smithV('t'),smc:()=>smithV('c'),smm:()=>smithV('m'),smo:()=>smithV('o'),smf:()=>smithV('f')};
+const WORK={wck:wpeC,wtoss:wtossC,wshk:wshkC,wfl:wingC,wplt:wpltC,wcr:wcrC,wpe:wpeC,wsa:wsaC,wes:wesC,wjo:wjoC,wing:wingC,wc:chop,mi:mine,sm:smith,smH:()=>smithV('H'),smB:()=>smithV('B'),smt:()=>smithV('t'),smc:()=>smithV('c'),smm:()=>smithV('m'),smo:()=>smithV('o'),smf:()=>smithV('f')};
 // tiempos del seguimiento (s) tras el impacto: pesado = más largo
-const FOLLOW={dual:.36,fist:.3,sword:.4,dagger:.26,great:.7,scepter:.45,staff:.5,bow:.6,xbow:.85,wcr:.35,wpe:.35,wsa:.4,wes:.4,wjo:.25,wing:.4,wc:.45,mi:.5,sm:.35,smH:.45,smB:.55,smt:.3,smc:.4,smm:.4,smo:.4,smf:.5};
+const FOLLOW={wck:.3,wtoss:.4,wshk:.3,wfl:.4,wplt:.45,dual:.36,fist:.3,sword:.4,dagger:.26,great:.7,scepter:.45,staff:.5,bow:.6,xbow:.85,wcr:.35,wpe:.35,wsa:.4,wes:.4,wjo:.25,wing:.4,wc:.45,mi:.5,sm:.35,smH:.45,smB:.55,smt:.3,smc:.4,smm:.4,smo:.4,smf:.5};
 
 // ════════════════════════════ IK ════════════════════════════
 const _d=new V3(),_p=new V3(),_u=new V3(),_f=new V3(),_X=new V3(),_Y=new V3(),_Z=new V3(),_m=new M4(),_q=new QT(),_q2=new QT(),_v=new V3(),_w=new V3(),_sp=new V3();
@@ -445,6 +456,7 @@ export const BUILD={
  tongs:(p,g,o)=>{[-1,1].forEach(q=>p(box(.012,.3,.012).translate(0,.15,0),'#4a4a52',.012*q,0,0,{p:g,ink:.006}).rotation.z=-q*.05);
   p(box(.07,.025,.04),'#ff8a3a',0,.31,0,{p:g,ink:0,mat:glow('#ff7a2a',1.6)});return{}},
  rod:(p,g,o)=>{p(cyl(.006,.018,1.25,6).translate(0,.44,0),'#7a5a3a',0,0,0,{p:g,ink:.008});p(cyl(.022,.022,.03,10).rotateZ(Math.PI/2),IRON,-.03,-.03,0,{p:g,ink:.006});return{tip:new V3(0,1.06,0)}},
+ shaker:(p,g,o)=>{p(cyl(.026,.03,.09,8).translate(0,.045,0),'#d8d0c0',0,0,0,{p:g,ink:.005});p(cyl(.027,.027,.02,8).translate(0,.1,0),'#8a8a92',0,0,0,{p:g,ink:.005});return{}},
  ladle:(p,g,o)=>{p(cyl(.011,.011,.32,6).translate(0,.1,0),'#8a8a92',0,0,0,{p:g,ink:.006});p(sph(.045,1,.55,1),'#8a8a92',0,.27,0,{p:g,ink:.007});return{}},
  saw:(p,g,o)=>{p(box(.04,.08,.03),WOOD,0,0,0,{p:g,ink:.007});p(box(.07,.32,.008).translate(.01,.2,0),'#b8bec8',0,0,0,{p:g,ink:.006});return{}},
  quill:(p,g,o)=>{p(cyl(.004,.004,.14,4).translate(0,.04,0),'#e8e0c8',0,0,0,{p:g,ink:0});p(sph(.03,.35,1.6,.12),'#f0ead8',0,.12,0,{p:g,ink:.005});return{}},
@@ -469,7 +481,7 @@ const PULL={sword:.42,dagger:.26,scepter:.12,great:.1,staff:.1,bow:0,xbow:.05,sh
 const SWAP=.5,DRAW_T=.5,SHEATH_T=.55,DUR_K={great:1.4,staff:1.2,bow:1.1,xbow:1.15};   // duración por arma (el mandoble pesa: se saca más despacio)   // s=SWAP: la mano agarra el objeto y este cambia de sitio (funda/espalda ↔ mano)
 Object.assign(BUILD,SETW);   // armas de set (monstersets3d.js)
 const TOOLKIND={tongsR:'tongs'};
-const TOOL={wcr:['saw'],wpe:['awl'],wsa:['needle'],wes:['chisel','mallet'],wjo:['jhammer','tongs'],wing:['wrench'],ds:['knife'],he:['shears'],wc:['axe'],mi:['pick'],sm:['hammer','tongs'],fu:['tongsR'],co:['ladle'],fi:['rod'],cr:['saw'],es:['saw'],ins:['quill','book'],eat:['food']};
+const TOOL={wck:['knife'],wtoss:[],wshk:['shaker'],wfl:[],wplt:[],wcr:['saw'],wpe:['awl'],wsa:['needle'],wes:['chisel','mallet'],wjo:['jhammer','tongs'],wing:['wrench'],ds:['knife'],he:['shears'],wc:['axe'],mi:['pick'],sm:['hammer','tongs'],fu:['tongsR'],co:['ladle'],fi:['rod'],cr:['saw'],es:['saw'],ins:['quill','book'],eat:['food']};
 
 // ════════════════════════════ EL ANIMADOR ════════════════════════════
 // ARMAS → ANIMACIÓN (reciclar): un arma nueva NO necesita animaciones nuevas. Añade una fila: anim = clase de animación existente

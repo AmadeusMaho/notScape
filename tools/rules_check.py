@@ -272,7 +272,7 @@ _lp = re.search(r"function loop\(now\)\{(.*)", _g)
 _lb = _lp.group(1) if _lp else ''
 (ok if _lb.startswith('requestAnimationFrame(loop);') and re.search(r"try\{[^}]*upd\(DT,now\)", _lb) and re.search(r"try\{draw\(now\)\}catch", _lb) and _lb.count('requestAnimationFrame(loop)') == 1 else bad)(
     'BUCLE: loop() pide el siguiente fotograma AL EMPEZAR y protege upd/draw con try/catch (un error no congela el juego)', 'game.js loop')
-(ok if re.search(r"function rollLoot\(m,bm\)\{const k=lootK\(m\)", _g) and re.search(r"function addLoot\(id,gx,gy\)\{const it=LOOT\[id\];if\(!it\)", _g) else bad)(
+(ok if re.search(r"function rollLoot\(m,bm\)\{const k=lootK\(m\)", _g) and re.search(r"function addLoot\(id,gx,gy\)\{id=rollId\(id\);const it=LOOT\[id\];if\(!it\)", _g) else bad)(
     'BOTÍN: rollLoot usa lootK(m) y addLoot ignora ids inexistentes (MB no conoce los monstruos de áreas/fauna)', 'game.js rollLoot/addLoot')
 #  MB[id] solo se lee en sitios de JEFE/CAPITÁN (que sí están en BI[k].mobs); cualquier uso nuevo debe pasar por lootK o comprobar null
 _mbu = []

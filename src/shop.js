@@ -65,7 +65,7 @@ const TRADE=(()=>{
  const SELLERS=['Aldric','Maelis','Torvin','Selka','Brannoch','Yuna','Dorian','Hakon','Isolde','Pipo','Garrick','Lenka','Ostrel','Vesper','Kaito','Mirren','Rurik','Tamsin','Odalys','Burk'];
  const CATS=[['all','Todo'],['arm','Armas'],['def','Armaduras'],['tool','Herramientas'],['mat','Materiales'],['food','Comida'],['mag','Magia'],['misc','Varios']];
  const catOf=id=>/^(sw|bw|st|lw|maza|garrote|shuriken)(_|$)/.test(id)?'arm':/^(ar|lg|gl|sh)_/.test(id)||id==='antifaz'||id==='sombrero'||id==='corona'?'def':/^(pk|ax|rd)_/.test(id)?'tool':/^(c|f)_/.test(id)||['pan','carne','pollo','huevo','camaron','trucha','salmon','atun','sardina','arenque','lucio','pezespada','manta','kraken','arroz','hongo'].includes(id)||/^carne_/.test(id)?'food':/^(pot|sc|rn)_/.test(id)?'mag':/^(b|logs|roble|sauce|arce|abedul|fresno|ebano|tejo|caoba|baobab|mundo|cobre|estano|hierro|carbon|mitril|plata|adam|runita|oricalco|celestita|cuero|lana|tela|piel|hueso|pluma|grasa|gema|perla)(_|$)/.test(id)?'mat':'misc';
- const trade=id=>I[id]&&I[id][2]>0&&!/^rv_/.test(id)&&id!=='quemado';
+ const trade=id=>I[id]&&I[id][2]>0&&!/^rv_/.test(id)&&!id.includes('^')&&id!=='quemado';
  let ALL=null;const allIds=()=>ALL||(ALL=Object.keys(I).filter(trade));
  const fair=id=>Math.max(1,Math.round(val(id)*MK_K));
  const rng=(()=>{let s=(Date.now()>>>0)||1;return()=>{s^=s<<13;s>>>=0;s^=s>>>17;s^=s<<5;s>>>=0;return s/4294967296}})();

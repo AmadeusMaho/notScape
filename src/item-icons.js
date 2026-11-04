@@ -143,7 +143,7 @@ const ITEMICON=(()=>{
   const r=CRP[p[0]];if(!r||p.length<2)return null;const last=p[p.length-1],ti=['cobre','bronce','hierro','acero','plata','alba','mitril','adam','runita','oricalco','infernita','celestita'].indexOf(last);
   const col=r[1]==='w'?(WCOL[last]||'#a0703a'):r[1]==='l'?(LCOL[Math.max(0,ti)]):r[1]==='g'?GRN:(ti>=0?TC[last]:'#cdbfe8');
   return[r[0],col]}
- function spec(id){let m,t;
+ function spec(id){id=String(id).replace(/\^[0-9][0-9a-z]/,'');let m,t;   /* N0.9-TIRADAS: `^<p><s>` es la tirada de atributos, no cambia el aspecto */
   const tr=ITEMICON.tier?ITEMICON.tier(id):null,cm0=/^(?:ar|sh|lg|gl)_(cu|tu)_/.exec(id),tb=TC[tr]||'#aaaaaa',tc=cm0?(cm0[1]==='cu'?mix('#8a5a2a',tb,.3):mix('#cfc8e8',tb,.5)):(TC[tr]||'#aaa'); // lote C1: cuero = marrón teñido · túnica = tela clara teñida por el tier
   if(id.startsWith('sw_'))return['sword',tc];if(id.startsWith('ar_'))return['chest',tc];if(id.startsWith('sh_'))return['shield',tc];if(id.startsWith('lg_'))return['legs',tc];if(id.startsWith('gl_'))return['gloves',tc];
   if(typeof COC!=='undefined'){const pl=COC.parse(id);if(pl){const fc=pl.top.length?COC.FX[pl.top[0][0]][1]:'#c8a060';return['bowl','#8a6a4a',{food:fc,steam:1,bits:[[26,28,3,'#d8884a'],[38,27,3,'#6ab048']]}]}}
@@ -234,7 +234,7 @@ const ITEMICON=(()=>{
   return out}
  const canvas=id=>C[id]||(C[id]=String(id).includes('@')?ench(draw(id),id):draw(id)),URL_={};
  // H3 (oct 2026): descripción para el pipeline 3D (src/r3d/icons3d.js): forma, color, opciones, tier, cultura y color de rareza (el contraluz del icono)
- const info=id=>{const s=spec(id),r=typeof rr==='function'&&typeof RAR!=='undefined'?rr(id):0;return{kind:s[0],c:s[1],o:s[2]||{},id,tier:ITEMICON.tier?ITEMICON.tier(id):null,cu:typeof cultOfId==='function'?cultOfId(id):0,rc:r&&RAR[r]?RAR[r][1]:null,rn:gradeOf(id),fc:(g=>g>=1&&typeof RAR!=='undefined'&&RAR[Math.min(5,g)]?RAR[Math.min(5,g)][1]:null)(gradeOf(id))}};
+ const info=id=>{id=String(id).replace(/\^[0-9][0-9a-z]/,'');const s=spec(id),r=typeof rr==='function'&&typeof RAR!=='undefined'?rr(id):0;return{kind:s[0],c:s[1],o:s[2]||{},id,tier:ITEMICON.tier?ITEMICON.tier(id):null,cu:typeof cultOfId==='function'?cultOfId(id):0,rc:r&&RAR[r]?RAR[r][1]:null,rn:gradeOf(id),fc:(g=>g>=1&&typeof RAR!=='undefined'&&RAR[Math.min(5,g)]?RAR[Math.min(5,g)][1]:null)(gradeOf(id))}};
  // url(): si el icono 3D ya está en caché se devuelve ese; si no, sale el pintado 2D y se encola el 3D (las <img data-i3="id"> se actualizan solas al terminar)
  return{ench,aura:id=>{const sp=spec(id);return AURA.has(sp[0])&&/^#/.test(sp[1]||'')?sp[1]:null},grade:gradeOf,marker,canvas,url:id=>{const u3=window.ICON3D&&ICON3D.url(id,()=>info(id));return u3||URL_[id]||(URL_[id]=canvas(id).toDataURL())},has:id=>true,spec,info,tier:null}
 })();

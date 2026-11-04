@@ -18,7 +18,7 @@ const MSET=(()=>{
         f:{nm:'Botas de gelatina',em:'🥾',of:'sa',lv:3,ing:{tela:2,gelatina:4},st:{hp:1}},
         a:{nm:'Peto de gelatina',em:'🦺',of:'sa',lv:4,ing:{tela:4,gelatina:8,nucleo_gel:2},st:{},def:1},
         n:{nm:'Amuleto de gelatina',em:'📿',of:'jo',lv:5,ing:{gelatina:3,b_cobre:1,nucleo_gel:3},st:{hp:2,mana:1}}},
-      tr:{2:{mana:1},3:{hp:1},4:{def:1}},
+      tr:{2:{mana:1,esp:1},3:{hp:1,con:1},4:{def:1,con:1}},
       pasiva:{n:'Pegajoso',d:'Quien te golpea queda pegajoso: 35 % de ralentizarlo 2,5 s.'}},
     caz:{n:'Cazador de la Pradera',r:1,tier:'cobre',mobs:['conejo','cabra','zorrorojo','jabali','toro'],em:'🏹',col:'#9a6a34',
       pz:{
@@ -26,7 +26,7 @@ const MSET=(()=>{
         g:{nm:'Guantes de cazador',em:'🧤',of:'pe',lv:3,ing:{cu_cobre:2,hueso:2,cuerno_toro:1},st:{},def:.7},
         f:{nm:'Botas de cazador',em:'🥾',of:'pe',lv:3,ing:{cu_cobre:3,hueso:2,cola_zorro:1},st:{hp:1}},
         a:{nm:'Chaleco de cazador',em:'🦺',of:'pe',lv:5,ing:{cu_cobre:4,cuerno_cabra:2,grasa:1},st:{},def:1}},
-      tr:{2:{acc:1},3:{hp:1},4:{def:1}},
+      tr:{2:{acc:1,agi:1},3:{hp:1,con:1},4:{def:1,agi:1}},
       pasiva:{n:'Rastreador',d:'+12 % de daño a la fauna y +15 % de probabilidad de piel extra al desollar.'}},
     gob:{n:'Goblin',r:1,tier:'bronce',mobs:['goblin','goblinarq','goblinsha'],em:'🏴',col:'#6f8a3a',
       pz:{
@@ -36,7 +36,7 @@ const MSET=(()=>{
         f:{nm:'Botas goblin',em:'🥾',of:'pe',lv:10,ing:{cu_bronce:3,hueso:2},st:{def:1,acc:1}},
         a:{nm:'Peto goblin',em:'🦺',of:'pe',lv:11,ing:{cu_bronce:4,hueso:4,boton_hueso:3},st:{hp:1},def:1},
         w:{nm:'Arco goblin',em:'🏹',of:'cr',lv:11,ing:{tb_roble:3,boton_hueso:3,amuleto_hueso:1,pluma:2},wk:'bow',src:'bw_roble'}},
-      tr:{2:{acc:1},3:{hp:1},4:{def:1},5:{str:1},6:{acc:1}},
+      tr:{2:{acc:1,agi:1},3:{hp:1},4:{def:1,agi:1},5:{str:1,fue:1},6:{acc:1,agi:2}},
       pasiva:{n:'Flechas venenosas',d:'Tus flechas envenenan (25 %) y aciertan mejor a distancia.'}},
     esp:{n:'Espantapájaros',r:1,tier:'bronce',mobs:['espantapajaros'],em:'🌾',col:'#c8a850',
       pz:{
@@ -46,7 +46,7 @@ const MSET=(()=>{
         f:{nm:'Botas de paja',em:'🥾',of:'sa',lv:10,ing:{tela:3,paja_emb:2,arpillera_emb:2},st:{def:1,hp:1}},
         a:{nm:'Túnica de arpillera',em:'🦺',of:'sa',lv:11,ing:{tela:5,paja_emb:5,arpillera_emb:4},st:{hp:1},def:1},
         w:{nm:'Hoz del espantapájaros',em:'🗡️',of:'sm',lv:11,ing:{b_bronce:2,paja_emb:2,arpillera_emb:3},wk:'dagger',src:'lw_0d2'}},
-      tr:{2:{mana:1},3:{hp:1},4:{def:1},5:{mana:1},6:{hp:1}},
+      tr:{2:{mana:1,esp:1},3:{hp:1,int:1},4:{def:1,esp:1},5:{mana:1,int:1},6:{hp:1,esp:2}},
       pasiva:{n:'Pavor de cosecha',d:'15 % de causar Miedo al golpear (1,8 s).'}},
     ban:{n:'Bandido',r:2,tier:'bronce',mobs:['bandido','banasesino','k0'],em:'🥷',col:'#8a1c22',
       pz:{
@@ -56,7 +56,7 @@ const MSET=(()=>{
         f:{nm:'Botas de bandido',em:'🥾',of:'pe',lv:12,ing:{cu_bronce:3,hueso:2},st:{def:1}},
         a:{nm:'Jubón de bandido',em:'🦺',of:'pe',lv:13,ing:{cu_bronce:4,grasa:2,sello_cabecilla:1},st:{},def:1},
         w:{nm:'Daga del cabecilla',em:'🗡️',of:'sm',lv:13,ing:{b_hierro:2,panuelo_carmesi:3},wk:'dagger',src:'lw_0d3'}},
-      tr:{2:{acc:1},3:{str:1},4:{hp:1},5:{str:1},6:{acc:1}},
+      tr:{2:{acc:1,agi:1},3:{str:1,fue:1},4:{hp:1,agi:1},5:{str:1,agi:1},6:{acc:1,agi:2}},
       pasiva:{n:'Filo sucio',d:'Con daga, 30 % de causar sangrado.'}},
     orc:{n:'Orco',r:2,tier:'hierro',mobs:['orco','orcocampeon'],em:'👹',col:'#6a7a4a',
       pz:{
@@ -66,7 +66,7 @@ const MSET=(()=>{
         f:{nm:'Botas orcas',em:'🥾',of:'sm',lv:16,ing:{b_hierro:3,piel_bronce:2,colmillo_campeon:1},st:{def:1,hp:1}},
         a:{nm:'Peto orco',em:'🦺',of:'sm',lv:17,ing:{b_hierro:5,piel_bronce:2,dientorco:3},st:{hp:1},def:1},
         w:{nm:'Mandoble orco',em:'⚔️',of:'sm',lv:17,ing:{b_hierro:5,dientorco:3,colmillo_campeon:2},wk:'great',src:'lw_1m2'}},
-      tr:{2:{hp:1},3:{def:1},4:{str:1},5:{hp:1},6:{def:1}},
+      tr:{2:{hp:1,con:1},3:{def:1,fue:1},4:{str:1,fue:1},5:{hp:1,con:1},6:{def:1,fue:2}},
       pasiva:{n:'Brazo de hierro',d:'El mandoble gasta un 40 % menos de aguante y tu golpe cargado aturde 1,2 s.'}},
     gru:{n:'Gruk',r:3,tier:'hierro',mobs:['b0'],em:'👑',col:'#5a6a3a',
       pz:{
@@ -78,7 +78,7 @@ const MSET=(()=>{
         c:{nm:'Capa de Gruk',em:'🧥',of:'sa',lv:18,ing:{tela:6,piel_bronce:3,colmillo_gruk:2},st:{def:1,hp:2}},
         w:{nm:'Maza de guerra de Gruk',em:'🔨',of:'sm',lv:19,ing:{b_hierro:6,colmillo_gruk:3,hueso:4},wk:'great',src:'lw_1m3'},
         n:{nm:'Amuleto de Gruk',em:'📿',of:'jo',lv:19,ing:{b_hierro:1,colmillo_gruk:2,nucleo_gel:2},st:{hp:3,str:1}}},
-      tr:{2:{hp:1},3:{def:1},4:{str:1},5:{hp:1},6:{def:1},7:{hp:1},8:{str:1,hp:1}},
+      tr:{2:{hp:1,con:1},3:{def:1,fue:1},4:{str:1,fue:1},5:{hp:1,con:1},6:{def:1,fue:2},7:{hp:1,con:2},8:{str:1,hp:1,fue:2,con:2}},
       pasiva:{n:'Onda de choque',d:'Tu golpe cargado lanza una onda que daña y aturde a los enemigos cercanos.'}}
   };
   const idOf=(s,sl)=>'ms_'+s+'_'+sl+'_'+SETS[s].tier;
@@ -109,10 +109,10 @@ const MSET=(()=>{
     LOOT[id]={s:'c',r:TIERRAR[i],k,st:{def:Math.round(1+i*.6),hp:Math.round(1+i*.8)},cp:i};
     if(ACT.sa&&!ACT.sa.some(a=>a[2]===id)){const ms=2900+lv*34;ACT.sa.push(['Capa de '+t[1],{tela:3+Math.ceil(i*.7),['b_'+t[0]]:1},id,lv,pxp(lv,ms),ms])}})}
   // set base: piezas de ARMADURA/ESCUDO/CAPA del MISMO tier (ar_, lg_, gl_, sh_, cp_, cualquier familia); 2–5 piezas dan un bonus pequeño ligado a la cultura del tier (misma tabla que OFGEAR.CULT)
-  const BASE={0:{n:'Disciplina',st:['def','hp']},1:{n:'Puntería',st:['acc','def']},2:{n:'Resistencia',st:['hp','def']},3:{n:'Escarcha',st:['hp','def']},4:{n:'Filo certero',st:['str','acc']},5:{n:'Brasas',st:['str','hp']},9:{n:'Gracia celeste',st:['mana','hp']},10:{n:'Espinas infernales',st:['str','def']}};
+  const BASE={0:{n:'Disciplina',st:['def','hp'],at:['con','fue']},1:{n:'Puntería',st:['acc','def'],at:['agi','con']},2:{n:'Resistencia',st:['hp','def'],at:['con','esp']},3:{n:'Escarcha',st:['hp','def'],at:['int','con']},4:{n:'Filo certero',st:['str','acc'],at:['agi','fue']},5:{n:'Brasas',st:['str','hp'],at:['fue','int']},9:{n:'Gracia celeste',st:['mana','hp'],at:['esp','int']},10:{n:'Espinas infernales',st:['str','def'],at:['fue','agi']}};
   const baseTier=id=>{const b=String(id||'').split('~')[0],m=/^(?:ar|lg|gl|sh)_(?:(?:cu|tu)_)?([a-z]+)$/.exec(b)||/^cp_([a-z]+)$/.exec(b);return m&&TIERS.includes(m[1])?m[1]:null};
   function baseCounts(){const c={};if(!S.eq)return c;['a','l','g','s','c'].forEach(sl=>{const t=baseTier(S.eq[sl]);if(t)c[t]=(c[t]||0)+1});return c}
-  const baseDef=tier=>{const i=TIERS.indexOf(tier),B=BASE[OFGEAR.CULT[i]]||BASE[0],v=1+Math.floor(i/4);return{B,v,i,tr:{2:{[B.st[0]]:v},3:{[B.st[1]]:v},4:{[B.st[0]]:v},5:{[B.st[1]]:v+1}}}};
+  const baseDef=tier=>{const i=TIERS.indexOf(tier),B=BASE[OFGEAR.CULT[i]]||BASE[0],v=1+Math.floor(i/4);return{B,v,i,tr:{2:{[B.st[0]]:v,[B.at[0]]:1},3:{[B.st[1]]:v,[B.at[1]]:1},4:{[B.st[0]]:v,[B.at[0]]:1},5:{[B.st[1]]:v+1,[B.at[1]]:1}}}};   /* N0.9-ATRIBUTOS: cada tramo suma también atributos de su cultura */
   function baseStat(k){let t=0;const c=baseCounts();for(const tier in c){const n=c[tier];if(n<2)continue;const d=baseDef(tier);for(let q=2;q<=Math.min(5,n);q++)if(d.tr[q][k])t+=d.tr[q][k]}return t}
   function baseDesc(id){const tier=baseTier(id);if(!tier)return'';const n=baseCounts()[tier]||0,d=baseDef(tier);
     const rows=Object.keys(d.tr).map(q=>'<span style="color:'+(n>=+q?'#e8cf94':'#8a8274')+'">('+q+') '+fmt(d.tr[q])+'</span>').join('<br>');
@@ -139,9 +139,11 @@ const MSET=(()=>{
     b0:{id:'un_cuerno_rey',nm:'Cuerno del Rey Orco',em:'📯',sl:'n',n:3,r:3,st:{hp:4,str:2},pa:{thorns:2,stone:1.6,frenzy:1.6},col:'#c8a24a',ic:['amulet','#c8a24a'],tx:'Su eco hace temblar hasta a los que lo tocan.'}};
   const UQID={};for(const m in UQ){UQ[m].mob=m;UQID[UQ[m].id]=UQ[m]}
   const uq=id=>UQID[String(id||'').split('~')[0]]||null;
+  /* N0.9-ATRIBUTOS: atributos de los únicos (presupuesto ≈ 5 azul · 6 épico · 7 legendario) */
+  const UQA={un_rey_gel:{con:3,esp:2},un_reloj_conejo:{agi:3,int:2},un_cencerro:{con:3,agi:2},un_cola_lunas:{agi:4,esp:2},un_colmillo_bosque:{fue:3,con:2},un_espada_heroe:{fue:4,con:3},un_gorro_aventurero:{agi:3,con:2},un_arco_hada:{agi:4,esp:2},un_ocarina_hueso:{esp:3,int:2},un_sombrero_cuervo:{int:3,esp:2},un_anillo_susurrante:{agi:3,int:2},un_hoja_oculta:{agi:4,fue:2},un_escudo_olvidado:{con:4,fue:2},un_hoja_escarcha:{agi:3,int:3},un_capa_carmesi:{agi:4,fue:2},un_cuerno_rey:{fue:4,con:2}};
   function genUniq(){for(const m in UQ){const u=UQ[m],id=u.id;I[id]=[u.nm,u.em,400+u.r*300];
     const pa=Object.keys(u.pa).map(k=>({id:k,v:+((PS[k]?PS[k].b:5)*u.pa[k]).toFixed(1)}));
-    if(u.sl==='w')regWeapon(id,u.src);LOOT[id]={s:u.sl,r:u.r,k:u.k||0,st:Object.assign({},u.st||{}),pa,uq:1,tx:u.tx}}}
+    if(u.sl==='w')regWeapon(id,u.src);LOOT[id]={s:u.sl,r:u.r,k:u.k||0,st:Object.assign({},u.st||{},UQA[id]||{}),pa,uq:1,tx:u.tx}}}
   /** Se llama desde rollLoot: ¿suelta este monstruo su objeto único? (1/n, la suerte ayuda) */
   function rollUniq(m){const u=m&&m.d&&UQ[m.d.id];if(!u)return;if(Math.random()<(1+.25*(S.luck||0))/u.n){dropGround(u.id,m.x,m.y,{rare:1});try{inc('uniq');toast('<span style="color:'+RAR[u.r][1]+'">'+RAR[u.r][0]+' · único</span><br><b style="color:'+RAR[u.r][1]+'">'+u.em+' '+u.nm+'</b>',5500);snd('epic')}catch(e){}}}
   // ---- contador y bonus ----
@@ -182,7 +184,7 @@ const MSET=(()=>{
     if(gru&&n){fText('Onda de choque','#c8b060',P.x,P.y,52);try{R3D.skill.play('grietas',{x:P.x,y:P.y,r:R,col:'#c8b060',col2:'#6a4a2a',life:.5})}catch(e){}try{sp(P.x,P.y,'#c8b060',14,120,70,150)}catch(e){}}
     else if(orc&&n)fText('¡Aturdido!','#e8cf94',P.x,P.y,52)}catch(e){}}
   // ---- texto de la descripción ----
-  const T={hp:'Vida',def:'Defensa',mana:'Maná',acc:'Precisión',str:'Fuerza',mreg:'Reg. de maná'};
+  const T={hp:'Vida',def:'Defensa',mana:'Maná',acc:'Precisión',str:'Fuerza',mreg:'Reg. de maná',fue:'Fuerza',con:'Constitución',agi:'Agilidad',int:'Inteligencia',esp:'Espíritu'};
   const fmt=o=>Object.keys(o).map(k=>'+'+o[k]+' '+(T[k]||k)).join(' · ');
   function desc(id){const p=parse(id);if(!p){const u=uq(id);return u?'<span style="color:'+RAR[u.r][1]+'">Objeto único de '+(MD[u.mob]?MD[u.mob].n:u.mob)+' · 1 de cada '+u.n+'</span><br><i style="color:#8a8274">'+u.tx+'</i>':baseDesc(id)}const D=SETS[p.set],c=count(p.set),tt=total(p.set),z=D.pz[p.slot],have=eqPieces(p.set);
     const rows=Object.keys(D.tr).map(n=>{const on=c>=+n;return '<span style="color:'+(on?'#e8cf94':'#8a8274')+'">('+n+') '+fmt(D.tr[n])+'</span>'}).join('<br>');

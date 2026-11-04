@@ -7,7 +7,7 @@ const COOKA=(()=>{
  const X=COC.X,FX=X.FX,FL=X.FL,MET=X.MET,FLK=X.FLK,W=640,H=380,TAU=Math.PI*2,OL='#2a1a0e';
  const MN={g:['Guiso','🍲'],s:['Frito','🍳'],p:['Asado','🍖'],h:['Horneado','🥧']},FLE={d:'🍯',s:'🧂',a:'🌿',p:'🌶️',u:'🍖'},SPN={d:'Miel',s:'Sal',a:'Hierbas',p:'Pimienta',u:'Caldo'},SPC={d:'#e8b030',s:'#f4f0e6',a:'#6a9a3a',p:'#c83a22',u:'#b8803a'};
  const CATS=[['all','Todo'],['c','Carnes'],['p','Pescados'],['h','Hierbas'],['o','Otros']],CATN={c:0,p:1,h:2,o:3},VERB={fish:'Limpiando',cut:'Cortando',chop:'Picando'};
- let OPEN=false,ST='pick',SEL=[],MSEL=null,COND=null,QTY=1,TAB='ing',CAT='all',RES=null,SQ=null,LAST=null,STN=null,root=null,cv=null,cx=null,t=0,RR=[],pop={},bad=0;
+ let K3=null,OPEN=false,ST='pick',SEL=[],MSEL=null,COND=null,QTY=1,TAB='ing',CAT='all',RES=null,SQ=null,LAST=null,STN=null,root=null,cv=null,cx=null,t=0,RR=[],pop={},bad=0;
  const $=s=>root&&root.querySelector(s),nm=X.nm,cnt=id=>SEL.filter(x=>x===id).length,T_=()=>X.tutRec(),ease=x=>1-Math.pow(1-Math.max(0,Math.min(1,x)),3),cl=(v,a,b)=>Math.max(a,Math.min(b,v)),hsh=(a,b)=>{const v=Math.sin(a*127.1+b*311.7)*43758.5453;return v-Math.floor(v)};
  const tn=(f,d)=>{try{tone(f,d||.05,'triangle',.04,700)}catch(e){}};
  // ── SFX (síntesis: tone/noise del juego) y VFX (partículas 2D en coordenadas de la escena 640×380) ──────────────────────────────────────────────────────────────────────────────
@@ -50,9 +50,11 @@ const COOKA=(()=>{
    +'<section class="ck-side"><div class="ck-stage"><canvas width="960" height="570"></canvas><div class="ck-cap"></div><div class="ck-bar"><i></i></div></div>'
    +'<div class="ck-form"><div class="ck-slots"></div><div class="ck-meth"></div><div class="ck-cond"></div><div class="ck-pred"></div><div class="ck-act"></div></div><div class="ck-steps"></div></section></div><div class="ck-res"></div></div>';
   root=e.querySelector('.ck-root');cv=root.querySelector('canvas');cx=cv.getContext('2d');root.onclick=onClick;
+  /* N0.7-COCINA-ALQUIMIA-3D: la escena es un diorama 3D (kitchen3d.js: héroe cocinando con un clip por acción, ingredientes y plato 3D). `?forge3d=0` o sin R3D = el lienzo 2D de siempre */
+  K3=null;try{if(!/[?&]forge3d=0/.test(location.search)&&window.R3D&&R3D.kit3d&&R3D.kit3d.ok&&cv){const look=R3D.outfits.resolve({app:S.app,ar:S.eq.a?ARC(S.eq.a):null,helm:S.eq.h?ARC(S.eq.h):null,boot:S.eq.f?ARC(S.eq.f):null,gear:gearOpts(),hood:'down',arm:armorInfo()});R3D.kit3d.open({mode:'cook',look,out:cv,rectFn:()=>cv.getBoundingClientRect()});K3=R3D.kit3d}}catch(er){console.warn('[COOKA 3D]',er);K3=null};root.classList.toggle('ck-3d',!!K3)
   root.onmouseover=ev=>{const b=ev.target.closest('.ck-t[data-id]');const n=$('.ck-info');if(b&&performance.now()-lastHov>70){lastHov=performance.now();sfx.tick()}if(n)n.innerHTML=b?info(b.dataset.id):(T_()?'':'Pulsa un ingrediente para añadirlo al plato.')};
   renderAll();tn(520,.08)}
- function close(){if(!OPEN)return;if(ST==='cook'&&RES)log('Has cocinado '+RES.n+' × '+I[RES.out][0]+'.');OPEN=false;ST='pick';SQ=null;if(RES&&RES.n){LAST={sel:SEL.slice(),m:MSEL,cond:COND}}const e=document.getElementById('alq');if(e){e.style.display='none';e.innerHTML='';e.className=''}root=null;cv=null;cx=null}
+ function close(){if(!OPEN)return;try{if(K3)K3.close()}catch(er){}K3=null;if(ST==='cook'&&RES)log('Has cocinado '+RES.n+' × '+I[RES.out][0]+'.');OPEN=false;ST='pick';SQ=null;if(RES&&RES.n){LAST={sel:SEL.slice(),m:MSEL,cond:COND}}const e=document.getElementById('alq');if(e){e.style.display='none';e.innerHTML='';e.className=''}root=null;cv=null;cx=null}
  function renderAll(){renderPick();renderForm()}
  function renderPick(){if(!root)return;const T=T_(),lv=X.L('co');$('.ck-lv').textContent='Nivel '+lv+' · hasta '+X.maxIng()+' ingredientes';
   $('.ck-tabs').innerHTML=T?'':'<button data-a="tab" data-v="ing" class="'+(TAB==='ing'?'on':'')+'">Ingredientes</button><button data-a="tab" data-v="rec" class="'+(TAB==='rec'?'on':'')+'">Recetario</button>';
@@ -119,19 +121,19 @@ const COOKA=(()=>{
  const skip=()=>{if(SQ)SQ.fast=true};
  function stepsHTML(){const e=$('.ck-steps');if(!e||!SQ)return;e.innerHTML=SQ.steps.map((s,i)=>'<span class="ck-st'+(i<SQ.i?' ok':i===SQ.i?' cur':'')+'"><i>'+(i<SQ.i?'✓':'')+'</i>'+s.txt+'</span>').join('')+'<button class="ck-skip" data-a="skip" title="Espacio / clic / Esc">Saltar ▸</button>'}
  function capSet(on){const c=$('.ck-cap');if(!c)return;c.innerHTML=on?(SQ.steps[SQ.i]?SQ.steps[SQ.i].txt:'Cocinando')+'<span class="dts"><i>.</i><i>.</i><i>.</i></span>':''}
- function land(j){const m=SQ.m,n=SQ.items.length,[x,y]=slot(m,j,n);sfx.plop(j);emit('dot',x,y,9,{a:-1.57,sp:2.4,v:115,L:.6,r:2.6,c:brothCol()});emit('ring',x,y,1,{r:6,L:.45,c:'rgba(255,255,255,.7)'});if(m==='s'||m==='p')emit('spark',x,y,5,{a:-1.57,sp:2,v:80,L:.5,r:2,c:'#ffd080'});wob=1}
+ function land(j){if(K3)K3.cookFx('land',j);const m=SQ.m,n=SQ.items.length,[x,y]=slot(m,j,n);sfx.plop(j);emit('dot',x,y,9,{a:-1.57,sp:2.4,v:115,L:.6,r:2.6,c:brothCol()});emit('ring',x,y,1,{r:6,L:.45,c:'rgba(255,255,255,.7)'});if(m==='s'||m==='p')emit('spark',x,y,5,{a:-1.57,sp:2,v:80,L:.5,r:2,c:'#ffd080'});wob=1}
  function stepFx(s,i,p,dt,enter){const st=s.steps[i],m=s.m,n=s.items.length,ev=s.ev,bx=m==='g'?162:m==='s'?208:m==='p'?240:200;
-  if(enter){if(st.k==='fire'){sfx.whoosh();shk=Math.max(shk,.3);zp=.7;emit('spark',320,262,16,{a:-1.57,sp:1.5,v:120,L:.9,r:2,c:'#ffb050',g:120,w:120})}
+  if(enter){if(K3&&(st.k==='fire'||st.k==='cook'))K3.cookFx(st.k==='fire'?'fire':'sear');if(st.k==='fire'){sfx.whoosh();shk=Math.max(shk,.3);zp=.7;emit('spark',320,262,16,{a:-1.57,sp:1.5,v:120,L:.9,r:2,c:'#ffb050',g:120,w:120})}
    else if(st.k==='cook'){sfx.sear();emit('ring',320,bx,1,{r:10,L:.5,c:'#ffd080'});emit('ring',320,bx,1,{r:2,L:.7,c:'#fff0c0'});zp=.5}
    else if(st.k==='spice')sfx.shake();else if(st.k==='plate')sfx.slide()}
-  if(st.k==='prep'){const it=st.it;[1/6,1/2,5/6].forEach((u,j)=>{if(p>=u&&!ev['c'+i+j]){ev['c'+i+j]=1;if(it.k==='fish'){sfx.scrape();emit('dot',320,326,6,{a:-1.57,sp:2.6,v:90,L:.5,r:1.8,c:'#cfd8e0'})}else{sfx.chop();shk=Math.max(shk,.32);emit('chip',320,326,7,{a:-1.57,sp:2.6,v:130,L:.6,r:3,c:chipCol(it.id)})}}})}
+  if(st.k==='prep'){const it=st.it;[1/6,1/2,5/6].forEach((u,j)=>{if(p>=u&&!ev['c'+i+j]){ev['c'+i+j]=1;if(K3)K3.cookFx(it.k==='fish'?'scrape':'chop');if(it.k==='fish'){sfx.scrape();emit('dot',320,326,6,{a:-1.57,sp:2.6,v:90,L:.5,r:1.8,c:'#cfd8e0'})}else{sfx.chop();shk=Math.max(shk,.32);emit('chip',320,326,7,{a:-1.57,sp:2.6,v:130,L:.6,r:3,c:chipCol(it.id)})}}})}
   else if(st.k==='fire'){for(let j=0;j<n;j++)if(p*st.d>=.5+j*.09&&!ev['l'+j]){ev['l'+j]=1;land(j)}}
   else if(st.k==='cook'){s.sz+=dt;if(s.sz>.11){s.sz=0;sfx.sizz();if(Math.random()<.4)sfx.pop()}
    if(Math.random()<dt*11){const x=m==='g'?232+Math.random()*176:m==='s'?238+Math.random()*164:m==='p'?210+Math.random()*220:262+Math.random()*118;if(m==='p'||m==='s')emit(Math.random()<.5?'spark':'bub',x,bx+6,1,{a:-1.57,sp:2.2,v:70,g:m==='p'?200:30,L:.7,r:2,c:m==='p'?'#ffb050':'#fff0c0'});else emit('bub',x,bx+(m==='g'?0:20),1,{a:-1.57,v:20,g:-24,L:1,r:2.5,c:'rgba(255,240,200,.9)'})}
-   if((m==='s'||m==='p')&&p>=.5&&s.flipT==null){s.flipT=t;sfx.flip();shk=Math.max(shk,.25)}
+   if((m==='s'||m==='p')&&p>=.5&&s.flipT==null){s.flipT=t;if(K3)K3.cookFx('flip');sfx.flip();shk=Math.max(shk,.25)}
    if(m==='h'&&p>.85&&!ev.dn){ev.dn=1;T2(1760,.5,'sine',.05);T2(2350,.4,'sine',.03,0,.06)}}
-  else if(st.k==='spice'){s.sz+=dt;if(s.sz>.1){s.sz=0;sfx.shake();emit('dot',320+(Math.random()-.5)*70,96,2,{a:1.57,sp:.6,v:60,g:220,L:.9,r:2,c:SPC[s.cond]||'#fff'})}}
-  else if(st.k==='plate'){if(p>=.6&&!ev.pl){ev.pl=1;sfx.clink();emit('star',320,298,9,{a:-1.57,sp:3.5,v:80,L:.8,r:5,c:'#ffe8a0',g:60,w:90})}}}
+  else if(st.k==='spice'){s.sz+=dt;if(s.sz>.1){s.sz=0;if(K3)K3.cookFx('shake',SPC[s.cond]||'#ffffff');sfx.shake();emit('dot',320+(Math.random()-.5)*70,96,2,{a:1.57,sp:.6,v:60,g:220,L:.9,r:2,c:SPC[s.cond]||'#fff'})}}
+  else if(st.k==='plate'){if(p>=.6&&!ev.pl){ev.pl=1;if(K3)K3.cookFx('plate');sfx.clink();emit('star',320,298,9,{a:-1.57,sp:3.5,v:80,L:.8,r:5,c:'#ffe8a0',g:60,w:90})}}}
  function seqTick(dt){const s=SQ;s.el+=dt*(s.fast?6:1);let a=0,i=0;for(;i<s.steps.length;i++){if(s.el<a+s.steps[i].d)break;a+=s.steps[i].d}
   if(i>=s.steps.length){s.i=s.steps.length;s.p=1;endCook();return}
   s.p=(s.el-a)/s.steps[i].d;const enter=i!==s.lastI;s.lastI=i;if(i!==s.i){for(let j=0;j<i;j++){const st=s.steps[j];if(st.it)st.it.cut=st.it.k==='cut'||st.it.k==='chop'}s.i=i;stepsHTML();capSet(true);T2(pn(i),.06,'triangle',.03,0)}
@@ -175,5 +177,9 @@ const COOKA=(()=>{
    if(k==='plate'||ST==='res'){const q=ST==='res'?1:ease(p/.6);plate(c,320+(1-q)*340,308,1,brothCol(),Math.min(1,q*2));if(q>.9)steam(c,320,286,80,5,.9)}}
   fpDraw(c);COOKART.finish(c);c.drawImage(COOKART.vig(),0,0,W,H)}
  // ── fotograma ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
- function tick(now,dt){if(!OPEN)return;if(STN&&typeof P!=='undefined'&&Math.hypot(P.x-STN.x,P.y-STN.y)>190){close();return}dt=Math.min(dt||.016,.1);t+=dt;DT=dt;fpTick(dt);if(ST==='pick'&&Math.random()<dt*1.8)sfx.crackle();if(ST==='cook'&&SQ){if(HOLD!=null)SQ.el=HOLD;seqTick(dt)}try{frame()}catch(e){if(!bad++)console.warn('[COOKA] frame',e)}}
+ /* estado de la escena para el diorama 3D (se lee cada fotograma) */
+ function brothArr(){const a=brothCol().match(/\d+/g);return a?a.map(Number):[168,105,46]}
+ function push3d(){const ph=SQ&&SQ.steps[SQ.i]?SQ.steps[SQ.i]:null,k=ph?ph.k:(ST==='res'?'plate':'idle'),m=SQ?SQ.m:meth(),ids=SQ?SQ.items.map(i=>i.id):SEL.slice();
+  K3.setCook({m,k,p:SQ?SQ.p||0:0,d:ph?ph.d:.75,st:ST,ids,items:SQ?SQ.items:null,it:ph&&ph.it&&SQ?SQ.items.indexOf(ph.it):-1,itObj:ph&&ph.it?ph.it:null,pop,tnow:t,flipT:SQ?SQ.flipT:null,broth:brothArr(),out:RES&&(ST==='res'||k==='plate')?RES.out:null,qn:RES?RES.q+1:0,zp,chip:ph&&ph.it?chipCol(ph.it.id):'#c8a060',cond:SQ?SQ.cond:null})}
+ function tick(now,dt){if(!OPEN)return;if(STN&&typeof P!=='undefined'&&Math.hypot(P.x-STN.x,P.y-STN.y)>190){close();return}dt=Math.min(dt||.016,.1);t+=dt;DT=dt;fpTick(dt);if(ST==='pick'&&Math.random()<dt*1.8)sfx.crackle();if(ST==='cook'&&SQ){if(HOLD!=null)SQ.el=HOLD;seqTick(dt)}try{if(K3)push3d();else frame()}catch(e){if(!bad++)console.warn('[COOKA] frame',e)}}
  return{dbg:{hold:v=>{HOLD=v}},open,close,tick,skip,get active(){return OPEN},get cooking(){return OPEN&&ST==='cook'},get stage(){return ST},get sel(){return SEL.slice()},get res(){return RES},pick:{add:addIng,del:delIng,go:startCook,meth:setMeth,rec:useRec,again,back,render:renderAll,qty:q=>{QTY=Math.max(1,q|0);renderForm()},cond:k=>{COND=k||null;renderForm()},clear:()=>{SEL=[];afterSel()}}}})();
